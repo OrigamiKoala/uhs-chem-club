@@ -19,7 +19,7 @@
  */
 
 import { registerKit } from './registry.js';
-import { paintPiece, paintFixture, faceKey, RECTS, contentTop, wrap, wrapN } from './heat-draw.js';
+import { paintPiece, paintFixture, faceKey, RECTS, contentTop, wrap, wrapN, noteLines } from './heat-draw.js';
 import { buildIngot, buildTin, buildCupWall, buildThermometer } from '../../engine/heat-props.js';
 import { buildBathDress, buildPairDress, buildBondChip, buildPhaseCard, buildCellsDress, buildChamberDress, buildParticle } from '../../engine/heat-solids.js';
 import { cupRead, wellRead, plotRead, warmRead, cellsOpen, occupiedCells, loggedArrangements, shakesOf, shakeCells, targetMap, BOND_ENTHALPIES, cardTerms, fmtEqn, seatedIn } from './heat-read.js';
@@ -162,7 +162,7 @@ function solidDress3d(f, state, c) {
     const pair = buildPairDress(atoms, 2.4 * s, { own: c.own });
     put(pair, box.x0 + f.size.w / 2, box.y0 + top + 6, 0.002);
     group.userData.update = (fx, st) => {
-      const r = wellRead(st, fx.id);
+      const r = wellRead(st, fx.id, true);
       pair.userData.set({ gap: (2 + r.frac * (fx.size.w - 20)) * s, strength: 1 - r.frac });
     };
     return group;
@@ -226,9 +226,22 @@ const live = state => state.kit === HEAT_KIT_ID && (Object.values(state.fixtures
 function tapZones(f) {
   const top = contentTopOf(f);
   if (f.kind === 'well' && f.dials.pull) return [{ x0: 2, x1: f.size.w - 2, y0: top, y1: top + 12, dial: 'pull', drag: { axis: 'x', x0: 8, x1: f.size.w - 8 } }];
-  if (f.kind === 'shelves' && f.dials.after) return [{ x0: f.size.w * 0.5, x1: f.size.w, y0: top, y1: f.size.h - 8, dial: 'after', drag: { y0: top + 2, y1: f.size.h - 10, scale: f.dials.after.max } }];
-  if (f.kind === 'plot' && f.dials.temp) return [{ x0: 4, x1: f.size.w - 3, y0: top, y1: f.size.h - 8, dial: 'temp', drag: { axis: 'x', x0: 6, x1: f.size.w - 4 } }];
+  if (f.kind === 'shelves' && f.dials.after) return [{ x0: f.size.w * 0.45, x1: f.size.w, y0: top, y1: f.size.h - 6, dial: 'after', drag: { y0: top + 2, y1: f.size.h - 10, scale: f.dials.after.max } }];
+  if (f.kind === 'plot' && f.dials.temp) {
+    const pw = f.props.bars ? (f.size.w - 10) * 0.56 : (f.size.w - 10);
+    return [{ x0: 4, x1: 6 + pw + 2, y0: top, y1: f.size.h - 6, dial: 'temp', drag: { axis: 'x', x0: 6, x1: 6 + pw } }];
+  }
   if (f.kind === 'curve' && f.dials.heat) return [{ x0: 2, x1: f.size.w - 2, y0: top, y1: f.size.h - 2, dial: 'heat', drag: { axis: 'x', x0: 30, x1: f.size.w - 4 } }];
+  if (f.kind === 'selector' && f.props.list && f.dials.value) {
+    const out = [];
+    let row = 0;
+    f.props.options.forEach((o, k) => {
+      if (!o.trim()) return;
+      out.push({ x0: 2, x1: f.size.w - 2, y0: 12.4 + row * 3.5, y1: 15.9 + row * 3.5, dial: 'value', value: k + 1 });
+      row++;
+    });
+    return out;
+  }
   return [];
 }
 
@@ -267,7 +280,7 @@ export const HEAT_KIT = {
   deckStyle: () => 'instrument',
   slot3d: () => 'well',
   // What a piece's face prints as one line of words: a card its first line (long words break in two), an equation card its equation.
-  printed: p => (p.kind === 'tag' ? wrap(p.label, 17)[0] : p.kind === 'note' ? wrapN(p.label, 30, 3)[0] : p.kind === 'stmt' ? wrap(p.label)[0] : p.kind === 'shift' ? p.label : p.kind === 'eqn' ? fmtEqn(cardTerms(p)) : p.kind === 'ptc' ? '' : p.kind === 'bond' && (p.props.scale || 1) > 1 ? `${p.label} ×${p.props.scale}` : String(p.label)),
+  printed: p => (p.kind === 'tag' ? wrap(p.label, 17)[0] : p.kind === 'note' ? noteLines(p.label).lines[0] : p.kind === 'stmt' ? wrap(p.label)[0] : p.kind === 'shift' ? p.label : p.kind === 'eqn' ? fmtEqn(cardTerms(p)) : p.kind === 'ptc' ? '' : p.kind === 'phase' && p.props.T != null ? `${p.label} · ${p.props.T} °C` : p.kind === 'gcard' && p.props.hideCurve ? wrap(p.label, 16)[0] : p.kind === 'bond' && (p.props.scale || 1) > 1 ? `${p.label} ×${p.props.scale}` : String(p.label)),
   faceKey
 };
 
@@ -287,9 +300,9 @@ const piece = (kind, id, label, at, props = {}, extra = {}) => ({ id, kind, labe
 /** A body with a mass, a specific heat and a temperature: a block, or a bath. `mat` is how its mass line ends ("Fe"). */
 export const block = (id, label, at, { m, c, T, mat = '', mass = null, latent = null }, extra = {}) =>
   piece('block', id, label, at, { m, c, T, mat, ...(mass ? { mass } : {}), ...(latent ? { latent } : {}) }, extra);
-/** A charge of chemicals for the cup: its moles and its ΔH per mole (the system's sign). `shown` replaces the moles line. */
-export const charge = (id, label, at, { moles, dH, shown = null }, extra = {}) =>
-  piece('charge', id, label, at, { moles, dH, ...(shown ? { shown } : {}) }, extra);
+/** A charge of chemicals for the cup: its moles and its ΔH per mole (the system's sign). `shown` replaces the moles line (pass '' to hide). */
+export const charge = (id, label, at, { moles, dH, shown = undefined }, extra = {}) =>
+  piece('charge', id, label, at, { moles, dH, ...(shown !== undefined ? { shown } : {}) }, extra);
 /** A step card: `lhs` and `rhs` are `[[coefficient, species], ...]`, `dH` the step's measured ΔH. */
 export const eqn = (id, at, lhs, rhs, dH, extra = {}) => piece('eqn', id, id, at, { lhs, rhs, dH, ...(extra.symbol ? { symbol: extra.symbol } : {}) }, extra);
 /** A bond chip: its kind ("C-H"), its energy, and how many of them there are; `note` says where it comes from ("methane"). */
@@ -312,7 +325,8 @@ export const markCard = (id, label, at, extra = {}) => piece('note', id, label, 
 /** A longer card of words (three lines of 30 characters). */
 export const note = (id, label, at, extra = {}) => piece('note', id, label, at, {}, extra);
 /** A card with the line of ΔG against temperature for a reaction of the given ΔH (kJ/mol) and ΔS (J/(mol·K)). */
-export const gCard = (id, label, at, { dH, dS, Tmin = 100, Tmax = 600 }, extra = {}) => piece('gcard', id, label, at, { dH, dS, Tmin, Tmax }, extra);
+export const gCard = (id, label, at, { dH, dS, Tmin = 100, Tmax = 600, hideCurve = false }, extra = {}) =>
+  piece('gcard', id, label, at, { dH, dS, Tmin, Tmax, ...(hideCurve ? { hideCurve } : {}) }, extra);
 /** A card with a number on it: an answer a stage cannot build. */
 export const numCard = (id, label, at, value, extra = {}) => piece('num', id, label, at, { value }, extra);
 /** A chip with a short word on it (a part of the bench, a change). */
@@ -354,7 +368,7 @@ export function cupFixture(id, at, o = {}) {
       id, kind: 'cup', label: title, at: { ...at }, size: { w, h }, dials, ...(record ? { runLabel } : { noRun: true }),
       props: { backdrop: true, slot: slotId, water, ...(waters ? { waters } : {}), T0, ...(c != null ? { c } : {}), joules, ...(joulesList ? { joulesList } : {}), ...(molesList ? { molesList } : {}), showHeat, showVerdict, boundary, showLid, vmax }
     },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 13, y: y0 + top + 8.5 }, size: { w: 20, h: 14 } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + 13, y: y0 + top + (nd ? 10.5 : 8.5) }, size: { w: 23, h: 16 } },
     slotId,
     size: { w, h }
   };
@@ -390,8 +404,17 @@ export function wellFixture(id, at, o = {}) {
 }
 
 /** A ledger: the totals of the chips lying in the `broken` and `formed` trays. */
-export function ledgerFixture(id, at, { broken, formed, hideNet = false, hideTotals = false, w = 60, title = 'Bond ledger' } = {}) {
-  return { id, kind: 'ledger', label: title, at: { ...at }, size: { w, h: 22 }, noRun: true, dials: {}, props: { broken, formed, hideNet, ...(hideTotals ? { hideTotals } : {}) } };
+export function ledgerFixture(id, at, { broken, formed, hideNet = false, hideTotals = false, hideTotalsUntilCommit = false, hideNetUntilCommit = false, gate = null, w = 60, title = 'Bond ledger' } = {}) {
+  return {
+    id, kind: 'ledger', label: title, at: { ...at }, size: { w, h: 22 }, noRun: true, dials: {},
+    props: {
+      broken, formed, hideNet,
+      ...(hideTotals ? { hideTotals } : {}),
+      ...(hideTotalsUntilCommit ? { hideTotalsUntilCommit } : {}),
+      ...(hideNetUntilCommit ? { hideNetUntilCommit } : {}),
+      ...(gate ? { gate } : {})
+    }
+  };
 }
 
 /**
@@ -495,8 +518,8 @@ export function curveFixture(id, at, { m, from, to, title = 'Heating the sample'
 }
 
 /** A clip that plays by itself before a prediction (see `heat-motion.js`, `paintLead`): a neighbouring case, with no control. */
-export function leadFixture(id, at, { scene, lhs = null, rhs = null, dH = 0, w = 66, h = 30, title = 'Watch first' } = {}) {
-  return { id, kind: 'lead', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { scene, ...(lhs ? { lhs, rhs, dH } : {}) } };
+export function leadFixture(id, at, { scene, lhs = null, rhs = null, dH = 0, asymmetric = false, w = 66, h = 30, title = 'Watch first' } = {}) {
+  return { id, kind: 'lead', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { scene, ...(asymmetric ? { asymmetric } : {}), ...(lhs ? { lhs, rhs, dH } : {}) } };
 }
 
 /** A printed reference: lines of text on a plate. */

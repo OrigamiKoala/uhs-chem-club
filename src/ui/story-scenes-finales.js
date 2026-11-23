@@ -434,8 +434,8 @@ function warmCylinder(ctx, w, h, t, clock = 0) {
   const cold = 1 - win(t, 0.44, 0.52);
   if (cold > 0) machineClip(ctx, w, h, () => alpha(ctx, cold, () => compressorBody(ctx, w, h, lit, settle, cx)));
   callouts(ctx, w, h, t, [
-    ['a piston', 0.08, 0.34, 0.46 - 0.22, 0.56], ['a heater', 0.08, 0.12, 0.46 - 0.05, 0.3], ['a count', 0.7, 0.28, 0.56, 0.45],
-    ['a blend', 0.84, 0.24, 0.46 + 0.28, 0.42], ['a pinhole', 0.82, 0.74, 0.46 + 0.4, 0.58]
+    ['a piston', 0.08, 0.34, 0.46 - 0.22, 0.56], ['a heater', 0.08, 0.12, 0.46 - 0.05, 0.3], ['a tank counter', 0.7, 0.28, 0.56, 0.45],
+    ['a gas mixer', 0.84, 0.24, 0.46 + 0.28, 0.42], ['a pinhole', 0.82, 0.74, 0.46 + 0.4, 0.58]
   ]);
   tag(ctx, 'cold in its housing', cx, h * 0.9, { size: 26, a: since(t, 0.36) * (1 - win(t, 0.5, 0.54)) });
 

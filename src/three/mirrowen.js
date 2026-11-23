@@ -128,14 +128,14 @@ export class MirrowenWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => buildMaterial(
-      platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 }
+    const metal = (paint, base, rust, seed, weather, panels = 2, size = 128) => buildMaterial(
+      platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(Math.min(size, 256)) }), { repeat: 2, roughness: 1.0 }
     );
 
     // Stone and concrete: the quays are dressed granite, the dock and the pump well cast concrete.
-    M.granite = buildMaterial(quayPaving({ size: texSize(512), seed: 5 }), { repeat: 1, roughness: 1.0 });
+    M.granite = buildMaterial(quayPaving({ size: texSize(256), seed: 5 }), { repeat: 1, roughness: 1.0 });
     M.granite.color.set(0xb4b6b4);
-    M.concrete = buildMaterial(quayPaving({ size: texSize(512), seed: 9 }), { repeat: 2, roughness: 1.0 });
+    M.concrete = buildMaterial(quayPaving({ size: texSize(256), seed: 9 }), { repeat: 2, roughness: 1.0 });
     M.concrete.color.set(0x9a9c98);
 
     // Steel: painted plate weathered by the sea, a different paint for each ship.
@@ -195,7 +195,7 @@ export class MirrowenWorld {
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
     // The Fifth's ice: crystal columns, white where milky and blue where clear. Opaque, so it is a body.
-    M.ice = buildMaterial(crystalIce({ size: texSize(512), seed: 21 }), { repeat: 1, roughness: 1.0 });
+    M.ice = buildMaterial(crystalIce({ size: texSize(256), seed: 21 }), { repeat: 1, roughness: 1.0 });
     M.ice.normalScale.set(1.3, 1.3);
     M.ice.envMapIntensity = 1.5;
     M.ice.flatShading = true;
@@ -203,12 +203,12 @@ export class MirrowenWorld {
     M.iceDeep.color.set(0x9ec4da);
     M.iceDeep.flatShading = true;
 
-    // The ground: frost-dusted setts and ice, painted per vertex.
+    // The ground: wind-packed snow and ice, fine cells, painted per vertex.
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
-    M.ground = buildMaterial(frostShingle({ size: texSize(512), seed: 7 }), { repeat: 1, roughness: 1.0 });
+    M.ground = buildMaterial(frostShingle({ size: texSize(256), seed: 7 }), { repeat: 2, roughness: 1.0 });
     M.ground.vertexColors = true;
-    M.ground.normalScale.set(1.2, 1.2);
-    M.ground.envMapIntensity = 0.7;
+    M.ground.normalScale.set(0.9, 0.9);
+    M.ground.envMapIntensity = 0.75;
     for (const t of M.ground.userData.surfaceMaps || []) t.anisotropy = aniso;
 
     // The water: a moving mirror, coloured per vertex.

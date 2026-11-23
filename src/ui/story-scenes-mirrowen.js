@@ -27,7 +27,7 @@ function molecule(ctx, id, cx, cy, unit) {
   for (const [el, x, y] of g.atoms) disc(ctx, cx + x * unit, cy - y * unit, el === 'H' ? unit * 0.2 : unit * 0.3, inkOf(el), C.steel);
 }
 
-const kj = v => (v < 1 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : String(Math.round(v)));
+const kj = v => (v < 1 ? (v + 1e-9).toFixed(2) : v < 100 ? (v + 1e-9).toFixed(1) : String(Math.round(v)));
 
 /* ---- q2-grip: a bigger cloud holds harder; light water out-grips heavier hydrogen sulfide; both are tiny beside a bond ---- */
 const NOBLE = ['He', 'Ne', 'Ar', 'Xe'];
@@ -49,9 +49,9 @@ function gripBars(ctx, w, h, t) {
       ctx.fillStyle = C.amber; ctx.fillRect(x - 34, base - bh, 68, bh);
       ctx.globalAlpha = a * 0.55; disc(ctx, x, base + 62, (s.r / 216) * 38, '#3a3a38', C.dust); ctx.globalAlpha = a;
       text(ctx, id, x, base + 62, { size: 24, color: C.text, weight: 700 });
-      text(ctx, `${kj(s.grip * grow)}`, x, base - bh - 18, { size: 22, color: C.text, weight: 700 });
+      text(ctx, `${kj(s.grip)}`, x, base - bh - 18, { size: 22, color: C.text, weight: 700 });
     });
-    text(ctx, 'heat to pull one mole apart (kJ)', w / 2, 56, { size: 24, color: C.dust });
+    text(ctx, 'heat to separate one mole (kJ)', w / 2, 56, { size: 24, color: C.dust });
     ctx.globalAlpha = 1;
   }
   const b = ease(win(t, 0.34, 0.4)) * (1 - ease(win(t, 0.62, 0.68)));
@@ -67,9 +67,9 @@ function gripBars(ctx, w, h, t) {
       ctx.fillStyle = C.amber; ctx.fillRect(x - 40, base - bh, 80, bh);
       molecule(ctx, id, x, base + 56, 40);
       text(ctx, `${s.formula}   ${s.M.toFixed(0)} g/mol`, x, base + 112, { size: 22, color: C.text, weight: 700 });
-      text(ctx, `${kj(s.grip * grow)}`, x, base - bh - 18, { size: 24, color: C.text, weight: 700 });
+      text(ctx, `${kj(s.grip)}`, x, base - bh - 18, { size: 24, color: C.text, weight: 700 });
     });
-    text(ctx, 'heat to pull one mole apart (kJ)', w / 2, 56, { size: 24, color: C.dust });
+    text(ctx, 'heat to separate one mole (kJ)', w / 2, 56, { size: 24, color: C.dust });
     ctx.globalAlpha = 1;
   }
   const c = ease(win(t, 0.66, 0.72));

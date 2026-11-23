@@ -120,7 +120,8 @@ const inOrbit = (zone, p) => Math.hypot(p.x - zone.at.x, p.y - zone.at.y) <= (zo
  */
 export function zoneAt(state, p) {
   for (const s of Object.values(state.zones.slots)) {
-    if (inRect(rectOf(s, SIZES.slot), p)) return { kind: 'slot', id: s.id };
+    const r = rectOf(s, SIZES.slot);
+    if (inRect(r, p)) return { kind: 'slot', id: s.id };
   }
   for (const c of Object.values(state.zones.containers)) {
     if (inRect(rectOf(c, SIZES.container), p)) return { kind: 'container', id: c.id };
@@ -133,6 +134,12 @@ export function zoneAt(state, p) {
       } else if (inRect(rectOf(t, SIZES.tray), p)) {
         return { kind: 'tray', id: t.id };
       }
+    }
+  }
+  // Dropping a tank directly onto the common tank fixture opens it into that fixture's valve tray.
+  for (const f of Object.values(state.fixtures || {})) {
+    if (f.kind === 'common' && f.props?.of && state.zones.trays?.[f.props.of]) {
+      if (inRect(rectOf(f, SIZES.fixture), p)) return { kind: 'tray', id: f.props.of };
     }
   }
   // An ORBIT is round: either one multi-ring atom (Stage 4) or concentric shells (Stage 5).
@@ -173,6 +180,11 @@ export function zoneAt(state, p) {
   }
   const rail = state.zones.rail;
   if (rail && inRect(rectOf(rail, SIZES.rail), p)) return { kind: 'rail', id: rail.id || 'rail' };
+  // Generous snap margin for slots so a card dropped near a slot centres cleanly instead of landing half over its edge.
+  for (const s of Object.values(state.zones.slots)) {
+    const r = rectOf(s, SIZES.slot);
+    if (p.x >= r.x0 - 4 && p.x <= r.x1 + 4 && p.y >= r.y0 - 4 && p.y <= r.y1 + 4) return { kind: 'slot', id: s.id };
+  }
   return null;
 }
 
@@ -225,6 +237,9 @@ export function layoutIn(zone, fallback, n, total = 0) {
   const cols = Math.max(1, Math.floor(r.w / cell));
   const col = n % cols;
   const row = Math.floor(n / cols);
+  // A zone at the near edge of the table (`near.js` sets `growUp`) fills from its bottom row up, so more pieces than it
+  // holds spill away from the edge, not off it.
+  if (zone.growUp) return { x: r.x0 + cell / 2 + col * cell, y: r.y1 - cellH / 2 - row * cellH };
   return { x: r.x0 + cell / 2 + col * cell, y: r.y0 + cellH / 2 + row * cellH };
 }
 

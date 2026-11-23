@@ -71,6 +71,8 @@ import { reorder, startArrangement } from './rail.js';
 import { emptyRecorder, append, lay } from './recorder.js';
 import { fileCard } from '../engine/catalogue.js';
 import { cardHalf } from './layout.js';
+import { nearInstrument } from './near.js';
+import { balanceRows } from './balance.js';
 
 export { clusterOf, itemsIn, zoneKey, parseTo, pointFor };
 
@@ -146,6 +148,8 @@ export function createTable(spec, seedKey = '') {
     fetch: {},
     // Plain data the kit may read (`state.opts`): a stage's wording mode, say.
     opts: { ...(spec.opts || {}) },
+    // A fight's table (`near.js` `markFights`): its top-right corner is the foe's.
+    ...(spec.foe ? { foe: true } : {}),
     last: null
   };
 
@@ -179,6 +183,7 @@ export function createTable(spec, seedKey = '') {
       ...(t.spot ? { spot: true } : {}),
       ...(t.nucleus ? { nucleus: true } : {}),
       ...(t.round ? { round: true } : {}),
+      ...(t.labelBelow ? { labelBelow: true } : {}),
       // An ORBIT is a round place round a fixed middle (a nucleus): pieces dropped in it snap onto rings,
       // closest in first, and the view draws the rings instead of a tray. It holds what stands in it and
       // refuses nothing; the rings are where a piece comes to rest, not a rule about what may go there.
@@ -212,7 +217,9 @@ export function createTable(spec, seedKey = '') {
       size: { ...SIZES.rail, ...(z.rail.size || {}) },
       first: z.rail.first || '', last: z.rail.last || '', order: [],
       // A rail may stand its end words higher: a card on it has thickness, and in 3D its top edge rises over the word.
-      ...(z.rail.labelLift ? { labelLift: z.rail.labelLift } : {})
+      ...(z.rail.labelLift ? { labelLift: z.rail.labelLift } : {}),
+      // Its end words printed under it, not over it (`near.js` sets this on a rail it moves to the far side).
+      ...(z.rail.labelsBelow ? { labelsBelow: true } : {})
     };
   }
 
@@ -264,6 +271,14 @@ export function createTable(spec, seedKey = '') {
   }
   for (const key of new Set(Object.values(s.pieces).map(p => p.zone).filter(k => k && k !== 'rail'))) relayout(s, key);
   getKit(spec.kit).settle?.(s);
+  // The instrument stands nearest the player, the pieces it takes beyond it (`near.js`).
+  if (spec.layout !== 'as-drawn' && nearInstrument(s, getKit(spec.kit))) {
+    // A zone that now fills upward lays its pieces out again.
+    for (const key of new Set(Object.values(s.pieces).map(p => p.zone).filter(k => k && k !== 'rail'))) relayout(s, key);
+    getKit(spec.kit).settle?.(s);
+  }
+  // A row of loose pieces packed against one side of its line stands in the middle of it (`balance.js`).
+  if (spec.layout !== 'as-drawn') balanceRows(s, getKit(spec.kit));
   return s;
 }
 
@@ -491,8 +506,22 @@ const HANDLERS = {
 
   flip(s, kit, id) {
     const p = s.pieces[id];
-    if (!p || p.hidden || p.fixed) return fail('no such piece');
+    if (!p || p.hidden) return fail('no such piece');
+    if (kit.flip) {
+      const handled = kit.flip(s, p);
+      if (handled) return handled;
+    }
+    if (p.fixed && !p.props?.markable) return fail('no such piece');
     p.props.flipped = !p.props.flipped;
+    if (p.props.markable) {
+      const next = !p.props.marked;
+      if (p.props.radio && next) {
+        for (const o of Object.values(s.pieces)) {
+          if (o.props?.radio === p.props.radio) o.props.marked = false;
+        }
+      }
+      p.props.marked = next;
+    }
     return { flipped: p.props.flipped };
   },
 
@@ -568,6 +597,12 @@ function drop(s, kit, id, t) {
   }
 
   if (t.kind === 'free') {
+    if (kit.returnFree && p.home) {
+      if (isTool(kit, p)) unlinkAll(s, id);
+      leaveZone(s, id);
+      p.at = { ...p.home };
+      return { placed: 'free' };
+    }
     const group = clusterOf(s, id);
     const dest = clampTo(s, t.at, radiusOf(kit, p));
     const dx = dest.x - p.at.x;
@@ -593,6 +628,12 @@ function drop(s, kit, id, t) {
 
   if (t.kind === 'tray' || t.kind === 'container') {
     const key = zoneKey(t.kind, t.id);
+    const zone = t.kind === 'tray' ? s.zones.trays[t.id] : s.zones.containers[t.id];
+    if (zone?.single) {
+      for (const o of Object.values(s.pieces)) {
+        if (o.zone === key && o.id !== id) { o.zone = null; o.at = { ...o.home }; }
+      }
+    }
     const group = clusterOf(s, id);
     group.forEach(g => { leaveZone(s, g); s.pieces[g].zone = key; });
     relayout(s, key);
@@ -681,6 +722,8 @@ function joinPieces(s, kit, aId, bId) {
     // does its work and goes back where it hangs; one that stays (a lens) rides with its sample.
     if (plan.set?.a) Object.assign(a.props, plan.set.a);
     if (plan.set?.b) Object.assign(b.props, plan.set.b);
+    // ...and on other pieces by id (`plan.setPieces`): two atoms dropped together write the bond onto the joint between them.
+    for (const [id, props] of Object.entries(plan.setPieces || {})) if (s.pieces[id]) Object.assign(s.pieces[id].props, props);
     group.forEach(g => leaveZone(s, g));
     if (plan.once) {
       a.at = { ...a.home };

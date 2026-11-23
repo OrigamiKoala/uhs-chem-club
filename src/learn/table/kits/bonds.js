@@ -48,8 +48,9 @@ import { PAIRS, IONS, LATTICES, DISC_RADIUS, morse, planCurve, energySpan, centr
 import { PLATE_COLORS, plateText, lampMark, mulberry32, hashId } from '../../engine/plates.js';
 import { SIZES, rectOf } from '../snap.js';
 import { fixtureLayout } from '../layout.js';
+import { glideValue } from '../glide.js';
 import {
-  LIGAR_SKIN, buildOreBlock, buildSaltSpecimen, buildPairTag, buildHammer, buildLeads, buildTongs, ligarDeck
+  LIGAR_SKIN, buildOreBlock, buildSaltSpecimen, buildPairTag, buildHammer, buildLeads, buildTongs, buildDomainGuess3D, ligarDeck
 } from '../../engine/ligar-props.js';
 
 export const BONDS_KIT_ID = 'bonds';
@@ -340,7 +341,7 @@ function planJoin(a, b, state) {
   if (BLOCK_TOOLS.has(a.kind)) {
     if (b.kind !== 'slab') return { holds: false, home: true, reason: 'That goes on a block.' };
     const v = slabView(b, state);
-    if (a.kind === 'leads') return { holds: true, link: { tool: 'leads' }, rest: { x: 7, y: -5.5 }, reason: 'The leads clip across the block.' };
+    if (a.kind === 'leads') return { holds: true, link: { tool: 'leads' }, rest: { x: 10.5, y: 0 }, reason: 'The leads clip across the block.' };
     if (a.kind === 'hammer') {
       if (v.molten) return { holds: false, home: true, reason: 'There is nothing solid left to hit.' };
       return { holds: true, once: true, set: { b: { struck: true } }, reason: 'The hammer comes down on the block.' };
@@ -430,8 +431,9 @@ export function paintSlabPicture(ctx, decl, phase, box, lifted = [], current = f
       ctx.lineTo(ex, ey);
     }
     ctx.stroke();
-    ctx.strokeStyle = PLATE_COLORS.steel;
+    ctx.strokeStyle = phase === 'molten' ? AMBER : PLATE_COLORS.steel;
     ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h - 1);
+    fitted(ctx, phase === 'molten' ? 'MOLTEN' : 'SOLID', x0 + w / 2, y0 + h / 2, w * 0.8, { size: Math.max(8, Math.round(h * 0.28)), weight: 700, color: phase === 'molten' ? AMBER : PLATE_COLORS.dust });
     return;
   }
   const pad = Math.max(2, Math.min(w, h) * 0.07);
@@ -669,6 +671,26 @@ function paintGuess(ctx, p, state, o) {
   const x0 = o.x - hw;
   const y0 = o.y - hh;
   frame(ctx, x0, y0, hw * 2, hh * 2, '#2a2620', o.lit);
+  if (p.props?.model3d) {
+    // 2D schematic twin of the floating 3D geometry model (no text on the card).
+    const r = Math.min(hw, hh) * 0.56;
+    const pts = p.props.model3d === 'cross'
+      ? [[-r, 0], [r, 0], [0, -r], [0, r]]
+      : p.props.model3d === 'pyramid3'
+        ? [[0, -r * 0.95], [-r * 0.85, r * 0.5], [r * 0.85, r * 0.5], [0, r * 0.85]]
+        : [[0, -r * 0.95], [-r * 0.85, r * 0.55], [r * 0.85, r * 0.55], [r * 0.35, -r * 0.1]];
+    ctx.strokeStyle = PLATE_COLORS.dust;
+    ctx.lineWidth = Math.max(1.5, o.sc * 0.25);
+    for (const [dx, dy] of pts) {
+      ctx.beginPath();
+      ctx.moveTo(o.x, o.y);
+      ctx.lineTo(o.x + dx, o.y + dy);
+      ctx.stroke();
+    }
+    disc(ctx, o.x, o.y, Math.max(3, r * 0.28), PLATE_COLORS.steel);
+    for (const [dx, dy] of pts) disc(ctx, o.x + dx, o.y + dy, Math.max(2.5, r * 0.24), AMBER);
+    return;
+  }
   const lines = (p.props.lines && p.props.lines.length ? p.props.lines : [p.label]).slice(0, 3);
   const size = Math.max(7, Math.round(hh * (lines.length > 2 ? 0.27 : 0.32)));
   lines.forEach((text, i) => {
@@ -700,8 +722,8 @@ function paintPiece(ctx, p, state, o) {
 }
 
 function printed(p, state) {
-  // A guess card prints its wording across lines: the first line is what a test looks for.
-  if (p.kind === 'guess') return String(p.props.lines?.[0] || p.label);
+  // A guess card prints its wording across lines (unless it is a textless 3D model prediction card).
+  if (p.kind === 'guess') return p.props?.model3d ? '' : String(p.props.lines?.[0] || p.label);
   if (PAINTERS[p.kind]) return String(p.label);
   return ATOMS_KIT.printed(p, state);
 }
@@ -902,6 +924,7 @@ export function wellPlot(f) {
 }
 
 const DASHES = [[], [5, 3], [1.5, 2.5]];
+const CURVE_COLORS = ['#f2a629', '#dcd6cc', '#7fa868'];
 
 function paintWells(ctx, f, state, b) {
   const read = wellRead(state, f.id);
@@ -913,7 +936,7 @@ function paintWells(ctx, f, state, b) {
   const X = d => b.X(P.x0 + (d / dmax) * (P.x1 - P.x0));
   const Y = e => b.Y(P.y0 + ((hi - e) / (hi - lo)) * (P.y1 - P.y0));
   const size = Math.max(7, Math.round(2.1 * b.sc));
-  // Axes: the zero line (parted), the separation ticks, the frame.
+  // Axes: the zero line (parted), y-axis energy ticks, separation ticks, the frame.
   ctx.strokeStyle = PLATE_COLORS.rim;
   ctx.lineWidth = 1;
   ctx.strokeRect(Math.round(b.X(P.x0)) + 0.5, Math.round(b.Y(P.y0)) + 0.5, Math.round(b.X(P.x1) - b.X(P.x0)), Math.round(b.Y(P.y1) - b.Y(P.y0)));
@@ -923,9 +946,21 @@ function paintWells(ctx, f, state, b) {
   ctx.moveTo(b.X(P.x0), Y(0)); ctx.lineTo(b.X(P.x1), Y(0));
   ctx.stroke();
   ctx.setLineDash?.([]);
-  plateText(ctx, '0', b.X(P.x0) - 2, Y(0), { size, align: 'right', base: 'middle', color: PLATE_COLORS.dim });
+  // Y-axis energy ticks and labels so the scale is always readable.
+  const yStep = (hi - lo) > 900 ? 200 : 100;
+  const firstTick = Math.ceil(lo / yStep) * yStep;
+  for (let e = firstTick; e <= hi; e += yStep) {
+    const yy = Y(e);
+    if (yy < b.Y(P.y0) + size * 1.4 || yy > b.Y(P.y1) - size * 0.5) continue;
+    ctx.strokeStyle = PLATE_COLORS.dim;
+    ctx.beginPath();
+    ctx.moveTo(b.X(P.x0), yy); ctx.lineTo(b.X(P.x0) + 3, yy);
+    ctx.stroke();
+    plateText(ctx, e === 0 ? '0' : `${e > 0 ? '+' : '−'}${Math.abs(e)}`, b.X(P.x0) + 5, yy, { size: Math.max(6, Math.round(size * 0.85)), align: 'left', base: 'middle', color: PLATE_COLORS.dim });
+  }
   const runKey = fixtureLayout(f).run;
-  for (let d = 0; d <= dmax; d += 100) {
+  const xStep = dmax <= 260 ? 50 : 100;
+  for (let d = 0; d <= dmax; d += xStep) {
     // A tick's number leaves the Run key's corner alone.
     if (!runKey || X(d) < b.X(runKey.x0) - size * 2) plateText(ctx, String(d), X(d), b.Y(P.y1) + size * 1.15, { size, align: 'center', color: PLATE_COLORS.dim });
     ctx.strokeStyle = PLATE_COLORS.dim;
@@ -933,19 +968,25 @@ function paintWells(ctx, f, state, b) {
     ctx.moveTo(X(d), b.Y(P.y1)); ctx.lineTo(X(d), b.Y(P.y1) + 2);
     ctx.stroke();
   }
-  plateText(ctx, 'pm apart', b.X(P.x0) + 2, b.Y(P.y1) + size * 2.3, { size, color: PLATE_COLORS.dim });
-  plateText(ctx, 'kJ/mol', b.X(P.x0) + 2, b.Y(P.y0) + size * 1.1, { size, color: PLATE_COLORS.dim });
+  plateText(ctx, 'Distance between atoms (pm)', b.X(P.x0) + 2, b.Y(P.y1) + size * 2.3, { size, color: PLATE_COLORS.dim });
+  plateText(ctx, 'Potential energy (kJ/mol)', b.X(P.x0) + 4, b.Y(P.y0) + size * 1.1, { size, color: PLATE_COLORS.dust });
+  if (read.rows.length === 1) {
+    plateText(ctx, '0 = atoms apart', b.X(P.x1) - 4, Y(0) - size * 0.65, { size: Math.max(6, Math.round(size * 0.85)), align: 'right', color: PLATE_COLORS.dim });
+  }
 
   // The curves, over the stretch each hand has passed through.
+  const multi = read.rows.length > 1;
   read.rows.forEach((row, i) => {
     const pair = PAIRS[row.pair];
-    ctx.strokeStyle = PLATE_COLORS.text;
-    ctx.lineWidth = 1.6;
-    ctx.setLineDash?.(DASHES[i % DASHES.length]);
+    const shownGap = glideValue(f, row.id) ?? row.gap;
+    const col = multi ? CURVE_COLORS[i % CURVE_COLORS.length] : PLATE_COLORS.text;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = multi ? 2 : 1.6;
+    ctx.setLineDash?.(multi ? [] : DASHES[i % DASHES.length]);
     ctx.beginPath();
     let started = false;
-    const a = Math.max(1, Math.round(row.lo));
-    const z = Math.round(row.hi);
+    const a = Math.max(1, Math.round(Math.min(row.lo, shownGap)));
+    const z = Math.round(Math.max(row.hi, shownGap));
     // The part of the curve above the plot (the nuclei pressing together) is left off the edge, not drawn flat along it.
     for (let d = a; d <= z; d += 1) {
       const e = morse(pair, d);
@@ -956,6 +997,13 @@ function paintWells(ctx, f, state, b) {
     }
     ctx.stroke();
     ctx.setLineDash?.([]);
+    // On multi-curve plots, mark each curve's discovered minimum so all three bond lengths are easy to read.
+    if (multi && a <= pair.r0 && z >= pair.r0) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(X(pair.r0), Y(-pair.de), 3.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     // `props.components`: the two things the curve is made of, drawn over the same stretch. The Morse curve is exactly their sum:
     // the attraction of the nuclei for the electrons (negative, long reach) plus the repulsion of nucleus against nucleus and cloud against cloud (positive, short reach).
     if (f.props.components) {
@@ -989,27 +1037,33 @@ function paintWells(ctx, f, state, b) {
       }
     }
     // Where the hand has the pair now: a small square on the curve, and the reading.
-    const e = Math.min(hi, morse(pair, row.gap));
-    ctx.fillStyle = AMBER;
-    ctx.fillRect(X(row.gap) - 2.5, Y(e) - 2.5, 5, 5);
+    const e = Math.min(hi, morse(pair, shownGap));
+    ctx.fillStyle = multi ? col : AMBER;
+    ctx.fillRect(X(shownGap) - 2.5, Y(e) - 2.5, 5, 5);
     const ty = b.Y(P.y0) + size * (1.1 + i * 1.2);
-    plateText(ctx, `${row.label} ${row.gap} pm  ${row.energy > 0 ? '+' : row.energy < 0 ? '−' : ''}${Math.abs(row.energy).toFixed(1)}`, b.X(P.x1) - 2, ty, { size, align: 'right', weight: 700, color: AMBER });
+    plateText(ctx, `${row.label} ${row.gap} pm  ${row.energy > 0 ? '+' : row.energy < 0 ? '−' : ''}${Math.abs(row.energy).toFixed(1)}`, b.X(P.x1) - 2, ty, { size, align: 'right', weight: 700, color: multi ? col : AMBER });
   });
 
   // The level line a depth is set against.
   if (read.marker != null) {
+    const shownMarker = glideValue(f, f.props.marker) ?? read.marker;
+    const my = Y(-shownMarker);
     ctx.strokeStyle = AMBER;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.4;
     ctx.setLineDash?.([6, 3]);
     ctx.beginPath();
-    ctx.moveTo(b.X(P.x0), Y(-read.marker)); ctx.lineTo(b.X(P.x1), Y(-read.marker));
+    ctx.moveTo(b.X(P.x0), my); ctx.lineTo(b.X(P.x1), my);
     ctx.stroke();
     ctx.setLineDash?.([]);
+    if (shownMarker > 0) {
+      plateText(ctx, `−${Math.round(shownMarker)} kJ/mol`, b.X(P.x1) - 4, my - size * 0.65, { size: Math.max(6, Math.round(size * 0.85)), align: 'right', weight: 700, color: AMBER });
+    }
   }
 
   // One pair: its atoms drawn to the plot's own scale on the track, the near one under the hand.
   if (f.props.discs) {
     const row = read.rows[0];
+    const shownGap = glideValue(f, row.id) ?? row.gap;
     const pair = PAIRS[row.pair];
     const t = fixtureTrack(f);
     // The atoms are drawn to one scale of their own (`props.discK`, units a picometre of radius), so a bigger atom is a bigger disc;
@@ -1020,7 +1074,7 @@ function paintWells(ctx, f, state, b) {
     const rb = DISC_RADIUS[pair.b] * k;
     const tint = sym => TINTS[{ H: 'bone', C: 'iron', N: 'pale', O: 'rust', F: 'sand', Cl: 'sand' }[sym] || 'bone'];
     const ax = b.X(t.x0);
-    const bx = ax + (row.gap / dmax) * (b.X(t.x1) - b.X(t.x0));
+    const bx = ax + (shownGap / dmax) * (b.X(t.x1) - b.X(t.x0));
     ctx.strokeStyle = PLATE_COLORS.steel;
     ctx.lineWidth = Math.max(1, Math.min(ra, rb) * 0.2);
     for (let i = 0; i < pair.order; i++) {
@@ -1032,12 +1086,13 @@ function paintWells(ctx, f, state, b) {
     disc(ctx, ax, ay, ra, tint(pair.a));
     disc(ctx, bx, ay, rb, tint(pair.b), PLATE_COLORS.dust);
   }
-  // A row of several pairs shows each pair's atoms beside its track.
+  // A row of several pairs shows each pair's atoms beside its track (in the clear right margin, never crossed by the track).
   if (!f.props.discs) {
     const t0 = fixtureTrackAll(f);
+    const iconX = b.X(P.x1 - 5.5);
     read.rows.forEach((row, i) => {
       const t = t0[i];
-      miniPair(ctx, row.pair, b.X(t.x1) - 5 * b.sc * 0.9, b.Y(t.y) - 0.4 * b.sc, (f.props.icon ?? 0.034) * b.sc);
+      miniPair(ctx, row.pair, iconX, b.Y(t.y) - 0.3 * b.sc, (f.props.icon ?? 0.034) * b.sc);
     });
   }
 }
@@ -1109,6 +1164,7 @@ function piece3d(p, state, c) {
       const v = slabId ? slabView(state.pieces[slabId], state) : null;
       return buildLeads(c, { lit: Boolean(v?.current), text: p.label });
     }
+    case 'guess': return p.props?.model3d ? buildDomainGuess3D(c, p.props.model3d) : null;
     default: return ATOMS_KIT.piece3d(p, state, c);
   }
 }
@@ -1122,6 +1178,7 @@ function restHeight(p, state) {
     const on = p.joinedTo.map(id => state.pieces[id]).find(o => o?.kind === 'slab');
     return on ? BLOCK_TOP + (hotplateUnder(on, state) ? PLATE_TOP : 0) : 0;
   }
+  if (p.kind === 'pairtag' && p.zone?.startsWith('rail:')) return 0.016;
   return (p.kind === 'slab' || p.kind === 'salt') && hotplateUnder(p, state) ? PLATE_TOP : 0;
 }
 

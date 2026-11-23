@@ -50,16 +50,16 @@ const H2 = 'H₂(g)'; const H2O = 'H₂O(l)'; const CH4 = 'CH₄(g)'; const CA =
 /** Where the loose cards stand, the stack's tray, its readout and the answer dial on every stack stage. */
 const CARD_AT = i => ({ x: 25.5, y: 10 + i * 13 });
 const STACK_TRAY = { id: 'stack', label: 'The stack', at: { x: 78, y: 33 }, size: { w: 52, h: 52 }, cell: 50, cellH: 13 };
-/** The stack with its energy ladder. The stack prints its own total: building it right is the whole answer. */
-const stackAt = (target, ladder) => stackFixture('wanted', { x: 128, y: 27 }, { tray: 'stack', target, hideSum: false, w: 44, h: 44, ladder });
+/** The stack with its energy ladder (hideSum hides the live ΔH total on puzzle stages until Submit). */
+const stackAt = (target, ladder) => stackFixture('wanted', { x: 128, y: 27 }, { tray: 'stack', target, hideSum: true, w: 44, h: 44, ladder });
 
 /** A stage whose answer is the stack itself: refuse an empty or mismatched stack by what the stack prints. */
 function stackAnswer(state) {
   const t = state.table;
   const r = stackRead(t, 'wanted');
-  if (r.empty) return { ok: false, notYet: true, msg: 'Stack the cards first.' };
+  if (r.empty) return { ok: false, notYet: true, msg: 'Add cards to the stack first.' };
   if (r.matches) return { ok: true };
-  return { ok: false, msg: 'The stack adds up to a different reaction from the one wanted: compare the two reactions printed on it, one substance at a time.' };
+  return { ok: false, msg: 'Your stack adds up to a different reaction than the target; compare both reactions substance by substance.' };
 }
 
 /* ------------------------------------------------------------------
@@ -72,25 +72,25 @@ export const STAGES = [
     title: 'One Step or Two?',
     // A PREDICT STAGE: the stacks are not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Carbon can burn to carbon dioxide in one step or through carbon monoxide in two: which route gives out more heat?',
+    prompt: 'Carbon can burn to CO₂ in one step or via CO in two steps: which route releases more total heat?',
     widget,
     table: heatTable({
       pieces: [
         note('one', 'The one-step route', { x: 24, y: 16 }),
         note('two', 'The two-step route', { x: 70, y: 16 }),
-        note('same', 'Both give out the same', { x: 116, y: 16 })
+        note('same', 'Both release the same', { x: 116, y: 16 })
       ],
-      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'react', w: 62, h: 30, lhs: [[1, 'C'], [1, 'O₂']], rhs: [[1, 'CO₂']] })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'routes', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
     }),
     hints: [
-      'Watch the clip: carbon and oxygen join to make carbon dioxide.',
-      'Both routes start with carbon and oxygen, and both end with carbon dioxide.',
-      'Think about climbing between two floors by one long staircase or by two short ones.'
+      'Watch the clip: one route goes straight from carbon to CO₂, while the other stops at CO first.',
+      'Notice that both routes start with the exact same carbon and oxygen and finish with the same CO₂.',
+      'Think of walking between two floors: does taking one long staircase or two short ones change your total height climbed?'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -100,7 +100,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction recorded.',
       title: 'Hypothesis Recorded',
-      body: 'Your prediction for the two routes is recorded. Test it on the bench.'
+      body: 'Your prediction for the two routes is saved. Test it on the bench.'
     }
   },
 
@@ -108,8 +108,15 @@ export const STAGES = [
   {
     id: 's2-routes',
     title: 'Two Routes, One Total',
-    briefing: { speaker: SPEAKER, body: 'Each card is one measured step with its ΔH, where (s) marks a solid and (g) a gas. A stack adds its cards: a substance made by one card and used up by another cancels, and the energy ladder beside the stack steps down or up by the ΔH of each card.' },
-    prompt: 'Does burning carbon in two steps give out the same heat as burning it in one?',
+    briefing: {
+      speaker: SPEAKER,
+      body: [
+        'Each card is a measured step with its ΔH; (s) marks a solid and (g) a gas.',
+        'Stacking cards adds their reactions, canceling any substance produced in one step and consumed in another.',
+        'The energy ladder beside each stack moves up or down by each card\'s ΔH.'
+      ]
+    },
+    prompt: 'Build both routes to CO₂: does burning carbon in two steps release the same heat as one?',
     widget,
     table: (() => {
       const target = { lhs: [[1, C], [1, O2]], rhs: [[1, CO2]] };
@@ -132,24 +139,24 @@ export const STAGES = [
       });
     })(),
     hints: [
-      'Read what each card uses up and what it makes, and the reaction printed at the top of both stacks.',
-      'Compare the ΔH each stack prints, and where each energy ladder ends.',
-      'Both routes start with the same substances and end with the same substance, so think about what that means for the energy between them.'
+      'Check the reactants and products on each card against the target reaction at the top of both stacks.',
+      'Place the one-step card in Route A and the two CO-pathway cards in Route B so CO cancels out.',
+      'Compare the two energy ladders: both routes connect the same reactants to the same product.'
     ],
     check(state) {
       const t = state.table;
       const A = stackRead(t, 'routeA'); const B = stackRead(t, 'routeB');
-      if (A.empty || B.empty) return { ok: false, notYet: true, msg: 'Stack cards on both routes.' };
-      if (!A.matches) return { ok: false, msg: 'Route A adds up to a different reaction from the one wanted.' };
-      if (!B.matches) return { ok: false, msg: 'Route B adds up to a different reaction from the one wanted.' };
+      if (A.empty || B.empty) return { ok: false, notYet: true, msg: 'Add cards to both routes.' };
+      if (!A.matches) return { ok: false, msg: 'Route A does not add up to the target reaction yet.' };
+      if (!B.matches) return { ok: false, msg: 'Route B does not add up to the target reaction yet.' };
       const ids = r => r.cards.map(c => c.id).sort().join(',');
-      if (ids(A) === ids(B)) return { ok: false, msg: 'Both routes hold the same cards.' };
+      if (ids(A) === ids(B)) return { ok: false, msg: 'Both routes have the same cards.' };
       return { ok: true };
     },
     reward: {
       log: 'Both routes ended at the same total.',
       title: 'Hess\'s Law',
-      body: 'Both routes gave out 393.5 kJ, and both ladders ended at the same level. The heat of a reaction is the same whichever steps it takes: this is Hess\'s law.'
+      body: 'Both routes released 393.5 kJ and ended at the exact same level. A reaction\'s total enthalpy change depends only on its start and end, never the steps in between: this is Hess\'s law.'
     }
   },
 
@@ -157,8 +164,8 @@ export const STAGES = [
   {
     id: 's3-methane',
     title: 'Building Methane',
-    briefing: { speaker: SPEAKER, body: 'A step run backwards has the opposite ΔH, and a step doubled has double the ΔH. With Hess\'s law, steps like these add up to the ΔH of a reaction nobody has measured directly.' },
-    prompt: 'Which steps, flipped or made larger as needed, add up to C(s) + 2 H₂(g) → CH₄(g)?',
+    briefing: { speaker: SPEAKER, body: 'Tap any card to Flip it (reversing its arrow and ΔH sign) or press Larger to double it. Using Hess\'s law, we can combine known steps to find an unmeasured reaction.' },
+    prompt: 'Which steps, flipped or doubled as needed, add up to C(s) + 2 H₂(g) → CH₄(g)?',
     widget,
     table: heatTable({
       pieces: [
@@ -170,15 +177,15 @@ export const STAGES = [
       zones: { trays: [STACK_TRAY] }
     }),
     hints: [
-      'Compare the reaction wanted with the reaction the stack prints under it.',
-      'Find a substance that the stack has on the wrong side of the arrow, or has too few of.',
-      'A card with a wanted substance on the wrong side has to run backwards, and a card that supplies too little has to be made larger.'
+      'Compare the target reaction at the top with the combined reaction printed below it.',
+      'Spot any substance that is on the wrong side of the arrow, or has the wrong coefficient.',
+      'Flip a card to move a substance to the opposite side, and press Larger to double its amounts.'
     ],
     check(state) { return stackAnswer(state); },
     reward: {
-      log: 'Three cards cancelled to leave methane.',
-      title: 'Cancelling Steps',
-      body: 'Flipping the methane card turned its ΔH from −890.3 kJ to +890.3 kJ, and doubling the hydrogen card doubled its ΔH. The CO₂ and H₂O cancelled, leaving ΔH = −74.8 kJ for making methane.'
+      log: 'Three cards canceled to leave methane.',
+      title: 'Canceling Steps',
+      body: 'Flipping the methane card changed its ΔH from −890.3 kJ to +890.3 kJ, and doubling the hydrogen card doubled its ΔH. CO₂ and H₂O canceled out, leaving ΔH = −74.8 kJ.'
     }
   },
 
@@ -186,7 +193,7 @@ export const STAGES = [
   {
     id: 's4-formation',
     title: 'Down to the Elements and Back',
-    briefing: { speaker: SPEAKER, body: 'The standard enthalpy of formation of a substance is the ΔH of making one mole of it from its elements. Each card on this bench is one formation step.' },
+    briefing: { speaker: SPEAKER, body: 'The standard enthalpy of formation of a compound is ΔH for forming one mole of it from its pure elements (like carbon and oxygen).' },
     prompt: 'Which formation steps, flipped as needed, add up to CaCO₃(s) → CaO(s) + CO₂(g)?',
     widget,
     table: heatTable({
@@ -199,25 +206,25 @@ export const STAGES = [
       zones: { trays: [STACK_TRAY] }
     }),
     hints: [
-      'Compare the reaction wanted with the reaction the stack prints under it.',
-      'CaCO₃ is used up in the reaction wanted, but its formation card makes it.',
-      'A substance that is used up has to be taken apart into its elements, which is its formation step run backwards.'
+      'Compare the target reaction at the top with the combined reaction printed below it.',
+      'Check which substance appears on the wrong side of the arrow compared to the target.',
+      'A reactant must be broken down into its elements, which is its formation step run in reverse.'
     ],
     check(state) { return stackAnswer(state); },
     reward: {
-      log: 'Down to the elements and back up to the products.',
-      title: 'Products Less Reactants',
-      body: 'The stack took CaCO₃ apart into its elements, then built CaO and CO₂ from them: ΔH = +178.3 kJ. The total is the standard enthalpy of formation of everything made, minus that of what was used up.'
+      log: 'Broken down to elements and rebuilt into CaO and CO₂.',
+      title: 'Formation Steps',
+      body: 'The stack broke CaCO₃ into its elements and built CaO and CO₂ from them, giving ΔH = +178.3 kJ. Overall, ΔH equals the standard enthalpy of formation of products minus reactants.'
     }
   }
 ];
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the card you choose into the slot.'],
-  2: ['Drag cards into the two stacks.'],
-  3: ['Drag cards into the stack; pick one up for Flip or Larger.'],
-  4: ['Drag cards into the stack; pick one up for Flip.']
+  1: ['Drag your prediction into the slot.'],
+  2: ['Drag cards into the two route stacks.'],
+  3: ['Drag cards into the stack; tap a card to Flip or press Larger.'],
+  4: ['Drag cards into the stack; tap a card to Flip.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -229,7 +236,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The heat of a reaction is the same whichever steps it takes, so the ΔH of a reaction nobody has measured can be found by adding steps that have been. Formation steps always work: add the standard enthalpies of formation of the products and take away those of the reactants.'
+      body: 'By Hess\'s law, a reaction\'s enthalpy change is the same no matter which steps it takes, so you can combine measured reactions to find an unmeasured one. Using formation enthalpies, ΔH always equals products minus reactants.'
     }
   ]
 };
@@ -272,7 +279,12 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+    onLoad(r) {
+      if (r.index === 1) {
+        const g = recall(QUEST_KEY);
+        if (g && GUESS_LABEL[g]) r.frame.note(`You predicted: ${GUESS_LABEL[g]}. Test both routes on the bench.`);
+      }
+    }
   });
   runner.start();
   return { dispose: () => runner.dispose() };

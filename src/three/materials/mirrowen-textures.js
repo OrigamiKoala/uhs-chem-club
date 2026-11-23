@@ -43,22 +43,21 @@ function paint(S, fn) {
 }
 
 /**
- * Frost shingle: the ground of the shelf. Rounded stones the tide has sorted, packed in
- * fines, with a rime of frost on the crests and wet dark in the lows.
+ * Frost shingle / packed snow & ice: the ground of Mirrowen's snowy quay shelf.
+ * Fine wind-packed snow crusts, small crystalline ice facets, and subtle blue-grey shadows.
  */
 export function frostShingle(opts = {}) {
-  const { size = texSize(512), seed = 7, crest = '#d6dcde', body = '#a3adb0', low = '#5f6a6e' } = opts;
+  const { size = texSize(256), seed = 7, crest = '#eef4f8', body = '#d0dee8', low = '#a5bacb' } = opts;
   const S = size;
   const sd = hashStr(`shingle${seed}`);
 
   const height = heightField(S, (u, v) => {
-    const a = worley(u * 14, v * 14, 14, sd);
-    const b = worley(u * 36, v * 36, 36, sd ^ 0x2b);
-    // Stones are round-topped; the fines between them sit low.
-    let h = 0.34 + Math.max(0, 0.56 - a.f1) * 0.62 + Math.max(0, 0.4 - b.f1) * 0.18;
-    h -= Math.max(0, 1 - a.border * 10) * 0.12;
-    h += (fbm(u * 8, v * 8, { octaves: 4, period: 8, seed: sd ^ 0x11 }) - 0.5) * 0.14;
-    h += (fbm(u * 80, v * 80, { octaves: 2, period: 80, seed: sd ^ 0x77 }) - 0.5) * 0.04;
+    const a = worley(u * 32, v * 32, 32, sd);
+    const b = worley(u * 64, v * 64, 64, sd ^ 0x2b);
+    // Soft snow drifts with fine ice-crystal grain rather than large cracked paving cells.
+    let h = 0.50 + (fbm(u * 6, v * 6, { octaves: 4, period: 6, seed: sd ^ 0x11 }) - 0.5) * 0.24;
+    h += Math.max(0, 0.42 - a.f1) * 0.16 + Math.max(0, 0.35 - b.f1) * 0.08;
+    h += (fbm(u * 48, v * 48, { octaves: 2, period: 48, seed: sd ^ 0x77 }) - 0.5) * 0.05;
     return h;
   });
 
@@ -68,22 +67,20 @@ export function frostShingle(opts = {}) {
   const albedo = paint(S, (i, x, y) => {
     const h = hf.data[i];
     const u = x / S, v = y / S;
-    const cell = worley(u * 14, v * 14, 14, sd);
-    let c = rgbLerp(lowC, bodyC, clamp01((h - 0.3) * 4));
-    // Each stone has its own grey: slate, granite, a few pale ones.
-    c = rgbLerp(c, [c[0] * 0.82, c[1] * 0.86, c[2] * 0.9], clamp01(cell.id * 2 - 0.4) * 0.5);
-    // Frost on whatever stands up.
-    const frost = clamp01((h - 0.52) * 3.2) * (0.6 + 0.4 * fbm(u * 5, v * 5, { octaves: 3, period: 5, seed: sd ^ 0x9a }));
-    c = rgbLerp(c, crestC, frost);
-    rough[i] = clamp01(0.88 - frost * 0.16 - clamp01((0.34 - h) * 5) * 0.3);
+    let c = rgbLerp(lowC, bodyC, clamp01((h - 0.34) * 3.0));
+    const snow = clamp01((h - 0.50) * 3.2) * (0.65 + 0.35 * fbm(u * 8, v * 8, { octaves: 3, period: 8, seed: sd ^ 0x9a }));
+    c = rgbLerp(c, crestC, snow);
+    // Subtle glazed ice sheen in compacted patches, powdery matte on snow crests.
+    const glaze = clamp01((0.46 - h) * 4.5);
+    rough[i] = clamp01(0.76 + snow * 0.14 - glaze * 0.42);
     return c;
   });
 
   return {
     albedo, height,
     roughness: writeField({ data: rough, w: S, h: S }),
-    ao: heightToAO(height, { radius: Math.max(4, S >> 6), strength: 1.2 }),
-    normalStrength: 2.6
+    ao: heightToAO(height, { radius: Math.max(3, S >> 6), strength: 0.55 }),
+    normalStrength: 1.4
   };
 }
 

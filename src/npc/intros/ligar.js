@@ -18,11 +18,11 @@ export const INTROS = {
   },
   'q3-distance': {
     prop: { kind: 'rubble', opts: { cut: true } },
-    steps: walkUp('ligar-surveyor', 'I need you to see the face of the cut before anyone touches it.', { speed: 1.5, show: 'No torch marks, no chisel marks. Look at it.' })
+    steps: walkUp('ligar-surveyor', 'The Fifth Guild sliced straight through this solid rock in seconds. Come see.', { speed: 1.5, show: 'How much energy does it take to pull strong bonds apart?' })
   },
   'q4-dots': {
     prop: { kind: 'rubble', effects: [{ kind: 'plume', at: 'crack', color: 0xc8c4b8, rise: 0.5, opacity: 0.22, spread: 0.3 }] },
-    steps: walkUp('ligar-miner', 'Something is seeping out of the rock where the blast hit. Quick, before it spreads.', { speed: 1.6 })
+    steps: walkUp('ligar-miner', 'Gas is pouring out where the blast hit, and it put my lamp out.', { speed: 1.6, show: 'The sensor reads carbon dioxide.' })
   },
   'q9-orbitals': {
     prop: { kind: 'pipe', opts: { len: 2.0 } },

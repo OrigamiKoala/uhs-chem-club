@@ -81,7 +81,7 @@ export class Encounter {
     }
     this.fight = newFight();
     this.line = this.enc.intent;
-    this.host.hidden = false;
+    this.host.hidden = Boolean(getActiveBossArena() && this.host.closest?.('.lq-tstrip'));
     this.paint();
     if (this.phase) {
       try { getActiveBossArena()?.setPhase(this.phase.index, this.phase.count, this.rig()); } catch (e) { /* the arena is scenery */ }

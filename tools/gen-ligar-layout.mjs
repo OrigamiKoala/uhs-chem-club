@@ -274,7 +274,7 @@ lm('stack', 30, -32, { scale: 0.95, radius: 5.6 });
 lm('water-tower', -18, 4, { rotY: 0.3, radius: 3.0 });
 lm('cable-mast', -4, 16, { radius: 1.4 });
 lm('cable-mast', 40, -26, { radius: 1.4 });
-lm('landing-pad', 0, 50, { radius: 8.0, minTier: 'T2' });
+lm('landing-pad', 3, 68, { radius: 8.0, minTier: 'T2' });
 for (const [x, z] of [[0, 32], [10, 10], [-12, 10], [20, -24]]) lm('stake-marker', x, z, { radius: 0.9, minTier: 'T4' });
 
 // ---- the hosts of the four surface benches: each declares the circle its machinery stands in

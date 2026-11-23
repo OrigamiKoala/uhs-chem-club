@@ -53,7 +53,8 @@ export function readPainter(handler, f, state, box, clock, scope = '3d') {
   return out;
 }
 
-export function dressRecorded(handler) {
+export function dressRecorded(handler, opts = {}) {
+  const flat = Boolean(opts.flat);
   return function dress3d(f, state, c) {
     const { THREE, scale: s, toPlate, own, box, ground } = c;
     const group = new THREE.Group();
@@ -81,7 +82,8 @@ export function dressRecorded(handler) {
     const rebuild = () => {
       const out = readPainter(handler, live.f, live.state, box, live.clock);
       // The columns: a filled coloured rectangle stands up from the plate, as wide as it is on the flat bench, as deep as it is wide.
-      const bars = out.rects.slice(0, COLS);
+      // When `flat` is true (Mirrowen's matter kit), keep particles resting on the plate inside their drawn glass/window so none project outside it.
+      const bars = flat ? [] : out.rects.slice(0, COLS);
       bars.forEach((r, i) => {
         const cx = r.x + r.w / 2; const cy = r.y + r.h;
         const pl = where(cx, cy);
@@ -101,6 +103,9 @@ export function dressRecorded(handler) {
           // A particle drawn inside a column floats inside it: across the column, up it by how far it is from the foot, and in depth by its own number.
           const pl = where(d.x, bar.y + bar.h);
           pos = [pl.x, ground + 0.004 + (bar.y + bar.h - d.y) * s, pl.z - bar.w * s * (0.2 + 0.6 * hash(i))];
+        } else if (flat) {
+          const pl = where(d.x, d.y);
+          pos = [pl.x, ground + rad + 0.004, pl.z];
         } else {
           const pl = where(d.x, d.y);
           pos = [pl.x, ground + 0.008 + hash(i) * 4 * s + Math.sin(live.clock * (0.8 + hash(i + 9)) + i) * 0.5 * s, pl.z];

@@ -36,6 +36,7 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
+import { createTable } from '../../table/model.js';
 import { conductionOf } from '../../engine/joinbench.js';
 import {
   bondsTable, slabPiece, hotplate, declOf, gridRead, piecesIn, guessCard, strikeOf
@@ -49,12 +50,12 @@ export const meta = { stageCount: 8 };
  * searched in order and the first match decides when a word becomes sayable.
  */
 export const VOCABULARY = [
-  { term: /\bsubstitutional\b/i, introducedAt: 7 },
-  { term: /\binterstitial\b/i, introducedAt: 7 },
-  { term: /\balloys?\b/i, introducedAt: 6 },
+  { term: /\bsubstitutional\b/i, introducedAt: 8 },
+  { term: /\binterstitial\b/i, introducedAt: 8 },
+  { term: /\balloys?\b/i, introducedAt: 7 },
   { term: /\bmelting points?\b/i, introducedAt: 3 },
-  { term: /\blattices?\b/i, introducedAt: 4 },
-  { term: /\bbrittle\b/i, introducedAt: 4 },
+  { term: /\blattices?\b/i, introducedAt: 5 },
+  { term: /\bbrittle\b/i, introducedAt: 5 },
   { term: /\bconduct\w*\b/i, introducedAt: 2 }
 ];
 
@@ -147,16 +148,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Salt and the Lamp',
-    prompt: 'A cold block of salt is wired to a lamp: does the lamp light?',
+    prompt: 'If you wire a cold block of salt to a lamp, does the lamp light up?',
     cards: GUESSES,
     hints: [
-      'Lay one of the three cards in the slot.',
-      'Salt is made of sodium ions and chloride ions, which carry charge, packed tightly in a solid.',
-      'A prediction is never graded, so lay the card you think most likely.'
+      'Drag one of the three prediction cards into the slot.',
+      'Salt is made of charged sodium and chloride ions packed tightly together in a solid.',
+      'Predictions are never graded, so pick the card you think is most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'The next stage wires four blocks to the lamp, salt among them.'
+      body: 'The next stage tests four blocks with the lamp, including salt.'
     }
   }),
 
@@ -165,27 +166,27 @@ export const STAGES = [
     title: 'Wire Each Block',
     briefing: {
       speaker: SPEAKER,
-      body: 'A material conducts electricity only if it holds charged particles that are free to move. Each block\'s picture shows its particles, with a + or − on the ones that carry a charge.'
+      body: 'A material conducts electricity only if it has charged particles that are free to move. Each block shows its particles, with + or − on any that carry a charge.'
     },
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'which blocks conduct cold, which only when molten, and which never?');
+      return testPrompt(QUEST_KEY, GUESSES, 'which blocks conduct when cold, which only when molten, and which never conduct?');
     },
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
-        slabPiece('s1', 'BLOCK A', SALT, bench(0)),
-        slabPiece('s2', 'BLOCK B', VENT, bench(1)),
-        slabPiece('s3', 'BLOCK C', COPPER, bench(2)),
-        slabPiece('s4', 'BLOCK D', ARCH, bench(3)),
+        slabPiece('s1', 'IONIC SOLID', SALT, bench(0)),
+        slabPiece('s2', 'MOLECULAR SOLID', VENT, bench(1)),
+        slabPiece('s3', 'METAL', COPPER, bench(2)),
+        slabPiece('s4', 'NETWORK SOLID', ARCH, bench(3)),
         leads(0)
       ],
       zones: { trays: [tray('both', 'Conducts cold', 14), tray('molten', 'Only when molten', 37), tray('never', 'Never conducts', 60)] },
       fixtures: [plate(2000)]
     }),
     hints: [
-      'Drag the leads onto a block to test it cold, then put the block on the hotplate and raise the heat until it is molten.',
-      'Compare the pictures of a block whose lamp lit and one whose lamp stayed dark: look for charged particles and for streaks behind them.',
-      'A current is charge on the move, so ask what each block has that carries a charge and whether anything holds it in place.'
+      'Drag the conductivity tester onto a block to test it cold, then melt it on the hotplate and test it again.',
+      'Compare the pictures of blocks that lit the lamp with those that stayed dark: look for charged particles with motion streaks behind them.',
+      'Electric current is moving charge, so check whether each block has charged particles and whether they are free to move.'
     ],
     check(state) {
       const t = state.table;
@@ -193,14 +194,14 @@ export const STAGES = [
       const where = Object.fromEntries(ids.map(id => [id, ['both', 'molten', 'never'].find(k => trayOf(t, k).some(p => p.id === id)) || null]));
       if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
       const wrong = ids.find(id => where[id] !== carries(declOf(t.pieces[id])));
-      if (wrong) return { ok: false, msg: `${name(t.pieces[wrong])} is in a tray that does not match its lamp: test it with the leads again, cold and then molten.` };
+      if (wrong) return { ok: false, msg: `${name(t.pieces[wrong])} is in the wrong tray: test it with the leads again, both cold and molten.` };
       return { ok: true };
     },
     get reward() {
       return {
-        log: 'Salt conducted only when molten. Copper conducted cold and molten. The other two never conducted.',
+        log: 'Ionic solid conducted only when molten. Metal conducted cold and molten. Molecular and network solids never conducted.',
         title: 'What Conducts',
-        body: `${verdictLine(QUEST_KEY, 'dark')}Block A has mobile − charges so it conducts cold; Block B's ions are held in place until it melts. The other two blocks have no charged particles free to move, so they never conduct.`
+        body: `${verdictLine(QUEST_KEY, 'dark')}The metal has free-moving electrons, so it conducts cold. The ionic solid's ions are locked in place until it melts. Molecular and network solids have no free charges, so they never conduct.`
       };
     }
   },
@@ -210,24 +211,24 @@ export const STAGES = [
     title: 'Heat All Four',
     briefing: {
       speaker: SPEAKER,
-      body: 'These blocks are the four kinds of solid: a molecular solid is separate molecules, an ionic solid is ions, a metal is positive ions among loose electrons, and a covalent network solid is atoms covalently bonded throughout. The melting point is the temperature at which a solid\'s particles come free of their places.'
+      body: 'The four kinds of solid are molecular (separate molecules), ionic (ions), metal (positive ions in free-moving electrons), and covalent network (atoms covalently bonded throughout). The melting point is the temperature where a solid melts into a liquid.'
     },
-    prompt: 'Which block has the lowest melting point and which the highest?',
+    prompt: 'How do these four solids rank from lowest to highest melting point?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
-        slabPiece('s1', 'BLOCK A', SALT, bench(0)),
-        slabPiece('s2', 'BLOCK B', VENT, bench(1)),
-        slabPiece('s3', 'BLOCK C', COPPER, bench(2)),
-        slabPiece('s4', 'BLOCK D', ARCH, bench(3))
+        slabPiece('s1', 'IONIC SOLID', SALT, bench(0)),
+        slabPiece('s2', 'MOLECULAR SOLID', VENT, bench(1)),
+        slabPiece('s3', 'METAL', COPPER, bench(2)),
+        slabPiece('s4', 'NETWORK SOLID', ARCH, bench(3))
       ],
       zones: { rail: { id: 'rail', at: { x: 56, y: 55 }, size: { w: 104, h: 14 }, first: 'Melts lowest', last: 'Melts highest', items: ['s1', 's2', 's3', 's4'], start: ['s1', 's4', 's2', 's3'] } },
       fixtures: [plate(2000)]
     }),
     hints: [
-      'Drag the blocks onto the hotplate and raise the heat dial; a block shows MOLTEN once the plate reaches its melting point.',
-      'Compare the pictures: in which block are the particles separate groups, and in which is every atom bonded to its neighbours?',
-      'Melting has to free the particles from each other, so ask what holds one particle to the next in each picture.'
+      'Drag the blocks onto the hotplate and turn up the heat dial; each block shows MOLTEN once it reaches its melting point.',
+      'Compare the pictures: which block has separate small groups, and which has every atom bonded to its neighbors?',
+      'Melting frees particles from each other, so look at what holds neighboring particles together in each block.'
     ],
     check(state) {
       const t = state.table;
@@ -237,19 +238,65 @@ export const STAGES = [
       if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four blocks back on the rail in order.' };
       if (order.join() === want.join()) return { ok: true };
       const k = order.findIndex((id, i) => id !== want[i]);
-      return { ok: false, msg: `${name(t.pieces[order[k]])} is out of place on the rail: heat it beside its neighbour and see which turns molten first.` };
+      return { ok: false, msg: 'One block is out of order on the rail: heat it beside its neighbor to see which melts first.' };
     },
     reward: {
-      log: 'Block B 115 C. Block A 801 C. Block C 1085 C. Block D 1710 C.',
+      log: 'Molecular 115 C. Ionic 801 C. Metal 1085 C. Network 1710 C.',
       title: 'Melting Point',
-      body: 'Separate molecules part easily, so the molecular solid has the lowest melting point. The ionic solid and the metal need far more heat, and the covalent network solid, bonded throughout, needs the most.'
+      body: 'Molecular solids melt at the lowest temperature because only weak attractions between molecules break. Ionic solids and metals need far more heat to break strong bonds, and covalent network solids need the most.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
+    title: 'What Breaks When It Melts',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Melting point depends on what holds the particles together. Molecular solids are held together only by weak intermolecular forces between separate molecules; ionic solids, metals, and covalent networks are held by strong bonds throughout.'
+    },
+    prompt: 'What has to be overcome for each solid to melt?',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('w1', 'IONIC SOLID', SALT, bench(0)),
+        slabPiece('w2', 'MOLECULAR SOLID', VENT, bench(1)),
+        slabPiece('w3', 'METAL', COPPER, bench(2)),
+        slabPiece('w4', 'NETWORK SOLID', ARCH, bench(3))
+      ],
+      zones: {
+        trays: [
+          tray('imf', 'Weak forces between molecules', 14),
+          tray('ionmet', 'Ionic or metallic bonds', 37),
+          tray('covnet', 'Covalent bonds throughout', 60)
+        ]
+      }
+    }),
+    hints: [
+      'Look inside each block: are the particles separate molecules, charged ions, or one continuous web of bonds?',
+      'When a molecular solid melts, the covalent bonds inside each molecule stay intact and only the weak attractions between molecules break.',
+      'Match each solid to what holds its particles together: weak forces between molecules, ionic or metallic bonds, or covalent bonds throughout.'
+    ],
+    check(state) {
+      const t = state.table;
+      const want = { w1: 'ionmet', w2: 'imf', w3: 'ionmet', w4: 'covnet' };
+      const ids = ['w1', 'w2', 'w3', 'w4'];
+      const where = Object.fromEntries(ids.map(id => [id, ['imf', 'ionmet', 'covnet'].find(k => trayOf(t, k).some(p => p.id === id)) || null]));
+      if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
+      const wrong = ids.find(id => where[id] !== want[id]);
+      if (wrong) return { ok: false, msg: 'That block is in the wrong tray: look again at what holds its particles together.' };
+      return { ok: true };
+    },
+    reward: {
+      log: 'Molecular: weak intermolecular forces. Ionic and metal: strong ionic/metallic bonds. Network: covalent bonds throughout.',
+      title: 'Why Melting Points Differ',
+      body: 'Melting a molecular solid only overcomes weak intermolecular forces between molecules, so it melts lowest. Ionic solids and metals break strong bonds between ions, and covalent networks break covalent bonds everywhere.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 5 */
+  {
     title: 'Slide a Layer',
-    prompt: 'What happens to a salt crystal when one layer of ions slides one place along?',
+    prompt: 'What happens to a salt crystal when one layer of ions shifts over by one ion?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [...IONS, ...SLIDE_CARDS],
@@ -261,31 +308,31 @@ export const STAGES = [
       opts: { diskAtoms: true }
     }),
     hints: [
-      'Press "Slide a Layer" to move the top row of ions one place along, then lay a card in the slot.',
-      'Compare the charges that sit side by side across the slid layer before the slide and after it.',
-      'Opposite charges attract and like charges repel, so ask what the top row and the row under it now do to each other.'
+      'Press "Slide a Layer" to shift the top row of ions, then drag an answer card into the slot.',
+      'Compare which charges line up next to each other before and after the layer slides.',
+      'Opposite charges attract and like charges repel, so think about what the shifted rows now do to each other.'
     ],
     check(state) {
       const t = state.table;
       const g = gridRead(t, 'grid');
       const card = piecesIn(t, `slot:${SLIDE_SLOT.id}`)[0];
       if (!g.slid) return { ok: false, notYet: true, msg: 'Press "Slide a Layer" first.' };
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Drag an answer card into the slot.' };
       if (card.id === 'split') return { ok: true };
-      return { ok: false, msg: `${g.faced} pairs of ions with the same charge now sit side by side across the slid layer, and like charges repel.` };
+      return { ok: false, msg: `${g.faced} pairs of ions with the same charge now sit next to each other, and like charges repel.` };
     },
     reward: {
       log: 'The slid layer put like charges side by side.',
       title: 'Why Salt Is Brittle',
-      body: 'After the slide, ions of the same charge sat side by side and repelled, so the crystal split. This is why an ionic lattice, the regular arrangement of ions in the solid, is brittle.',
+      body: 'After the slide, ions with the same charge lined up and repelled each other, splitting the crystal. This is why an ionic lattice (the regular arrangement of ions) is brittle.',
       model: { type: 'crystal', cation: 'Na', anion: 'Cl', n: 3, caption: 'Sodium and chloride ions alternating in a crystal.' }
     }
   },
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 6 */
   {
     title: 'Solid at 900 °C',
-    prompt: 'Which sealed block stays solid at 900 °C and never conducts?',
+    prompt: 'Which sealed block stays solid at 900 °C and never conducts electricity?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -299,34 +346,34 @@ export const STAGES = [
       fixtures: [plate(1000)]
     }),
     hints: [
-      'The blocks are sealed, so test them: heat them on the hotplate and drag the leads onto them.',
-      'Look at both the particle pictures and what happens on the hotplate and leads.',
-      'Go through the four kinds of solid and ask which one neither melts at that temperature nor has charged particles free to move.'
+      'Test each sealed block on the hotplate at 900 °C and with the conductivity tester.',
+      'Check both whether each block melts at 900 °C and whether it lights the conductivity lamp.',
+      'Think about which of the four solid types has a very high melting point and no free-moving charged particles.'
     ],
     check(state) {
       const t = state.table;
       const held = Object.values(t.pieces).find(p => p.kind === 'slab' && p.zone === 'slot:liner');
       if (!held) return { ok: false, notYet: true, msg: 'Put a block in the slot.' };
       const d = declOf(held);
-      if (d.melt <= 900) return { ok: false, msg: `${name(held)} is molten on the hotplate at 900 °C.` };
-      if (conductionOf(d, false) || conductionOf(d, true)) return { ok: false, msg: `${name(held)} lights the lamp.` };
+      if (d.melt <= 900) return { ok: false, msg: `${name(held)} melts at or below 900 °C.` };
+      if (conductionOf(d, false) || conductionOf(d, true)) return { ok: false, msg: `${name(held)} conducts electricity and lights the lamp.` };
       return { ok: true };
     },
     reward: {
       log: 'Block D: still solid at 900 °C, no current.',
       title: 'Covalent Network Solid',
-      body: 'Block D is a covalent network solid. It melts only when covalent bonds break, and it has no charged particles free to move, so it stays solid and never conducts.'
+      body: 'Block D is a covalent network solid. It melts only when covalent bonds break, and it has no free-moving charged particles, so it stays solid and never conducts.'
     }
   },
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 7 */
   {
     title: 'Hammer the Metals',
     briefing: {
       speaker: SPEAKER,
       body: 'An alloy is a metal with atoms of another element mixed in. Two of these three blocks are alloys.'
     },
-    prompt: 'Which block changes shape most when hammered and which least?',
+    prompt: 'How much does each block change shape when hammered?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -338,9 +385,9 @@ export const STAGES = [
       zones: { trays: [tray('bends', 'Bends a lot', 14), tray('dents', 'Dents a little', 37), tray('holds', 'Does not give', 60)] }
     }),
     hints: [
-      'Drag the hammer onto each block to strike it, then look at its picture again.',
-      'Compare how far the rows of atoms have shifted in each struck block, and what else sits among those rows.',
-      'A metal changes shape when its rows of atoms slide past each other, so ask what could stop a row from sliding.'
+      'Drag the hammer onto each block to strike it, then check its picture.',
+      'Compare how far the rows of atoms shifted in each struck block, and notice what else sits among the rows.',
+      'A metal bends when its rows of atoms slide past each other, so ask what keeps a row from sliding.'
     ],
     check(state) {
       const t = state.table;
@@ -351,24 +398,24 @@ export const STAGES = [
       if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
       if (ids.some(id => !t.pieces[id].props.struck)) return { ok: false, notYet: true, msg: 'Strike every block before you submit.' };
       const wrong = ids.find(id => where[id] !== want(id));
-      if (wrong) return { ok: false, msg: `${name(t.pieces[wrong])} is in a tray that does not match the word printed on it after the blow.` };
+      if (wrong) return { ok: false, msg: `${name(t.pieces[wrong])} is in the wrong tray: check the result printed on it after striking it.` };
       return { ok: true };
     },
     reward: {
       log: 'Block A bent most. Block C dented a little. Block B did not give.',
       title: 'Alloys',
-      body: 'In the pure metal the rows of atoms slid, so it bent. In each alloy the atoms of the other element blocked the sliding, which makes an alloy harder than the pure metal.'
+      body: 'In the pure metal, rows of atoms slid easily, so it bent. In each alloy, the added atoms blocked the rows from sliding, making the alloy harder than the pure metal.'
     }
   },
 
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 8 */
   {
     title: 'Where the Atoms Go',
     briefing: {
       speaker: SPEAKER,
-      body: 'An alloy is substitutional if the added atoms take the places of metal atoms, and interstitial if they sit in the gaps between them.'
+      body: 'An alloy is substitutional if the added atoms replace host metal atoms, and interstitial if they sit in the gaps between them.'
     },
-    prompt: 'Which of these alloys are substitutional and which interstitial?',
+    prompt: 'Which alloys are substitutional, and which are interstitial?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -379,9 +426,9 @@ export const STAGES = [
       zones: { trays: [tray('sub', 'Substitutional', 17, 24), tray('int', 'Interstitial', 52, 24)] }
     }),
     hints: [
-      'Each block\'s picture shows the metal atoms in rows and the added atoms in another colour.',
-      'Compare the size of the added atoms with the size of the metal atoms in each picture.',
-      'An atom can only take a metal atom\'s place if it is close to that size, so ask where a much smaller atom could fit.'
+      'Each block shows the host metal atoms in rows and the added atoms in a different color.',
+      'Compare the size of the added atoms with the size of the host metal atoms in each picture.',
+      'Similar-sized atoms can replace host atoms in the rows, while much smaller atoms fit in the gaps between them.'
     ],
     check(state) {
       const t = state.table;
@@ -389,49 +436,13 @@ export const STAGES = [
       const where = Object.fromEntries(ids.map(id => [id, ['sub', 'int'].find(k => trayOf(t, k).some(p => p.id === id)) || null]));
       if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
       const wrong = ids.find(id => where[id] !== declOf(t.pieces[id]).alloy);
-      if (wrong) return { ok: false, msg: where[wrong] === 'sub' ? `${name(t.pieces[wrong])}'s added atoms are drawn between the rows of metal atoms, not in the rows.` : `${name(t.pieces[wrong])}'s added atoms are drawn in the rows, where metal atoms would stand.` };
+      if (wrong) return { ok: false, msg: where[wrong] === 'sub' ? `${name(t.pieces[wrong])}'s added atoms sit in the gaps between rows, not inside the rows.` : `${name(t.pieces[wrong])}'s added atoms sit inside the rows, replacing metal atoms.` };
       return { ok: true };
     },
     reward: {
       log: 'Brass and bronze: in the rows. Steel: in the gaps.',
       title: 'Substitutional and Interstitial Alloys',
-      body: 'In brass and bronze the added atoms are close in size to the host metal atoms and take their places: substitutional alloys. In steel the added atoms are far smaller and sit in the gaps: an interstitial alloy.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'Blocks Not Yet Heated',
-    prompt: 'Which of these four new blocks will have the lowest melting point and which the highest?',
-    widget: { type: 'table', label: 'The bench' },
-    table: bondsTable({
-      pieces: [
-        slabPiece('r1', 'BLOCK A', { build: 'web', melt: 2200, tint: 'iron' }, bench(0)),
-        slabPiece('r2', 'BLOCK B', { build: 'clusters', melt: 60, tint: 'sand', cluster: 3, groups: 8 }, bench(1)),
-        slabPiece('r3', 'BLOCK C', { build: 'grid', melt: 993, tint: 'bone' }, bench(2)),
-        slabPiece('r4', 'BLOCK D', { build: 'metallic', melt: 1085, tint: 'rust' }, bench(3))
-      ],
-      zones: { rail: { id: 'rail', at: { x: 56, y: 55 }, size: { w: 104, h: 14 }, first: 'Melts lowest', last: 'Melts highest', items: ['r1', 'r2', 'r3', 'r4'], start: ['r1', 'r2', 'r3', 'r4'] } }
-    }),
-    hints: [
-      'There is no hotplate here: each block\'s picture shows its particles, and the blocks go on the rail.',
-      'Decide which of the four kinds of solid each picture shows, and compare with the blocks you melted earlier.',
-      'Melting has to free the particles from each other, so ask what holds one particle to the next in each picture.'
-    ],
-    check(state) {
-      const t = state.table;
-      const order = t.zones.rail.order;
-      const melt = id => declOf(t.pieces[id]).melt;
-      const want = order.slice().sort((a, b) => melt(a) - melt(b));
-      if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four blocks back on the rail in order.' };
-      if (order.join() === want.join()) return { ok: true };
-      const k = order.findIndex((id, i) => id !== want[i]);
-      return { ok: false, msg: `${name(t.pieces[order[k]])} is out of place on the rail: look again at what holds its particles to each other.` };
-    },
-    reward: {
-      log: 'Molecular, ionic, metallic, then network.',
-      title: 'Predicting From Structure',
-      body: 'The pictures were enough: the molecular solid melts lowest, then the ionic solid and the metal, and the covalent network solid highest.',
+      body: 'In brass and bronze, the added atoms are similar in size to the host atoms and replace them (substitutional alloys). In steel, the added atoms are much smaller and fit in the gaps (an interstitial alloy).',
       last: true
     }
   }
@@ -452,11 +463,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A solid conducts only if it has charged particles free to move: a metal\'s electrons always are, and an ionic solid\'s ions only once it melts. Molecular and covalent network solids have none.'
+      body: 'A solid conducts electricity only if it has charged particles free to move. Metals have free electrons even when solid, while ionic solids only conduct once melted. Molecular and covalent network solids have no free charges.'
     },
     {
       heading: 'Melting and Breaking',
-      body: 'Melting point follows what holds the particles together: weakest between separate molecules, strongest in a covalent network. An ionic lattice splits when a layer slides, and a metal bends unless an alloy\'s added atoms block its rows.'
+      body: 'Melting point depends on what holds the particles together: weakest between separate molecules, strongest in a covalent network. Ionic lattices split when layers slide, while metals bend unless an alloy\'s added atoms block the rows.'
     },
     {
       heading: 'Next',
@@ -473,7 +484,9 @@ export const DEBRIEF = {
    ------------------------------------------------------------------ */
 
 const SPOTS = [16, 39, 62, 85];
-const onPlate = (id, i) => ({ place: { piece: id, to: `free:${SPOTS[i]},${PLATE_Y}` } });
+/** Where the plate stands on stage `n`'s table as built (`table/near.js` may have moved the hotplate nearer the player). */
+const plateDy = n => createTable(STAGES[n].table, STAGES[n].title).fixtures.hp.at.y - PLATE_AT.y;
+const onPlate = (id, i, n) => ({ place: { piece: id, to: `free:${SPOTS[i]},${PLATE_Y + plateDy(n)}` } });
 const into = (piece, trayId) => ({ place: { piece, to: `tray:${trayId}` } });
 const clip = (block) => ({ join: ['leads', block] });
 const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
@@ -481,23 +494,23 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 export const SOLUTIONS = [
   [guess('dark')],
   [
-    clip('s1'), onPlate('s1', 0), heat(825), into('s1', 'molten'),
-    clip('s2'), onPlate('s2', 1), into('s2', 'never'),
-    heat(0), clip('s3'), onPlate('s3', 2), heat(1100), into('s3', 'both'),
-    clip('s4'), onPlate('s4', 3), heat(1725), into('s4', 'never')
+    clip('s1'), onPlate('s1', 0, 1), heat(825), into('s1', 'molten'),
+    clip('s2'), onPlate('s2', 1, 1), into('s2', 'never'),
+    heat(0), clip('s3'), onPlate('s3', 2, 1), heat(1100), into('s3', 'both'),
+    clip('s4'), onPlate('s4', 3, 1), heat(1725), into('s4', 'never')
   ],
   [
-    onPlate('s1', 0), onPlate('s2', 1), onPlate('s3', 2), onPlate('s4', 3), heat(125), heat(825), heat(1100), heat(1725),
+    onPlate('s1', 0, 2), onPlate('s2', 1, 2), onPlate('s3', 2, 2), onPlate('s4', 3, 2), heat(125), heat(825), heat(1100), heat(1725),
     { place: { piece: 's2', to: 'rail:0' } }, { place: { piece: 's1', to: 'rail:1' } }, { place: { piece: 's3', to: 'rail:2' } }, { place: { piece: 's4', to: 'rail:3' } }
   ],
+  [into('w1', 'ionmet'), into('w2', 'imf'), into('w3', 'ionmet'), into('w4', 'covnet')],
   [{ run: 'grid' }, guess('split')],
-  [onPlate('x1', 0), onPlate('x2', 1), onPlate('x3', 2), onPlate('x4', 3), heat(900), clip('x4'), { place: { piece: 'x4', to: 'slot:liner' } }],
+  [onPlate('x1', 0, 5), onPlate('x2', 1, 5), onPlate('x3', 2, 5), onPlate('x4', 3, 5), heat(900), clip('x4'), { place: { piece: 'x4', to: 'slot:liner' } }],
   [
     { join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] },
     into('m1', 'bends'), into('m3', 'dents'), into('m2', 'holds')
   ],
-  [into('y1', 'sub'), into('y2', 'int'), into('y3', 'sub')],
-  [{ place: { piece: 'r2', to: 'rail:0' } }, { place: { piece: 'r3', to: 'rail:1' } }, { place: { piece: 'r4', to: 'rail:2' } }, { place: { piece: 'r1', to: 'rail:3' } }]
+  [into('y1', 'sub'), into('y2', 'int'), into('y3', 'sub')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -505,11 +518,11 @@ export const MISSES = [
   [],
   [into('s1', 'both'), into('s2', 'never'), into('s3', 'both'), into('s4', 'never')],
   [{ place: { piece: 's4', to: 'rail:0' } }],
+  [into('w1', 'imf'), into('w2', 'imf'), into('w3', 'ionmet'), into('w4', 'covnet')],
   [{ run: 'grid' }, guess('bend')],
   [{ place: { piece: 'x3', to: 'slot:liner' } }],
   [{ join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] }, into('m1', 'dents'), into('m3', 'bends'), into('m2', 'holds')],
-  [into('y1', 'int'), into('y2', 'int'), into('y3', 'sub')],
-  [{ place: { piece: 'r1', to: 'rail:0' } }]
+  [into('y1', 'int'), into('y2', 'int'), into('y3', 'sub')]
 ];
 
 function blankState() { return {}; }

@@ -1309,20 +1309,20 @@ export class Voyage {
     const q0 = this.camQuat.clone();
     const self = this;
     this.phases = [{
-      name: 'disembark', dur: 1.6 + len / 1.7,
+      name: 'disembark', dur: Math.min(4.2, 1.0 + len / 3.8),
       label: () => self._stateLabel(),
       enter() { soundscape.playHatch?.(); },
       tick(u, t) {
-        const open = smooth(0, 1.4, t);
+        const open = smooth(0, 1.1, t);
         st.shipInterior?.setAirlockOpen(open);
-        const walk = clamp01((t - 0.9) / Math.max(0.1, this.dur - 0.9));
+        const walk = clamp01((t - 0.5) / Math.max(0.1, this.dur - 0.5));
         const k = ease(walk);
         self.camPos.copy(curve.getPointAt(k));
         const ahead = curve.getPointAt(Math.min(1, k + 0.06)).clone();
         const dir = ahead.sub(self.camPos);
-        dir.y *= 0.4;
+        dir.y *= 0.15;
         if (dir.lengthSq() < 1e-6) dir.set(1, 0, 0);
-        const look = self.camPos.clone().add(dir.normalize()).add(new THREE.Vector3(0, -0.12 * smooth(0.4, 0.8, walk), 0));
+        const look = self.camPos.clone().add(dir.normalize());
         const qLook = cameraQuat(self.camPos, look);
         self.camQuat.copy(q0).slerp(qLook, smooth(0, 0.25, t / this.dur + walk));
         // Once through the hull the outside of the ship is what is behind the

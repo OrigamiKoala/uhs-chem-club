@@ -38,13 +38,14 @@ function paintLeadClip(ctx, f, state, b) {
     const T = 9; const u = t % T;
     const apart = ease((u - 2) / 2.2) * (1 - ease((u - 6) / 1.6));
     const cx = w / 2; const cy = top + (h - top) / 2;
-    const gap = 2.6 + apart * 14;
+    const gap = 3.2 + apart * 11;
     const [ax, ay] = shakeAt(1, t, 0.25 * (1 - apart * 0.6));
     const [bx, by] = shakeAt(2, t, 0.25 * (1 - apart * 0.6));
     box(3, top, w - 6, h - top - 3);
-    ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1, F.len(0.5 * (1 - apart * 0.7)));
+    ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1, F.len(0.45 * (1 - apart * 0.7)));
     ctx.beginPath(); ctx.moveTo(F.x(cx - gap + ax), F.y(cy + ay)); ctx.lineTo(F.x(cx + gap + bx), F.y(cy + by)); ctx.stroke(); ctx.lineWidth = 1;
-    if (!b.bodies) { dot(ctx, F, cx - gap + ax, cy + ay, 2.6, '#7a98b8'); dot(ctx, F, cx + gap + bx, cy + by, 2.6, '#7a98b8'); }
+    if (!b.bodies) { dot(ctx, F, cx - gap + ax, cy + ay, 2.4, '#7a98b8'); dot(ctx, F, cx + gap + bx, cy + by, 2.4, '#7a98b8'); }
+    say(ctx, 'Pulling two molecules apart takes heat', F.x(cx), F.y(h - 5), F.size(1.8, 5.8), { align: 'center', color: DUST, maxW: F.len(w - 10) });
     return;
   }
   if (scene === 'sealed') {
@@ -71,19 +72,27 @@ function paintLeadClip(ctx, f, state, b) {
     box(8, top, w - 16, h - top - 3);
     ctx.strokeStyle = DUST; ctx.setLineDash([2, 1.5]);
     ctx.beginPath(); ctx.moveTo(F.x(8), F.y(meshY)); ctx.lineTo(F.x(w - 8), F.y(meshY)); ctx.stroke(); ctx.setLineDash([]);
+    say(ctx, 'FILTER PAPER', F.x(w / 2), F.y(meshY - 1.5), F.size(1.7, 5.5), { align: 'center', color: DUST });
+    say(ctx, 'CLEAN CUP', F.x(w / 2), F.y(h - 5), F.size(1.7, 5.5), { align: 'center', color: DIM });
     if (!b.bodies) {
-      for (let i = 0; i < 16; i++) {
-        // Water molecules fall through the mesh and keep falling to the cup below.
-        const k = (t * (0.12 + 0.08 * h01(i, 1)) + h01(i, 2)) % 1;
-        dot(ctx, F, 10 + (w - 20) * h01(i, 3), top + 1.5 + k * (h - top - 5), 0.8, '#7fb2d9');
-      }
-      for (let i = 0; i < 6; i++) {
-        // Sand grains fall onto the mesh and lie there.
-        const k = Math.min(1, (t * 0.14 + h01(i, 4)) % 1.6);
-        const y = Math.min(meshY - 1.2, top + 1.5 + k * (meshY - top));
-        dot(ctx, F, 14 + (w - 28) * (i / 5) + Math.sin(i * 3) * 1.2, y, 1.4, '#a6896a');
+      // Show the mixture pouring onto the paper without revealing what passes through before the student predicts.
+      for (let i = 0; i < 10; i++) {
+        const k = (t * (0.14 + 0.06 * h01(i, 1)) + h01(i, 2)) % 1;
+        dot(ctx, F, 14 + (w - 28) * h01(i, 3), top + 1.5 + k * (meshY - top - 3), 0.85, i % 3 === 0 ? '#d8c49a' : '#7fb2d9');
       }
     }
+    return;
+  }
+  if (scene === 'water') {
+    box(8, top, w - 16, h - top - 3);
+    ctx.fillStyle = 'rgba(111,143,176,0.22)'; ctx.fillRect(F.x(8) + 1, F.y(top + 4), F.len(w - 16) - 2, F.len(h - top - 7));
+    if (!b.bodies) {
+      for (let i = 0; i < 12; i++) {
+        const [dx, dy] = slideAt(i, t, 0.9, 1.0);
+        dot(ctx, F, 14 + (i % 4) * ((w - 28) / 3) + dx, top + 8 + Math.floor(i / 4) * 5 + dy, 0.9, '#7fb2d9');
+      }
+    }
+    say(ctx, '500 mL WATER', F.x(w / 2), F.y(h - 5), F.size(1.7, 5.5), { align: 'center', color: DUST });
     return;
   }
   say(ctx, '', 0, 0, 6);

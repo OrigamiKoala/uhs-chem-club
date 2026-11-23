@@ -81,13 +81,13 @@ export const STAGES = [
     prompt: 'Is oxygen gas attracted to a magnet?',
     cards: GUESSES,
     hints: [
-      'Lay one of the three cards in the slot.',
-      'The Lewis structure of O₂ is a double bond with two lone pairs on each atom, every electron in a pair.',
-      'A prediction is never graded, so lay the card you think most likely.'
+      'Drag one of the three prediction cards into the slot.',
+      'The Lewis structure of O₂ shows a double bond and two lone pairs on each atom, with every electron paired.',
+      'Predictions are never graded, so pick the card you think is most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'The next stage holds four gases, oxygen among them, beside a magnet.'
+      body: 'The next stage tests four gases, including oxygen, next to a magnet.'
     }
   }),
 
@@ -96,7 +96,7 @@ export const STAGES = [
     title: 'Four Gases',
     briefing: {
       speaker: SPEAKER,
-      body: 'An electron on its own in an orbital, with no partner, is called unpaired. A substance with unpaired electrons is attracted to a magnet and is called paramagnetic; one whose electrons are all paired is not attracted.'
+      body: 'An electron alone in an orbital is called unpaired. A substance with unpaired electrons is attracted to a magnet (paramagnetic); one with all electrons paired is not.'
     },
     get prompt() {
       return testPrompt(QUEST_KEY, GUESSES, 'which of these four gases are attracted to the magnet?');
@@ -114,9 +114,9 @@ export const STAGES = [
       fixtures: [magnet('magnet', { x: 76, y: 22 }, { slot: 'test', size: { w: 34, h: 30 }, label: 'Magnet' })]
     }),
     hints: [
-      'Drag a gas card into the "Gas to test" slot and press "Test Sample"; the card keeps what the magnet did.',
-      'Compare the gases the magnet attracted with what the briefing says about unpaired electrons.',
-      'Draw the Lewis structure of O₂ in your head and ask whether it shows any electron without a partner.'
+      'Drag a gas card into the "Gas to test" slot and press "Test Sample"; the card records how the magnet reacted.',
+      'Compare the gases attracted to the magnet with what the briefing says about unpaired electrons.',
+      'Picture the Lewis structure of O₂ and ask whether it shows any unpaired electrons.'
     ],
     check(state) {
       const t = state.table;
@@ -124,14 +124,14 @@ export const STAGES = [
       const where = Object.fromEntries(ids.map(id => [id, ['pulled', 'ignored'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
       if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all four gases into trays.' };
       const wrong = ids.find(id => where[id] !== (DIATOMICS[t.pieces[id].props.mol].unpaired > 0 ? 'pulled' : 'ignored'));
-      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that does not match what the magnet did to it: test it again.` };
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in the wrong tray: test it next to the magnet again.` };
       return { ok: true };
     },
     get reward() {
       return {
         log: 'Oxygen and diboron were attracted. Nitrogen and fluorine were not.',
         title: 'Paramagnetic Gases',
-        body: `${verdictLine(QUEST_KEY, 'pulled')}O₂ and B₂ are attracted, so they are paramagnetic and must have unpaired electrons. Their Lewis structures show every electron paired, so another picture of bonding is needed.`
+        body: `${verdictLine(QUEST_KEY, 'pulled')}O₂ and B₂ are attracted, so they are paramagnetic and must have unpaired electrons. Their Lewis structures show every electron paired, so we need a deeper model of bonding.`
       };
     }
   },
@@ -141,7 +141,7 @@ export const STAGES = [
     title: 'Two Orbitals Add',
     briefing: {
       speaker: SPEAKER,
-      body: 'An orbital is a wave, and each part of it has a sign, + or −, like the crest and trough of a water wave; the sign is not an electric charge. When two atoms come together their orbitals overlap and combine into molecular orbitals, which belong to the whole molecule.'
+      body: 'An orbital is a wave with a sign (+ or −), like the high and low parts of a water wave (not an electric charge). When two atoms approach, their orbitals overlap and combine into molecular orbitals that span the whole molecule.'
     },
     prompt: 'When two 1s orbitals of the same sign overlap, where is the electron most likely to be found?',
     widget: { type: 'table', label: 'The bench' },
@@ -149,17 +149,17 @@ export const STAGES = [
       fixtures: [overlapTrack('ov', TRACK_AT, { type: 's' }), chooser('ans', 'Most likely', ANSWER_AT, ['Between nuclei', 'Beyond nuclei', 'At one nucleus'])]
     }),
     hints: [
-      'Drag the "Distance" dial to bring the two hydrogen atoms together; the denser the cloud, the more likely the electron is there.',
-      'Compare the cloud between the two nuclei when the atoms are far apart and when they are close, and watch the amber energy mark labelled BOTH, which is the combined orbital.',
-      'Two waves of the same sign add where they overlap, so ask where both atoms\' orbitals reach at once.'
+      'Drag the "Distance" dial to bring the two hydrogen atoms together; a denser cloud means the electron is more likely to be there.',
+      'Compare the cloud between the two nuclei when far apart versus close, and watch the amber energy level labeled BOTH.',
+      'Two waves with the same sign add together where they overlap, concentrating electron density where both orbitals meet.'
     ],
     check(state) {
-      return trackCheck(state, { right: 1, wrong: 'The cloud is thinner there than it is somewhere else: look for the densest part of the combined orbital.' });
+      return trackCheck(state, { right: 1, wrong: 'The cloud is thinner there than elsewhere: look for the densest part of the combined orbital.' });
     },
     reward: {
       log: 'Like signs add between the nuclei.',
       title: 'Bonding Orbital',
-      body: 'Between the two nuclei: the two waves add there, lowering the energy, so this molecular orbital is called a bonding orbital.'
+      body: 'Between the two nuclei: the two waves add there, lowering the energy, so this molecular orbital is a bonding orbital.'
     }
   },
 
@@ -168,7 +168,7 @@ export const STAGES = [
     title: 'Two Orbitals Cancel',
     briefing: {
       speaker: SPEAKER,
-      body: 'When two orbitals of opposite sign overlap they cancel; such an antibonding orbital is marked with a star (*).'
+      body: 'When two orbitals of opposite sign overlap, they cancel each other out. This higher-energy antibonding orbital is marked with a star (*).'
     },
     prompt: 'When two 1s orbitals of opposite sign overlap, where is the electron never found?',
     widget: { type: 'table', label: 'The bench' },
@@ -176,17 +176,17 @@ export const STAGES = [
       fixtures: [overlapTrack('ov', TRACK_AT, { type: 's', flip: true }), chooser('ans', 'Never found', ANSWER_AT, ['Midway between', 'At each nucleus', 'Beyond nuclei'])]
     }),
     hints: [
-      'Set the "Signs" dial to Opposite to turn one atom\'s orbital over, then bring the atoms together with the "Distance" dial.',
-      'Compare the space between the nuclei with the last stage, and watch which way the energy level marked BOTH moves.',
-      'A + wave and a − wave of equal size add up to nothing, so ask where the two orbitals are equally strong.'
+      'Set "Signs" to Opposite to flip one orbital\'s sign, then bring the atoms together with the "Distance" dial.',
+      'Compare the space between the nuclei with the previous stage, and watch which way the energy level labeled BOTH moves.',
+      'A + wave and a − wave of equal size cancel to zero right where both orbitals have the same strength.'
     ],
     check(state) {
-      return trackCheck(state, { right: 1, needOpposite: true, wrong: 'The cloud is not empty there: look for the place where the combined orbital has faded to nothing.' });
+      return trackCheck(state, { right: 1, needOpposite: true, wrong: 'The cloud is not empty there: look for where the combined orbital fades to nothing.' });
     },
     reward: {
       log: 'Unlike signs cancel between the nuclei.',
       title: 'Antibonding Orbital',
-      body: 'Midway between the nuclei, on a surface called a node. With almost no electron between them the nuclei repel, so the energy is higher: an antibonding orbital, marked with a star (*).'
+      body: 'Midway between the nuclei, at a surface called a node. With almost no electron density between them, the nuclei repel and energy rises: an antibonding orbital, marked with a star (*).'
     }
   },
 
@@ -195,7 +195,7 @@ export const STAGES = [
     title: 'Side by Side',
     briefing: {
       speaker: SPEAKER,
-      body: 'A p orbital has two lobes of opposite sign, one on each side of its nucleus. Here two p orbitals stand side by side, across the line between the nuclei, with like signs on the same side.'
+      body: 'A p orbital has two lobes of opposite sign on opposite sides of its nucleus. Here two p orbitals sit side by side with matching signs aligned.'
     },
     prompt: 'Where is the electron most likely to be found when two p orbitals overlap side by side?',
     widget: { type: 'table', label: 'The bench' },
@@ -203,17 +203,17 @@ export const STAGES = [
       fixtures: [overlapTrack('ov', TRACK_AT, { type: 'p' }), chooser('ans', 'Most likely', ANSWER_AT, ['On the line', 'Above and below', 'Beyond nuclei'])]
     }),
     hints: [
-      'Drag the "Distance" dial to bring the two atoms together; the line runs through both nuclei.',
-      'Compare the cloud on the line with the cloud above it and below it.',
-      'Each p orbital is zero at its own nucleus and all along the line, so ask where the two upper lobes, and the two lower, reach each other.'
+      'Drag the "Distance" dial to bring the two atoms together; the dashed line runs through both nuclei.',
+      'Compare the cloud on the line with the cloud above and below it.',
+      'Each p orbital is zero along the line through the nuclei, so the lobes overlap above and below that line.'
     ],
     check(state) {
-      return trackCheck(state, { right: 2, wrong: 'The cloud is thinner there than it is somewhere else: look for the densest parts of the combined orbital.' });
+      return trackCheck(state, { right: 2, wrong: 'The cloud is thinner there than elsewhere: look for the densest parts of the combined orbital.' });
     },
     reward: {
       log: 'Side by side: above and below the line.',
       title: 'Sigma and Pi Orbitals',
-      body: 'Above and below the line between the nuclei, with none on it: a pi orbital, π. Orbitals that overlap along the line, as the 1s orbitals did, make sigma orbitals, σ.'
+      body: 'Above and below the line between the nuclei, with none on the line itself: a pi orbital (π). Orbitals overlapping along the line, like 1s orbitals, form sigma orbitals (σ).'
     }
   },
 
@@ -224,10 +224,10 @@ export const STAGES = [
       title: 'Filling the Levels',
       briefing: {
         speaker: SPEAKER,
-        body: 'Electrons fill molecular orbitals from the lowest energy up, two to an orbital. Bond order is the number of electrons in bonding orbitals minus the number in antibonding orbitals, divided by two, which matches the count of shared pairs.',
+        body: 'Electrons fill molecular orbitals from lowest energy to highest, two per orbital. Bond order equals (bonding electrons − antibonding electrons) ÷ 2, matching the number of shared pairs:',
         worked: [
-          'H₂ has 2 electrons: both go into σ, the bonding orbital.',
-          'Bond order = (2 − 0) ÷ 2 = 1, a single bond.'
+          'H₂ has 2 electrons: both go into the bonding orbital (σ).',
+          'Bond order = (2 − 0) ÷ 2 = 1 (a single bond).'
         ]
       },
       prompt: 'What is the bond order of He₂, which has four electrons?',
@@ -238,22 +238,22 @@ export const STAGES = [
       }),
       hints: [
         'Drag the four electrons from the jar into the two molecular orbitals in the middle, then set the "Bond order" dial.',
-        'Compare the count of electrons in the bonding orbital, σ, with the count in the antibonding orbital, σ*.',
-        'The worked case for H₂ shows where the two counts go in the subtraction.'
+        'Compare the number of electrons in the bonding orbital (σ) with the number in the antibonding orbital (σ*).',
+        'Use the same formula as the H₂ example: (bonding electrons − antibonding electrons) ÷ 2.'
       ],
       check(state) {
         const t = state.table;
         const r = readOf(t, 'a');
         if (r.total < DIATOMICS.He2.e) return { ok: false, notYet: true, msg: 'Place all four electrons in the molecular orbitals first.' };
-        if (!matchesGround(t, 'a', DIATOMICS.He2.e)) return { ok: false, msg: 'An electron is in a higher orbital while a lower one still has a place.' };
+        if (!matchesGround(t, 'a', DIATOMICS.He2.e)) return { ok: false, msg: 'An electron is in a higher orbital while a lower orbital still has space.' };
         const v = t.fixtures.bo.dials.n.value;
         if (v === r.bondOrder) return { ok: true };
-        return { ok: false, msg: `A bond order of ${v} needs ${2 * v} more electrons in bonding orbitals than in antibonding ones, and the diagram counts ${r.bonding} and ${r.anti}.` };
+        return { ok: false, msg: `A bond order of ${v} requires ${2 * v} more bonding electrons than antibonding electrons, but the diagram has ${r.bonding} and ${r.anti}.` };
       },
       reward: {
         log: 'Two bonding, two antibonding.',
         title: 'Bond Order From Orbitals',
-        body: '0: two electrons go into σ and two into σ*, and the antibonding pair undoes the bonding pair. With a bond order of zero, He₂ does not form.'
+        body: '0: two electrons fill σ and two fill σ*, so the antibonding pair cancels the bonding pair. With a bond order of 0, He₂ does not form.'
       }
     };
   })(),
@@ -267,7 +267,7 @@ export const STAGES = [
       title: 'Oxygen\'s Last Two',
       briefing: {
         speaker: SPEAKER,
-        body: 'Two oxygen atoms make more molecular orbitals, from their 2s and 2p orbitals, each named σ or π with a star if it is antibonding. Ten of O₂\'s twelve valence electrons already stand in the lowest of them.'
+        body: 'Two oxygen atoms combine their 2s and 2p orbitals into a set of σ and π molecular orbitals (with * for antibonding). Ten of O₂\'s twelve valence electrons are already placed in the lowest orbitals.'
       },
       prompt: 'Where do oxygen\'s last two electrons go?',
       widget: { type: 'table', label: 'The bench' },
@@ -276,22 +276,22 @@ export const STAGES = [
         fixtures: [rack.fixture, magnet('magnet', { x: 134, y: 36 }, { mol: 'O2' })]
       }),
       hints: [
-        'Drag the two electrons from the jar into molecular orbitals; "Test Sample" shows what a magnet does to real oxygen.',
-        'Compare a diagram with both electrons in one orbital with one that has them in two, and then with what the magnet shows.',
-        'Electrons repel each other, so two orbitals of equal energy each take one electron before either takes a second.'
+        'Drag the two electrons from the jar into molecular orbitals; "Test Sample" shows how a magnet reacts to real oxygen.',
+        'Compare placing both electrons in one orbital versus placing one in each equal-energy orbital, then check the magnet.',
+        'Because electrons repel each other, two orbitals of equal energy each take one electron before either takes a second.'
       ],
       check(state) {
         const t = state.table;
         const r = readOf(t, 'a');
         if (r.total !== DIATOMICS.O2.e) return { ok: false, notYet: true, msg: 'Place both electrons from the jar.' };
         if (matchesGround(t, 'a', DIATOMICS.O2.e)) return { ok: true };
-        if (r.unpaired !== DIATOMICS.O2.unpaired) return { ok: false, msg: `The diagram counts ${r.unpaired} unpaired electrons, and a gas with none would not be attracted to a magnet as oxygen is.` };
-        return { ok: false, msg: 'An electron is in a higher orbital while a lower one still has a place.' };
+        if (r.unpaired !== DIATOMICS.O2.unpaired) return { ok: false, msg: `This diagram has ${r.unpaired} unpaired electrons, so a gas like this would not be attracted to a magnet the way oxygen is.` };
+        return { ok: false, msg: 'An electron is in a higher orbital while a lower orbital still has space.' };
       },
       reward: {
         log: 'Two electrons stand unpaired.',
         title: 'Why Oxygen Is Paramagnetic',
-        body: 'One into each of the two π* orbitals, which have the same energy. Those two unpaired electrons are why oxygen is attracted to a magnet, which its Lewis structure could not explain.',
+        body: 'One in each of the two equal-energy π* orbitals. Those two unpaired electrons explain why oxygen is attracted to a magnet, which its Lewis structure could not show.',
         last: true
       }
     };
@@ -307,11 +307,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'When two atoms meet, their orbitals combine. Like signs add between the nuclei and lower the energy: a bonding orbital. Unlike signs cancel there and raise it: an antibonding orbital.'
+      body: 'When two atoms meet, their orbitals combine. Matching signs add between the nuclei to lower energy (a bonding orbital); opposite signs cancel there and raise energy (an antibonding orbital).'
     },
     {
       heading: 'Filling Them',
-      body: 'Electrons fill molecular orbitals from the lowest up. Bond order is bonding electrons minus antibonding electrons, divided by two, and unpaired electrons make a molecule paramagnetic, as in O₂.'
+      body: 'Electrons fill molecular orbitals from lowest energy up. Bond order is (bonding − antibonding) ÷ 2, and unpaired electrons make a molecule paramagnetic, like O₂.'
     },
     {
       heading: 'Next',

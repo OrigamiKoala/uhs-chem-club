@@ -67,7 +67,7 @@ export const UNKNOWN = 'CH4';
 export const TUBE_CM = 100;
 const TUBE_TIMES = [0, 15, 30, 45, 60, 75];
 
-export const LEAK_GUESSES = [['he', 'The helium chamber'], ['n2', 'The nitrogen chamber'], ['same', 'Both together']];
+export const LEAK_GUESSES = [['he', 'The helium chamber'], ['n2', 'The nitrogen chamber'], ['same', 'They empty at the same time']];
 export const TUBE_GUESSES = [['nh3', 'Nearer the ammonia end'], ['mid', 'Halfway'], ['hcl', 'Nearer the hydrogen chloride end']];
 
 /** Where the ring has formed, as the card that says so: more than a twentieth of the tube from the middle is "nearer an end". */
@@ -87,58 +87,62 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
     key: KEY_LEAK,
-    title: 'Effusion Prediction',
-    prompt: 'A helium chamber and a nitrogen chamber each have a tiny hole in the wall: which one runs out of gas first?',
+    title: 'Which Gas Leaks First?',
+    prompt: 'Between a helium chamber and a nitrogen chamber that each have a tiny pinhole, which one runs out of gas first?',
     items: LEAK_GUESSES,
     hints: [
-      'Lay one card in the slot.',
-      'Picture the particles of each gas flying at the wall and ask which kind reaches the hole more often.',
-      'Ask whether speed at one temperature depends on how heavy a particle is.'
+      'Think about which gas\'s particles move faster at the same temperature: helium (4 g/mol) or nitrogen (28 g/mol).',
+      'Faster particles cross the chamber more often, so they reach the tiny hole more frequently.',
+      'Ask whether lighter or heavier particles move faster when both gases have the same average kinetic energy.'
     ],
     reward: {
       log: 'Prediction recorded.',
       title: 'Prediction Recorded',
-      body: 'Chambers with pinholes will now be tested to observe which gas escapes faster.'
+      body: 'Your guess is locked in. Next, you will test four pinhole chambers to see which gas escapes fastest.'
     }
   }),
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const p = pinhole(PIN, { x: 55, y: 25 }, {
-      chambers: CHAMBERS.map(([id, gas]) => ({ id, gas, label: `CHAMBER ${id.toUpperCase()}` })), times: TIMES, timeStart: 1, w: 100, record: false,
-      gate: { railChanged: CHAMBERS.map(([id]) => id) }, hideUntilCommit: ['left']
+    const p = pinhole(PIN, { x: 75, y: 24 }, {
+      chambers: CHAMBERS.map(([id, gas]) => ({ id, gas, label: `CHAMBER ${id.toUpperCase()}` })), times: TIMES, timeStart: 1, w: 104, record: false
     });
     return {
-      title: 'Effusion Rates',
-      briefing: 'Four chambers hold different gases at 300 K, each with a tiny pinhole opening into vacuum.',
+      title: 'Pinholes and Escape Speed',
+      briefing: 'Four chambers hold different gases at 300 K, each with a tiny pinhole opening into a vacuum.',
       get prompt() {
-        return youPredicted(KEY_LEAK, LEAK_GUESSES, 'Rank the four chambers on the rail from earliest to empty to latest to empty.', 'Rank the four chambers on the rail from earliest to empty to latest to empty.');
+        return youPredicted(KEY_LEAK, LEAK_GUESSES, 'Order the four chambers from the one that empties first (left) to last (right).', 'Order the four chambers from the one that empties first (left) to last (right).');
       },
       widget,
       table: gasTable({
-        pieces: CHAMBERS.map(([id]) => chip(id, `CHAMBER ${id.toUpperCase()}`, { x: 0, y: 0 })),
+        pieces: CHAMBERS.map(([id, gas]) => chip(id, `CHAMBER ${id.toUpperCase()} (${GASES[gas].sym})`, { x: 0, y: 0 })),
         fixtures: [p],
-        zones: { rail: { id: 'rail', at: { x: 75, y: 56 }, size: { w: 84, h: 14 }, first: 'Empties first', last: 'Empties last', items: CHAMBERS.map(([id]) => id), start: CHAMBERS.map(([id]) => id) } }
+        zones: { rail: { id: 'rail', at: { x: 75, y: 55 }, size: { w: 94, h: 14 }, first: 'Empties first', last: 'Empties last', items: CHAMBERS.map(([id]) => id), start: CHAMBERS.map(([id]) => id) } }
       }),
       hints: [
-        'Turn the Stopwatch dial to observe the chambers over time.',
-        'Compare the remaining gas in each chamber at equal times.',
-        'Set the stopwatch to one time and rank the chambers by how much gas each has left.'
+        'Turn the Stopwatch dial to watch how much gas remains in each chamber over time.',
+        'Compare the percentage remaining in each chamber at 2 s or 4 s.',
+        'The chamber with the lowest percentage left is escaping fastest.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four chambers on the rail.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four chambers on the strip.' };
         const gasOf = id => CHAMBERS.find(c => c[0] === id)[1];
         const want = CHAMBERS.map(c => c[0]).sort((x, y) => halfTime(gasOf(x), T0) - halfTime(gasOf(y), T0));
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Two adjacent chambers on the rail are in the wrong order.' };
+        for (let i = 0; i < order.length - 1; i++) {
+          if (halfTime(gasOf(order[i]), T0) > halfTime(gasOf(order[i + 1]), T0)) {
+            return { ok: false, msg: `${t.pieces[order[i]].label} empties slower than ${t.pieces[order[i + 1]].label}: swap them.` };
+          }
+        }
+        return { ok: false, msg: 'Two adjacent chambers on the strip are in the wrong order.' };
       },
       get reward() {
         return {
           log: 'The lightest gas emptied fastest.',
           title: 'Effusion',
-          body: 'Gas escaping through a pinhole into a vacuum undergoes effusion. Lighter gas molecules have higher average speeds at a given temperature, reaching the hole more frequently and effusing faster.'
+          body: 'Gas escaping through a tiny hole into a vacuum is called effusion. Lighter particles move faster at the same temperature, so they effuse faster.'
         };
       }
     };
@@ -146,20 +150,19 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const p = pinhole(PIN, { x: 40, y: 30 }, {
+    const p = pinhole(PIN, { x: 75, y: 31 }, {
       chambers: [{ id: 'a', label: 'REFERENCE', pick: 'ref' }, { id: 'b', gas: SAMPLE, label: 'STACK LEAK', sealed: true }],
-      picks: { ref: { gases: REFERENCE_GASES, label: 'Gas', start: 1 } }, times: TIMES, timeStart: 1, showHalf: true, record: false,
-      hideUntilCommit: ['half']
+      picks: { ref: { gases: REFERENCE_GASES, label: 'Gas', start: 1 } }, times: TIMES, timeStart: 1, showHalf: true, record: false, w: 80
     });
     return {
       title: 'Identifying an Unknown Gas',
-      prompt: 'Set the reference gas so its effusion rate matches the unknown sample.',
+      prompt: 'Which reference gas leaks out at the same rate as the stack sample?',
       widget,
       table: gasTable({ fixtures: [p] }),
       hints: [
-        'Adjust the Gas dial and use the Stopwatch dial.',
-        'Compare the time required for each chamber to reach half its initial amount.',
-        'Change the reference gas until its half-empty time matches the sample\'s.'
+        'Turn the Gas dial and compare REFERENCE\'s half-empty time with STACK LEAK (6.45 s).',
+        'Heavier gases take longer to half-empty, while lighter gases empty faster.',
+        'Match the reference gas whose half-empty time equals the stack leak\'s time.'
       ],
       check(state) {
         const t = state.table;
@@ -168,12 +171,12 @@ export const STAGES = [
         const leak = r.chambers[1];
         if (Math.round(t.fixtures[PIN].dials.ref.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Gas dial to test different gases.' };
         if (ref.gas === leak.gas) return { ok: true };
-        return { ok: false, msg: ref.half < leak.half ? 'The reference chamber empties faster than the unknown sample.' : 'The reference chamber empties more slowly than the unknown sample.' };
+        return { ok: false, msg: ref.half < leak.half ? `The reference (${ref.half.toFixed(2)} s) empties faster than the stack leak (${leak.half.toFixed(2)} s).` : `The reference (${ref.half.toFixed(2)} s) empties slower than the stack leak (${leak.half.toFixed(2)} s).` };
       },
       reward: {
         log: 'Effusion rate matched to reference gas.',
-        title: 'Effusion Rate and Molar Mass',
-        body: 'Gases with identical effusion rates at the same temperature have the same molar mass. Comparing an unknown gas to reference standards identifies its molar mass.'
+        title: 'Matching by Leak Rate',
+        body: 'The stack leak emptied at the same pace as krypton (6.45 s), showing it has krypton\'s molar mass (84 g/mol).'
       }
     };
   })(),
@@ -182,38 +185,38 @@ export const STAGES = [
   predictStage({
     key: KEY_TUBE,
     title: 'Gas Meeting Point',
-    prompt: 'Ammonia (NH₃, 17 g/mol) and hydrogen chloride (HCl, 36.5 g/mol) enter opposite ends of a tube: where do they meet?',
+    prompt: 'When ammonia (NH₃, 17 g/mol) and hydrogen chloride (HCl, 36.5 g/mol) enter opposite ends of a tube, where do they meet?',
     items: TUBE_GUESSES,
     hints: [
-      'Lay one card in the slot.',
-      'Compare the speeds of the two gases in the tube as the last bench found them.',
-      'Ask what the particles bump into on the way, and whether that slows both kinds equally.'
+      'Compare the molar masses of NH₃ (17 g/mol) and HCl (36.5 g/mol) to see which particles move faster.',
+      'Both gases start at the same time, so the faster gas travels farther along the tube.',
+      'If one gas travels more than halfway down the tube, think about which end their meeting point is closer to.'
     ],
     reward: {
       log: 'Prediction recorded.',
       title: 'Prediction Recorded',
-      body: 'A tube with opposing gas inputs will test where the two gases meet.'
+      body: 'Your guess is locked in. Next, you will watch both gases travel down a tube until they meet.'
     }
   }),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const tb = tube('tube', { x: 42, y: 28 }, { ends: ['NH3', 'HCl'], times: TUBE_TIMES, timeStart: 1, length: TUBE_CM, gate: { slot: 'show' }, hideUntilCommit: ['ring'] });
+    const tb = tube('tube', { x: 42, y: 28 }, { ends: ['NH3', 'HCl'], times: TUBE_TIMES, timeStart: 1, length: TUBE_CM });
     return {
-      title: 'Diffusion Along a Tube',
+      title: 'Racing Down a Tube',
       get prompt() {
-        return youPredicted(KEY_TUBE, TUBE_GUESSES, 'Run the stopwatch until the gases meet and place the card for where the ring formed.', 'Run the stopwatch until the gases meet and place the card for where the ring formed.');
+        return youPredicted(KEY_TUBE, TUBE_GUESSES, 'Where does the white ring form when ammonia and hydrogen chloride meet in the tube?', 'Where does the white ring form when ammonia and hydrogen chloride meet in the tube?');
       },
       widget,
       table: gasTable({
         pieces: [stmt('nh3', 'Nearer the ammonia end', { x: 97, y: 45 }), stmt('mid', 'Halfway', { x: 131, y: 45 }), stmt('hcl', 'Nearer the hydrogen chloride end', { x: 114, y: 57.5 })],
         fixtures: [tb],
-        zones: { slots: [{ id: 'show', label: 'Prediction', at: { x: 114, y: 26 }, size: { w: 38, h: 12 } }] }
+        zones: { slots: [{ id: 'show', label: 'Where the ring formed', at: { x: 114, y: 26 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Advance the Stopwatch dial and press Check.',
-        'Observe how far each gas migrates through the tube over time.',
-        'Run the stopwatch to its last setting and read where the white ring sits along the tube.'
+        'Turn the Stopwatch dial to 60 s or 75 s to see where the white ring forms.',
+        'Compare the ring\'s position with the 50 cm midpoint of the 100 cm tube.',
+        'Check which end (NH₃ at 0 cm or HCl at 100 cm) the ring is closer to.'
       ],
       check(state) {
         const t = state.table;
@@ -221,51 +224,53 @@ export const STAGES = [
         if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const f = t.fixtures.tube;
         const end = { ...t, fixtures: { ...t.fixtures, tube: { ...f, dials: { ...f.dials, time: { ...f.dials.time, value: f.props.times.length } } } } };
-        const want = ringCard(tubeRead(end, 'tube').ringFromLeft);
+        const ring = Math.round(tubeRead(end, 'tube').ringFromLeft);
+        const want = ringCard(ring);
         if (card.id === want) return { ok: true };
-        return { ok: false, msg: 'The reaction ring does not form at that position.' };
+        return { ok: false, msg: `The white ring formed at ${ring} cm of ${TUBE_CM} cm (past the 50 cm midpoint), closer to the HCl end.` };
       },
       get reward() {
         return {
           log: 'The reaction ring formed closer to the heavier gas.',
           title: 'Diffusion',
-          body: 'Gases disperse through other gases by diffusion. Frequent collisions slow net movement, but lighter particles travel faster on average, so the ring forms closer to the heavier gas.'
+          body: 'One gas spreading through another is diffusion. Lighter ammonia moves faster, so the ring forms closer to the heavier HCl end (at 59 cm).'
         };
       }
     };
-  })()  ,
+  })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const p = pinhole(PIN, { x: 40, y: 30 }, {
+    const p = pinhole(PIN, { x: 75, y: 31 }, {
       chambers: [{ id: 'a', label: 'REFERENCE', pick: 'ref' }, { id: 'b', gas: UNKNOWN, label: 'UNKNOWN', sealed: true }],
-      picks: { ref: { gases: MASS_GASES, label: 'Gas', start: 1, withMass: true } }, times: TIMES, timeStart: 1, showHalf: true, record: false
+      picks: { ref: { gases: MASS_GASES, label: 'Gas', start: 1, withMass: true } }, times: TIMES, timeStart: 1, showHalf: true, record: false, w: 80
     });
     return {
       title: 'Graham\'s Law',
-      briefing: 'An unknown gas and a selectable reference gas sit in identical pinhole chambers at the same temperature.',
-      prompt: 'Type the mass of one mole of the unknown gas.',
+      briefing: 'Half-empty time scales with the square root of molar mass (Graham\'s law): a gas 9 times heavier takes √9 = 3 times as long to half-empty.',
+      prompt: 'What is the molar mass of the unknown gas?',
       entry: { id: 'ans', label: 'Molar mass', unit: 'g/mol' },
       widget,
       table: gasTable({
         fixtures: [p],
       }),
       hints: [
-        'Turn the Gas dial and read each reference gas\'s half-empty time.',
-        'Compare how the half-empty time grows when the molar mass grows, from helium to neon and from neon to argon.',
-        'The half-empty time scales with the square root of the molar mass.'
+        'Compare the unknown\'s half-empty time (2.82 s) with helium\'s (1.41 s, 4 g/mol).',
+        'Find the ratio of the unknown\'s half-empty time to helium\'s half-empty time.',
+        'By Graham\'s law, square that time ratio to find how many times heavier the unknown is than helium.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in g/mol.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the value in g/mol.' };
         const want = GASES[UNKNOWN].M;
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
-        return { ok: false, msg: v > want ? 'The unknown gas has a smaller figure than that.' : 'The unknown gas has a larger figure than that.' };
+        return { ok: false, msg: v > want ? 'The unknown gas has a lower value than that.' : 'The unknown gas has a higher value than that.' };
       },
       reward: {
-        log: 'Time grew as the square root of the mass.',
+        log: 'Time grew as the square root of molar mass.',
         title: 'Graham\'s Law',
-        body: 'The half-empty time scales as the square root of molar mass (Graham\'s law), so twice the time means four times the mass: 4 × 4 = 16 g/mol, methane.'
+        body: 'By Graham\'s law, twice the half-empty time means 2² = 4 times the molar mass: 4 × 4 = 16 g/mol (methane).',
+        model: { type: 'bellows-scene', scene: 'leak-race' }
       }
     };
   })(),
@@ -273,25 +278,25 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   (() => {
     const snap = (id, label, gas) => histCard(id, label, { x: 0, y: 0 }, gas, SNAP_T, SNAP_REF);
-    const speedRig = rig('speedRig', { x: 34, y: 29 }, {
+    const speedRig = rig('speedRig', { x: 28, y: 29 }, {
       cyls: [{ id: 'a', label: 'Reference', gas: 'He', n: 1, hold: 'V', V: 20, T: SNAP_T }],
-      vmax: 20, w: 60, speedScreen: true,
+      vmax: 20, w: 50, speedScreen: true,
       show: { gauge: false, volume: false, temperature: false, kelvin: true },
       title: `Helium at ${SNAP_T} K`
     });
     return {
       title: 'Speed Distribution and Mass',
-      prompt: `Put the four speed snapshots in order from the lightest particles to the heaviest, all taken at ${SNAP_T} K.`,
+      prompt: `Order the four speed snapshots from lightest particles (left) to heaviest (right), all at ${SNAP_T} K.`,
       widget,
       table: gasTable({
         pieces: SNAP_GASES.map(([id, gas]) => snap(id, `SNAPSHOT ${id.toUpperCase()}`, gas)),
         fixtures: [speedRig],
-        zones: { rail: { id: 'rail', at: { x: 108, y: 32 }, size: { w: 76, h: 24 }, first: 'Lightest', last: 'Heaviest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
+        zones: { rail: { id: 'rail', at: { x: 102, y: 36 }, size: { w: 92, h: 24 }, first: 'Lightest', last: 'Heaviest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
       }),
       hints: [
-        'Drag the snapshots along the strip.',
-        'Compare where each curve peaks and how wide it spreads.',
-        'At one temperature every gas has the same average kinetic energy, so the particles of a heavier gas move more slowly.'
+        'Compare each snapshot\'s curve with the helium reference screen on the left.',
+        'Lighter particles move faster at 300 K, so their speed curve spreads wider to the right.',
+        'Heavier particles move slower, so their curve peaks taller and narrower on the left.'
       ],
       check(state) {
         const t = state.table;
@@ -300,12 +305,17 @@ export const STAGES = [
         const mass = id => GASES[t.pieces[id].props.gas].M;
         const want = ['a', 'b', 'c', 'd'].sort((x, y) => mass(x) - mass(y));
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Two neighbouring snapshots on the strip are the wrong way round.' };
+        for (let i = 0; i < order.length - 1; i++) {
+          if (mass(order[i]) > mass(order[i + 1])) {
+            return { ok: false, msg: `${t.pieces[order[i]].label} and ${t.pieces[order[i + 1]].label} are in the wrong order on the strip.` };
+          }
+        }
+        return { ok: false, msg: 'Two adjacent snapshots on the strip are in the wrong order.' };
       },
       reward: {
         log: 'At one temperature the heavier gas is slower.',
         title: 'Mass and Speed',
-        body: 'At one temperature every gas has the same average kinetic energy, so heavier particles move more slowly. Their curve is taller and narrower at lower speeds, while a light gas spreads wider toward high speeds.',
+        body: 'At one temperature every gas has the same average kinetic energy, so heavier particles move slower. Their curve peaks taller and narrower at low speeds, while a light gas spreads wider toward high speeds.',
         last: true
       }
     };
@@ -315,11 +325,11 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Place a card in the slot.'],
-  2: ['Turn the Stopwatch dial,', 'then rank the chips.'],
-  3: ['Adjust the Gas and Stopwatch dials.'],
+  2: ['Turn the Stopwatch dial,', 'then drag the chambers into order on the strip.'],
+  3: ['Adjust the Gas dial to match the stack leak.'],
   4: ['Place a card in the slot.'],
-  5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.'],
-  6: ['Turn the Gas dial,', 'then type your answer in the field at the bottom.'],
+  5: ['Advance the Stopwatch dial,', 'then place a card in the slot.'],
+  6: ['Compare the half-empty times,', 'then type your answer in the field at the bottom.'],
   7: ['Drag the snapshots along the strip.']
 };
 applyNotes(STAGES, NOTES);
@@ -332,7 +342,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'Summary',
-      body: 'Lighter gas molecules have higher average velocities at a given temperature, causing them to effuse through pinholes and diffuse through other gases more rapidly than heavier molecules.'
+      body: 'At the same temperature, lighter gas particles move faster than heavier ones. Because they move faster, they effuse through pinholes and diffuse through other gases more quickly (Graham\'s law).'
     }
   ]
 };

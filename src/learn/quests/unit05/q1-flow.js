@@ -59,7 +59,7 @@ export const STAGES = [
   {
     id: 's1-meet',
     title: 'Where Two Blocks Meet',
-    briefing: { speaker: SPEAKER, body: 'Temperature tells how fast the particles of a thing are moving, and heat is energy that passes from a hotter thing to a colder one. Two touching blocks pass heat until they are at one temperature, which is called thermal equilibrium.' },
+    briefing: { speaker: SPEAKER, body: 'Temperature measures how fast particles move on average, while heat is energy flowing from a hotter object to a colder one. When two blocks touch, heat flows until both reach the same temperature, called thermal equilibrium.' },
     prompt: 'Which two blocks reach thermal equilibrium at 50 °C?',
     widget,
     table: heatTable({
@@ -72,9 +72,9 @@ export const STAGES = [
       fixtures: [latticeFixture('atoms', { x: 70, y: 48 }, { blocks: ['a', 'b', 'c', 'd'], w: 128, h: 20 })]
     }),
     hints: [
-      'Look at the thermometer printed on each block, and at the box of particles under it with the same name.',
-      'Join a pair and watch which particles change first, then compare where the two readings end with where each began.',
-      'The four blocks are the same metal and the same size, so compare the heat one block loses with the heat the other gains.'
+      'Check the thermometer on each block and the matching particle box directly below it.',
+      'Join a pair of blocks and compare their final temperature with their starting temperatures.',
+      'All four blocks have the same mass and metal, so the heat one block loses equals the heat the other gains.'
     ],
     check(state) {
       const t = state.table;
@@ -83,18 +83,18 @@ export const STAGES = [
         const r = blockRead(t, id);
         if (r.joined) groups.set([...r.cluster].sort().join(), r);
       }
-      if (!groups.size) return { ok: false, notYet: true, msg: 'Join two blocks, then read their thermometers.' };
+      if (!groups.size) return { ok: false, notYet: true, msg: 'Join two blocks first, then check their thermometers.' };
       for (const r of groups.values()) if (r.cluster.length === 2 && Math.abs(r.T - 50) < 0.5) return { ok: true };
       const r = [...groups.values()][0];
       const began = r.cluster.map(id => t.pieces[id].props.T).sort((x, y) => y - x);
       return r.cluster.length === 2
-        ? { ok: false, msg: `Those two blocks began at ${began[0]} °C and ${began[1]} °C, and both finished at ${fixed(r.T, 1)} °C.` }
-        : { ok: false, msg: `The group you joined holds ${r.cluster.length} blocks, and they all finished at ${fixed(r.T, 1)} °C.` };
+        ? { ok: false, msg: `Those two blocks started at ${began[0]} °C and ${began[1]} °C, and settled at ${fixed(r.T, 1)} °C.` }
+        : { ok: false, msg: `You joined ${r.cluster.length} blocks, and they settled at ${fixed(r.T, 1)} °C.` };
     },
     reward: {
-      log: 'Two blocks met at one reading.',
+      log: 'Two blocks met at the same temperature.',
       title: 'Thermal Equilibrium',
-      body: 'Heat passed from the hotter block to the colder one until both were at one temperature. Two equal blocks reach thermal equilibrium halfway between their starting temperatures.'
+      body: 'Heat flowed from the hotter block to the colder one until both reached the same temperature. Two identical blocks reach thermal equilibrium halfway between their starting temperatures.'
     }
   },
 
@@ -104,25 +104,25 @@ export const STAGES = [
     title: 'Spark or Tank?',
     // A PREDICT STAGE: the blocks are not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Which will warm the frozen valve more: the welding spark or the warm tank?',
+    prompt: 'Which warms a frozen pipe valve more: a welding spark or a warm water tank?',
     widget,
     table: heatTable({
       pieces: [
-        note('spark', 'Welding spark: 1200 °C, one speck of iron', { x: 24, y: 16 }),
-        note('tank', 'Warm tank: 40 °C, a tankful of water', { x: 70, y: 16 }),
-        note('same', 'They warm the valve the same', { x: 116, y: 16 })
+        note('spark', 'Welding spark: 1200 °C, tiny speck of iron', { x: 24, y: 16 }),
+        note('tank', 'Warm tank: 40 °C, full tank of water', { x: 70, y: 16 }),
+        note('same', 'Both warm the valve the same', { x: 116, y: 16 })
       ],
-      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'meet', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'meet', asymmetric: true, w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
     }),
     hints: [
-      'Read what each card gives: a temperature, and how much material there is.',
-      'The clip shows two equal blocks, but here the spark is one speck and the tank is a tankful.',
-      'Think about how much energy each source can pass on before it and the valve are at one temperature.'
+      'Notice both numbers on each card: the temperature and the amount of material.',
+      'Watch the clip showing a tiny hot speck meeting a large cold valve, and compare how much material each source has.',
+      'Think about how much total energy each source can transfer before it cools to the valve\'s temperature.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -132,7 +132,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction recorded.',
       title: 'Hypothesis Recorded',
-      body: 'Your prediction for the spark and the tank is recorded. Test it on the bench.'
+      body: 'Your prediction for the spark and the tank is saved. Test it on the bench.'
     }
   },
 
@@ -151,12 +151,12 @@ export const STAGES = [
         tag('pick-tank', 'Warm tank', { x: 54, y: 55 })
       ],
       fixtures: [latticeFixture('atoms', { x: 75, y: 36 }, { blocks: ['spark', 'valve', 'tank'], w: 122, h: 16, gate: { slot: 'answer' }, gateMsg: 'Place your answer in the slot before joining the blocks.' })],
-      zones: { slots: [{ id: 'answer', label: 'My answer', at: { x: 118, y: 51 }, size: { w: 34, h: 10 } }] }
+      zones: { slots: [{ id: 'answer', label: 'My answer', at: { x: 118, y: 51 }, size: { w: 32, h: 14 } }] }
     }),
     hints: [
-      'Place your answer in the slot first, then join the frozen valve to a source.',
-      'Compare how many particles are in the box of the welding spark and in the box of the warm tank.',
-      'A source stops passing heat on once it and the valve are at one temperature, so think about how much energy each source can lose before then.'
+      'Check the thermometer on the frozen valve and the particle boxes under the spark and the tank.',
+      'Compare how many particles are in the welding spark\'s box versus the warm tank\'s box.',
+      'Heat stops flowing once the source and valve reach the same temperature, so compare how much total energy each can transfer before then.'
     ],
     check(state) {
       const pick = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
@@ -164,13 +164,13 @@ export const STAGES = [
       const r = blockRead(state.table, 'valve');
       if (!r.joined) return { ok: false, notYet: true, msg: 'Now join the frozen valve to a source and read its thermometer.' };
       if (pick.id === 'pick-tank' && r.T >= 30) return { ok: true };
-      if (pick.id === 'pick-spark' && r.T >= 30) return { ok: false, msg: `The frozen valve warmed to ${fixed(r.T, 1)} °C against the warm tank, so check which tag sits in your answer slot.` };
-      return { ok: false, msg: `Joined to the welding spark, the frozen valve reads ${fixed(r.T, 1)} °C: the spark fell to that reading almost at once.` };
+      if (pick.id === 'pick-spark' && r.T >= 30) return { ok: false, msg: `The frozen valve warmed to ${fixed(r.T, 1)} °C against the warm tank, so check which card is in your answer slot.` };
+      return { ok: false, msg: `Joined to the welding spark, the frozen valve reads ${fixed(r.T, 1)} °C because the spark cooled almost instantly.` };
     },
     reward: {
       log: 'The tank warmed the valve; the spark barely did.',
-      title: 'Temperature Is Not Amount',
-      body: 'Temperature tells how fast the particles move, not how much energy there is. The tank is cooler than the spark but holds far more material, so it passed on far more energy as heat.'
+      title: 'Temperature Is Not Total Energy',
+      body: 'Temperature measures average particle speed, not total energy. Although cooler than the spark, the tank holds far more water and transfers far more heat.'
     }
   },
 
@@ -179,46 +179,53 @@ export const STAGES = [
     const c = cupFixture('cup', { x: 30, y: 32 }, { title: 'Cup', boundary: true, water: 100, T0: 22 });
     return {
       id: 's4-tins',
-      title: 'Warmers, Packs and Tablets',
-      briefing: { speaker: SPEAKER, body: 'The sample inside the dashed line is the system, and the water around it, called the bath, is the surroundings. A change that gives heat out to the surroundings is exothermic; one that takes heat in from them is endothermic.' },
+      title: 'Warmers, Packs, and Tablets',
+      briefing: {
+        speaker: SPEAKER,
+        body: [
+          'The sample inside the dashed line is the system.',
+          'The water bath around it, where the thermometer sits, is the surroundings.',
+          'An exothermic change releases heat to the surroundings; an endothermic change absorbs heat from them.'
+        ]
+      },
       prompt: 'Which samples are exothermic and which are endothermic?',
       widget,
       table: heatTable({
         pieces: [
-          charge('warmer', 'Hand warmer', { x: 70, y: 18 }, { moles: 0.04, dH: -165 }),
-          charge('cold', 'Cold pack', { x: 92, y: 18 }, { moles: 0.08, dH: 26 }),
-          charge('fizz', 'Fizzing tablet', { x: 70, y: 40 }, { moles: 0.05, dH: 28 }),
-          charge('lime', 'Quicklime', { x: 92, y: 40 }, { moles: 0.05, dH: -65 })
+          charge('warmer', 'Hand warmer', { x: 64, y: 18 }, { moles: 0.04, dH: -165, shown: '' }),
+          charge('cold', 'Cold pack', { x: 86, y: 18 }, { moles: 0.08, dH: 26, shown: '' }),
+          charge('fizz', 'Fizzing tablet', { x: 64, y: 40 }, { moles: 0.05, dH: 28, shown: '' }),
+          charge('lime', 'Quicklime', { x: 86, y: 40 }, { moles: 0.05, dH: -65, shown: '' })
         ],
         fixtures: [c.fixture],
         zones: {
           slots: [c.slot],
           trays: [
-            { id: 'out', label: 'Exothermic', at: { x: 125, y: 20 }, size: { w: 44, h: 22 }, cell: 22, cellH: 14 },
-            { id: 'in', label: 'Endothermic', at: { x: 125, y: 47 }, size: { w: 44, h: 22 }, cell: 22, cellH: 14 }
+            { id: 'out', label: 'Exothermic', at: { x: 124, y: 17 }, size: { w: 48, h: 22 }, cell: 22, cellH: 11 },
+            { id: 'in', label: 'Endothermic', at: { x: 124, y: 48 }, size: { w: 48, h: 22 }, cell: 22, cellH: 11 }
           ]
         }
       }),
       hints: [
-        'Look at the thermometer, which sits in the bath outside the dashed line.',
-        'Drop each sample in the cup and compare the reading of the bath before and after.',
-        'A bath that warmed was given energy by the sample, and a bath that cooled gave energy to it.'
+        'Watch the thermometer in the water bath outside the dashed line.',
+        'Drop each sample into the cup and compare the bath temperature before and after.',
+        'If the bath warms up, the sample released energy to it; if the bath cools down, the sample absorbed energy from it.'
       ],
       check(state) {
         const t = state.table;
         const want = { warmer: 'out', lime: 'out', cold: 'in', fizz: 'in' };
-        if (Object.keys(want).some(k => !['out', 'in'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Every sample needs a tray.' };
+        if (Object.keys(want).some(k => !['out', 'in'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Sort all four samples into the trays.' };
         const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
         if (!wrong) return { ok: true };
         const tin = t.pieces[wrong[0]];
         const tray = t.zones.trays[whereIs(t, wrong[0])];
-        if (tin.props.rise == null) return { ok: false, msg: 'Not every sample has been in the cup yet.' };
-        return { ok: false, msg: `The bath ${tin.props.rise > 0 ? 'warmed' : 'cooled'} around a sample you put in the "${tray.label}" tray.` };
+        if (tin.props.rise == null) return { ok: false, msg: 'Test every sample in the cup first.' };
+        return { ok: false, msg: `The bath ${tin.props.rise > 0 ? 'warmed' : 'cooled'} around the ${tin.label}, which you placed in the "${tray.label}" tray.` };
       },
       reward: {
         log: 'Two baths warmed and two cooled.',
         title: 'Exothermic and Endothermic',
-        body: 'Exothermic means the system gives heat out, so the surroundings warm. Endothermic means it takes heat in, so they cool.'
+        body: 'Exothermic means the system releases heat, warming the surroundings. Endothermic means the system absorbs heat, cooling the surroundings, even when a tablet fizzes vigorously.'
       }
     };
   })()
@@ -226,10 +233,10 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag one block onto another to join them;', 'tap the gap between them to pull them apart.'],
-  2: ['Drag the card you choose into the slot.'],
-  3: ['Drag the frozen valve onto a source.'],
-  4: ['Drag a sample onto the cup, then drag each sample into a tray.']
+  1: ['Drag one block onto another to join them;', 'tap the gap between them to separate.'],
+  2: ['Drag your prediction into the slot.'],
+  3: ['Place an answer card in the slot, then drag the valve onto a source.'],
+  4: ['Drag each sample onto the cup, then sort it into a tray.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -241,7 +248,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Heat passes from hotter things to colder ones until they reach thermal equilibrium. Temperature tells how fast the particles move; how much energy a thing can pass on as heat also depends on how much of it there is.'
+      body: 'Heat flows from hotter objects to colder ones until they reach thermal equilibrium. Temperature measures average particle motion, but total heat transfer also depends on how much material is present.'
     }
   ]
 };
@@ -286,7 +293,12 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+    onLoad(r) {
+      if (r.index === 2) {
+        const g = recall(QUEST_KEY);
+        if (g && GUESS_LABEL[g]) r.frame.note(`You predicted: ${GUESS_LABEL[g]}. Test it on the bench.`);
+      }
+    }
   });
   runner.start();
   return { dispose: () => runner.dispose() };

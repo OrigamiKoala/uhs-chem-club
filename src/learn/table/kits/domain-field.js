@@ -68,8 +68,8 @@ export function molRead(p) {
   };
 }
 
-/** Does this card carry the arrows tool? */
-export const arrowsOn = (state, p) => p.joinedTo.some(id => state.pieces[id]?.kind === 'arrows');
+/** Does this card show bond dipole arrows (either by default or via the arrows tool)? */
+export const arrowsOn = (state, p) => Boolean(p.props?.showDipoles) || p.joinedTo.some(id => state.pieces[id]?.kind === 'arrows');
 /** Is this stream under the charged rod? */
 export const rodOn = (state, p) => p.joinedTo.some(id => state.pieces[id]?.kind === 'rod');
 
@@ -403,7 +403,28 @@ export function paintFieldFixture(ctx, f, state, b) {
   ctx.strokeRect(b.X(g.x0) + 0.5, b.Y(g.y0) + 0.5, (g.x1 - g.x0) * b.sc - 1, (g.y1 - g.y0) * b.sc - 1);
   ctx.setLineDash?.([]);
   plateText(ctx, on ? 'FIELD ON' : 'FIELD OFF', b.x1 - 1.5 * b.sc, b.y0 + 3.6 * b.sc, { size: Math.max(7, Math.round(2.2 * b.sc)), weight: 700, align: 'right', base: 'middle', color: on ? PLATE_COLORS.phosphor : PLATE_COLORS.dim });
+  if (f.props?.flipPiece) {
+    const bx0 = b.x0 + 3 * b.sc;
+    const by0 = b.y1 - 6.2 * b.sc;
+    const bw = 28 * b.sc;
+    const bh = 4.6 * b.sc;
+    ctx.fillStyle = '#242019';
+    ctx.fillRect(bx0, by0, bw, bh);
+    ctx.strokeStyle = AMBER;
+    ctx.lineWidth = 1.4;
+    ctx.strokeRect(bx0 + 0.5, by0 + 0.5, bw - 1, bh - 1);
+    plateText(ctx, 'Rotate Molecule', bx0 + bw / 2, by0 + bh / 2, { size: Math.max(7, Math.round(2.0 * b.sc)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+  }
   return true;
+}
+
+/** Tap zones for field fixtures (e.g. the "Rotate Molecule" button on Plates). */
+export function fieldTapZones(f) {
+  if (f.kind === 'plates' && f.props?.flipPiece) {
+    const r = rectOf(f, SIZES.fixture);
+    return [{ x0: 3, x1: 31, y0: r.h - 6.2, y1: r.h - 1.6, action: { flip: f.props.flipPiece } }];
+  }
+  return [];
 }
 
 /* ------------------------------------------------------------------
@@ -411,11 +432,11 @@ export function paintFieldFixture(ctx, f, state, b) {
    ------------------------------------------------------------------ */
 
 /** A pair of charged plates: the fixture (Run throws the field). `at` is the box's middle. */
-export function plates(id, at, { size = { w: 100, h: 46 }, runLabel = 'Switch Field' } = {}) {
+export function plates(id, at, { size = { w: 100, h: 46 }, runLabel = 'Switch Field', flipPiece = null } = {}) {
   return {
     id, kind: 'plates', label: 'Plates', at, size, runLabel,
     dials: { field: { min: 0, max: 1, step: 1, value: 0, label: 'Field' } },
-    props: { hidden: ['field'], inset: 6, bar: 5, top: 9, bottom: 8 }
+    props: { hidden: ['field'], inset: 6, bar: 5, top: 9, bottom: 8, ...(flipPiece ? { flipPiece } : {}) }
   };
 }
 

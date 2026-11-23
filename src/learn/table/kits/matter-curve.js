@@ -280,8 +280,10 @@ function samplePanel(ctx, F, top, T, a, { crowd = null, cup = null, clock = 0 })
   if (crowd) {
     const unit = F.len(1.55);
     const tail = tailOf(T) * 3.4;
+    let freeCount = 0;
     for (let i = 0; i < 12; i++) {
       const m = placeOfMolecule(i, crowd);
+      if (m.state === 'gas') freeCount++;
       // Each molecule moves as its own state does: shaking in the ice, sliding in the water, flying and bouncing in the steam. The
       // sample's temperature sets how fast, so the molecules speed up on a slope and the state changes on a level stretch.
       const [px, py] = placeIn(m.state, i, clock, T, [wx + 1.5 + m.at[0] * (ww - 3), wy + 1.5 + m.at[1] * (wh - 3)], { x0: wx + 1.5, y0: wy + 1.5, w: ww - 3, h: wh - 3 }, 0.9);
@@ -292,11 +294,23 @@ function samplePanel(ctx, F, top, T, a, { crowd = null, cup = null, clock = 0 })
       ctx.globalAlpha = 1;
       paintGlyph(ctx, 'H2O', cx, cy, unit);
     }
+    say(ctx, `free: ${freeCount} of 12`, F.x(wx + ww / 2), F.y(wy + wh + 2.6), F.size(1.9, 6), { align: 'center', color: freeCount === 12 ? AMBER : DUST, weight: 700 });
   } else if (cup) {
-    // A lagged cup with the sample in it, as deep as its mass and tinted by its temperature.
-    ctx.fillStyle = T > a.yMin + (a.yMax - a.yMin) * 0.5 ? 'rgba(192,101,43,0.30)' : T < 15 ? 'rgba(111,143,176,0.32)' : 'rgba(111,143,63,0.22)';
-    ctx.fillRect(F.x(wx), F.y(wy + wh * 0.4), F.len(ww), F.len(wh * 0.6));
-    say(ctx, cup, F.x(wx + ww / 2), F.y(wy + wh - 3), F.size(2.4, 6), { align: 'center', color: DUST });
+    // A lagged cup with the sample in it: shows ice shrinking and water filling during the 0 °C melting plateau.
+    const liquidH = T <= -0.5 ? 0 : T >= 0.5 ? wh * 0.62 : wh * 0.34;
+    const iceFrac = T <= -0.5 ? 1 : T >= 0.5 ? 0 : 0.45;
+    if (liquidH > 0) {
+      ctx.fillStyle = T > a.yMin + (a.yMax - a.yMin) * 0.5 ? 'rgba(192,101,43,0.34)' : 'rgba(111,143,176,0.38)';
+      ctx.fillRect(F.x(wx), F.y(wy + wh - liquidH), F.len(ww), F.len(liquidH));
+    }
+    if (iceFrac > 0) {
+      const iw = ww * (0.35 + 0.35 * iceFrac); const ih = wh * (0.25 + 0.28 * iceFrac);
+      ctx.fillStyle = 'rgba(216,232,244,0.82)';
+      ctx.fillRect(F.x(wx + (ww - iw) / 2), F.y(wy + wh - ih - liquidH * 0.35), F.len(iw), F.len(ih));
+      ctx.strokeStyle = DUST;
+      ctx.strokeRect(F.x(wx + (ww - iw) / 2), F.y(wy + wh - ih - liquidH * 0.35), F.len(iw), F.len(ih));
+    }
+    say(ctx, cup, F.x(wx + ww / 2), F.y(wy + wh - 2.6), F.size(2.3, 6), { align: 'center', color: DUST, weight: 700 });
   }
   ctx.strokeStyle = STEEL; ctx.lineWidth = 2;
   ctx.strokeRect(Math.round(F.x(wx)) + 0.5, Math.round(F.y(wy)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));

@@ -14,6 +14,7 @@ import { thornTable, tbuildFixture, tmolFixture, molRead, ttestFixture, resultOf
 import { alkaneH } from '../../engine/thorndata.js';
 import '../../engine/thorn-scenes/q4-groups.js';
 import '../../engine/thorn-scenes/q6-polymers.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -226,3 +227,5 @@ export function mount(container, ctx) {
   runner.start();
   return { dispose: () => runner.dispose() };
 }
+
+markFights(STAGES);

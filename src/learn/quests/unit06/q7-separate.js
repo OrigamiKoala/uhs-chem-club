@@ -79,25 +79,25 @@ export const STAGES = [
     title: 'Through the Paper',
     // A PREDICT STAGE: the filter is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Salty water is poured through filter paper into a clean cup: what does the cup hold afterwards?',
+    prompt: 'If you pour salty water through filter paper into a clean cup, what ends up in the cup?',
     widget,
     table: matterTable({
       pieces: [
         note('clean', 'Clean water, with the salt left on the paper', { x: 30, y: 14 }),
-        note('same', 'Salty water, as it went in', { x: 30, y: 34 }),
-        note('less', 'Water that is less salty than before', { x: 78, y: 14 })
+        note('same', 'Salty water, just as salty as before', { x: 30, y: 34 }),
+        note('less', 'Water that is less salty than before', { x: 74, y: 14 })
       ],
       fixtures: [mleadFixture('lead', { x: 117, y: 52 }, { scene: 'sieve', w: 44, h: 24 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 40, h: 15 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
-      'Think about what the paper can hold back, and where the salt is when the water goes in.',
-      'Commit to the card that matches what you expect in the cup, even if you are unsure.'
+      'Read the three prediction cards and drag your choice into the slot.',
+      'Think about what filter paper can trap and whether dissolved salt is small enough to pass through.',
+      'Pick what you expect to find in the cup after filtering.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -107,7 +107,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, pour four mixtures through the paper and look at what each leaves.'
+      body: 'Next, pour four mixtures through filter paper and inspect what stays on the paper and what goes into the cup.'
     }
   },
 
@@ -116,50 +116,45 @@ export const STAGES = [
     const fil = filterFixture('filter', { x: 36, y: 29 });
     const at = [14, 36, 58, 80].map(x => ({ x, y: 62.5 }));
     const cards = MIXES.map((m, i) => mixCard(m, m, at[i]));
-    const tray = (id, x) => ({ id, label: TRAY_LABEL[id], at: { x, y: 29 }, size: { w: 40, h: 44 }, cell: 19, cellH: 19 });
+    const tray = (id, x) => ({ id, label: TRAY_LABEL[id], at: { x, y: 29 }, size: { w: 38, h: 44 }, cell: 19, cellH: 19 });
     return {
       id: 's2-filter',
       title: 'Four Mixtures',
-      get prompt() {
-        const g = recall(QUEST_KEY);
-        return g && GUESS_LABEL[g]
-          ? `You guessed ${GUESS_LABEL[g]}: which mixtures can be separated by filtering, and which need the water boiled off?`
-          : 'Which mixtures can be separated by filtering, and which need the water boiled off?';
-      },
+      prompt: 'Which mixtures can be separated by filtering, and which need the water boiled off?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [fil.fixture],
-        zones: { slots: [fil.slot], trays: [tray('filter', 88), tray('boil', 130)] }
+        zones: { slots: [fil.slot], trays: [tray('filter', 88), tray('boil', 129)] }
       }),
       hints: [
-        'Use the filter and its "Pour Through" key, then drag each mixture into a tray.',
-        'Compare what the paper holds and what the dried drop of the cup shows for each mixture.',
-        'File a mixture under filtering when the paper takes its solid, and under boiling off when the solid stays in the cup.'
+        'Pour each mixture through the filter with "Pour Through", then sort each card into a tray.',
+        'Compare what stays on the filter paper with what is left when a drop from the cup dries.',
+        'Put a mixture under "Filter it" when the paper traps the solid, and under "Boil the water off" when it passes into the cup.'
       ],
       check(state) {
         const t = state.table;
         const placed = MIXES.map(m => whereIs(t, m));
-        if (placed.some(w => !t.zones.trays[w])) return { ok: false, notYet: true, msg: 'Every mixture needs a tray.' };
+        if (placed.some(w => !t.zones.trays[w])) return { ok: false, notYet: true, msg: 'Sort every mixture into a tray.' };
         const unpoured = MIXES.find(m => t.pieces[m].props.poured == null);
+        if (unpoured) return { ok: false, msg: `Pour ${MIXTURES[unpoured].name} through the filter first.` };
         const wrong = MIXES.filter(m => whereIs(t, m) !== methodFor(m));
         if (!wrong.length) return { ok: true };
         const m = wrong[0];
-        if (unpoured && m === unpoured) return { ok: false, msg: `${MIXTURES[m].name} has not been poured through the filter yet.` };
         const res = pourThrough(m);
         const tray = TRAY_LABEL[whereIs(t, m)];
         return { ok: false, msg: res.onPaper
-          ? `${MIXTURES[m].name} sits in the "${tray}" tray, and the paper held its grains while the drop of the cup dried clean.`
-          : `${MIXTURES[m].name} sits in the "${tray}" tray, and the paper held nothing while the drop of the cup dried to a ${res.dried}.` };
+          ? `${MIXTURES[m].name} is in "${tray}", but the filter paper trapped its grains while the drop from the cup dried clean.`
+          : `${MIXTURES[m].name} is in "${tray}", but nothing stayed on the paper while the drop from the cup dried to a ${res.dried}.` };
       },
       get reward() {
         const g = recall(QUEST_KEY);
-        const verdict = g === 'same' ? 'Your guess held. ' : g && GUESS_LABEL[g] ? 'The cup was not as you guessed. ' : '';
+        const verdict = g === 'same' ? 'The test matched your prediction. ' : g && GUESS_LABEL[g] ? 'The test overturned your prediction. ' : '';
         return {
-          log: 'The salt and the dye went through the paper with the water.',
+          log: 'Salt and dye passed through the filter paper with the water.',
           title: 'The Filtrate',
-          body: `${verdict}Filter paper holds back pieces too big for its pores. The liquid that passes is the filtrate, and a solid dissolved in it passes too, so only boiling the water off takes it out.`
+          body: `${verdict}The liquid that passes through filter paper is the filtrate. Paper traps large grains like sand and sawdust, while dissolved salt and dye pass through and need the water boiled off.`
         };
       }
     };
@@ -171,9 +166,9 @@ export const STAGES = [
     return {
       id: 's3-rf',
       title: 'Black Ink',
-      briefing: 'In chromatography a liquid climbs a strip of paper and carries each dye a different distance. A dye\'s retention factor, Rf, is its distance divided by the distance the liquid travelled.',
-      prompt: 'What is the Rf of the red dye?',
-      entry: { id: 'rf', label: 'Fraction', unit: '' },
+      briefing: 'In chromatography, a liquid climbs paper and carries each dye a different distance. Retention factor (Rf) = dye distance ÷ solvent-front distance.',
+      prompt: 'What is the red dye\'s retention factor (Rf = spot distance ÷ wet-edge distance)?',
+      entry: { id: 'rf', label: 'Rf (0 to 1)', unit: '' },
       widget,
       table: matterTable({
         pieces: [inkCard('ink', { x: 100, y: 30 })],
@@ -181,65 +176,65 @@ export const STAGES = [
         zones: { slots: [strip.slot] }
       }),
       hints: [
-        'Use the strip, its "Run Strip" key and the answer field.',
-        'Read the red spot and the wet edge of the paper on the ruler, both from the start line.',
-        'Divide the red spot\'s distance from the start line by the distance the wet edge reached.'
+        'Place the ink on the strip, press "Run Strip", and enter your answer below.',
+        'Measure both the red spot and the wet edge (solvent front) from the start line on the ruler.',
+        'Compare how far the red spot climbed as a fraction of how far the wet edge climbed.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'rf');
-        if (!(v >= 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
+        if (!(v >= 0)) return { ok: false, notYet: true, msg: 'Enter your answer in the field at the bottom.' };
         if (Math.abs(v - RF_RED) <= RF_TOL) return { ok: true };
         const r = stripRead(t, 'strip');
-        if (!r.item || r.ran.water == null) return { ok: false, msg: 'The strip has not been run yet.' };
-        if (v > 1) return { ok: false, msg: `${fixed(v, 2)} is longer than the whole climb of the wet edge on the ruler.` };
-        return { ok: false, msg: v > RF_RED ? `${fixed(v, 2)} puts the red spot farther from the start line than the ruler shows.` : `${fixed(v, 2)} puts the red spot nearer the start line than the ruler shows.` };
+        if (!r.item || r.ran.water == null) return { ok: false, msg: 'Run the paper strip first.' };
+        if (v > 1) return { ok: false, msg: `${fixed(v, 2)} is greater than 1, meaning the dye climbed past the wet edge.` };
+        return { ok: false, msg: v > RF_RED ? `${fixed(v, 2)} places the red spot farther from the start line than the ruler shows.` : `${fixed(v, 2)} places the red spot closer to the start line than the ruler shows.` };
       },
       reward: {
-        log: 'The black ink held three dyes, and the red one went about half as far as the liquid.',
+        log: 'Black ink split into three dyes, and the red dye climbed about half as far as the water.',
         title: 'Chromatography',
-        body: 'Chromatography separates a mixture as a liquid climbs paper that holds each dye differently. A dye\'s retention factor, Rf, is its distance divided by the solvent front, how far the liquid reached; black ink held three dyes.'
+        body: 'Chromatography separates a mixture as a liquid climbs paper that holds each dye differently. A dye\'s retention factor (Rf) is its distance divided by the solvent front distance; black ink contains three dyes.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const strip = stripFixture('strip', { x: 41, y: 32 }, { solvents: ['water', 'mix', 'hexane'] });
-    const cards = ['yellow', 'red', 'blue'].map((d, i) => dyeCard(d, d, { x: 100 + i * 22, y: 56 }));
+    const strip = stripFixture('strip', { x: 38, y: 32 }, { solvents: ['water', 'hexane'] });
+    const cards = ['yellow', 'red', 'blue'].map((d, i) => dyeCard(d, d, { x: 96 + i * 22, y: 56 }));
     return {
       id: 's4-solvent',
       title: 'Another Liquid',
-      prompt: 'In hexane and acetone, which dye travels least and which furthest?',
+      prompt: 'In hexane and acetone, order the three dyes from least distance traveled to farthest.',
       widget,
       table: matterTable({
         pieces: [inkCard('ink', { ...strip.slot.at }, { ran: { water: FRONT_CM } }, { zone: `slot:${strip.slotId}` }), ...cards],
         fixtures: [strip.fixture],
         zones: {
           slots: [strip.slot],
-          rail: { at: { x: 115, y: 34 }, size: { w: 68, h: 16 }, first: 'Travelled least', last: 'Travelled furthest', items: cards.map(c => c.id), start: ['blue', 'yellow', 'red'] }
+          rail: { at: { x: 112, y: 34 }, size: { w: 74, h: 16 }, labelLift: 3.2, first: 'Traveled least', last: 'Traveled farthest', items: cards.map(c => c.id) }
         }
       }),
       hints: [
-        'Use the "Solvent" dial and the "Run Strip" key, then the rail.',
-        'Compare where each coloured spot ends on the ruler with where it ended in water.',
-        'Rank the dyes by how far their spots travelled in hexane and acetone, the nearest to the start line first.'
+        'Set the "Solvent" dial to Hexane and acetone, press "Run Strip", then order the dyes on the rail.',
+        'Compare where each colored spot ends on the ruler with where it ended in water.',
+        'Order the dyes by how far their spots traveled in hexane and acetone, closest to the start line first.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all 3 dyes on the rail.' };
-        if (order.join() === HEXANE_ORDER.join()) return { ok: true };
+        if (order.length < 3) return { ok: false, notYet: true, msg: 'Place all 3 dyes on the rail.' };
         const r = stripRead(t, 'strip');
-        if (!r.item || r.ran.hexane == null) return { ok: false, msg: 'The ink has not run in hexane and acetone yet.' };
+        if (!r.item || r.ran.hexane == null) return { ok: false, msg: 'Run the ink in hexane and acetone first.' };
+        if (order.join() === HEXANE_ORDER.join()) return { ok: true };
         const k = order.findIndex((d, i) => i > 0 && spotCm(order[i - 1], 'hexane') > spotCm(d, 'hexane'));
         const a = DYE_NAME[order[k - 1]]; const b = DYE_NAME[order[k]];
-        return { ok: false, msg: `${a} sits left of ${b} on the rail, but on the hexane and acetone strip the ${a.toLowerCase()} spot stands higher than the ${b.toLowerCase()} one.` };
+        return { ok: false, msg: `${a} is left of ${b} on the rail, but on the hexane and acetone strip the ${a.toLowerCase()} spot climbed higher than the ${b.toLowerCase()} spot.` };
       },
       reward: {
-        log: 'Blue led in water and trailed in hexane and acetone, and yellow did the opposite.',
+        log: 'Blue led in water and trailed in hexane and acetone, while yellow did the opposite.',
         title: 'Reading Polarity',
-        body: 'The order turned round: water carries polar dyes far, while hexane and acetone carry nonpolar dyes. How far a dye travels in each liquid tells you how polar it is.'
+        body: 'The order reversed: polar water carries polar dyes farthest, while nonpolar hexane and acetone carry nonpolar dyes farthest. Comparing the two strips reveals each dye\'s polarity.'
       }
     };
   })(),
@@ -251,35 +246,35 @@ export const STAGES = [
     return {
       id: 's5-still',
       title: 'Three Liquids',
-      prompt: 'Which liquid comes over first and which last?',
+      prompt: 'Order the three liquids from the first to boil off in the still to the last.',
       widget,
       table: matterTable({
         pieces: cards,
         fixtures: [still.fixture],
-        zones: { rail: { at: { x: 117, y: 34 }, size: { w: 64, h: 16 }, first: 'Comes over first', last: 'Comes over last', items: cards.map(c => c.id), start: ['h2o', 'acetone', 'ethanol'] } }
+        zones: { rail: { at: { x: 115, y: 34 }, size: { w: 68, h: 16 }, labelLift: 3.2, first: 'Comes over first', last: 'Comes over last', items: cards.map(c => c.id) } }
       }),
       hints: [
-        'Use the "Collect Cut" key until the receiver is full, then the rail.',
-        'Compare what each vial holds, and the temperature at the top of the column while it filled.',
-        'Rank each liquid by the vial that holds the most of it, from the first vial to the last.'
+        'Press "Collect Cut" until all three vials fill, then order the liquids on the rail.',
+        'Check which liquid dominates each vial and note the column temperature as it fills.',
+        'Order the liquids by which vial holds the most of each, from vial 1 to vial 3.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all 3 liquids on the rail.' };
+        if (order.length < 3) return { ok: false, notYet: true, msg: 'Place all 3 liquids on the rail.' };
+        const s = stillRead(t, 'still');
+        if (s.cuts < STILL_CUTS) return { ok: false, msg: `You have collected ${s.cuts} of ${STILL_CUTS} vials so far; press "Collect Cut" until all three fill.` };
         const want = STILL_ORDER.map(id => (id === 'H2O' ? 'h2o' : id));
         if (order.join() === want.join()) return { ok: true };
-        const s = stillRead(t, 'still');
-        if (s.cuts < STILL_CUTS) return { ok: false, msg: `The receiver holds ${s.cuts} of ${STILL_CUTS} vials so far.` };
         const sub = id => (id === 'h2o' ? 'H2O' : id);
         const k = order.findIndex((id, i) => i > 0 && richestCut(sub(order[i - 1])) > richestCut(sub(id)));
         const a = order[k - 1]; const b = order[k];
-        return { ok: false, msg: `${STILL_NAME[sub(a)][0].toUpperCase()}${STILL_NAME[sub(a)].slice(1)} sits left of ${STILL_NAME[sub(b)]}, but the vial richest in ${STILL_NAME[sub(a)]} is vial ${richestCut(sub(a)) + 1} and the one richest in ${STILL_NAME[sub(b)]} is vial ${richestCut(sub(b)) + 1}.` };
+        return { ok: false, msg: `${STILL_NAME[sub(a)][0].toUpperCase()}${STILL_NAME[sub(a)].slice(1)} is left of ${STILL_NAME[sub(b)]}, but ${STILL_NAME[sub(a)]} is richest in vial ${richestCut(sub(a)) + 1} while ${STILL_NAME[sub(b)]} is richest in vial ${richestCut(sub(b)) + 1}.` };
       },
       reward: {
-        log: 'Each vial came out richer in one liquid, but none came out pure.',
+        log: 'Each vial was richest in one liquid, though none was completely pure.',
         title: 'Distillation',
-        body: 'Distillation heats a mixture so the liquid held least tightly leaves first as vapour, then cools the vapour into a vial. Each vial is richer in one liquid but never pure; a longer column separates further.'
+        body: 'Distillation heats a mixture so the liquid with the weakest attractions boils off first and cools into a vial. Each vial is enriched in one liquid rather than pure; a taller column separates them better.'
       }
     };
   })(),
@@ -293,31 +288,31 @@ export const STAGES = [
       title: 'A Salted Flask',
       briefing: {
         speaker: 'Vess',
-        body: 'Dissolved particles raise water\'s boiling point. As a dilute-solution rule of thumb, each mole of particles per kilogram of water raises it by 0.51 °C.'
+        body: 'Test sugar, NaCl, and CaCl₂ in the boiling flask to see how the boiling-point rise depends on the number of dissolved particles.'
       },
-      prompt: 'How many degrees above 100 °C does water boil with 3.00 mol of CaCl₂ in 2.00 kg?',
+      prompt: 'How many degrees above 100 °C does 2.00 kg of water boil when 3.00 mol of CaCl₂ is dissolved in it?',
       entry: { id: 'rise', label: 'Rise in boiling point', unit: '°C' },
       widget,
       table: matterTable({ pieces: cards, fixtures: [boil.fixture], zones: { slots: [boil.slot] } }),
       hints: [
-        'Use a card, the "Dissolved" dial and the "Boil" key, then the answer field.',
-        'Compare the rise for sugar and for salt at the same amount, and count the particles drawn on each card.',
-        'Count how many particles each formula unit breaks into, and scale the rise for the mass of water.'
+        'Drag a solute card into the boiling flask, set the "Dissolved" dial, press "Boil", then enter your answer below.',
+        'Compare the boiling-point rise for sugar, NaCl, and CaCl₂ at the same moles, and count the ions on each card.',
+        'Scale the boiling-point rise from 1.00 kg of water to 3.00 mol of CaCl₂ in 2.00 kg of water.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'rise');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter your answer in the field at the bottom.' };
         if (Math.abs(v - RISE_ANSWER) <= RISE_TOL) return { ok: true };
         const near = x => Math.abs(v - x) <= RISE_TOL;
-        if (near(boilingRise('NaCl', 3, 2)) || near(boilingRise('sugar', 3, 2))) return { ok: false, msg: `${fixed(v, 2)} °C is what the bench reads for another card at this amount, not for CaCl₂.` };
-        if (near(boilingRise('CaCl2', 3, 1))) return { ok: false, msg: `${fixed(v, 2)} °C is the rise for 3.00 mol in 1.00 kg, and the flask holds 2.00 kg.` };
-        return { ok: false, msg: `${fixed(v, 2)} °C does not fit the rises the bench gives for CaCl₂ at ${BOIL_AMOUNTS.map(a => a.toFixed(2)).join(', ')} mol in 1.00 kg.` };
+        if (near(boilingRise('NaCl', 3, 2)) || near(boilingRise('sugar', 3, 2))) return { ok: false, msg: `${fixed(v, 2)} °C matches a different solute at this amount, not CaCl₂.` };
+        if (near(boilingRise('CaCl2', 3, 1))) return { ok: false, msg: `${fixed(v, 2)} °C is the rise for 3.00 mol in 1.00 kg of water, but this flask holds 2.00 kg.` };
+        return { ok: false, msg: `${fixed(v, 2)} °C does not match the boiling-point rises shown for CaCl₂ in 1.00 kg of water.` };
       },
       reward: {
-        log: 'A salted flask boils hotter, in step with the number of dissolved particles.',
+        log: 'Dissolved solute raised the boiling point in proportion to the number of dissolved particles.',
         title: 'Boiling Point Elevation',
-        body: '1.50 mol of CaCl₂ per kilogram is 4.50 mol of particles, a boiling point elevation of 2.3 °C. A property that counts particles only is a colligative property.'
+        body: 'Dissolving 3.00 mol of CaCl₂ in 2.00 kg of water gives 1.50 mol/kg, or 4.50 mol of ions per kg, raising the boiling point by 2.3 °C. Properties that depend only on particle count are colligative properties.'
       }
     };
   })(),
@@ -330,7 +325,7 @@ export const STAGES = [
     return {
       id: 's7-plan',
       title: 'Sand, Salt and Water',
-      prompt: 'Which steps, in which order, leave the sand, the salt and the water each alone?',
+      prompt: 'Which steps, in what order, separate a mixture of sand, salt, and water into three pure parts?',
       widget,
       table: matterTable({
         pieces: cards,
@@ -338,45 +333,36 @@ export const STAGES = [
         zones: { rail: { at: { x: 108, y: 24 }, size: { w: 80, h: 16 }, first: 'First step', last: 'Last step', items: [] } }
       }),
       hints: [
-        'Drag step cards onto the row; the board shows where each part ends.',
-        'Look for any place on the board that holds more than one part, and for a step that changes nothing.',
-        'Think about which step stops working once the water has gone.'
+        'Drag step cards onto the rail in order, then press Submit to see where each part ends up.',
+        'Decide which step traps the sand and which step separates dissolved salt from liquid water.',
+        'Notice which step only works while the water is still there.'
       ],
       check(state) {
         const t = state.table;
         const steps = planSteps(t);
-        if (!steps.length) return { ok: false, notYet: true, msg: 'Lay a step on the row.' };
+        if (!steps.length) return { ok: false, notYet: true, msg: 'Place at least one step card on the rail.' };
         const r = planRead(t);
         const idle = r.moved.findIndex(m => !m);
         if (r.separated && idle < 0) return { ok: true };
-        if (r.separated) return { ok: false, msg: `The "${STEP_LABEL[steps[idle]]}" step changed nothing: the board is the same with it as without it.` };
+        if (r.separated) return { ok: false, msg: `The "${STEP_LABEL[steps[idle]]}" step did nothing: the result is the same without it.` };
         const where = { paper: 'the paper', flask: 'the flask', receiver: 'the receiver' };
         const crowded = ['paper', 'flask', 'receiver'].filter(k => r[k].length > 1);
-        if (!crowded.length) return { ok: false, msg: 'The board does not show each part alone yet.' };
+        if (!crowded.length) return { ok: false, msg: 'The three parts are not separated yet.' };
         const k = crowded[0];
-        const text = `${where[k]} holds ${joinWords(r[k])} together.`;
+        const text = `${where[k]} still holds ${joinWords(r[k])} together.`;
         return { ok: false, msg: text[0].toUpperCase() + text.slice(1) };
       },
       reward: {
-        log: 'Filtering first, then boiling the water off, left each part alone.',
+        log: 'Filtering first, then boiling the water off, separated all three parts.',
         title: 'Choosing a Method',
-        body: 'Filtering removes what is too big for the paper, and boiling the water off leaves the salt. Choose each method by what differs between the parts.'
+        body: 'Filtering first traps the sand grains, and boiling the water off next leaves the salt behind while collecting clean water. Match each separation step to how the parts differ.'
       }
     };
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: [],
-  3: ['Drag the ink into the strip, press the key, then read the ruler and type.'],
-  4: ['Set the dial to a liquid, press the key, then put the dyes on the rail.'],
-  5: ['Press the key until the receiver is full, then put the cards on the rail.'],
-  6: ['Drag a card into the flask, set the dial, press the key, then type.'],
-  7: ['Drag step cards onto the row. The board shows what they do.']
-};
-for (const k of Object.keys(NOTES)) if (!NOTES[k].length) delete NOTES[k];
-applyNotes(STAGES, NOTES);
+/** How-to lines removed from the plate. */
+applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -386,7 +372,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Filter paper cannot take out a dissolved solid. A strip separates dyes by how the paper and the liquid each hold them, and a still separates liquids by how tightly each is held. Boiling the water off leaves a dissolved solid behind.'
+      body: 'Filter paper traps undissolved solids but lets dissolved solutes pass through in the filtrate. Chromatography separates dyes by polarity, distillation separates liquids by boiling point, and boiling off the solvent recovers a dissolved solid.'
     }
   ]
 };
@@ -405,7 +391,7 @@ export const SOLUTIONS = [
   [put('same', 'slot:guess')],
   pourAll(methodFor),
   [put('ink', 'slot:strip.ink'), { run: 'strip' }, typed('rf', RF_RED)],
-  [dial('strip', 'solvent', 3), { run: 'strip' }, ...rail(HEXANE_ORDER)],
+  [dial('strip', 'solvent', 2), { run: 'strip' }, ...rail(HEXANE_ORDER)],
   [...Array.from({ length: STILL_CUTS }, () => ({ run: 'still' })), ...rail(STILL_ORDER.map(id => (id === 'H2O' ? 'h2o' : id)))],
   [put('cacl2', 'slot:boil.pot'), dial('boil', 'amount', 3), { run: 'boil' }, dial('boil', 'amount', 2), { run: 'boil' }, typed('rise', RISE_ANSWER.toFixed(2))],
   [put('s-filter', 'rail:0'), put('s-boil', 'rail:1')]
@@ -416,7 +402,7 @@ export const MISSES = [
   [],
   pourAll(m => (m === 'salt' ? 'filter' : methodFor(m))),
   [put('ink', 'slot:strip.ink'), { run: 'strip' }, typed('rf', (spotCm('red', 'water') ).toFixed(1))],
-  [dial('strip', 'solvent', 3), { run: 'strip' }, ...rail(WATER_ORDER)],
+  [dial('strip', 'solvent', 2), { run: 'strip' }, ...rail(WATER_ORDER)],
   [...Array.from({ length: STILL_CUTS }, () => ({ run: 'still' })), ...rail(['h2o', 'ethanol', 'acetone'])],
   [put('cacl2', 'slot:boil.pot'), dial('boil', 'amount', 3), { run: 'boil' }, typed('rise', boilingRise('NaCl', 3, 2).toFixed(2))],
   [put('s-boil', 'rail:0'), put('s-filter', 'rail:1')]

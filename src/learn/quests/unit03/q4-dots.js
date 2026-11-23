@@ -1,102 +1,118 @@
 /**
  * q4-dots.js — Ligar, bench four: LEWIS STRUCTURES.
  *
- * The pair slate, and the second TABLETOP on the second world (plan `bench-tabletop.md`, phase T1b). A slate holds a molecule's
- * atoms, fixed where the molecule puts them, with a joint at every place a pair could go between two of them; a tray holds exactly
- * the electrons the molecule has. The player deals electrons from the tray by hand: a pair dropped on a joint shares itself between
- * the two atoms beside it, a pair dropped on an atom stays on that atom, and "Lift Out" takes one back. Every atom carries a lamp
- * that lights when eight stand round it (two for hydrogen). The slate reads and never lectures: it has one rule, that a hydrogen or
- * fluorine atom shares one pair and no more. Nothing arranges an electron for the player, and the lamps only report. A drawing of
- * electrons on a slate is flat, so it stays flat (the reward cards hold the solid shapes).
+ * REBUILT 2026-11-21 (`docs/feedback-11-21.md`). The old bench was practice for a student who already knew Lewis structures: it
+ * asked for a count of valence electrons nobody had taught, pinned water's atoms in a triangle, and never said what a lone pair is.
+ * This one teaches from the shell picture up, one idea per stage, and only then builds molecules (the old file is in
+ * `archive/2026-11-21/q4-dots-before-rework/`).
  *
- * THE CLICK (2026-10-23 rollout). Most students draw every bond as a single stick, so carbon dioxide would be O-C-O. The quest asks
- * how many pairs join carbon to each oxygen (the single-stick idea is a card), then hands over carbon dioxide's electrons: with a
- * pair in each gap two lamps stay dark, and only a second pair between the neighbours lights them.
+ *   1  count oxygen's outer-shell electrons off its shell picture                  -> valence electrons
+ *   2  read sulfur's count off its column, with four open atoms beside it          -> the column gives the count
+ *   3  add up what water's three atoms bring                                         -> a molecule pools them
+ *   4  build water on the board: bond by dragging atoms together, then lone pairs   -> bond, lone pair, Lewis structure, octet
+ *   5  PREDICT: how many pairs join carbon to each oxygen in carbon dioxide?          (no instrument; the single-bond idea is a card)
+ *   6  build carbon dioxide                                                           -> double bonds
+ *   7  build HOF with the atoms loose: which atom can bond to both others?            -> central atom
+ *   8  boron trifluoride, where boron's ring stays amber                              -> incomplete octet
+ *   9  sulfur tetrafluoride, where sulfur ends with ten                               -> expanded octet
+ *  10  nitric oxide, eleven electrons and one left on its own                         -> free radical
  *
- *   1  place water's electrons so every lamp is lit                -> Lewis structure, lone pair, octet
- *   2  PREDICT: how many pairs join carbon to each oxygen?         (no instrument; the single-stick idea is a card)
- *   3  place carbon dioxide's electrons                            -> multiple bonds share more
- *   4  build HOF, where only one atom can join the other two        -> central atom
- *   5  boron trifluoride, where boron's lamp stays amber           -> incomplete octet
- *   7  sulfur tetrafluoride, where sulfur's lamp shows ten          -> expanded octet
- *   8  nitric oxide, eleven electrons and one left unpaired         -> odd-electron molecule
- *
- * Cut (2026-10-23): "what is left over" (water already leaves lone pairs), the ammonium ion (a charge dial for a count the AP exam
- * asks), nitric oxide and SF6 (free radical and expanded octet; restored 2026-10-29 as stages 7 and 8).
- *
- * Stage 4 is HOF, not HCN: on this board hydrogen and fluorine take one pair only, so the oxygen between them is the one atom that can
- * join them, which is something the player can FIND. (HCN has an isomer, HNC, that lights every lamp as well.)
- *
- * THE TABLE (`table/`, `kits/atoms.js`, the Lewis slate). The dealing is `lewis.js` `addBond` / `addLone` / `addDot` / `removeOne`, the
- * reading is `planLewis`, and `slateOf` reads the picture: the picture and the grade are one function. `SOLUTIONS` and `MISSES` are
- * scripts of the player's own deals, replayed by `verify:table` by drag and by two taps.
+ * THE BOARD (`kits/atoms.js`, the LOOSE slate). A molecule's atoms start apart in a row. Dragging one atom onto another shares an
+ * electron pair between them (a bond, drawn as a thick line); an Electron pair dropped on an atom stays there (a lone pair, two dots);
+ * dropped on a bond it shares one more pair; Remove takes one back. After every move the atoms arrange themselves round the bonds and
+ * lone pairs they now hold (`lewis.js` `poseDrawing`), so the drawing is never a fixed triangle. Each atom prints the electrons in its
+ * outer shell against a full one and lights its ring when full; nothing is arranged FOR the player. The reading is `planLewis`
+ * (`slateOf`): the picture and the grade are one function. `SOLUTIONS` and `MISSES` are scripts of the player's own moves, replayed
+ * by `verify:table` by drag and by two taps.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
-import { atomTable, slateOf, slateParts, slateLayout } from '../../table/kits/atoms.js';
+import { atomTable, slateOf, looseSlateParts } from '../../table/kits/atoms.js';
 import { MOLECULES, DRAWINGS, planLewis, allLit, trayFor } from '../../engine/lewis.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 10 };
 
 export const VOCABULARY = [
-  { term: /\bincomplete octets?\b/i, introducedAt: 6 },
-  { term: /\bexpanded octets?\b/i, introducedAt: 7 },
-  { term: /\bunpaired electrons?\b|\bfree radicals?\b|\bodd.electron\b/i, introducedAt: 8 },
-  { term: /\bcentral atoms?\b/i, introducedAt: 5 },
-  { term: /\blewis structures?\b/i, introducedAt: 2 },
-  { term: /\blone pairs?\b/i, introducedAt: 2 },
-  { term: /\boctets?\b/i, introducedAt: 2 }
+  { term: /\bincomplete octets?\b/i, introducedAt: 8 },
+  { term: /\bexpanded octets?\b/i, introducedAt: 9 },
+  { term: /\bfree radicals?\b/i, introducedAt: 10 },
+  { term: /\bcentral atoms?\b/i, introducedAt: 7 },
+  { term: /\blewis structures?\b/i, introducedAt: 4 },
+  { term: /\blone pairs?\b/i, introducedAt: 4 },
+  { term: /\boctets?\b/i, introducedAt: 4 },
+  { term: /\bvalence electrons?\b/i, introducedAt: 1 }
 ];
 
 export const BUILDS_ON = ['unit03/q1-joins', 'unit03/q3-distance', 'unit01/q2-core'];
 
 const SPEAKER = 'Vess';
 
-/**
- * The legend lines. A piece whose label says what it does owes nothing, and the tray's pieces are
- * dragged, not pressed. Kept so the quest contract (`toolNoteFor`) holds.
- */
+/** The legend lines. The board's pieces are dragged, not pressed. Kept so the quest contract (`toolNoteFor`) holds. */
 export function toolNoteFor() { return null; }
 
 /* ------------------------------------------------------------------
-   THE TABLES
-   One layout, so the furniture is always where the hand expects it (120 x 64 units): the tray's
-   pieces and the charge chip down the left, the slate on the right, the scratch corner bottom
-   left. A slate's atoms and joints are fixed (they are targets, never grabbed); the tray's pieces
-   are the only things that move.
+   THE COUNTING TABLES (stages 1-3)
+   Atoms shown as their shells (the `specimen` pieces Tallow used): the small ring is the inner shell, the
+   big one the outer shell. The answer is set on a dial; nothing on these tables can be built.
    ------------------------------------------------------------------ */
 
-const OPTS = { words: 'shells', slate: true };
+/** An atom drawn as its shells: `rings` from the inside out. */
+const shells = (id, label, x, y, r, p, n, rings, extra = {}) => ({ id, kind: 'specimen', label, at: { x, y }, r, fixed: true, props: { p, n, rings, ...extra } });
+const OXYGEN = (id, label, x, y, r) => shells(id, label, x, y, r, 8, 8, [2, 6]);
+const HYDROGEN = (id, label, x, y, r) => shells(id, label, x, y, r, 1, 0, [1]);
 
-/** What each tool does, printed under the place it hangs. */
-const CAPTION = { pairs: 'Adds a pair', lift: 'Takes one back', single: 'Adds one' };
-const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y }, caption: CAPTION[kind] });
-const TILES = { pairs: [10, 10], lift: [32, 10], single: [54, 10] };
+/** The answer dial. */
+const dial = (label, dialLabel, at) => ({
+  id: 'count', kind: 'tally', label, at, size: { w: 44, h: 16 }, noRun: true,
+  dials: { count: { min: 0, max: 12, step: 1, value: 0, label: dialLabel } }
+});
 
-/**
- * One stage's table: its slates (`[id, molecule, cx, cy, size, pos?, chip?]`), the tray's pieces (`tiles`
- * moves them when a stage needs the left for a slate) and any extra fixtures.
- */
-function slateTable(slates, { single = false, fixtures = [], tiles = TILES } = {}) {
-  const pieces = [tile('pairs', 'Pair', tiles.pairs), tile('lift', 'Lift Out', tiles.lift), ...(single ? [tile('single', 'Single', tiles.single)] : [])];
-  const boards = [];
-  for (const [id, mol, cx, cy, size, pos, chip] of slates) {
-    const part = slateParts(id, mol, slateLayout(mol, cx, cy, size, pos), { chip });
-    pieces.push(...part.pieces);
-    boards.push(part.fixture);
-  }
-  return atomTable({ opts: OPTS, pieces, fixtures: [...boards, ...fixtures] });
+/** A counting stage's check: the dial against the right count. */
+function countCheck(right, wrongMsg) {
+  return state => {
+    const v = state.table.fixtures.count.dials.count.value;
+    if (!v) return { ok: false, notYet: true, msg: 'Turn the dial to a number of electrons.' };
+    if (v === right) return { ok: true };
+    return { ok: false, msg: wrongMsg };
+  };
 }
 
-/** HOF laid out with no atom at the head of anything: the hydrogen on top, oxygen and fluorine below. */
-const HOF_POS = [[0.5, 0.22], [0.2, 0.78], [0.8, 0.78]];
+/* ------------------------------------------------------------------
+   THE BOARD TABLES (stages 4, 6-10)
+   The electron pieces in a column down the left, the board across the rest of the table and its full depth, so even a
+   five-atom molecule is drawn large.
+   ------------------------------------------------------------------ */
+
+const CAPTION = { pairs: 'Two electrons', lift: 'Takes one back', single: 'One electron' };
+const LABEL = { pairs: 'Electron pair', lift: 'Remove', single: 'Single' };
+const tile = (kind, y) => ({ id: kind, kind, label: LABEL[kind], at: { x: 10, y }, caption: CAPTION[kind] });
+const BOARD = { x0: 22, y0: 2, x1: 118, y1: 62 };
+/** The atoms' radius and the bond length the board draws when there is room. */
+const ATOM_R = 5.4;
+const BOND = 20;
+
+/** One stage's board: the molecule's atoms loose on it, and the electron pieces above it. */
+function boardTable(molKey, { single = false, r = ATOM_R, bond = BOND } = {}) {
+  const part = looseSlateParts('a', molKey, BOARD, { r, bond });
+  const pieces = single ? [tile('pairs', 12), tile('single', 30), tile('lift', 48)] : [tile('pairs', 18), tile('lift', 40)];
+  return atomTable({ opts: { words: 'shells', slate: true }, layout: 'as-drawn', pieces: [...pieces, ...part.pieces], fixtures: [part.fixture] });
+}
+
+/** Every atom's ring lit and no electron left over (boron's amber and sulfur's ten count as lit). */
+function litCheck(state) {
+  const sl = slateOf(state.table, 'a');
+  if (sl.used === 0) return { ok: false, notYet: true, msg: 'Drag one atom onto another to start.' };
+  if (allLit(sl.read)) return { ok: true };
+  if (sl.read.atoms.some(a => a.lamp === 'over')) return { ok: false, msg: 'An atom has more electrons in its outer shell than it can hold.' };
+  if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s ring is still dark.' };
+  return { ok: false, msg: 'Every electron is placed, and an atom\'s ring is still dark: read the number on that atom.' };
+}
 
 /* ------------------------------------------------------------------
-   THE SIX STAGES
+   THE TEN STAGES
    ------------------------------------------------------------------ */
 
 /** The key the player's guess is kept under (`engine/predict.js`), and the cards it is chosen from. */
@@ -109,283 +125,341 @@ const GUESSES = [
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  (() => {
-    const part = slateParts('a', 'H2O', slateLayout('H2O', 46, 32, 44, undefined), { hideTotal: true });
-    return {
-      title: 'Count the Electrons',
-      briefing: { speaker: SPEAKER, body: 'Valence electrons are the electrons in an atom\'s outermost shell, drawn here as dots round each atom.' },
-      prompt: 'How many valence electrons do the three atoms of water bring in all?',
-      widget: { type: 'table', label: 'The bench' },
-      table: atomTable({
-        opts: OPTS,
-        pieces: part.pieces,
-        fixtures: [part.fixture, {
-          id: 'count', kind: 'tally', label: 'Electrons to place', at: { x: 96, y: 32 }, size: { w: 40, h: 16 }, noRun: true,
-          dials: { count: { min: 0, max: 20, step: 1, value: 0, label: 'Total' } }
-        }]
-      }),
-      hints: [
-        'The dial sets your answer; each atom is drawn with its valence electrons round it.',
-        'Compare what a hydrogen atom brings with what the oxygen atom brings.',
-        'A molecule has every valence electron of every one of its atoms, so nothing is left out and nothing counted twice.'
-      ],
-      check(state) {
-        const v = state.table.fixtures.count.dials.count.value;
-        if (!v) return { ok: false, notYet: true, msg: 'Set the dial to a number of electrons.' };
-        if (v === trayFor(MOLECULES.H2O)) return { ok: true };
-        return { ok: false, msg: 'That is not the number of dots drawn round the three atoms.' };
-      },
-      reward: {
-        log: 'Two hydrogens at 1 and an oxygen at 6.',
-        title: 'Electrons to Place',
-        body: 'One from each hydrogen and six from oxygen: eight valence electrons to place.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Water\'s Electrons',
-    briefing: { speaker: SPEAKER, body: 'A Lewis structure shows every valence electron either in a pair shared between two atoms, which is a bond, or in a lone pair on one atom. Most atoms end with eight electrons round them, an octet; hydrogen ends with two.' },
-    prompt: 'Where do water\'s eight valence electrons go?',
-    widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'H2O', 82, 28, 62]]),
-    hints: [
-      'Drag the Pair piece onto the gap between two atoms to share a pair, or onto one atom to leave a pair there.',
-      'Compare the atoms whose lights are on with the one whose light is still off, and count the electrons round it.',
-      'A shared pair counts toward both atoms it sits between, so place those first and see what each atom still lacks.'
-    ],
-    check(state) {
-      const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
-      if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
-      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
+    title: 'The Outer Shell',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An atom\'s electrons sit in shells around its nucleus, and only the electrons in the outermost shell take part in bonding. Here the small ring is oxygen\'s inner shell and the large ring is its outer shell.'
     },
+    prompt: 'How many electrons does an oxygen atom have in its outer shell?',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      layout: 'as-drawn',
+      pieces: [OXYGEN('o', 'Oxygen', 36, 33, 16)],
+      fixtures: [dial('Outer shell', 'Electrons', { x: 88, y: 33 })]
+    }),
+    hints: [
+      'Look at the larger of the two rings around the oxygen atom.',
+      'Count only the dots on the large outer ring, not the small inner ring.',
+      'The inner shell is full and never takes part in bonding, so its two electrons are not part of the answer.'
+    ],
+    check: countCheck(6, 'That is not the number of dots on the outer ring.'),
     reward: {
-      log: 'Every electron placed, every lamp lit.',
-      title: 'Lewis Structure',
-      body: 'Two shared pairs bond the hydrogens to oxygen, and two lone pairs stay on oxygen. Oxygen has its octet and each hydrogen has two: this drawing is the Lewis structure of water.'
+      log: 'Oxygen: six in its outer shell.',
+      title: 'Valence Electrons',
+      body: 'Oxygen has 6 electrons in its outer shell. These are its valence electrons, the only ones used in bonding.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
-  predictStage({
-    key: QUEST_KEY,
-    title: 'Carbon Dioxide',
-    prompt: 'How many electron pairs does carbon share with each oxygen in carbon dioxide?',
-    cards: GUESSES,
+  {
+    title: 'Read the Column',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The periodic table\'s columns are numbered 1 to 18, and atoms in the same column have the same number of valence electrons. Sulfur\'s shells are covered, but its column is printed.'
+    },
+    prompt: 'How many valence electrons does a sulfur atom have?',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      layout: 'as-drawn',
+      pieces: [
+        // Laid out as the periodic table lays them: one row, and sulfur under oxygen in its column.
+        shells('c', 'Carbon, column 14', 30, 16, 9, 6, 6, [2, 4]),
+        shells('n', 'Nitrogen, column 15', 54, 16, 9, 7, 7, [2, 5]),
+        OXYGEN('o', 'Oxygen, column 16', 78, 16, 9),
+        shells('f', 'Fluorine, column 17', 102, 16, 9, 9, 10, [2, 7]),
+        shells('s', 'Sulfur, column 16', 78, 44, 9, 16, 16, [2, 8, 6], { casing: true })
+      ],
+      fixtures: [dial('Sulfur', 'Valence electrons', { x: 32, y: 46 })]
+    }),
     hints: [
-      'Lay one of the three cards in the slot.',
-      'Carbon brings four valence electrons and each oxygen six, and every atom should end with an octet.',
-      'A prediction is never graded, so lay the card you think most likely.'
+      'Read the column number under each atom, and count the outer-ring dots on each visible atom.',
+      'Compare sulfur\'s column number with the four visible atoms.',
+      'Atoms in the same column have the same number of valence electrons, so find the atom in sulfur\'s column.'
     ],
+    check: countCheck(6, 'That is not the count of the visible atom in sulfur\'s column.'),
     reward: {
-      title: 'Prediction Recorded',
-      body: 'The next stage places carbon dioxide\'s sixteen valence electrons.'
+      log: 'Sulfur: six, like oxygen above it.',
+      title: 'Same Column, Same Count',
+      body: 'Sulfur is in oxygen\'s column, so it has 6 valence electrons too. Each column to the right adds one more: carbon 4, nitrogen 5, fluorine 7.'
     }
-  }),
+  },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Two Pairs Short',
-    get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'build the Lewis structure of carbon dioxide so every atom has an octet with sixteen electrons.');
+    title: 'Water\'s Electrons',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'When atoms bond into a molecule, all of their valence electrons go into one shared pool. A drawing of the molecule must place every one of them.'
     },
+    prompt: 'How many total valence electrons do water\'s three atoms have?',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'CO2', 80, 28, 68]]),
+    table: atomTable({
+      layout: 'as-drawn',
+      pieces: [OXYGEN('o', 'Oxygen', 32, 25, 13), HYDROGEN('h1', 'Hydrogen', 64, 25, 10), HYDROGEN('h2', 'Hydrogen', 90, 25, 10)],
+      fixtures: [dial('Water', 'Valence electrons', { x: 60, y: 52 })]
+    }),
     hints: [
-      'The Pair piece adds a pair and "Lift Out" takes one back; a gap between two atoms can hold more than one pair.',
-      'With one shared pair in each gap, compare the electrons round carbon with the electrons round each oxygen.',
-      'A pair on one atom counts for that atom only, while a shared pair counts for two atoms, so ask which placing gives more octets.'
+      'Count the outer-ring electrons on each of the three atoms.',
+      'Compare how many valence electrons each hydrogen brings with how many oxygen brings.',
+      'Add the outer-ring electrons from all three atoms together.'
     ],
-    check(state) {
-      const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
-      if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
-      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
-    },
-    get reward() {
-      return {
-        log: 'Neighbours share a second pair.',
-        title: 'Double Bonds',
-        body: `${verdictLine(QUEST_KEY, 'two')}With single bonds carbon is four electrons short and none are left. Sharing a second pair with each oxygen gives every atom an octet: carbon forms a double bond to each.`
-      };
+    check: countCheck(trayFor(MOLECULES.H2O), 'That is not the sum of the three outer rings.'),
+    reward: {
+      log: 'Two hydrogens at 1 and an oxygen at 6.',
+      title: 'Eight to Place',
+      body: 'One from each hydrogen and six from oxygen gives water 8 valence electrons to place.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'The Middle',
-    briefing: { speaker: SPEAKER, body: 'An atom bonded to two or more other atoms is a central atom.' },
-    prompt: 'Which atom in HOF is bonded to both of the others?',
-    widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'HOF', 82, 35, 62, HOF_POS]]),
-    hints: [
-      'Any two of the three atoms can share a pair here; complete the structure with the atom you choose in the middle.',
-      'Compare how many more electrons hydrogen, oxygen and fluorine each need to fill their outer shells.',
-      'An atom forms about as many bonds as it is electrons short of a full outer shell.'
-    ],
-    check(state) {
-      const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
-      if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
-      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
+    title: 'Bonds and Lone Pairs',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'In a Lewis structure, every electron pair is either shared between two atoms (a bond, drawn as a line) or kept by one atom (a lone pair, drawn as two dots). Each atom ends with a full outer shell: 8 electrons, or 2 for hydrogen.',
+      parts: [
+        { title: 'Lewis Structure', body: 'A Lewis structure shows where every valence electron in a molecule sits. Electrons are placed in pairs.' },
+        { title: 'Bonds', body: 'A pair shared between two atoms is a bond, drawn as a line. It counts toward both atoms\' outer shells.' },
+        { title: 'Lone Pairs', body: 'A pair kept by one atom is a lone pair, drawn as two dots. It counts only toward that atom\'s outer shell.' },
+        { title: 'Full Shells', body: 'The number on each atom counts all electrons in its outer shell (shared and lone). A shell is full at 8 (or 2 for hydrogen), and its ring lights up.' }
+      ]
     },
+    prompt: 'How are water\'s 8 valence electrons arranged so every atom has a full outer shell?',
+    widget: { type: 'table', label: 'The bench' },
+    table: boardTable('H2O'),
+    hints: [
+      'Drag each hydrogen onto the oxygen, then check the electron count on every atom.',
+      'Compare oxygen\'s count with 8 once both hydrogens are bonded, and see how many electrons are left.',
+      'A lone pair counts only for the atom it sits on, and both hydrogens are already full, so place the leftover pairs on oxygen.'
+    ],
+    check: litCheck,
     reward: {
-      log: 'The atom that joins the others.',
-      title: 'Central Atom',
-      body: 'Hydrogen and fluorine are each one electron short and form one bond. Oxygen is two short and forms two, so oxygen is the central atom.'
+      log: 'Two bonds and two lone pairs.',
+      title: 'Water\'s Lewis Structure',
+      body: 'Two bonds join the hydrogens to oxygen, and two lone pairs stay on oxygen. Oxygen has 8 electrons (an octet) and each hydrogen has 2: this is water\'s Lewis structure.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
-  {
-    title: 'Fewer Than Eight',
-    briefing: { speaker: SPEAKER, body: 'Fluorine is the most electronegative element (it pulls hardest on shared electrons) and forms only single bonds: it never shares a second pair.' },
-    prompt: 'Where do the 24 valence electrons of BF₃ go, given that fluorine forms only single bonds?',
-    widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'BF3', 82, 36, 62]]),
-    hints: [
-      'Place pairs until none are left; boron\'s light turns amber, not lit, if it ends with fewer than eight.',
-      'Compare how many electrons each fluorine needs with how many are left for boron afterwards.',
-      'Fluorine is more electronegative than boron, so ask which atoms keep the electrons when there are not enough for every octet.'
-    ],
-    check(state) {
-      const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
-      const lamps = sl.read.atoms.map(a => a.lamp);
-      if (lamps.includes('over')) return { ok: false, msg: 'An atom has more electrons round it than it can hold.' };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
-      if (sl.read.atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine atom\'s light is still off.' };
-      if (lamps[0] === 'amber') return { ok: true };
-      return { ok: false, msg: 'Every electron is placed, and boron\'s light is not amber.' };
+  predictStage({
+    key: QUEST_KEY,
+    title: 'Carbon Dioxide',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The gas from the crack is carbon dioxide: one carbon atom and two oxygen atoms. Carbon brings 4 valence electrons and each oxygen brings 6, giving 16 electrons to place.'
     },
+    prompt: 'How many electron pairs does carbon share with each oxygen in carbon dioxide?',
+    cards: GUESSES,
+    hints: [
+      'Drag one of the three prediction cards into the slot.',
+      'Water needed one shared pair per hydrogen; think about how carbon can reach 8 electrons.',
+      'Predictions are never graded, so pick the card you think is most likely.'
+    ],
     reward: {
-      log: 'Boron stops at six.',
-      title: 'Incomplete Octet',
-      body: 'Every fluorine has its octet and boron is left with six: an incomplete octet. A few atoms, boron among them, form compounds this way.'
+      title: 'Prediction Recorded',
+      body: 'The next stage builds carbon dioxide from its 16 valence electrons.'
+    }
+  }),
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    title: 'More Than One Pair',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Two atoms can share more than one electron pair. Drag an atom onto one it is already bonded to, or drag an Electron pair onto the bond, to share another pair.'
+    },
+    get prompt() {
+      return testPrompt(QUEST_KEY, GUESSES, 'how are carbon dioxide\'s 16 valence electrons arranged?');
+    },
+    widget: { type: 'table', label: 'The bench' },
+    table: boardTable('CO2'),
+    hints: [
+      'Bond each oxygen to carbon once, fill each oxygen with lone pairs, then check carbon\'s count.',
+      'Compare carbon\'s count with 8 when no electrons are left, and look at the lone pairs on each oxygen.',
+      'A shared pair counts for both atoms while a lone pair counts for one, so sharing an oxygen lone pair gives carbon more electrons without taking any from oxygen.'
+    ],
+    check: litCheck,
+    get reward() {
+      return {
+        log: 'Each oxygen shares two pairs.',
+        title: 'Double Bonds',
+        body: `${verdictLine(QUEST_KEY, 'two')}With one bond to each oxygen, carbon has only 4 electrons. Each oxygen shares a second pair instead of keeping it, giving every atom 8: two double bonds.`
+      };
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'More Than Eight',
-    prompt: 'Where do the electrons go that are left once every fluorine in SF₄ has its octet?',
-    widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'SF4', 82, 32, 46]]),
-    hints: [
-      'Place pairs until none are left to place, and watch which atom has to take the last pair.',
-      'Compare the electrons round sulfur with eight once the last pair is placed.',
-      'Fluorine is in the second period and never has more than eight, so ask which atom is left to take the extra pair.'
-    ],
-    check(state) {
-      const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
-      const atoms = sl.read.atoms;
-      if (atoms.some(a => a.lamp === 'over')) return { ok: false, msg: 'An atom has more electrons round it than it can hold.' };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
-      if (atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine atom\'s light is still off.' };
-      if (atoms[0].lamp === 'expanded') return { ok: true };
-      return { ok: false, msg: 'Every electron is placed, and sulfur is not joined to all four fluorine atoms.' };
+    title: 'The Middle',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'HOF has one hydrogen, one oxygen, and one fluorine atom. Hydrogen and fluorine can each form only one bond.'
     },
+    prompt: 'Which atom in HOF bonds to both of the others?',
+    widget: { type: 'table', label: 'The bench' },
+    table: boardTable('HOF'),
+    hints: [
+      'Try bonding a pair of atoms and notice which atoms will not accept a second bond.',
+      'Compare how many electrons each atom needs to reach a full outer shell.',
+      'Each bond adds 1 electron to an atom\'s count, so an atom that is only 1 electron short can form just one bond.'
+    ],
+    check: litCheck,
     reward: {
-      log: 'Sulfur holds ten.',
-      title: 'Expanded Octet',
-      body: 'The last pair is a lone pair on sulfur, which then has ten electrons round it: an expanded octet. Only atoms in the third row (period) of the periodic table or below can have more than eight.'
+      log: 'Oxygen joins the other two.',
+      title: 'Central Atom',
+      body: 'Hydrogen and fluorine each form one bond. Oxygen needs two electrons and forms two bonds, so it sits in the middle as the central atom.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
-    title: 'One Left Over',
-    prompt: 'Nitric oxide, NO, has eleven valence electrons: where does the odd one go?',
+    title: 'Fewer Than Eight',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Boron is in column 13 (3 valence electrons) and each fluorine brings 7. Fluorine pulls strongly on electrons and only ever forms single bonds.'
+    },
+    prompt: 'How are the 24 valence electrons of BF₃ arranged?',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'NO', 82, 36, 62]], { single: true }),
+    table: boardTable('BF3'),
     hints: [
-      'The Single piece places one electron on an atom; the Pair piece places two.',
-      'Compare the electrons round each atom with eight once all eleven are placed.',
-      'Oxygen pulls electrons more strongly than nitrogen, so ask which atom is left one short.'
+      'Bond each fluorine to boron and fill each fluorine\'s outer shell; boron\'s ring turns amber when it stops short of 8.',
+      'Compare how many electrons the three fluorines use with the 24 total valence electrons.',
+      'Fluorine will not share a second pair, so check whether any electrons are left for boron.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Drag one atom onto another to start.' };
+      const lamps = sl.read.atoms.map(a => a.lamp);
+      if (lamps.includes('over')) return { ok: false, msg: 'An atom has more electrons in its outer shell than it can hold.' };
       if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
-      const [n, o] = sl.read.atoms;
-      if (o.lamp !== 'full') return { ok: false, msg: 'Every electron is placed, and oxygen does not have eight round it.' };
-      if (n.around === 7 && n.dots === 1) return { ok: true };
-      return { ok: false, msg: 'Every electron is placed, and nitrogen does not have seven round it with one electron on its own.' };
+      if (sl.read.atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine atom\'s ring is still dark.' };
+      if (lamps[0] === 'amber') return { ok: true };
+      return { ok: false, msg: 'Every electron is placed, and boron is not bonded to all three fluorine atoms.' };
     },
     reward: {
-      log: 'One electron stays unpaired.',
+      log: 'Boron stops at six.',
+      title: 'Incomplete Octet',
+      body: 'Every fluorine has 8 electrons while boron stops at 6: an incomplete octet. Boron is one of the few atoms that bond this way.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 9 */
+  {
+    title: 'More Than Eight',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Sulfur is in row 3 of the periodic table, while fluorine is in row 2. Atoms from row 3 and below can hold more than 8 electrons in their outer shell.'
+    },
+    prompt: 'Where do the leftover electrons go once every fluorine in SF₄ has a full shell?',
+    widget: { type: 'table', label: 'The bench' },
+    table: boardTable('SF4', { r: 5 }),
+    hints: [
+      'Bond all four fluorines to sulfur, fill every fluorine, and see how many electrons remain.',
+      'Check sulfur\'s count against 8 once the last pair is placed.',
+      'Fluorine never holds more than 8 electrons or forms double bonds, so only sulfur can take the extra pair.'
+    ],
+    check(state) {
+      const sl = slateOf(state.table, 'a');
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Drag one atom onto another to start.' };
+      const atoms = sl.read.atoms;
+      if (atoms.some(a => a.lamp === 'over')) return { ok: false, msg: 'An atom has more electrons in its outer shell than it can hold.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
+      if (atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine atom\'s ring is still dark.' };
+      if (atoms[0].lamp === 'expanded') return { ok: true };
+      return { ok: false, msg: 'Every electron is placed, and sulfur is not bonded to all four fluorine atoms.' };
+    },
+    reward: {
+      log: 'Sulfur holds ten.',
+      title: 'Expanded Octet',
+      body: 'The leftover pair becomes a lone pair on sulfur, giving it 10 electrons: an expanded octet. Only atoms from row 3 and below can hold more than 8.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 10 */
+  {
+    title: 'One Left Over',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Nitric oxide, NO, has 5 + 6 = 11 valence electrons, an odd number, so one electron cannot be paired. Use the Single piece to place one unpaired electron.'
+    },
+    prompt: 'Where does nitric oxide\'s odd electron go?',
+    widget: { type: 'table', label: 'The bench' },
+    table: boardTable('NO', { single: true }),
+    hints: [
+      'Bond the two atoms, fill oxygen first, and check the count on nitrogen.',
+      'Compare the electron count around each atom with 8 once all 11 electrons are placed.',
+      'Oxygen is more electronegative than nitrogen, so think about which atom keeps a full 8 and which is left with 7.'
+    ],
+    check(state) {
+      const sl = slateOf(state.table, 'a');
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Drag one atom onto another to start.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
+      const [n, o] = sl.read.atoms;
+      if (o.lamp !== 'full') return { ok: false, msg: 'Every electron is placed, and oxygen does not have 8.' };
+      if (n.around === 7 && n.dots === 1) return { ok: true };
+      return { ok: false, msg: 'Every electron is placed, and nitrogen does not have 7 with one unpaired electron.' };
+    },
+    reward: {
+      log: 'One electron stays on its own.',
       title: 'Free Radical',
-      body: 'One electron has no partner and sits on nitrogen, which has seven round it. A molecule with an unpaired electron is a free radical.',
+      body: 'The odd electron sits alone on nitrogen, which holds 7. A molecule with an unpaired electron is a free radical, and it reacts readily.',
       last: true
     }
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  2: ['Drag a Pair onto the gap between two atoms,', 'or onto one atom.']
-};
-applyNotes(STAGES, NOTES);
-
 /* ------------------------------------------------------------------
-   THE DEBRIEF
+   THE DEBRIEF — one idea per card
    ------------------------------------------------------------------ */
 export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
-    {
-      heading: 'What You Found',
-      body: 'A Lewis structure places every valence electron in a bond or a lone pair. Most atoms end with an octet, and where single bonds leave an atom short, a second or third pair is shared.'
-    },
-    {
-      heading: 'Exceptions',
-      body: 'Boron can stop at six electrons, atoms from the third period down can hold more than eight, and a molecule with an odd number of electrons leaves one unpaired.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench looks at molecules that one Lewis structure cannot describe.'
-    }
+    { heading: 'Count', body: 'Valence electrons are the outer-shell electrons. Add up every atom\'s count to get the molecule\'s.' },
+    { heading: 'Place', body: 'Each pair is a bond between two atoms or a lone pair on one. Most atoms end with 8, hydrogen with 2.' },
+    { heading: 'Share More', body: 'When single bonds leave an atom short, neighbors share a second or third pair.' },
+    { heading: 'The Gas', body: 'Carbon dioxide is O=C=O: two double bonds, and every atom has 8.' },
+    { heading: 'Exceptions', body: 'Boron can stop at 6, sulfur can hold more than 8, and an odd count leaves one electron alone.' }
   ]
 };
 
 /* ------------------------------------------------------------------
-   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN DEALS
-   A solution is what a player does, not what the table ends as: `verify:table` replays each one
-   through the reducer by direct actions, by drag and by two taps. A deal is a tray piece dropped on
-   a joint (`<slate>j<i><j>`) or on an atom (`<slate><i>`).
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN MOVES
+   `bond(a, b)` drags atom a onto atom b (one shared pair); `deal(target, n, tool)` drops an electron piece on an
+   atom (`a<i>`) or a bond (`aj<i><j>`). `verify:table` replays each by direct actions, by drag and by two taps.
    ------------------------------------------------------------------ */
 
+const bond = (a, b, n = 1) => Array.from({ length: n }, () => ({ join: [`a${a}`, `a${b}`] }));
 const deal = (target, n = 1, tool = 'pairs') => Array.from({ length: n }, () => ({ join: [tool, target] }));
+const dialTo = v => [{ setDial: { fixture: 'count', dial: 'count', value: v } }];
 const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 
-/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
+/** The moves that solve each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [{ setDial: { fixture: 'count', dial: 'count', value: 8 } }],
-  [...deal('aj01'), ...deal('aj02'), ...deal('a0', 2)],
+  dialTo(6),
+  dialTo(6),
+  dialTo(8),
+  [...bond(1, 0), ...bond(2, 0), ...deal('a0', 2)],
   [guess('two')],
-  [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2)],
-  [...deal('aj01'), ...deal('aj12'), ...deal('a1', 2), ...deal('a2', 3)],
-  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3)],
-  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('aj04'), ...deal('a0'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3), ...deal('a4', 3)],
-  [...deal('aj01', 2), ...deal('a0'), ...deal('a0', 1, 'single'), ...deal('a1', 2)]
+  [...bond(0, 1), ...bond(2, 1), ...bond(0, 1), ...deal('aj12'), ...deal('a0', 2), ...deal('a2', 2)],
+  [...bond(0, 1), ...bond(2, 1), ...deal('a1', 2), ...deal('a2', 3)],
+  [...bond(1, 0), ...bond(2, 0), ...bond(3, 0), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3)],
+  [...bond(1, 0), ...bond(2, 0), ...bond(3, 0), ...bond(4, 0), ...deal('a0'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3), ...deal('a4', 3)],
+  [...bond(0, 1, 2), ...deal('a0'), ...deal('a0', 1, 'single'), ...deal('a1', 2)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [{ setDial: { fixture: 'count', dial: 'count', value: 7 } }],
-  [...deal('aj01'), ...deal('aj02')],
+  dialTo(8),
+  dialTo(4),
+  dialTo(7),
+  [...bond(1, 0), ...bond(2, 0)],
   [],
-  [...deal('aj01'), ...deal('aj12'), ...deal('a0', 3), ...deal('a2', 3)],
-  [...deal('aj02'), ...deal('a1', 3), ...deal('a2', 3)],
-  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('a1', 2), ...deal('a2', 2), ...deal('a3', 2)],
-  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('aj04'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3), ...deal('a4', 3)],
-  [...deal('aj01', 3), ...deal('a0'), ...deal('a1')]
+  [...bond(0, 1), ...bond(2, 1), ...deal('a0', 3), ...deal('a2', 3)],
+  [...bond(0, 2), ...deal('a1', 3), ...deal('a2', 3)],
+  [...bond(1, 0), ...bond(2, 0), ...deal('a1', 2), ...deal('a2', 2), ...deal('a3', 2)],
+  [...bond(1, 0), ...bond(2, 0), ...bond(3, 0), ...bond(4, 0), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3), ...deal('a4', 3)],
+  [...bond(0, 1, 3), ...deal('a0'), ...deal('a1')]
 ];
 
 function blankState() { return {}; }

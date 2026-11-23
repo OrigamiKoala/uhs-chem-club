@@ -84,9 +84,11 @@ function gaugeWalls(ctx, w, h, t) {
   frame(ctx, bx, by, bw, bh);
   drawCrowd(ctx, KNOCK_CROWD, tau, bx, by, bw, bh, 4);
   drawHits(ctx, hits, bx, by, bw, bh, C.amber, 7 + 6 * (heat(t) - 1));
-  // A gauge on the roof, the side and the floor: each reads the knocks it received in the last moment, per length of wall.
+  // Time-averaged pressure on the roof, side wall and floor: particles collide equally with every wall.
   const per = wall => hits.filter(k => k.wall === wall).length / ((wall === 'L' || wall === 'R' ? bh : bw) / 100);
-  const top = per('T'); const side = per('R'); const floor = per('B');
+  const avg = (per('T') + per('R') + per('B')) / 3;
+  const smooth = v => avg * 0.85 + v * 0.15;
+  const top = smooth(per('T')); const side = smooth(per('R')); const floor = smooth(per('B'));
   const scale = 1 / 12;
   const rows = [['roof', top], ['side wall', side], ['floor', floor]];
   rows.forEach(([name, v], i) => {
@@ -98,10 +100,10 @@ function gaugeWalls(ctx, w, h, t) {
     ctx.fillRect(560, y + 14, Math.min(300, 300 * v * scale * 0.8), 14);
     text(ctx, `${v.toFixed(1)}`, 880, y + 21, { size: 20, color: C.text, align: 'left', weight: 700 });
   });
-  text(ctx, 'knocks per length of wall', 560, 140, { size: 18, color: C.dim, align: 'left' });
-  if (t > 0.3 && t < 0.5) text(ctx, 'less room', bx + bw / 2, by + bh + 36, { size: 22, color: C.amber });
-  if (t > 0.55) text(ctx, 'hotter', bx + bw / 2, by + bh + 36, { size: 22, color: C.amber });
-  if (t < 0.25) text(ctx, 'the same on every wall', bx + bw / 2, by + bh + 36, { size: 22, color: C.dust });
+  text(ctx, 'collisions per wall length', 560, 140, { size: 18, color: C.dim, align: 'left' });
+  if (t > 0.3 && t < 0.5) text(ctx, 'smaller volume', bx + bw / 2, by + bh + 36, { size: 22, color: C.amber });
+  if (t > 0.55) text(ctx, 'hotter (faster collisions)', bx + bw / 2, by + bh + 36, { size: 22, color: C.amber });
+  if (t < 0.25) text(ctx, 'cooler — equal on every wall', bx + bw / 2, by + bh + 36, { size: 22, color: C.dust });
 }
 
 /* ---- q2-laws: a sealed tank cooled by fifty degrees; its knocks fall, and the gauge follows the kelvin line to zero ---- */
@@ -122,7 +124,7 @@ function coldTank(ctx, w, h, t) {
   frame(ctx, bx, by, bw, bh);
   drawCrowd(ctx, COLD_CROWD, tau, bx, by, bw, bh, 4, C.pale);
   drawHits(ctx, wallHits(COLD_CROWD, tau0, tau), bx, by, bw, bh, C.amber, 6);
-  dial(ctx, bx + bw / 2, 100, 38, (P / P0) * 0.72, 'gauge', `${Math.round(P)}`);
+  dial(ctx, bx + bw / 2, 100, 38, (P / P0) * 0.72, 'pressure', `${Math.round(P)} kPa`);
   text(ctx, `${Math.round(T - 273.15)} °C   ${Math.round(T)} K`, bx + bw / 2, by + bh + 46, { size: 24, color: C.text, weight: 700 });
   // The line: pressure against the kelvin temperature. A dot rides it; the line carries on down to zero kelvin.
   const gx = 430; const gy = 110; const gw = 440; const gh = 320;
@@ -142,10 +144,10 @@ function coldTank(ctx, w, h, t) {
   line(ctx, gx, dy, dx, dy, C.dim, 1, [3, 4]);
   disc(ctx, dx, dy, 8, C.amber);
   if (ext > 0.9) {
-    text(ctx, '0 K: no knocks', gx + 70, gy + gh - 22, { size: 18, color: C.amber });
+    text(ctx, '0 K: zero pressure', gx + 80, gy + gh - 22, { size: 18, color: C.amber });
     disc(ctx, X(0), Y(0), 5, C.amber);
   }
-  if (t > 0.45) text(ctx, `${Math.round((1 - P / P0) * 100)} % lower`, dx + 16, dy - 20, { size: 20, color: C.text, align: 'left', weight: 700 });
+  if (t > 0.45) text(ctx, `${Math.round((1 - P / P0) * 100)} % lower (about 1/6)`, dx + 16, dy - 20, { size: 20, color: C.text, align: 'left', weight: 700 });
 }
 
 /* ---- q3-ideal: a mole of a light gas and a mole of a heavy one: the same count of particles, the same room, the same gauge, very different weights ---- */
@@ -174,7 +176,7 @@ function equalRooms(ctx, w, h, t) {
     if (t > 0.78) dial(ctx, x + bw / 2, by - 54, 28, (P / 300) * 0.9, '', null);
   });
   text(ctx, `${shown} particles in each`, w / 2, 60, { size: 26, color: C.text });
-  if (t > 0.78) text(ctx, `same room, same temperature, same gauge: ${Math.round(P)} kPa`, w / 2, 96, { size: 20, color: C.amber });
+  if (t > 0.78) text(ctx, `same volume, same temperature, same pressure: ${Math.round(P)} kPa`, w / 2, 96, { size: 20, color: C.amber });
 }
 
 /* ---- q4-mixtures: two gases in one tank, each pushing as if alone; the gauge is the two pushes added ---- */
@@ -212,7 +214,7 @@ function mixShare(ctx, w, h, t) {
     used += seg;
   });
   if (t > 0.7) {
-    text(ctx, `gauge ${Math.round(m.P)}`, cx + cw / 2, top - 22, { size: 26, color: C.amber, weight: 700 });
+    text(ctx, `total ${Math.round(m.P)} kPa`, cx + cw / 2, top - 22, { size: 26, color: C.amber, weight: 700 });
     text(ctx, `${Math.round(m.rows[0].P)} + ${Math.round(m.rows[1].P)}`, cx + cw / 2, top + colH + 34, { size: 22, color: C.text });
   }
 }

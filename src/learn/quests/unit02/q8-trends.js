@@ -459,6 +459,7 @@ export const STAGES = [
         log: 'Electronegativity: up across a period, down a group.',
         title: 'Electronegativity',
         body: 'Across this row, electronegativity rises from sodium to fluorine as the outer charge felt rises and the atom gets smaller; a metal such as sodium is low.',
+        model: { type: 'electronegativity-pull', left: 'H', right: 'F', enLeft: 2.2, enRight: 4.0, caption: 'More electronegative fluorine pulls the shared electrons closer.' },
         last: true
       }
     };

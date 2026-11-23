@@ -79,7 +79,7 @@ export function engravedPlaque(text, opts = {}) {
   ctx.lineTo(w, 2);
   ctx.stroke();
 
-  ctx.font = `${size}px "Share Tech Mono", monospace`;
+  ctx.font = `${size}px "Quantico", "JetBrains Mono", monospace`;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
 
@@ -92,7 +92,7 @@ export function engravedPlaque(text, opts = {}) {
   let fontSize = size;
   let lines = [];
   for (let attempt = 0; attempt < 50; attempt++) {
-    ctx.font = `${fontSize}px "Share Tech Mono", monospace`;
+    ctx.font = `${fontSize}px "Quantico", "JetBrains Mono", monospace`;
     lines = [];
     let line = '';
     for (const word of words) {
@@ -269,7 +269,7 @@ export function buildPowerDial(opts) {
     readCtx.fillStyle = '#0d0c0a';
     readCtx.fillRect(0, 0, 256, 96);
     readCtx.fillStyle = '#d99423';
-    readCtx.font = '56px "Share Tech Mono", monospace';
+    readCtx.font = '56px "Quantico", "JetBrains Mono", monospace';
     readCtx.textAlign = 'center';
     readCtx.textBaseline = 'middle';
     readCtx.fillText(`${v} / ${max}`, 128, 50);
@@ -836,7 +836,7 @@ export class BenchViewer3D {
       // so whichever one the pointer went down on has to win, or every attempt
       // to turn the power dial would also lean the camera over the bench.
       this.setPointer(e);
-      const grabbed = this.grabUnderRay();
+      const grabbed = this.grabUnderRay(e);
       if (grabbed) {
         this.dragging = false;
         this.grabbing = grabbed;
@@ -868,12 +868,7 @@ export class BenchViewer3D {
       this.movedWhileDown += Math.abs(dx) + Math.abs(dy);
 
       if (this.leaning) {
-        // Leaned in (standalone, or deployed in a world): a drag swings the view a little and it settles back on release. A slipped
-        // grab on the plate must never walk the player off the bench (and a phone has no key to lean back in); Leave Bench and the walk keys do that.
-        if (this.movedWhileDown >= 6) {
-          if (this.lean?.released) this.turnCamera(dx * 0.0024, dy * 0.0024);
-          else this.leanLook(dx, dy);
-        }
+        // Leaned in: a drag on empty table does nothing so a slipped grab never tilts or spins the bench camera.
         return;
       }
 
@@ -987,19 +982,35 @@ export class BenchViewer3D {
   }
 
   /** The nearest registered control the current ray passes through, or null. */
-  grabUnderRay() {
+  grabUnderRay(e = null) {
     let best = null;
     let bestDist = Infinity;
     for (const g of this.grabbables || []) {
       if (!g.object.visible) continue;
       const hit = this.raycaster.intersectObject(g.object, true);
-      if (hit.length && g.accepts && !g.accepts(this.raycaster)) continue;
+      if (hit.length && g.accepts && !g.accepts(this.raycaster, e)) continue;
       if (hit.length && hit[0].distance < bestDist) {
         bestDist = hit[0].distance;
         best = g;
       }
     }
     return best;
+  }
+
+  /** Re-center the camera over the bench (undo any manual look/tilt). */
+  resetView() {
+    this.orbit.targetYaw = 0;
+    this.orbit.targetPitch = 0;
+    this.playerControlled = false;
+    this._syncedLeanToFps = false;
+    if (this.lean) {
+      this.lean.released = false;
+      this.lean.look.yaw = 0;
+      this.lean.look.pitch = 0;
+    }
+    if (this.leaning || this.leanZones) {
+      this.leanIn({ instant: false, zones: this.leanZones || undefined });
+    }
   }
 
   /**
@@ -1071,7 +1082,7 @@ export class BenchViewer3D {
     };
     const strip = rect(document.querySelector('.lq-tstrip'));
     if (strip) out.top = Math.max(base.hud, Math.ceil(strip.bottom) + 6);
-    const dock = rect(document.querySelector('.lq-tdock'));
+    const dock = rect(document.querySelector('.lq-tdock-row')) || rect(document.querySelector('.lq-tdock'));
     if (dock) out.bottom = Math.max(0, Math.ceil(vp.h - dock.top) + 6);
     // The briefing docks down one edge on stage 1 (and only there, plan §2): the
     // table belongs in the rest of the width.
@@ -1093,7 +1104,7 @@ export class BenchViewer3D {
     const viewport = opts.viewport || this.leanViewport();
     const reserve = opts.reserve || this.measureLeanReserve(viewport);
     const zones = opts.zones || this.leanZones || [PLATE_ZONE];
-    const pose = planLeanIn({ zones, viewport, reserve, fov: this.camera.fov || 55, pitchDeg: opts.pitchDeg, minDist: opts.minDist ?? this.leanMinDist, frontZ: opts.frontZ ?? this.leanFrontZ });
+    const pose = planLeanIn({ zones, viewport, reserve, fov: this.camera.fov || 55, pitchDeg: opts.pitchDeg ?? this.leanPitchDeg, minDist: opts.minDist ?? this.leanMinDist, frontZ: opts.frontZ ?? this.leanFrontZ });
     pose.key = JSON.stringify([viewport, reserve, zones]);
     return pose;
   }

@@ -700,64 +700,64 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'Some of the rubble crumbles at a touch and some will not even chip. Why does it hold together so differently?',
     beats: [
-      { to: 0.2, say: 'Two atoms bond when being together lowers their energy: each nucleus attracts the other atom\'s electrons.' },
-      { to: 0.4, say: 'When electronegativities differ greatly, one atom takes electrons and the ions attract in an ionic bond. When they are close, atoms share pairs in a covalent bond.' },
-      { to: 0.6, say: 'Each atom loses, gains, or shares a fixed number of electrons, which is why every compound has a fixed formula.' },
-      { to: 0.8, say: 'The rubble around the tunnel mouth mixes both bond types. Next we test how each solid handles force, heat, and electricity.' }
+      { to: 0.25, say: 'Two atoms bond when coming together lowers their energy. For most atoms, a full outer shell means a full s and p subshell (8 electrons).' },
+      { to: 0.55, say: 'When electronegativities differ greatly, one atom takes electrons and the oppositely charged ions attract in an ionic bond. When electronegativities are similar, atoms share electron pairs in a covalent bond.' },
+      { to: 0.85, say: 'Ionic bonds between attracting ions hold solids together much more strongly than separate covalent molecules, which is why some rubble will not chip while other pieces crumble.' }
     ],
-    pin: 'The rubble mixes ionic and covalent bonds, so its pieces hold together differently.'
+    pin: 'Ionic bonds hold far more strongly than separate covalent molecules, explaining the mixed rubble.'
   },
   'unit03/q2-lattice': {
     scene: 'liner-heat',
     role: 'Station Fix',
     mystery: 'The tunnel lining must stay solid in great heat and carry no electricity to the miners. Which kind of solid can do both?',
     beats: [
-      { to: 0.25, say: 'Salt gave way at 801 degrees and passed a current only once it was molten, as ions in a lattice do. Separate molecules melt easily and never conduct.' },
-      { to: 0.5, say: 'A network bonded all the way through barely melts at all, and a metal carries a current cold.' },
-      { to: 0.75, say: 'Nothing you measured belongs to an atom: it belongs to how atoms are held together. So the bond type tells you what a material will do before you test it.' }
+      { to: 0.25, say: 'Molecular solids are held together by weak forces between molecules, so they melt at low temperatures and never conduct electricity.' },
+      { to: 0.5, say: 'Ionic solids lock ions in a rigid lattice, so they melt at high temperatures and conduct only when melted.' },
+      { to: 0.75, say: 'Metals have free-moving outer electrons, so they conduct electricity even when cold.' },
+      { to: 0.95, say: 'Covalent networks are bonded all the way through, so they survive 900 °C and carry no current.' }
     ],
     pin: 'A covalent network survives the heat and carries no current.'
   },
   'unit03/q3-distance': {
     scene: 'well-depth',
     role: 'Direct Clue',
-    mystery: 'The Fifth\'s cut went straight through solid basalt and left it smooth as glass. How much energy does it take to pull strong bonds apart?',
+    mystery: 'The Fifth Guild sliced straight through solid rock in seconds. How much energy does it take to pull bonded atoms apart?',
     beats: [
-      { to: 0.4, say: 'Two atoms settle where attraction and repulsion balance, at the lowest point of their energy curve. That distance is the bond length.' },
-      { to: 0.65, say: 'The deeper the curve, the more energy it takes to pull the atoms apart: the bond energy. More shared pairs sit closer and hold more strongly.' },
-      { to: 0.85, say: 'Every bond length and bond energy in a table is a point on one of these curves, so a breaker charge can be loaded for the bond it has to beat.' }
+      { to: 0.4, say: 'Two atoms settle where attraction and repulsion balance, at the lowest point of their potential energy curve. That distance is the bond length.' },
+      { to: 0.65, say: 'Pulling bonded atoms completely apart means lifting them from the bottom of the curve back up to zero. That depth is the bond energy.' },
+      { to: 0.85, say: 'Stronger bonds hold atoms closer together and have deeper energy wells, so slicing straight through rock packed with strong bonds takes enormous energy.' }
     ],
-    pin: 'Basalt\'s bonds take huge energy to break, far more heat than any torch gives.'
+    pin: 'Stronger bonds hold atoms closer and require enormous energy to pull apart.'
   },
   'unit03/q4-dots': {
     scene: 'lewis-count',
     role: 'Station Fix',
-    mystery: 'A gas is seeping out of the cracked rock where the blast hit. How are its atoms joined together?',
+    mystery: 'The gas from the crack is carbon dioxide: one carbon and two oxygens. How do they share electrons so every outer shell is full?',
     beats: [
-      { to: 0.26, say: 'Count first: carbon brings 4 valence electrons and each oxygen 6, so the Lewis structure of carbon dioxide has 16 to place.' },
-      { to: 0.48, say: 'Bonds go in first and use 4 of them. Lone pairs then fill each outer oxygen to an octet, and the 12 that are left are all used.' },
-      { to: 0.72, say: 'The central atom has only four electrons around it, short of an octet, and none are left to give it.' },
-      { to: 0.92, say: 'So each oxygen shares one of its lone pairs. Both single bonds become double bonds, and every atom counts eight.' }
+      { to: 0.26, say: 'Count first: carbon brings 4 valence electrons and each oxygen brings 6, giving 16 electrons to place.' },
+      { to: 0.48, say: 'Two single bonds use 4 electrons. Filling each oxygen to 8 with lone pairs uses the remaining 12.' },
+      { to: 0.72, say: 'Carbon then has only 4 electrons in its outer shell, and none are left to give it.' },
+      { to: 0.92, say: 'So each oxygen shares one of its lone pairs with carbon. Both bonds become double bonds, and every atom has 8.' }
     ],
-    pin: 'It is carbon dioxide: each oxygen shares two pairs with carbon, so every atom has eight.'
+    pin: 'Carbon dioxide is O=C=O: each oxygen shares two pairs with carbon, so every atom has 8.'
   },
   'unit03/q5-resonance': {
     scene: 'resonance-hybrid',
     role: 'Toolkit',
     beats: [
       { to: 0.28, say: 'Ozone can be drawn with a double bond on the left and a single bond on the right. Drawn that way, one bond would be short and the other long.' },
-      { to: 0.52, say: 'The other drawing swaps them, and it fits the formula just as well. Neither one matches what is measured.' },
-      { to: 0.78, say: 'Both bonds measure 128 pm, between a double bond and a single: a bond order of 1.5. The molecule is not flipping between drawings.' },
-      { to: 0.92, say: 'Each end carries a formal charge of half a minus. The structures exist on paper, and the real molecule is their average.' }
+      { to: 0.52, say: 'The other drawing swaps them, and it fits the formula just as well. Neither drawing matches what is measured.' },
+      { to: 0.78, say: 'Both bonds measure 128 pm, halfway between a double bond and a single bond (bond order 1.5). The molecule is not flipping between drawings.' },
+      { to: 0.92, say: 'Each outer oxygen carries a formal charge of −1/2. The individual drawings only exist on paper; the real molecule is their average.' }
     ]
   },
   'unit03/q6-shape': {
     scene: 'domain-shapes',
     role: 'Toolkit',
     beats: [
-      { to: 0.27, say: 'Electron domains repel, so they settle as far apart as they can. Four of them point to the corners of a tetrahedron, 109.5° apart.' },
-      { to: 0.5, say: 'Swap one bonded atom for a lone pair and the shape is trigonal pyramidal. A lone pair repels more strongly, so the bond angle closes to 107°.' },
-      { to: 0.76, say: 'With two lone pairs the shape is bent and the angle closes to 104.5°. Count the domains, then the lone pairs, and the shape follows.' }
+      { to: 0.27, say: 'Electron domains repel, so they spread as far apart as they can. Four domains point to the corners of a tetrahedron, 109.5° apart.' },
+      { to: 0.5, say: 'Replace one bonded atom with a lone pair and the shape becomes trigonal pyramidal. Because a lone pair repels more strongly than a bond, the bond angle narrows to 107°.' },
+      { to: 0.76, say: 'With two lone pairs, the shape is bent and the angle narrows to 104.5°. Count total domains first, then lone pairs, to predict the shape.' }
     ]
   },
   'unit03/q8-hybrid': {
@@ -765,9 +765,9 @@ export const QUEST_STORY = {
     role: 'Toolkit',
     beats: [
       { to: 0.26, say: 'A carbon atom has one s orbital and three p orbitals: four orbitals of two different shapes.' },
-      { to: 0.5, say: 'Mixed, they become four equal sp³ hybrid orbitals, 109.5° apart. That is the angle carbon\'s bonds make in methane.' },
-      { to: 0.76, say: 'In a double bond one overlap lies along the axis, a sigma bond, and a second lies above and below it, a pi bond.' },
-      { to: 0.92, say: 'Turn one end of the bond and the pi overlap shrinks to nothing, so a double bond cannot turn without breaking. The sigma bond is unchanged.' }
+      { to: 0.5, say: 'Mixed together, they form four identical sp³ hybrid orbitals, 109.5° apart. That is the angle of carbon\'s bonds in methane.' },
+      { to: 0.76, say: 'A double bond has two parts: a sigma bond overlapping head-on between the nuclei, and a pi bond overlapping side-by-side above and below them.' },
+      { to: 0.92, say: 'Twisting one end breaks the side-by-side pi overlap, so a double bond cannot rotate freely without breaking. A single sigma bond can rotate freely.' }
     ]
   },
   'unit03/q7-polarity': {
@@ -775,9 +775,9 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'Some tunnel gases cling to the rescuers\' charged gear, and others drift straight past. Why do only some cling?',
     beats: [
-      { to: 0.25, say: 'A bond is polar when its atoms share the pair unequally, and a molecule is polar when its bond dipoles do not balance.' },
-      { to: 0.8, say: 'Shape decides: water turned in the field, while carbon dioxide did not, however polar its bonds.' },
-      { to: 0.9, say: 'Whether a molecule is polar decides what it dissolves in and how it behaves near a charge. In hydrogen chloride the shared pair is shifted only about 18% of the way to chlorine.' }
+      { to: 0.25, say: 'A bond is polar when its atoms share electrons unequally, and a molecule is polar when its bond dipoles do not cancel.' },
+      { to: 0.8, say: 'Shape decides: water turned in the electric field, while linear carbon dioxide did not, even though its individual bonds are polar.' },
+      { to: 0.9, say: 'Polarity determines what a molecule dissolves in and how it behaves near electric charge. In hydrogen chloride, the shared electrons shift only about 18% of the way toward chlorine.' }
     ],
     pin: 'Polar gases cling to the gear, and nonpolar gases vent away.'
   },
@@ -786,9 +786,9 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'This pipe carries air to the trapped miners. How can a magnet show whether that air still has oxygen in it?',
     beats: [
-      { to: 0.25, say: 'When two atoms meet, their orbitals combine into molecular orbitals. Like signs add between the nuclei and make a bonding orbital; unlike signs cancel there and make an antibonding one.' },
-      { to: 0.5, say: 'Electrons fill them from the lowest up. Oxygen\'s last two stand unpaired, which is why a magnet attracted it, while nitrogen, with every electron paired, was not attracted.' },
-      { to: 0.75, say: 'Where a Lewis structure fails, as with oxygen\'s magnetism, molecular orbitals still work, which is why chemists keep both models. Ligar\'s last guard stands at the end of the cut.' }
+      { to: 0.25, say: 'When two atoms meet, their orbitals combine into molecular orbitals. Like signs add between the nuclei to make a bonding orbital; opposite signs cancel there to make an antibonding orbital.' },
+      { to: 0.5, say: 'Electrons fill from the lowest energy level up. Oxygen\'s last two electrons remain unpaired, so a magnet attracts it; nitrogen has all electrons paired and is not attracted.' },
+      { to: 0.75, say: 'Molecular orbitals explain oxygen\'s magnetism where Lewis structures cannot, which is why chemists use both models. Ligar\'s final guard waits at the end of the cut.' }
     ],
     pin: 'Oxygen is pulled toward a magnet and nitrogen is not, so the magnet finds it.'
   },
@@ -817,81 +817,81 @@ export const QUEST_STORY = {
     pin: 'It is bismuth, a heavy metal that ordinary chemistry cannot make from salt.'
   },
 
-  /* ---- Bellows: the Fifth jammed the station's holders; the chemistry reads what a gauge counts and ends on a sealed tank that stayed warm ---- */
+  /* ---- Bellows: gas pressure, gas laws, ideal gas law, mixtures, speed/effusion, real gases, and the Compressor ---- */
   'unit04/q1-knocks': {
     scene: 'gauge-walls',
     role: 'Station Fix',
-    mystery: 'Nobody has touched the valves, and the gauge on the jammed tank keeps climbing. What is happening inside the tank?',
+    mystery: 'A sealed tank\'s reading keeps climbing even though no gas was added. What is happening inside?',
     beats: [
-      { to: 0.25, say: 'A gauge on the floor, on the side wall and on the roof of a sealed box all read the same, because a gauge counts knocks and counts them alike on every wall.' },
-      { to: 0.5, say: 'The gas is not pressing down with its weight: more gas, less room or more heat all make the knocks harder or more frequent.' },
-      { to: 0.75, say: 'Temperature measures the average kinetic energy of the particles, and pressure reflects how frequently and forcefully they collide with walls.' }
+      { to: 0.25, say: 'Pressure meters on the roof, side wall, and floor of a sealed box all read the same because gas particles collide equally with every wall.' },
+      { to: 0.5, say: 'Shrinking the volume or heating the gas makes particles hit the walls harder and more often, raising the pressure.' },
+      { to: 0.75, say: 'Temperature measures the average kinetic energy of the particles, so higher temperature means faster collisions and higher pressure.' }
     ],
-    pin: 'Gas particles hitting the tank walls cause the pressure.'
+    pin: 'Particles hitting tank walls cause pressure; heat makes them hit harder and faster.'
   },
   'unit04/q2-laws': {
     scene: 'cold-tank',
     role: 'Direct Clue',
-    mystery: 'This sealed tank sat in freezing wind all night, and its gauge never dropped. What should the cold have done to it?',
+    mystery: 'This sealed tank sat in freezing wind all night, and its pressure never dropped. What should the cold have done to it?',
     beats: [
-      { to: 0.25, say: 'A gas does not care about the number on a Celsius thermometer. Its room, and its pressure in a sealed tank, follow the kelvin temperature, counted up from absolute zero.' },
-      { to: 0.5, say: 'So a sealed tank left out in the cold must lose pressure in step with its kelvin temperature: cool one by fifty degrees and its gauge falls by about a sixth.' },
-      { to: 0.75, say: 'Every cold-weather check on the station comes down to this, and a tank that does not follow it has something wrong inside.' }
+      { to: 0.25, say: 'A gas\'s volume and pressure follow kelvin temperature (counted from absolute zero), not Celsius.' },
+      { to: 0.5, say: 'Cool a sealed tank by 50 degrees from 293 K to 243 K and its kelvin temperature drops by about a sixth (17%), so its pressure drops by about a sixth too.' },
+      { to: 0.75, say: 'When both volume and kelvin temperature change at once, their pressure factors multiply.' }
     ],
-    pin: 'Cold should drop its pressure, so a tank that stays hot has a heat source inside.'
+    pin: 'Cold drops a sealed tank\'s pressure; steady pressure means something inside makes heat.'
   },
   'unit04/q3-ideal': {
     scene: 'equal-rooms',
     role: 'Station Fix',
-    mystery: 'Opening a jammed tank to look inside could burst it. How can we count the gas in it from the outside?',
+    mystery: 'Opening a sealed tank to look inside could burst it. How can we find the amount of gas inside from the outside?',
     beats: [
-      { to: 0.25, say: 'A gas takes up room according to how many particles it has, not what they are.' },
-      { to: 0.5, say: 'A mole of helium and a mole of carbon dioxide fill the same room, though one weighs eleven times the other.' },
-      { to: 0.75, say: 'So a pressure, a room and a temperature are enough to count a sealed tank without opening it, which is the first check when a holder reads too high.' }
+      { to: 0.25, say: 'At the same temperature and pressure, a gas\'s volume depends on how many moles of particles it holds, not which gas it is.' },
+      { to: 0.5, say: 'One mole of helium and one mole of carbon dioxide fill the same volume (22.4 L at 0 °C and 1 atm), even though carbon dioxide weighs eleven times as much.' },
+      { to: 0.75, say: 'So pressure, volume, and kelvin temperature are enough to calculate the moles inside any sealed tank with PV = nRT without opening it.' }
     ],
-    pin: 'Pressure, volume and temperature give the amount of gas without opening a valve.'
+    pin: 'Pressure, volume, and kelvin temperature give the moles of gas without opening the tank.'
   },
   'unit04/q4-mixtures': {
     scene: 'mix-share',
     role: 'Direct Clue',
-    mystery: 'The Fifth pumped a second gas into the fuel line, and the gauge reads higher. How much of that reading is the new gas?',
+    mystery: 'A second gas was added to the tank and the pressure rose. How much of the total pressure is from the new gas?',
     beats: [
-      { to: 0.25, say: 'Every gas in a tank pushes as if it were alone, and the gauge adds the pushes up. Each gas\'s share of the push is its share of the particles.' },
-      { to: 0.5, say: 'The moles, not the weight, decide who pushes hardest. Splitting a tank\'s push gas by gas is how a crew sees what has been added to it.' },
-      { to: 0.75, say: 'The station\'s air is a mixture, and so is the fuel in its lines, so whatever the Fifth added will show up as a push of its own.' }
+      { to: 0.25, say: 'Each gas in a mixture produces the same pressure as if it were alone, and the total pressure is the sum of those partial pressures.' },
+      { to: 0.5, say: 'Each gas\'s share of the total pressure equals its mole fraction (its moles divided by total moles), not its mass in grams.' },
+      { to: 0.75, say: 'When a gas is collected over water, subtracting the water vapor\'s partial pressure leaves the pressure of the gas alone.' }
     ],
-    pin: 'Each gas adds its own partial pressure, and together they make the total.'
+    pin: 'Each gas adds its own partial pressure: its mole fraction times the total.'
   },
   'unit04/q5-speed': {
     scene: 'leak-race',
     role: 'Direct Clue',
-    mystery: 'Gas is hissing out of the damaged vent, and nobody can see it. Which gas is leaking?',
+    mystery: 'Gas is leaking through a tiny hole in a tank vent. How can we tell which gas is escaping?',
     beats: [
-      { to: 0.25, say: 'The lighter the gas, the faster its particles go, so the sooner it leaks through a hole and the further it spreads in the same time.' },
-      { to: 0.5, say: 'The leak at the vent stack emptied at the same pace as krypton, and a leak that matches a known gas has the same kind of particle.' },
-      { to: 0.75, say: 'Graham\'s law connects effusion and diffusion rates inversely to the square root of molar mass.' }
+      { to: 0.25, say: 'Lighter gas particles move faster at the same temperature, so they escape faster through a pinhole (effusion) and spread faster through air (diffusion).' },
+      { to: 0.5, say: 'The stack leak emptied at the same rate as krypton, showing the leaking gas has krypton\'s molar mass (84 g/mol).' },
+      { to: 0.75, say: 'Half-empty time scales with the square root of molar mass (Graham\'s law): twice the time means four times the molar mass.' }
     ],
-    pin: 'The vent is leaking krypton, a heavy gas.'
+    pin: 'The vent is leaking a gas with krypton\'s molar mass (84 g/mol).'
   },
   'unit04/q6-real': {
     scene: 'crowd-and-pull',
     role: 'Station Fix',
-    mystery: 'The Fifth packed one tank far past its limit. Do the usual gas rules still hold inside it?',
+    mystery: 'A tank was compressed to a tiny volume. Does the gas law still give the right pressure?',
     beats: [
-      { to: 0.25, say: 'A real gas reads above the gas law where its particles crowd, because they take up room.' },
-      { to: 0.5, say: 'It reads below it where they cling, because they pull on each other, and that same pull is what turns a gas into a liquid.' },
-      { to: 0.75, say: 'So a gas is closest to ideal when it is thin and warm, and every pressure vessel on the cloud deck is designed knowing exactly where the gas law stops being true.' }
+      { to: 0.25, say: 'At high pressure, real gas particles take up a noticeable share of the volume, leaving less empty space and raising the pressure above the ideal gas law.' },
+      { to: 0.5, say: 'When a real gas is cold, attractions between particles pull them slightly away from the walls, lowering the pressure below the ideal gas law.' },
+      { to: 0.75, say: 'A gas behaves closest to ideal at low pressure and high temperature, where particle volume and attractions barely matter.' }
     ],
-    pin: 'No. Packed that tight, the particles crowd each other and the ideal gas law fails.'
+    pin: 'No. Compressed gas reads high from particle volume; cold gas reads low from attractions.'
   },
   'unit04/boss-compressor': {
     scene: 'warm-cylinder',
     role: 'Boss Payoff',
-    mystery: 'The Fifth\'s sealed tank has stayed hot for 12 days in freezing air. What could keep it hot that long?',
+    mystery: 'A sealed tank has stayed at high pressure for 12 days in freezing air. What could keep it warm that long?',
     beats: [
       { to: 0.25, say: 'With every gas tank balanced and vented, the Compressor finally shut down.' },
       { to: 0.5, say: 'Inside its vault sits a sealed cylinder that held steady pressure for twelve days while the air outside stayed freezing.' },
-      { to: 0.75, say: 'Gay-Lussac\'s law proves a sealed gas would lose pressure in the cold unless something inside keeps making heat. We logged the cylinder in the Case File.' }
+      { to: 0.75, say: 'Gay-Lussac\'s law shows a sealed gas would lose pressure in the cold unless something inside keeps making heat. We logged the cylinder in the Case File.' }
     ],
     pin: 'No ordinary gas stays hot 12 days in freezing air. Something inside makes heat.'
   },
@@ -1004,88 +1004,90 @@ export const QUEST_STORY = {
   'unit05/q1-flow': {
     scene: 'frost-manifold',
     role: 'Station Fix',
-    mystery: 'The shelters are freezing on top of a volcano, and this pipe is furred with frost. Why is everything so cold?',
+    mystery: 'The shelters are freezing on top of a volcano, and this pipe is coated in frost. Why is warmth leaving the shelters?',
     beats: [
-      { to: 0.25, say: 'Heat is energy flowing from a hotter object to a colder one until both reach the same temperature.' },
+      { to: 0.25, say: 'Heat flows from a hotter object to a colder one until both reach the same temperature.' },
       { to: 0.5, say: 'A thermometer measures the surroundings: when a water bath cools down, heat is flowing into the reaction, making it endothermic.' },
-      { to: 0.75, say: 'The Fifth Guild\'s volcano pipe is coated in frost because it is pulling heat inward, away from the colony shelters.' }
+      { to: 0.75, say: 'Just like the cold pack in your cup, an endothermic process inside the Fifth Guild\'s pipe is pulling heat away from the colony shelters.' }
     ],
-    pin: 'The Fifth Guild\'s volcano pipe is pulling heat away from the shelters.'
+    pin: 'An endothermic process inside the Fifth Guild\'s volcano pipe is pulling heat away from the shelters.'
   },
   'unit05/q2-calorimetry': {
     scene: 'heat-swap',
     role: 'Direct Clue',
-    mystery: 'The Fifth tapped an unmarked metal pipe into the volcano. How can we tell what metal it is without a label?',
+    mystery: 'The Fifth Guild installed an unmarked metal pipe in the volcano. How can we tell which metal it is made of?',
     beats: [
-      { to: 0.3, say: 'Drop a hot block into cool water and the block cools while the water warms. Heat moves until the two read the same temperature.' },
-      { to: 0.64, say: 'They meet where the heat the block lost has gone into the water. Nothing is made or lost on the way.' },
-      { to: 0.86, say: 'Heat follows q = m × c × ΔT, and the two sides come to the same number of joules. A calorimeter measures one side to learn the other.' }
+      { to: 0.3, say: 'Drop a hot copper fitting into cool water, and heat flows from the metal into the water until both reach the same temperature.' },
+      { to: 0.64, say: 'The heat lost by the metal equals the heat gained by the water. No energy is created or lost.' },
+      { to: 0.86, say: 'Using q = m × c × ΔT, the water\'s temperature rise identifies the metal, while melting and boiling absorb heat without raising temperature.' }
     ],
-    pin: 'The pipe\'s specific heat identifies its metal.'
+    pin: 'Specific heat capacity identifies the metal: the pipe fitting\'s c (0.385 J/(g·°C)) matches copper.'
   },
   'unit05/q3-enthalpy': {
     scene: 'fuel-bars',
     role: 'Station Fix',
-    mystery: 'The rescue skiff can only lift so much weight. Which fuel gives the most heat for each gram it carries?',
+    mystery: 'The rescue skiff has a strict weight limit. Which fuel releases the most heat per gram?',
     beats: [
-      { to: 0.3, say: 'The heat a reaction gives out grows in step with how much reacts: twice the moles, twice the heat.' },
-      { to: 0.6, say: 'Per mole, methane gives out the most of these four fuels and hydrogen the least.' },
-      { to: 0.85, say: 'Per gram the order turns over, and hydrogen leads by a wide margin. A mole of hydrogen weighs so little that its mass carries a lot of heat.' }
+      { to: 0.3, say: 'The heat a reaction releases scales directly with the amount reacting: twice the moles, twice the heat.' },
+      { to: 0.6, say: 'Per mole, methane releases the most heat of these four fuels and hydrogen releases the least.' },
+      { to: 0.85, say: 'Per gram, hydrogen wins by a wide margin. Because one mole of hydrogen weighs only 2 g, every gram packs far more moles.' }
     ],
-    pin: 'Measuring heat per gram picked the fuel that gets the skiff off the ground.'
+    pin: 'Hydrogen powers the rescue skiff because it releases the most heat per gram.'
   },
   'unit05/q4-bonds': {
     scene: 'bond-ledger',
     role: 'Direct Clue',
-    mystery: 'The Fifth\'s cracking coil breaks molecules apart. How much energy does that cost, and does any come back?',
+    mystery: 'The Fifth Guild\'s machine splits molecules into atoms. Does breaking bonds absorb or release energy, and does any come back?',
     beats: [
-      { to: 0.2, say: 'Breaking a bond takes energy in. Pulling the hydrogen pair apart costs 436 kJ for every mole.' },
-      { to: 0.4, say: 'Splitting chlorine costs another 242 kJ, so four separate atoms stand 678 kJ above where the reaction began.' },
-      { to: 0.78, say: 'Forming a bond gives energy back, 431 kJ for each H-Cl bond. Two of them return 862 kJ, releasing 184 kJ overall.' }
+      { to: 0.2, say: 'Breaking a bond always absorbs energy. Pulling H–H apart costs 436 kJ per mole.' },
+      { to: 0.4, say: 'Splitting Cl–Cl costs another 242 kJ, bringing the total energy put in to 678 kJ.' },
+      { to: 0.78, say: 'Forming two H–Cl bonds releases 862 kJ, giving 184 kJ extra overall. In nitric oxide, new bonds returned less than breaking cost, making it endothermic.' }
     ],
-    pin: 'Breaking bonds costs energy and forming new ones pays back 184 kJ extra.'
+    pin: 'Breaking bonds absorbs energy and forming bonds releases it: HCl releases 184 kJ overall.'
   },
   'unit05/q6-entropy': {
     scene: 'spread-count',
-    role: 'Toolkit',
+    role: 'Station Fix',
+    mystery: 'When a valve opens in the silencer bay, why does steam fill the whole pipe instead of staying on one side?',
     beats: [
-      { to: 0.4, say: 'Lift the partition and the gas spreads through the whole box, though nothing pushes it there.' },
-      { to: 0.7, say: 'Count the ways eight particles can split between the halves. An even split can happen in 70 ways, and all eight on one side in just 1.' },
-      { to: 0.9, say: 'That count of ways is what entropy measures. A gas spreads out because spread-out arrangements are overwhelmingly the most numerous.' }
-    ]
+      { to: 0.4, say: 'Open the wall and gas spreads across the entire box, even though no force drives it there.' },
+      { to: 0.7, say: 'Eight particles can split evenly 4–4 between two halves in 70 ways, but all eight land on one side in only 1 way.' },
+      { to: 0.9, say: 'Entropy measures that count of arrangements. Gas spreads out simply because spread-out arrangements vastly outnumber crowded ones.' }
+    ],
+    pin: 'Steam fills the pipe because spread-out arrangements vastly outnumber crowded ones.'
   },
   'unit05/q5-hess': {
     scene: 'two-routes',
     role: 'Direct Clue',
-    mystery: 'The Fifth sealed its main shaft, so nobody can measure it directly. How much heat flows down it?',
+    mystery: 'The Fifth Guild sealed its main shaft so we cannot test it directly. How can we combine measured reactions to find its heat?',
     beats: [
-      { to: 0.25, say: 'The heat of a reaction depends only on where it starts and where it finishes. So steps can be added, turned round and doubled.' },
-      { to: 0.5, say: 'A reaction nobody can run can still be worked out from ones that were measured, because measured from the elements, every compound sits at a height of its own.' },
-      { to: 0.75, say: 'The straight shaft at the separator is sealed, but the stepped pipe beside it starts and ends in the same two places. Heat counts only those two places, so the open pipe gives the same total.' }
+      { to: 0.25, say: 'A reaction\'s enthalpy change depends only on where it starts and ends, so known steps can be reversed, doubled, and added together.' },
+      { to: 0.5, say: 'Each substance sits at a fixed energy level, so any path connecting the same reactants and products has the same total ΔH.' },
+      { to: 0.75, say: 'Even with the main shaft sealed, adding the open side steps between carbon and CO₂ gives the exact same total: −393.5 kJ per mole.' }
     ],
-    pin: 'Adding up the open side pipes gives the total heat flowing down the sealed shaft.'
+    pin: 'Combining the open side steps gives the sealed shaft\'s heat: −393.5 kJ per mole of carbon.'
   },
   'unit05/q7-gibbs': {
     scene: 'seal-crossing',
     role: 'Direct Clue',
-    mystery: 'The Fifth\'s underground process takes in heat, yet it still runs. At what temperature can it start on its own?',
+    mystery: 'The Fifth Guild\'s underground limestone process absorbs heat, yet it still runs. At what temperature does it start on its own?',
     beats: [
-      { to: 0.25, say: 'Two factors decide whether a reaction runs on its own: how much heat it exchanges, and how much more spread out the particles become.' },
-      { to: 0.5, say: 'Free energy, ΔG = ΔH − TΔS, weighs both together. High temperature boosts the spreading term until a heat-absorbing reaction can still run.' },
-      { to: 0.75, say: 'Ice melts at 273 K where both terms balance, and the Fifth Guild\'s underground process only starts above extreme volcano temperatures.' }
+      { to: 0.25, say: 'Two factors decide whether a reaction runs on its own: the heat it exchanges (ΔH) and how much entropy it gains (ΔS).' },
+      { to: 0.5, say: 'Free energy (ΔG = ΔH − TΔS) combines both. Higher temperature boosts TΔS until even an endothermic reaction becomes spontaneous.' },
+      { to: 0.75, say: 'Ice melts at 273 K where ΔH and TΔS balance, and the Fifth Guild\'s limestone process (ΔH +178.3 kJ, ΔS +160.2 J/K) starts above 1,113 K.' }
     ],
-    pin: 'The underground process absorbs heat, so it only runs at extreme volcano temperatures.'
+    pin: 'The limestone process absorbs heat and starts above 1,113 K, where TΔS overtakes ΔH.'
   },
   'unit05/boss-crucible': {
     scene: 'crucible-open',
     role: 'Boss Payoff',
     mystery: 'Ember Reach\'s volcano heat is draining underground. What is using it?',
     beats: [
-      { to: 0.25, say: 'Tracing the heat flow, bond energies, and free energy finally broke the Crucible\'s grip on the volcano pipes.' },
-      { to: 0.5, say: 'The machine split open to reveal a giant heat exchanger pulling huge amounts of volcano heat away from the shelters.' },
-      { to: 0.75, say: 'Below the exchanger, a heavy pipe runs straight down into the crust. We logged the underground pipe in the Case File.' }
+      { to: 0.25, say: 'Measuring the jacket\'s heat, the coil\'s bond energies, the exchanger\'s Hess steps, the vent\'s entropy, and the seal\'s free energy broke the Crucible\'s grip.' },
+      { to: 0.5, say: 'The Crucible split open to reveal the siphon manifold, a giant heat exchanger draining volcano heat away from the shelters.' },
+      { to: 0.75, say: 'Below the manifold, a heavy pipe runs straight down into the crust. We logged the underground pipe in the Case File.' }
     ],
-    pin: 'The Fifth Guild is draining volcano heat to power a hidden underground rig.'
+    pin: 'The Fifth Guild is draining volcano heat to power an underground siphon manifold.'
   },
   /* ---- Lanternfall (unit02): who dimmed the beacons, and what is the Fifth lighting with a lens no guild lamp can make? ---- */
   'unit02/q1-wave': {
@@ -1211,8 +1213,8 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'Water molecules are light, yet the canal ice grips like stone. What holds water molecules to each other so hard?',
     beats: [
-      { to: 0.3, say: 'Larger electron clouds pull harder on their neighbors: helium needs 0.08 kJ per mole to separate, while xenon needs 12.6 kJ.' },
-      { to: 0.64, say: 'Water weighs 18 g per mole and hydrogen sulfide weighs 34 g, yet water needs 40.7 kJ to boil versus 18.7 kJ. Hydrogen bonds outweigh mass.' },
+      { to: 0.3, say: 'Larger electron clouds attract their neighbors more strongly: helium needs 0.08 kJ per mole to separate, while xenon needs 12.6 kJ.' },
+      { to: 0.64, say: 'Water weighs 18 g per mole and hydrogen sulfide weighs 34 g, yet water needs 40.7 kJ to separate versus 18.7 kJ. Hydrogen bonds outweigh mass.' },
       { to: 0.9, say: 'Even so, breaking every O-H bond inside a mole of water takes 926 kJ. Forces between molecules are much weaker than bonds inside them.' }
     ],
     pin: 'Strong hydrogen bonds between water molecules hold the ice together.'
@@ -1223,30 +1225,32 @@ export const QUEST_STORY = {
     mystery: 'Someone poured something on the canal, and it froze hard overnight. Is the ice still water, or something new?',
     beats: [
       { to: 0.28, say: 'A solid keeps its shape, a liquid keeps its volume and a gas fills its jar. Each jar holds the same eight molecules of water.' },
-      { to: 0.62, say: 'Carry the jar from solid to liquid to gas and the reader names H₂O the whole way. The molecules only change places, so no bond breaks.' },
+      { to: 0.62, say: 'Carry the jar from solid to liquid to gas and the analyzer names H₂O the whole way. The molecules only rearrange, so no bond breaks.' },
       { to: 0.9, say: 'A litre of liquid water weighs about 1,700 times a litre of steam, so a gas is mostly empty space. Melting and boiling overcome the intermolecular forces between molecules, never the bonds inside them.' }
     ],
-    pin: 'It is still water. The Fifth only locked the molecules in place.'
+    pin: 'It is still water—the molecules stayed whole and were only locked in place.'
   },
   'unit06/q3-boil': {
     scene: 'boil-flask',
-    role: 'Toolkit',
+    role: 'Station Fix',
+    mystery: 'Why does canal water evaporate even when it is far below 100 °C?',
     beats: [
-      { to: 0.32, say: 'In a sealed flask molecules leave the liquid and come back to it. The gauge stops rising when the leaving and the returning match, and that steady pressure is the vapor pressure.' },
-      { to: 0.66, say: 'Warming the liquid sends more molecules into the vapor, so its vapor pressure climbs: water pushes at 3.2 kPa at 25 °C and at 47.3 kPa at 80 °C.' },
+      { to: 0.32, say: 'In a sealed flask molecules leave the liquid and come back to it. The pressure reading stops rising when the leaving and returning rates match, and that steady pressure is the vapor pressure.' },
+      { to: 0.66, say: 'Warming the liquid sends more molecules into the vapor, so its vapor pressure climbs: water reaches 3.2 kPa at 25 °C and 47.3 kPa at 80 °C.' },
       { to: 0.92, say: 'A liquid boils when its vapor pressure reaches the pressure outside it. Water does that at 100 °C at sea level, and at 88 °C where the outside pressure is 65 kPa.' }
-    ]
+    ],
+    pin: 'Water leaves the surface at any temperature; boiling is only when vapor pressure reaches outside pressure.'
   },
   'unit06/q4-solids': {
     scene: 'solid-order',
     role: 'Direct Clue',
-    mystery: 'The canal barrier looks like ice, but glass looks like ice too. Which is it?',
+    mystery: 'The canal barrier looks like ice. How can you tell ice from glass or quartz?',
     beats: [
       { to: 0.32, say: 'Iodine, naphthalene, and ice all melt below 115 °C while their molecules stay intact. Only the forces between molecules give way.' },
-      { to: 0.7, say: 'Quartz stayed solid up to 1713 °C and then melted all at once. Fused silica, made of the same atoms, softened gradually from 1040 to 1585 °C.' },
-      { to: 0.9, say: 'In a crystal every bond has the same angle and breaks together. In glass the angles vary, so bonds give way gradually.' }
+      { to: 0.7, say: 'Quartz stayed solid up to 1713 °C and then melted all at once. Fused silica glass, made of the same atoms, softened gradually from 1040 to 1585 °C.' },
+      { to: 0.9, say: 'In a crystal every bond sits in a repeating pattern and breaks together. In glass the arrangement varies, so bonds give way gradually.' }
     ],
-    pin: 'The barrier melts at one sharp temperature, proving it is a crystal, not glass.'
+    pin: 'A crystal melts at one sharp temperature, whereas glass softens over a range.'
   },
   'unit06/q5-crossing': {
     scene: 'crossing-curve',
@@ -1255,32 +1259,31 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.3, say: 'A heating curve climbs as heat warms the ice, then stays flat at 0 °C while 6.01 kJ per mole goes into melting.' },
       { to: 0.62, say: 'That heat frees molecules from their fixed crystal spots, and boiling a mole of liquid water takes 40.65 kJ.' },
-      { to: 0.9, say: 'Cool it back down and steam condenses and freezes, releasing the exact same heat: 54.9 kJ on the way down.' }
+      { to: 0.9, say: 'Cool it back down and steam condenses and freezes, releasing the exact same 54.9 kJ of heat.' }
     ],
     pin: 'Melting uses heat to free the molecules, even while the temperature holds steady.'
   },
   'unit06/q6-solution': {
     scene: 'solution-drop',
     role: 'Direct Clue',
-    mystery: 'The drums on the quay are empty, and their chemical is in the canal water. How much of it is in each litre?',
+    mystery: 'The drums on the quay are empty, and their chemical is in the canal water. Did it dissolve, and how much is in each litre?',
     beats: [
-      { to: 0.28, say: 'Dissolved salt does not vanish. Its ions leave the crystal one by one and spread through the water, each surrounded by water molecules.' },
-      { to: 0.54, say: 'Four units of sodium chloride split into 8 ions, four of calcium chloride into 12 ions, and four of sugar stay 4 molecules. Molarity counts formula units, not split ions.' },
-      { to: 0.8, say: 'Adding water leaves the moles unchanged and spreads them over more liters: 25 mL of 2.00 M stock diluted to 100 mL becomes 0.500 M.' },
-      { to: 0.96, say: 'Dissolving also moves heat: calcium chloride warmed the water, while sodium chloride, potassium chloride, and ammonium nitrate cooled it.' }
+      { to: 0.33, say: 'Dissolved salt does not vanish. Its ions leave the crystal one by one and spread through the water, each surrounded by water molecules.' },
+      { to: 0.66, say: 'Four units of sodium chloride split into 8 ions, four of calcium chloride into 12 ions, and four of sugar stay 4 molecules. Molarity counts formula units, not split ions.' },
+      { to: 0.94, say: 'Adding water leaves the moles unchanged and spreads them over more liters: 25 mL of 2.00 M stock diluted to 100 mL becomes 0.500 M.' }
     ],
-    pin: 'We measured its molarity: the moles of chemical in each liter of canal water.'
+    pin: 'It dissolved into ions, and we measured its molarity (0.250 M) in moles per litre.'
   },
   'unit06/q7-separate': {
     scene: 'pull-apart',
     role: 'Station Fix',
-    mystery: 'The Fifth\'s chemical is dissolved in the canal water. Can we get it back out, and how?',
+    mystery: 'A chemical is dissolved in the canal water. Can we get it back out, and how?',
     beats: [
-      { to: 0.34, say: 'Filter paper traps solid chunks, but dissolved salt passes right through with the water. Filtering cannot remove the Fifth Guild\'s chemical.' },
+      { to: 0.34, say: 'Filter paper traps solid chunks, but dissolved salt passes right through with the water. Filtering cannot remove a dissolved chemical.' },
       { to: 0.66, say: 'In paper chromatography, each dye climbs according to how strongly it clings to the paper versus the solvent, so different solvents separate dyes in opposite orders.' },
       { to: 0.9, say: 'In distillation, the liquid with the lowest boiling point boils off first: acetone, then ethanol, then water. Boiling the water away leaves the dissolved chemical behind.' }
     ],
-    pin: 'Filtering fails, but boiling the water off leaves the chemical behind in the flask.'
+    pin: 'Filtering fails, but boiling the water off leaves the dissolved chemical behind in the flask.'
   },
   'unit06/boss-undertow': {
     scene: 'undertow-finale',

@@ -111,12 +111,12 @@ export function flaskFixture(id, x0, y0, o = {}) {
   const w = fx0 + 22 + WIN.w + 2;
   const h = Math.round((top + 37.2) * 10) / 10;
   const at = { x: x0 + w / 2, y: y0 + h / 2 };
-  const mouth = { id: `${id}.mouth`, label: ' ', at: { x: x0 + fx0 + 10, y: y0 + top + 11 }, size: { w: 18, h: 20 } };
-  const panSlot = pan ? { id: `${id}.pan`, label: ' ', at: { x: x0 + 11, y: y0 + top + 11 }, size: { w: 18, h: 20 } } : null;
+  const mouth = { id: `${id}.mouth`, label: ' ', at: { x: x0 + fx0 + 10, y: y0 + top + 12.2 }, size: { w: 18, h: 19 } };
+  const panSlot = pan ? { id: `${id}.pan`, label: ' ', at: { x: x0 + 11, y: y0 + top + 12.2 }, size: { w: 18, h: 19 } } : null;
   return {
     fixture: {
       id, kind: 'flask', label: title, at, size: { w, h }, dials, noRun: true,
-      props: { backdrop: true, slot: mouth.id, ...(pan ? { pan: panSlot.id } : {}), volume, ...(fills ? { fills } : {}), ...(stocks ? { stocks } : {}), ...(liquids ? { liquids } : {}), showM, count, keep, top, fx0 }
+      props: { backdrop: true, slot: mouth.id, ...(pan ? { pan: panSlot.id } : {}), volume, ...(fills ? { fills } : {}), ...(stocks ? { stocks } : {}), ...(liquids ? { liquids } : {}), showM, count, keep, top, fx0, tickLabels: true }
     },
     mouth, pan: panSlot, slotId: mouth.id, panId: panSlot?.id ?? null, size: { w, h }
   };
@@ -189,6 +189,10 @@ function paintWindow(ctx, F, f, R, wx, wy, b = {}) {
   const drop = dropFor(R);
   const liquid = R.liquid;
   if (!b.bodies) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(F.x(wx) + 1, F.y(wy) + 1, F.len(ww) - 2, F.len(wh) - 2);
+    ctx.clip();
     // The liquid's own molecules, faint, behind everything.
     const solventUnit = Math.max(3.4, hpx * 0.035);
     const sol = drop ? drop.solvent : dropOf({ sub: 'NaCl', solvent: liquid, units: 0, spreads: true }).solvent;
@@ -225,34 +229,48 @@ function paintWindow(ctx, F, f, R, wx, wy, b = {}) {
       }
       for (const q of moved) paintPart(ctx, q, U(q.u), V(q.v), Math.max(q.rad * hpx, q.k === 'cation' || q.k === 'anion' ? 5.2 : 3), hpx);
     }
+    ctx.restore();
   }
-  // The rows under the glass: what the drop is of, and what a stage chooses to print.
-  const cap = `A DROP, IN ${LIQUIDS[liquid]?.caption ?? 'WATER'}`;
-  say(ctx, cap, F.x(wx), F.y(wy + wh + 3.4), F.size(2.0, 6), { color: DIM });
+  // The rows under the glass: what the liquid is, and what a stage chooses to print.
+  const cap = LIQUIDS[liquid]?.caption ?? 'WATER';
+  say(ctx, cap, F.x(wx), F.y(wy + wh + 3.4), F.size(2.0, 6), { color: DUST });
   const reads = [];
   if (p.showM && R.item && R.c != null) reads.push(`MOLARITY ${R.c >= 1 ? R.c.toFixed(2) : R.c.toFixed(3)} M`);
-  if (p.count && drop) reads.push(`${countsOf(drop).total} PARTICLES`);
-  reads.forEach((t, i) => say(ctx, t, F.x(wx + ww), F.y(wy + wh + 7.4 + i * 3), F.size(2.6, 6.5), { color: AMBER, weight: 700, align: 'right', maxW: F.len(ww) }));
+  if (p.count && drop) {
+    const unitInfo = R.item?.props?.units ? ` (${R.item.props.units} UNITS)` : '';
+    reads.push(`${countsOf(drop).total} PARTICLES${unitInfo}`);
+  }
+  reads.forEach((t, i) => say(ctx, t, F.x(wx + ww), F.y(wy + wh + 7.4 + i * 3), F.size(2.4, 6.2), { color: AMBER, weight: 700, align: 'right', maxW: F.len(ww) }));
 }
 
 function paintFlaskBlock(ctx, F, f, R, fx0, top) {
   const p = f.props;
   const cx = fx0 + 10;
-  const neckTop = top + 21; const markY = top + 22.8; const bulbY = top + 31.2; const bulbR = 6;
-  const level = R.item || true;
-  // The bulb and neck: glass outline; the liquid stands at the mark.
-  ctx.fillStyle = 'rgba(111,143,176,0.26)';
-  ctx.beginPath(); ctx.arc(F.x(cx), F.y(bulbY), F.len(bulbR - 0.4), 0, Math.PI * 2); ctx.fill();
-  ctx.fillRect(F.x(cx - 1.1), F.y(markY), F.len(2.2), F.len(bulbY - markY - 1));
-  ctx.strokeStyle = STEEL; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(F.x(cx), F.y(bulbY), F.len(bulbR), -Math.PI * 0.42, Math.PI * 1.42); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(F.x(cx - 1.5), F.y(neckTop)); ctx.lineTo(F.x(cx - 1.5), F.y(bulbY - bulbR * 0.9)); ctx.moveTo(F.x(cx + 1.5), F.y(neckTop)); ctx.lineTo(F.x(cx + 1.5), F.y(bulbY - bulbR * 0.9)); ctx.stroke();
+  const neckTop = top + 21; const markY = top + 23.2; const baseY = top + 36.2; const halfBot = 6.8; const halfNeck = 1.9;
+  // Conical Erlenmeyer flask silhouette with flat base, sloped glass walls, and liquid fill to the mark.
+  ctx.fillStyle = R.liquid === 'hexane' ? 'rgba(196,174,116,0.28)' : 'rgba(111,143,176,0.34)';
+  ctx.beginPath();
+  ctx.moveTo(F.x(cx - halfNeck * 1.4), F.y(markY + 2.2));
+  ctx.lineTo(F.x(cx + halfNeck * 1.4), F.y(markY + 2.2));
+  ctx.lineTo(F.x(cx + halfBot - 0.5), F.y(baseY - 0.5));
+  ctx.lineTo(F.x(cx - halfBot + 0.5), F.y(baseY - 0.5));
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = STEEL; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(F.x(cx - halfNeck), F.y(neckTop));
+  ctx.lineTo(F.x(cx - halfNeck), F.y(markY + 1.4));
+  ctx.lineTo(F.x(cx - halfBot), F.y(baseY));
+  ctx.lineTo(F.x(cx + halfBot), F.y(baseY));
+  ctx.lineTo(F.x(cx + halfNeck), F.y(markY + 1.4));
+  ctx.lineTo(F.x(cx + halfNeck), F.y(neckTop));
+  ctx.stroke();
   ctx.lineWidth = 1;
   // The graduation mark round the neck, and what it reads.
   ctx.strokeStyle = AMBER; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(F.x(cx - 3.2), F.y(markY)); ctx.lineTo(F.x(cx + 3.2), F.y(markY)); ctx.stroke(); ctx.lineWidth = 1;
   say(ctx, `${R.volume} mL`, F.x(cx + 4), F.y(markY), F.size(2.0, 6), { color: DUST, weight: 700, maxW: F.len(8) });
-  void level; void p;
+  void p;
 }
 
 function paintBalance(ctx, F, f, R, top) {

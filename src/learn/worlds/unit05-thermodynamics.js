@@ -21,15 +21,15 @@ export const UNIT_05 = {
   world: 'Ember Reach',
   place: 'Volcanic vent field',
   title: 'Thermodynamics',
-  line: 'Heat, the heat of reactions, bond energies, entropy and free energy.',
+  line: 'Heat flow, calorimetry, reaction enthalpy, bond energies, entropy, and free energy.',
   brief:
-    'Where heat goes, how much a reaction gives out, and why some changes happen by themselves.',
+    'Where heat flows, how much energy reactions release or absorb, and why some changes happen on their own.',
 
   quests: [
     {
       id: 'q1-flow',
       title: 'Heat and Temperature',
-      line: 'Touch a hot block to a cold one, watch the two temperatures meet, and find which way the heat went.',
+      line: 'Touch a hot block to a cold one, watch their temperatures meet, and see which way heat flows.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -38,7 +38,7 @@ export const UNIT_05 = {
     {
       id: 'q2-calorimetry',
       title: 'Calorimetry',
-      line: 'Measure heat with a water bath: specific heat capacity, the heat of a reaction, and melting and boiling.',
+      line: 'Measure heat with a water bath: specific heat capacity, reaction heat, melting, and boiling.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -47,7 +47,7 @@ export const UNIT_05 = {
     {
       id: 'q3-enthalpy',
       title: 'Enthalpy of Reaction',
-      line: 'Find the heat of a reaction for each mole, scale it to any amount, and compare fuels gram for gram.',
+      line: 'Find reaction heat per mole, scale it to any amount, and compare fuels per gram.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -56,7 +56,7 @@ export const UNIT_05 = {
     {
       id: 'q4-bonds',
       title: 'Bond Enthalpies',
-      line: 'Estimate the heat of a reaction from the bonds it breaks and the bonds it forms.',
+      line: 'Estimate reaction heat by comparing the bonds broken with the bonds formed.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -65,7 +65,7 @@ export const UNIT_05 = {
     {
       id: 'q5-hess',
       title: "Hess's Law and Formation",
-      line: 'Add measured steps to find the heat of a reaction nobody measured, with Hess\'s law and enthalpies of formation.',
+      line: 'Combine measured steps to find the heat of an unmeasured reaction using Hess\'s law and formation enthalpies.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -74,7 +74,7 @@ export const UNIT_05 = {
     {
       id: 'q6-entropy',
       title: 'Entropy',
-      line: 'See why particles spread out, and what entropy counts, in phase changes and reactions.',
+      line: 'See why particles spread out and how entropy changes during phase changes and reactions.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -83,7 +83,7 @@ export const UNIT_05 = {
     {
       id: 'q7-gibbs',
       title: 'Free Energy',
-      line: 'Find when a change happens by itself: heat and entropy together, as free energy.',
+      line: 'Combine heat and entropy as free energy to predict when a change happens on its own.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -92,7 +92,7 @@ export const UNIT_05 = {
     {
       id: 'boss-crucible',
       title: 'The Crucible',
-      line: 'Solve five thermodynamic challenges across calorimetry, bond energies, Hess\'s law, entropy, and free energy.',
+      line: 'Solve five thermodynamics challenges covering calorimetry, bond energies, Hess\'s law, entropy, and free energy.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

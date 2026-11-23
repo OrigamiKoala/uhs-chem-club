@@ -61,8 +61,8 @@ export function stripFixture(id, at, { solvents = ['water'], title = 'Paper stri
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const dials = multi ? { solvent: { min: 1, max: solvents.length, step: 1, value: 1, label: 'Solvent', labels: solvents.map(s => SOLVENT_LABEL[s]) } } : {};
   return {
-    fixture: { id, kind: 'strip', label: title, at: { ...at }, size: { w, h }, dials, runLabel: 'Run Strip', props: { backdrop: true, slot: slotId, solvents: [...solvents], ctop: top } },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 11 }, size: { w: 24, h: 20 } },
+    fixture: { id, kind: 'strip', label: title, at: { ...at }, size: { w, h }, dials, runLabel: 'Run Strip', props: { backdrop: true, slot: slotId, solvents: [...solvents], ctop: top, tickLabels: true } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 12.5 }, size: { w: 24, h: 20 } },
     slotId, size: { w, h }
   };
 }
@@ -110,9 +110,17 @@ function paintStrip(ctx, f, state, b) {
     // The solvent climbs the paper after the key is pressed, and each dye is carried up behind it.
     const rise = did ? glide(`${b.scope || ''}strip:${f.id}:${r.item.id}:${s}:${r.ran[s]}`, 1, b.clock || 0, { dur: 3 }) : 0;
     if (did) {
-      const fy = cmY(r.ran[s] * rise);
-      rect(ctx, F, xc - 3.6, fy, 7.2, cmY(0) + 0.8 - fy, 'rgba(111,143,176,0.18)');
-      seg(ctx, F, xc - 4, fy, xc + 4, fy, DUST);
+      const frontCm = r.ran[s] * rise;
+      const fy = cmY(frontCm);
+      rect(ctx, F, xc - 3.6, fy, 7.2, cmY(0) + 0.8 - fy, 'rgba(111,143,176,0.22)');
+      // Bright amber dashed solvent-front line across the strip + tick on the ruler so the wet edge is unmistakable.
+      ctx.save(); ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1.5, F.len(0.35)); ctx.setLineDash([3, 2]);
+      ctx.beginPath(); ctx.moveTo(F.x(xc - 4.4), F.y(fy)); ctx.lineTo(F.x(xc + 4.4), F.y(fy)); ctx.stroke();
+      ctx.restore();
+      if (i === 0 || lit) {
+        seg(ctx, F, rx - 2.4, fy, rx + 2.0, fy, AMBER);
+        word(ctx, F, `front ${frontCm.toFixed(1)}`, rx - 3.2, fy - 1.5, 1.75, { align: 'right', color: AMBER, weight: 700 });
+      }
     }
     seg(ctx, F, xc - 4, cmY(0), xc + 4, cmY(0), DIM);
     if (!r.item) return;
@@ -375,15 +383,20 @@ export const planRead = state => planSeparation(planSteps(state));
 function paintPlan(ctx, f, state, b) {
   const F = frameOf(b);
   const top = f.props.ctop; const r = planRead(state);
+  const revealed = Boolean(state.revealed || f.props.revealed);
   word(ctx, F, 'START: ONE FLASK HOLDS', 3, top + 1.6, 2.0, { maxW: 54 });
   PLAN_PARTS.forEach((k, i) => { rect(ctx, F, 3 + i * 14, top + 4.2, 2, 2, PLAN_INK[k]); word(ctx, F, k, 6 + i * 14, top + 5.2, 2.0, { color: DUST, maxW: 10 }); });
+  if (!revealed) {
+    seg(ctx, F, 3, top + 8.8, 57, top + 8.8, DIM);
+    word(ctx, F, 'Order the steps on the rail, then press Submit.', 3, top + 14, 2.2, { color: DUST, maxW: 54 });
+    return;
+  }
   [['ON THE PAPER', 'paper'], ['IN THE FLASK', 'flask'], ['IN THE RECEIVER', 'receiver']].forEach(([label, key], i) => {
     const y = top + 11.5 + i * 6.6;
     seg(ctx, F, 3, y - 3.2, 57, y - 3.2, DIM);
     word(ctx, F, label, 3, y, 2.0, { maxW: 24 });
     if (!r[key].length) { word(ctx, F, '—', 29, y, 2.0); return; }
     r[key].forEach((k, j) => {
-      // Each part travels from the start line to where the steps send it.
       const g = glide(`${b.scope || ''}plan:${f.id}:${k}:${key}`, 1, b.clock || 0, { dur: 1.4 });
       const sx = 3 + PLAN_PARTS.indexOf(k) * 14 + 1; const sy = top + 5.2;
       if (!b.bodies) disc(ctx, F, sx + (30 + j * 10 - sx) * g, sy + (y - sy) * g, 1, PLAN_INK[k]);

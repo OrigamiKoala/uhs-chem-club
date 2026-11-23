@@ -16,6 +16,7 @@ import {
 } from '../../table/kits/nuke.js';
 import { commas } from '../../table/kits/nuke-draw.js';
 import { nameOf } from '../../engine/nucdata.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -241,3 +242,5 @@ export function mount(container, ctx) {
 }
 
 export { nameOf };
+
+markFights(STAGES);

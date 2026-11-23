@@ -28,7 +28,7 @@ import { retention, vaporPressure, PHASE_WATER } from './matterdata.js';
 export const FRONT_CM = 10.0;
 export const SOLVENT_ORDER = Object.freeze(['water', 'mix', 'hexane']);
 export const SOLVENT_LABEL = Object.freeze({ water: 'Water', mix: 'Ethanol and water', hexane: 'Hexane and acetone' });
-export const SOLVENT_SHORT = Object.freeze({ water: 'WATER', mix: 'ETHANOL', hexane: 'HEXANE' });
+export const SOLVENT_SHORT = Object.freeze({ water: 'WATER', mix: 'ETHANOL', hexane: 'HEX+ACET' });
 export const DYE_COLOUR = Object.freeze({ yellow: '#d9b23a', red: '#b8382c', blue: '#5b86b8' });
 export const DYE_NAME = Object.freeze({ yellow: 'Yellow', red: 'Red', blue: 'Blue' });
 export const INKS = Object.freeze({ black: { id: 'black', name: 'Black ink', dyes: ['yellow', 'red', 'blue'] } });

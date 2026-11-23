@@ -143,7 +143,7 @@ export class FpsControls {
       el.style.background = "rgba(18, 20, 24, 0.88)";
       el.style.border = "1px solid #d99423";
       el.style.color = "#d99423";
-      el.style.fontFamily = "'Share Tech Mono', monospace";
+      el.style.fontFamily = "'Quantico', 'JetBrains Mono', monospace";
       el.style.fontSize = "13px";
       el.style.letterSpacing = "0.1em";
       el.style.pointerEvents = "none";

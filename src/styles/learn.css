@@ -4180,17 +4180,17 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
   -webkit-backdrop-filter: none !important;
 }
 .lq-tstrip .lq-lamp {
-  width: 14px;
-  min-width: 14px;
-  height: 14px;
-  min-height: 14px;
-  padding: 0;
+  min-width: 22px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0 3px;
+  font-size: 0.68rem;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   align-self: center !important;
 }
-.lq-tstrip .lq-lamp em { display: none; }
+.lq-tstrip .lq-lamp em { display: inline; font-style: normal; }
 
 .lq-tdock {
   bottom: max(8px, env(safe-area-inset-bottom));
@@ -4252,6 +4252,7 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
   pointer-events: auto;
 }
 .lq-tmsg:not(:has(.lq-banner:not(:empty), .lq-widget:not(:empty), .lq-hints:not(:empty))) { display: none; }
+.lq-tmsg .lq-banner { order: -1; }
 .lq-tmsg .lq-banner:empty,
 .lq-tmsg .lq-widget:empty,
 .lq-tmsg .lq-hints:empty { display: none; }

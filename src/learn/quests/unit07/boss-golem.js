@@ -24,6 +24,7 @@ import { eqBench, boardRead, ledgerRead } from '../../table/kits/pot-balance.js'
 import { molarMass, parseEquation, reactPlan, nameIonic, pretty, IONS } from '../../engine/reactdata.js';
 import { saltInWater } from '../../engine/reactdata-names.js';
 import { session } from '../../../session.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -374,3 +375,5 @@ export function mount(container, ctx) {
 }
 
 export const CHECKS = { EQ_THERMITE, ORE_G, AL_G, GOLEM_KEEPS, GOLEM_PCT, POSSIBLE_FE, LEDGER };
+
+markFights(STAGES);

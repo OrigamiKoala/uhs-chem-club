@@ -26,7 +26,11 @@ export const inkOfElement = el => ELEMENT_INK[el] || '#b8afa0';
  * `u` runs across, `v` down the picture (0 at the top), `w` into the box.
  */
 export function phaseDots(phase, T = 20, n = 12) {
-  const tail = phase === 'solid' ? 0.06 : Math.max(0.1, 0.22 + (T + 40) / 260);
+  const tail = phase === 'solid'
+    ? 0.05
+    : phase === 'liquid'
+      ? Math.max(0.10, 0.12 + Math.max(0, T) / 115)
+      : Math.max(0.75, 0.55 + (T + 40) / 180);
   if (phase === 'solid') {
     const out = [];
     for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) for (let k = 0; k < 3; k++) out.push({ u: 0.28 + i * 0.44, v: 0.2 + k * 0.3, w: 0.28 + j * 0.44, tail });

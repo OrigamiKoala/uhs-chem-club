@@ -13,6 +13,7 @@ import {
   specFixture, wheelFixture, wheelRead, magnetFixture, vial, numCard, plaqueFixture
 } from '../../table/kits/lode.js';
 import { BANDS } from '../../engine/lodedata.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -249,3 +250,5 @@ export function mount(container, ctx) {
   runner.start();
   return { dispose: () => runner.dispose() };
 }
+
+markFights(STAGES);

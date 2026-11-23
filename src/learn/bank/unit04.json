@@ -154,7 +154,7 @@
     {
       "id": "q2-laws#1",
       "quest": "q2-laws",
-      "question": "At what Celsius temperature would the volume of a gas, carried back along its line, reach zero?",
+      "question": "If you extend a gas's volume-vs-temperature line straight back to zero volume, what Celsius temperature does it hit?",
       "options": [
         {
           "id": "a",
@@ -354,11 +354,11 @@
     {
       "id": "q3-ideal#4",
       "quest": "q3-ideal",
-      "question": "Which pair of readings multiplies out to the same number for every sample of an ideal gas?",
+      "question": "Which combination of pressure, volume, moles, and kelvin temperature stays constant for every ideal gas?",
       "options": [
         {
           "id": "a",
-          "label": "Pressure times volume, divided by amount times kelvin"
+          "label": "Pressure × volume, divided by (moles × kelvin)"
         },
         {
           "id": "b",
@@ -599,12 +599,12 @@
         }
       ],
       "answer": "a",
-      "explanation": "The lighter ammonia has crept further when they meet, so the meeting point is nearer the heavier gas's end."
+      "explanation": "Lighter ammonia spreads farther before they meet, so the ring forms closer to the heavier HCl end."
     },
     {
       "id": "q5-speed#4",
       "quest": "q5-speed",
-      "question": "Why does a smell take seconds to cross a room when its particles move at hundreds of metres a second?",
+      "question": "Why does a smell take seconds to cross a room when its particles move at hundreds of meters per second?",
       "options": [
         {
           "id": "a",
@@ -649,7 +649,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "The particles are not points: in a very small volume the volume they fill themselves is a large share of it, so the pressure is higher than the law says."
+      "explanation": "Gas particles take up real space. In a tiny container, their own volume leaves less empty space to move in, raising the pressure above the ideal gas law."
     },
     {
       "id": "q6-real#1",
@@ -953,7 +953,7 @@
             ],
             "answer": "a",
             "hint": "Speed and average kinetic energy depend only on temperature.",
-            "explain": "At constant temperature, particle speed is unchanged, but squeezing the gas into one-third the volume triples the collision frequency against the walls."
+            "explain": "At constant temperature, particle speed is unchanged, but compressing the gas into one-third the volume triples how often particles hit the walls."
           },
           {
             "say": "A second cylinder holds neon (20.2 g/mol) at 300 K. How does the average kinetic energy of neon compare with helium at 300 K?",
@@ -1248,7 +1248,7 @@
         {
           "id": "q4-mixtures#b2",
           "quest": "q4-mixtures",
-          "question": "A gas is collected over water at a total pressure of 100 kPa. The water vapour pressure is 3.2 kPa. What is the pressure of the dry gas?",
+          "question": "A gas is collected over water at a total pressure of 100 kPa. The water vapor pressure is 3.2 kPa. What is the pressure of the dry gas?",
           "options": [
             {
               "id": "a",
@@ -1268,14 +1268,14 @@
             }
           ],
           "answer": "d",
-          "explanation": "The total is the sum of the partial pressures. Subtract the water vapour: 100 - 3.2 = 96.8 kPa."
+          "explanation": "The total is the sum of the partial pressures. Subtract the water vapor: 100 - 3.2 = 96.8 kPa."
         }
       ],
       "worked": {
         "id": "q4-mixtures#w",
         "quest": "q4-mixtures",
         "title": "Hydrogen Collected Over Water",
-        "setup": "A student reacts 0.654 g of zinc (65.4 g/mol) with acid, giving one mole of hydrogen gas for each mole of zinc. The hydrogen is collected over water at 25 °C (298 K) with a total pressure of 101.3 kPa. The water vapour pressure at 25 °C is 3.2 kPa. What volume of gas is collected? (R = 8.314 kPa L/mol K)",
+        "setup": "A student reacts 0.654 g of zinc (65.4 g/mol) with acid, giving one mole of hydrogen gas for each mole of zinc. The hydrogen is collected over water at 25 °C (298 K) with a total pressure of 101.3 kPa. The water vapor pressure at 25 °C is 3.2 kPa. What volume of gas is collected? (R = 8.314 kPa L/mol K)",
         "steps": [
           {
             "say": "How many moles of zinc react?",
@@ -1301,7 +1301,7 @@
             "answer": 98.1,
             "calc": "101.3-3.2",
             "unit": "kPa",
-            "hint": "Total pressure minus the pressure of the water vapour.",
+            "hint": "Total pressure minus the pressure of the water vapor.",
             "explain": "101.3 - 3.2 = 98.1 kPa."
           },
           {
@@ -1340,7 +1340,7 @@
             "explain": "V = nRT / P, so a larger P gives a smaller V. The hydrogen's partial pressure is only 98.1 kPa."
           }
         ],
-        "finish": "A gas over water is a mixture, so subtract the vapour pressure before using the gas law for the dry gas."
+        "finish": "A gas over water is a mixture, so subtract the vapor pressure before using the gas law for the dry gas."
       }
     },
     "q5-speed": {
@@ -1432,7 +1432,7 @@
             "explain": "2.00 x 32.0 = 64.0 g/mol."
           },
           {
-            "say": "Which gas fits?",
+            "say": "Which gas has this molar mass?",
             "kind": "choice",
             "options": [
               {
@@ -1483,7 +1483,7 @@
             },
             {
               "id": "b",
-              "label": "Particles near the wall are pulled back by their neighbours, so they hit it more softly"
+              "label": "Particles near the wall are pulled back by their neighbors, so they hit it more softly"
             },
             {
               "id": "c",
@@ -1512,7 +1512,7 @@
             },
             {
               "id": "c",
-              "label": "H₂O vapour"
+              "label": "H₂O vapor"
             },
             {
               "id": "d",

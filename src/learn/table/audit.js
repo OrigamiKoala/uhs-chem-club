@@ -151,6 +151,8 @@ export function auditTable(state, kit, opts = {}) {
     for (const i of items) {
       if (i.kind === 'strip' && !opts.strip) continue;
       if (p.fixed && i.kind === 'fixture') continue;
+      // An atom of a loose Lewis board stands on its own board by design (`atoms.js` `looseSlateParts`).
+      if (p.props?.slate && i.name === `fixture ${p.props.slate}`) continue;
       if (i.backdrop) continue;
       if (opts.legacy && (i.kind === 'label' || i.kind === 'note')) continue;
       if (hit(r, i.r)) out.push(`loose piece ${p.id} starts on ${i.name}`);

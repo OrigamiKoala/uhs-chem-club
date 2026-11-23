@@ -69,12 +69,12 @@ export const STAGES = [
     ...predictStage({
       key: QUEST_KEY,
       title: 'Heavy Gas, Light Gas',
-      prompt: 'One mole of helium and one mole of carbon dioxide are at the same temperature and pressure: which fills more volume?',
+      prompt: 'Between one mole of helium and one mole of carbon dioxide at the same temperature and pressure, which fills more volume?',
       items: GUESSES,
       hints: [
-        'Lay one card in the slot.',
-        'Ask what fixes the volume a gas fills: how many particles are in it, or how heavy each one is.',
-        'Picture the same pressure on a piston from a few heavy particles and from the same number of light ones.'
+        'Think about whether a gas\'s volume depends on how many particles it has or how heavy they are.',
+        'Both samples contain the exact same number of particles at the same temperature and pressure.',
+        'Remember that lighter particles move faster while heavier particles hit harder, giving the same average kinetic energy.'
       ],
       reward: {
         log: 'Prediction recorded.',
@@ -84,49 +84,49 @@ export const STAGES = [
     }),
     briefing: {
       speaker: 'Vess',
-      body: 'A mole is a fixed, very large number of particles.'
+      body: 'A mole is a counting unit, like a dozen, but for particles: 1 mole = 6.02 × 10²³ particles.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const a = rig('ra', { x: 20, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'He', n: 1, hold: 'P', V: 20, T: STP, P0: P_ATM }], vmax: 70, compact: true, w: 34,
+    const a = rig('ra', { x: 45, y: 28 }, {
+      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'He', n: 1, hold: 'P', V: 20, T: STP, P0: P_ATM }], vmax: 70, compact: true, w: 40,
       show: { gauge: false, mass: true, kelvin: true }
     });
-    const b = rig('rb', { x: 58, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder B', gas: 'CO2', hold: 'P', V: 20, T: STP, P0: P_ATM }], amounts: CO2_AMOUNTS, amountStart: 1, vmax: 70, compact: true, w: 34,
-      show: { gauge: false, mass: true, kelvin: true }, hideUntilCommit: ['volume']
+    const b = rig('rb', { x: 105, y: 28 }, {
+      cyls: [{ id: 'a', label: 'Cylinder B', gas: 'CO2', hold: 'P', V: 20, T: STP, P0: P_ATM }], amounts: CO2_AMOUNTS, amountStart: 1, vmax: 70, compact: true, w: 40,
+      show: { gauge: false, mass: true, kelvin: true }
     });
     return {
       title: 'Equal Moles, Equal Volumes',
-      prompt: 'How many moles of carbon dioxide fill the same volume as one mole of helium?',
+      prompt: 'How many moles of carbon dioxide in Cylinder B fill the same volume as 1 mol of helium in Cylinder A?',
       widget,
       table: gasTable({ fixtures: [a, b] }),
       hints: [
-        'Turn Cylinder B\'s Gas in dial and watch its volume.',
-        'Compare the volumes of Cylinder A and Cylinder B at each setting.',
-        'Stop where the two volumes match, and read the amount of gas in Cylinder B.'
+        'Turn Cylinder B\'s Gas in dial and watch its VOLUME reading.',
+        'Compare Cylinder B\'s volume with Cylinder A\'s 22.4 L at each dial setting.',
+        'Stop when both cylinders show the same volume, then read the amount of gas in Cylinder B.'
       ],
       check(state) {
         const t = state.table;
-        if (Math.round(t.fixtures.rb.dials.amount.value) === 1) return { ok: false, notYet: true, msg: 'Cylinder B\'s dial is where it started: add gas and watch its volume.' };
+        if (Math.round(t.fixtures.rb.dials.amount.value) === 1) return { ok: false, notYet: true, msg: 'Turn Cylinder B\'s Gas in dial to match Cylinder A\'s volume.' };
         const va = cylRead(t, 'ra', 0).V;
         const vb = cylRead(t, 'rb', 0).V;
         if (Math.abs(vb - va) < 0.05) return { ok: true };
-        return { ok: false, msg: vb < va ? 'Cylinder B fills less volume than Cylinder A.' : 'Cylinder B fills more volume than Cylinder A.' };
+        return { ok: false, msg: vb < va ? `Cylinder B fills ${vb.toFixed(1)} L, less than Cylinder A's ${va.toFixed(1)} L.` : `Cylinder B fills ${vb.toFixed(1)} L, more than Cylinder A's ${va.toFixed(1)} L.` };
       },
       reward: {
         log: 'A mole of either gas fills the same volume.',
         title: 'Avogadro\'s Law',
-        body: 'One mole of each fills the same volume, however heavy its particles. This is Avogadro\'s law.'
+        body: 'One mole of any gas fills the same volume (22.4 L at 0 °C and 101.3 kPa), no matter how heavy its particles are. This is Avogadro\'s law.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const r = rig(RIG, { x: 36, y: 28 }, {
+    const r = rig(RIG, { x: 36, y: 30 }, {
       cyls: [{ id: 'a', label: 'Cylinder', gas: 'N2', n: 1, hold: 'dial', V: 22.4, T: STP }],
       temps: [273, 300, 400], tempList: 'K', tempStart: 1, amounts: [1, 2], amountStart: 1, vmax: 22.4,
       show: { kelvin: true, volume: true }, plot: { x: 'nT', y: 'PV' }, label: 'Cylinder'
@@ -135,31 +135,32 @@ export const STAGES = [
       title: 'The Gas Constant',
       briefing: {
         speaker: 'Vess',
-        body: 'Pressure rises with the moles (n) and kelvin temperature (T), and falls as volume (V) grows. Put together, P × V ÷ (n × T) comes to the same number for any gas.'
+        body: 'Pressure rises with moles (n) and kelvin temperature (T), and drops as volume (V) grows.'
       },
-      prompt: 'What does P × V ÷ (n × T) come to for this gas, in kPa, litres, moles and kelvin?',
+      prompt: 'What constant value does P × V ÷ (n × T) equal across different dial settings?',
       widget,
       table: gasTable({
-        pieces: R_CARDS.map(([id, label, v], i) => numCard(id, label, { x: 84 + i * 18, y: 38 }, v)),
+        pieces: R_CARDS.map(([id, label, v], i) => numCard(id, label, { x: 82 + i * 20, y: 39 }, v)),
         fixtures: [r],
-        zones: { slots: [{ id: 'answer', label: 'It comes to', at: { x: 111, y: 52 }, size: { w: 22, h: 11 } }] }
-      }, { recorder: { at: { x: 111, y: 17 }, size: { w: 40, h: 24 }, xLabel: 'n × K', xUnit: 'mol K', yLabel: 'P × V', yUnit: 'kPa L' } }),
+        zones: { slots: [{ id: 'answer', label: 'It comes to', at: { x: 112, y: 53 }, size: { w: 24, h: 11 } }] }
+      }, { recorder: { at: { x: 112, y: 17 }, size: { w: 46, h: 24 }, xLabel: 'n × K', xUnit: 'mol K', yLabel: 'P × V', yUnit: 'kPa L' } }),
       hints: [
-        'Turn both dials, read P, V, n and T, and place a card in the slot.',
-        'Compute P × V ÷ (n × T) at one setting, then check another setting.',
-        'Check where the decimal point sits for kPa, litres, moles and kelvin.'
+        'Press Record at two different dial settings so you have two sets of P, V, n, and T readings.',
+        'Use the Calc button to divide P × V by n × T at each setting.',
+        'Check the size of P × V divided by n × T to see where the decimal point belongs.'
       ],
       check(state) {
         const t = state.table;
         const card = cardIn(t, 'answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
+        if (t.recorder.rows.length < 2) return { ok: false, notYet: true, msg: 'Record at least two different dial settings first so you can verify the ratio stays constant.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (Math.abs(card.props.value - R) < 0.01) return { ok: true };
-        return { ok: false, msg: 'The cylinder readings do not come to the number on that card.' };
+        return { ok: false, msg: `101.3 × 22.4 ÷ (1.0 × 273) is about 8.31, not ${card.label}.` };
       },
       reward: {
         log: 'One number ties every reading together.',
         title: 'The Ideal Gas Law',
-        body: 'It is 8.31 at every setting. That number is the gas constant, R, and the relation PV = nRT is the ideal gas law.'
+        body: 'It equals 8.31 at every setting. That constant is R (the gas constant), and PV = nRT is the ideal gas law.'
       }
     };
   })(),
@@ -167,30 +168,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   (() => {
     const nX = (PLATE.P * PLATE.V) / (R * PLATE.T);
-    const rx = rig('rx', { x: 36, y: 29 }, {
+    const rx = rig('rx', { x: 75, y: 31 }, {
       cyls: [{ id: 'a', label: 'Tank X', gas: PLATE.gas, n: nX, hold: 'V', V: PLATE.V, T: PLATE.T, sealed: true }],
-      volumes: [5, 10, 15, 20], volumeStart: 2, vmax: 20, w: 62,
+      vmax: 20, w: 76,
       title: 'Tank X', show: { amount: false, temperature: false, kelvin: true }
     });
     return {
       title: 'Moles in a Tank',
       briefing: {
         speaker: 'Vess',
-        body: 'From PV = nRT, the moles in a tank are n = PV ÷ RT.',
-        worked: ['P × V = 500 × 5.0 = 2500', 'R × T = 8.31 × 301 = 2500', 'n = 2500 ÷ 2500 = 1.0 mol']
+        body: 'Rearranging PV = nRT gives n = PV ÷ (RT), with R = 8.31 L·kPa/(mol·K).'
       },
       prompt: 'How many moles of gas are in Tank X?',
       entry: { id: 'ans', label: 'Moles in Tank X', unit: 'mol' },
       widget,
       table: gasTable({ fixtures: [rx] }),
       hints: [
-        'Read the pressure, volume and temperature on Tank X.',
-        'Rearrange PV = nRT to solve for moles: n = PV ÷ RT.',
-        'Follow the worked example with Tank X\'s pressure, volume and temperature.'
+        'Read Tank X\'s pressure (kPa), volume (L), and temperature (K) directly from the tank.',
+        'Rearrange PV = nRT to solve for moles: n = PV ÷ (RT).',
+        'Multiply pressure by volume, then divide by the product of R (8.31) and kelvin temperature using Calc.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in mol.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the value in mol.' };
         const want = (PLATE.P * PLATE.V) / (R * PLATE.T);
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         const pAtV = (v * R * PLATE.T) / PLATE.V;
@@ -199,39 +199,39 @@ export const STAGES = [
       reward: {
         log: 'PV ÷ RT gives the moles in Tank X.',
         title: 'Moles in a Tank',
-        body: 'For Tank X, n = (400 × 10) ÷ (8.31 × 300), about 1.60 mol.'
+        body: 'For Tank X, n = (400 × 10) ÷ (8.31 × 300) ≈ 1.60 mol. You found the amount of gas from outside without opening the tank.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const sc = scaleFixture('scale', { x: 32, y: 33 });
-    const sealed = tank('sealed', 'Sealed tank', { x: 64, y: 33 }, {
+    const sc = scaleFixture('scale', { x: 28, y: 33 });
+    const sealed = tank('sealed', 'Sealed tank', { x: 62, y: 36 }, {
       gas: SEALED.gas, P: SEALED.P, V: SEALED.V, T: SEALED.T, sealed: true, plate: true, gaugeMax: 600
     });
     return {
       title: 'Naming a Gas',
-      prompt: 'Which gas is in the sealed tank?',
+      prompt: 'Which gas is inside the sealed tank?',
       widget,
       table: gasTable({
-        pieces: [sealed, ...answerCards(GAS_CARDS)],
+        pieces: [sealed, ...answerCards(GAS_CARDS, { x: 90, y: 44.5 })],
         fixtures: [sc.fixture],
         zones: { slots: [...sc.slots, answerSlot('Gas in the tank')] }
       }),
       hints: [
-        'Drag the sealed tank onto the scale to weigh its gas, then place a card in the slot.',
-        'Use the tank\'s pressure, volume and temperature to find how many moles it holds.',
-        'Divide the gas mass on the scale by the moles to find the mass of one mole.'
+        'Drag the sealed tank onto the scale to measure the mass of the gas inside.',
+        'Use n = PV ÷ (RT) with the tank\'s pressure, volume, and temperature to find how many moles it holds.',
+        'Divide the gas\'s mass in grams by its moles to get its molar mass (g/mol) and match a card.'
       ],
       check(state) {
         const t2 = state.table;
         if (!scaleRead(t2, 'scale').tank) return { ok: false, notYet: true, msg: 'Put the sealed tank on the scale to weigh its gas.' };
         const card = cardIn(t2, 'answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const hit = GAS_CARDS.find(c => c[0] === card.id);
         if (hit && hit[2] === SEALED.gas) return { ok: true };
-        return { ok: false, msg: 'That gas does not fit the sealed tank.' };
+        return { ok: false, msg: `44.1 g in 1.00 mol is 44 g/mol, not ${card.label}.` };
       },
       reward: {
         log: 'Mass over moles named the gas.',
@@ -244,37 +244,46 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   (() => {
     const nY = (ATM_PLATE.P * P_ATM * ATM_PLATE.V) / (R * (ATM_PLATE.TC + 273.15));
-    const ry = rig('ry', { x: 36, y: 29 }, {
+    const ry = rig('ry', { x: 42, y: 31 }, {
       cyls: [{ id: 'a', label: 'Tank Y', gas: 'Ar', n: nY, hold: 'V', V: ATM_PLATE.V, T: ATM_PLATE.TC + 273.15, sealed: true }],
-      volumes: [2.5, 5, 10], volumeStart: 2, vmax: 10, w: 62, units: 'atm',
+      vmax: 10, w: 66, units: 'atm',
       title: 'Tank Y · Ar', show: { amount: false, temperature: true, gauge: true, volume: true }
     });
+    const refPlaque = plaqueFixture('ref', 'Constants', { x: 112, y: 31 }, [
+      '1 atm = 101.3 kPa',
+      'R = 0.0821 L·atm/(mol·K)',
+      'K = °C + 273'
+    ], { w: 50 });
     return {
       title: 'Atmospheres and Celsius',
       briefing: {
         speaker: 'Vess',
-        body: 'Pressure is also measured in atmospheres: 1 atm is 101.3 kPa. With atm and litres the gas constant is 0.0821.'
+        body: 'Pressure is also measured in atmospheres (1 atm = 101.3 kPa). With atm and liters, use R = 0.0821 L·atm/(mol·K), and always convert temperature to kelvin.'
       },
       prompt: 'How many moles of gas are in Tank Y?',
       entry: { id: 'ans', label: 'Moles in Tank Y', unit: 'mol' },
       widget,
-      table: gasTable({ fixtures: [ry] }),
+      table: gasTable({ fixtures: [ry, refPlaque] }),
       hints: [
-        'Read the pressure, volume and temperature on Tank Y (R = 0.0821 L·atm/(mol·K)).',
-        'Convert the temperature from °C to kelvin before using PV = nRT.',
-        'Each number must be in the unit that this R uses, and temperature is always in kelvin.'
+        'Read Tank Y\'s pressure (atm), volume (L), and temperature (°C) along with the Constants plaque.',
+        'Convert the Celsius temperature to kelvin before using PV = nRT.',
+        'Because pressure is in atm, use R = 0.0821 in n = PV ÷ (RT) with the Calc button.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in mol.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the value in mol.' };
         const want = (ATM_PLATE.P * ATM_PLATE.V) / (R_ATM * (ATM_PLATE.TC + 273.15));
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        const celsiusTrap = (ATM_PLATE.P * ATM_PLATE.V) / (R_ATM * ATM_PLATE.TC);
+        if (Math.abs(v - celsiusTrap) / celsiusTrap < 0.15) {
+          return { ok: false, msg: 'Using 27 for T gives a number eleven times too large: convert °C to kelvin first.' };
+        }
         return { ok: false, msg: v > want ? 'That is more gas than Tank Y holds.' : 'That is less gas than Tank Y holds.' };
       },
       reward: {
         log: 'Same law, matched units.',
         title: 'Atmospheres and Celsius',
-        body: '2.5 atm, 5.0 L and 300 K give 0.51 mol. Using 27 for the temperature would have given a number eleven times too large.',
+        body: '2.5 atm, 5.0 L, and 300 K give 0.51 mol. Using 27 °C instead of 300 K would give a number eleven times too large.',
         last: true
       }
     };
@@ -285,7 +294,7 @@ export const STAGES = [
 const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn Cylinder B\'s Gas in dial.'],
-  3: ['Turn the dials, then place a card in the slot.'],
+  3: ['Record two dial settings,', 'then place a card in the slot.'],
   4: ['Read Tank X, then type your answer at the bottom.'],
   5: ['Weigh the tank on the scale,', 'then place a card in the slot.'],
   6: ['Type your answer in the field at the bottom.']
@@ -322,7 +331,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [],
   [dial('rb', 'amount', 3)],
-  [dial(RIG, 'temp', 2), put('n0831', 'slot:answer')],
+  [dial(RIG, 'temp', 2), { run: RIG }, dial(RIG, 'amount', 2), { run: RIG }, put('n0831', 'slot:answer')],
   [typed('ans', '16')],
   [put('sealed', 'slot:scale.pan'), put('n2', 'slot:answer')],
   [typed('ans', '5.6')]

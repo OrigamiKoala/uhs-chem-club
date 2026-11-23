@@ -15,65 +15,65 @@ import { addTourText } from '../tour.js';
 const FIXTURES = {
   'heat:cup': {
     title: 'Cup and thermometer', dials: false,
-    text: 'A lagged cup holds a bath of water with a thermometer in it. Drag a tin or a hot block onto the cup\'s mouth, the square above the bath, and the thermometer shows what the water does: its temperature and how far it has moved. A dial on the cup, named on the dial, changes one thing about it, such as how much energy an electric heater feeds the water. Where a cup prints a line of joules, that is the energy the water gained, and where a dashed line is drawn round the mouth it marks off the chemicals being studied from everything outside the line.'
+    text: 'An insulated cup holds a water bath with a thermometer. Drag a sample or hot block onto the cup mouth to see how the water temperature changes. A dial on the cup adjusts settings like heater energy, and any dashed boundary separates the chemicals being studied from the water bath around them.'
   },
   'heat:shelves': {
-    title: 'Energy chart', dials: false,
-    text: 'Two shelves stand side by side. The left shelf is the stored energy of the chemicals before a change, and the right shelf is their stored energy after it, so a right shelf that is higher means they ended with more. Turn the dial under the chart to move the right-hand shelf, and the chart redraws to match.'
+    title: 'Energy diagram', dials: false,
+    text: 'Two energy levels sit side by side: the left shows stored energy before a change, and the right shows stored energy after. Turn the dial below the diagram to raise or lower the right level.'
   },
   'heat:well': {
-    title: 'Bond crank', dials: false,
-    text: 'Two atoms are joined by a rod, which is the bond between them. Turn the dial one setting at a time to pull the atoms apart, or to let free atoms fall back together, and watch the rod thin as they separate. The meter under the atoms prints the energy that has gone in or come out so far.'
+    title: 'Bond puller', dials: false,
+    text: 'Two atoms are joined by a bond. Slide the dial to pull the atoms apart or let them come back together, and watch the meter below show the energy absorbed or released.'
   },
   'heat:ledger': {
-    title: 'Bond ledger', dials: false,
-    text: 'The ledger adds up the bond chips that lie in its two trays. The Broken column totals the energy of the bonds taken apart, and the Formed column totals the energy of the bonds built. Drag a chip from one tray to the other and the totals change at once.'
+    title: 'Bond table', dials: false,
+    text: 'The bond table totals the cards in its two trays: Broken on the left and Formed on the right. Move a card between trays to update both totals right away.'
   },
   'heat:stack': {
-    title: 'Stack of steps', dials: false,
-    text: 'The stack adds up the equation cards that lie in its tray. Under the reaction you want, in dust-grey, it prints the reaction the cards add up to, with the substances that appear on both sides cancelled out. Where it shows an energy change, that is the total for the cards in the tray.'
+    title: 'Reaction stack', dials: false,
+    text: 'The stack adds up the reaction cards in its tray and cancels any substance that appears on both sides. Below the target reaction, it shows what your cards currently add up to.'
   },
   'heat:cells': {
     title: 'Cells and gate', dials: false,
-    text: 'A row of cells with a gate across it. Drag a particle into a cell, then press "Log" to write that arrangement down; the count in the corner is how many different arrangements you have logged. Turn the "Gate" dial to open the wall and let the particles use the cells behind it.'
+    text: 'Drag a particle into a cell and press "Log" to record the arrangement. Turn the "Gate" dial to open the wall and unlock the remaining cells.'
   },
   'heat:chamber': {
     title: 'Shaking chamber', dials: false,
-    text: 'A chamber of cells holds a few particles, and the bars under it count how many of them stood in the left half after each shake. Press "Shake" to jostle them into a new set of cells; shake again as often as you like. Each shake adds to the bars, so the bars show what turns up most.'
+    text: 'Press "Shake" to place the particles randomly into the cells. The bars below count how many particles landed in the left half after each shake.'
   },
   'heat:plot': {
-    title: 'Balance plot', dials: false,
-    text: 'The line shows the net balance of a change as the temperature rises, and the shaded strip marks where the balance is below zero. Turn the "Temperature" dial to slide the amber marker along the line. The readout under the plot shows ΔH, TΔS and ΔG at the temperature the marker stands at.'
+    title: 'Temperature plot', dials: false,
+    text: 'The line shows how the net balance changes with temperature, with the shaded area marking values below zero. Drag the ball or turn the "Temperature" dial to read ΔH, TΔS, and ΔG at each point.'
   },
   'heat:warm': {
     title: 'Warmed sample', dials: false,
-    text: 'A sample sits in a box with a heater dial beside it. Turn the "Heater" dial to warm the sample, and its particles move faster, which the streaks behind them show. Press "Record" to write down what warming did.'
+    text: 'Turn the "Heater" dial to warm the sample and watch its particles move faster. Press "Record" to log what you observed.'
   },
   'heat:marker': {
-    title: 'Number marker', dials: false,
-    text: 'The marker holds a number. Drag its knob along the groove, or tap the groove, to set the number you worked out. Whatever it reads when you press Submit is your answer.'
+    title: 'Number dial', dials: false,
+    text: 'Drag the knob along the track, or tap the track, to set your answer before pressing Submit.'
   },
   'heat:selector': {
-    title: 'Answer dial', dials: false,
-    text: 'Drag the knob to your answer.'
+    title: 'Answer list', dials: false,
+    text: 'Tap your answer directly or drag the dial knob.'
   }
 };
 
 const PIECES = {
-  block: ['Metal blocks', 'Each block is a lump of metal with its weight and a thermometer reading printed on it. Drag one block onto another to join them, and both readings change. Tap the gap between two joined blocks to pull them apart again, and each goes back to its own reading.'],
-  charge: ['Tins of chemicals', 'Each tin holds chemicals that change when they react. Drag a tin onto the mouth of a cup and let it react in the water. A tin that has been in a cup keeps a line that says how far the bath moved, so you can compare tins after they are out again.'],
-  eqn: ['Equation cards', 'Each card is a reaction someone has already measured, with its energy change printed under it. Drag cards into the stack. Pick a card up and press "Flip" to run it the other way, which swaps its two sides and its sign, or "Larger" to double everything on it.'],
-  bond: ['Bond chips', 'Each chip is one kind of bond, drawn as two atoms joined by a rod, with how many there are and the energy of each. Drag a chip into a tray. The ledger adds up whatever lies in each tray. Where a chip stands for one bond, pick it up and press "Larger" until its count matches the molecule.'],
-  shelf: ['Energy charts', 'Each small chart has a left shelf for the energy before a change and a right shelf for the energy after it. Drag a chart to where it belongs.'],
-  phase: ['Particle boxes', 'Each box holds the same twelve particles, and a short streak on a particle shows how fast it is moving. Drag a box to where it belongs, or onto the strip in the order you choose.'],
-  stmt: ['Statement cards', 'Each card holds a short statement. Drag a card to where it belongs. Where a stage asks you to mark cards, tap one to ring it and tap it again to take the ring off.'],
-  shift: ['Change cards', 'Each card names a change and draws its particles before it on the left and after it on the right, one dot for each particle. Drag a card to where it belongs.'],
-  tag: ['Name cards', 'Each card names one thing. Drag a card to where it belongs, or tap it once and then tap the place you want it to go.'],
-  note: ['Cards', 'Each card holds a few words. Drag the card you choose to where it belongs, or tap it once and then tap the place; the card in a slot is your answer when you press Submit.'],
-  gcard: ['Line cards', 'Each card draws a line: the net balance of one kind of change as the temperature rises, with the stretch below zero shaded. Drag a card into a tray.'],
-  num: ['Number cards', 'Each card holds a number. Drag the one you worked out into the slot; it is your answer when you press Submit.'],
-  chip: ['Chips', 'Each chip holds a word or two. Drag a chip to where it belongs.'],
-  ptc: ['Particles', 'Each particle is a small bead. Drag one into a cell, and press "Log" once your arrangement is laid out.']
+  block: ['Metal blocks', 'Each block shows its mass and temperature. Drag one block onto another to join them, or tap the gap between joined blocks to separate them.'],
+  charge: ['Samples', 'Drag a sample onto the cup mouth to test it in the water bath. Once tested, the sample remembers how much the bath warmed or cooled.'],
+  eqn: ['Reaction cards', 'Each card shows a measured reaction and its energy change. Drag cards into the stack, or tap a card to Flip it (reversing its arrow and sign) or press Larger to double it.'],
+  bond: ['Bond cards', 'Each card shows one type of bond, its count, and its energy. Drag cards into the Broken or Formed trays, and tap a card to press Larger if you need more of that bond.'],
+  shelf: ['Energy diagrams', 'Each small diagram shows energy before on the left and energy after on the right. Drag it into the matching tray.'],
+  phase: ['Particle boxes', 'Each box holds twelve particles with motion trails showing their speed. Drag the boxes onto the rail in order.'],
+  stmt: ['Statement cards', 'Drag a card to the matching slot or tray, or tap to mark it when asked.'],
+  shift: ['Change cards', 'Each card shows the particles before a change on the left and after on the right. Drag it into the matching tray.'],
+  tag: ['Name cards', 'Drag a card to the answer slot, or tap it once and then tap the slot.'],
+  note: ['Prediction cards', 'Drag your chosen card into the slot, or tap it and then tap the slot.'],
+  gcard: ['Line cards', 'Each card plots ΔG against temperature, with the region below zero shaded. Drag each card into the matching tray.'],
+  num: ['Number cards', 'Drag your calculated number into the answer slot.'],
+  chip: ['Cards', 'Drag a card into the matching slot or tray.'],
+  ptc: ['Particles', 'Drag a particle into a cell, then press "Log" once your arrangement is ready.']
 };
 
 addTourText(

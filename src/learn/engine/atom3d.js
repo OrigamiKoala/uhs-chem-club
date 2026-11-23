@@ -55,8 +55,10 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
       else { shells[i] += -c; c = 0; }
     }
   }
+  const valenceOnly = Boolean(state?.opts?.shells);
   let activeShells = shells.filter(cnt => cnt > 0);
   if (!activeShells.length) activeShells = [1];
+  if (valenceOnly) activeShells = [activeShells[activeShells.length - 1]];
 
   const g = new THREE.Group();
   g.name = `atom-${p.id}`;
@@ -94,7 +96,18 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
   }));
 
   let nucClusterR = 0;
-  if (total <= 1) {
+  if (valenceOnly) {
+    // Generic ball nucleus for bonding/valence views so the focus stays on valence electrons.
+    const nucR = 0.23 * r;
+    nucClusterR = nucR;
+    const genericMat = own(new THREE.MeshStandardMaterial({
+      color: 0x9b8f7d, roughness: 0.38, metalness: 0.32
+    }));
+    const m = new THREE.Mesh(new THREE.SphereGeometry(nucR, 20, 14), genericMat);
+    m.position.set(0, cy, 0);
+    m.castShadow = true;
+    g.add(m);
+  } else if (total <= 1) {
     const nucR = 0.20 * r;
     nucClusterR = nucR;
     const m = new THREE.Mesh(new THREE.SphereGeometry(nucR, 16, 12), protMat);
@@ -133,18 +146,23 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
   const elecMat = own(new THREE.MeshStandardMaterial({
     color: 0xe8f6ff, emissive: 0x3388bb, roughness: 0.2, metalness: 0.3
   }));
+  const bondElecMat = own(new THREE.MeshStandardMaterial({
+    color: 0xffd27d, emissive: 0xb8680a, roughness: 0.2, metalness: 0.3
+  }));
 
   const electronTrackers = [];
   let globalRingIdx = 0;
 
   for (let k = 0; k < S; k++) {
-    const rad = S === 1 ? 0.72 * r : Rmin + (k / (S - 1)) * (Rmax - Rmin);
+    const rad = valenceOnly ? 0.76 * r : (S === 1 ? 0.72 * r : Rmin + (k / (S - 1)) * (Rmax - Rmin));
     const count = activeShells[k];
 
     let numRings = 1;
-    if (count === 2) numRings = 2;
-    else if (count >= 3 && count <= 4) numRings = 2;
-    else if (count > 4) numRings = Math.min(count, 3);
+    if (!valenceOnly) {
+      if (count === 2) numRings = 2;
+      else if (count >= 3 && count <= 4) numRings = 2;
+      else if (count > 4) numRings = Math.min(count, 3);
+    }
 
     const ringBuckets = Array.from({ length: numRings }, () => []);
     for (let e = 0; e < count; e++) {
@@ -152,10 +170,10 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
     }
 
     const ringGeo = new THREE.TorusGeometry(rad, Math.max(0.0004, r * 0.008), 6, 64);
-    const elecGeo = new THREE.SphereGeometry(Math.max(0.002, r * 0.05), 10, 8);
+    const elecGeo = new THREE.SphereGeometry(Math.max(0.002, r * (valenceOnly ? 0.062 : 0.05)), 10, 8);
 
     for (let ri = 0; ri < numRings; ri++) {
-      const tilt = RING_TILTS[(globalRingIdx++) % RING_TILTS.length];
+      const tilt = valenceOnly ? [Math.PI * 0.12, 0, Math.PI * 0.06] : RING_TILTS[(globalRingIdx++) % RING_TILTS.length];
       const ringEuler = new THREE.Euler(...tilt);
       const ringQuat = new THREE.Quaternion().setFromEuler(ringEuler);
 
@@ -169,14 +187,14 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
         const elecMesh = new THREE.Mesh(elecGeo, elecMat);
         g.add(elecMesh);
         const phase = (posIdx / electronsOnThisRing.length) * Math.PI * 2 + (ri * 0.6);
-        const speed = (0.55 / (1 + k * 0.28)) * (posIdx % 2 === 0 ? 1 : -1);
+        const speed = (0.55 / (1 + k * 0.28)) * (valenceOnly ? 1 : (posIdx % 2 === 0 ? 1 : -1));
         electronTrackers.push({
           mesh: elecMesh,
           rad,
           quat: ringQuat,
           phase,
           speed,
-          outer: k === shells.length - 1
+          outer: k === S - 1
         });
       });
     }
@@ -185,11 +203,67 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
   let time = 0;
   const v = new THREE.Vector3();
   const updateElectrons = (t) => {
+    const bondLinks = g.userData.bondLinks;
     const bondedAngles = g.userData.bondedAngles;
+    // Assign outer valence electrons to covalent shared pairs or ionic transfer hops first.
+    let used = 0;
+    const outerList = electronTrackers.filter(e => e.outer);
+    const assigned = new Set();
+
+    if (bondLinks?.length) {
+      for (const b of bondLinks) {
+        if (!b.dist || b.dist < 1e-5) continue;
+        const ux = b.dx / b.dist;
+        const uz = b.dz / b.dist;
+        const px = -uz;
+        const pz = ux;
+        if (b.type === 'share' && b.pairs > 0) {
+          const n = Math.min(b.pairs, outerList.length - used);
+          const mx = b.dx * 0.5;
+          const mz = b.dz * 0.5;
+          const rowGap = 0.26 * r;
+          const sideOff = -0.095 * r;
+          for (let k = 0; k < n; k++) {
+            const e = outerList[used++];
+            assigned.add(e);
+            const rowOff = (k - (n - 1) / 2) * rowGap;
+            e.mesh.material = bondElecMat;
+            e.mesh.position.set(
+              mx + px * rowOff + ux * sideOff,
+              cy,
+              mz + pz * rowOff + uz * sideOff
+            );
+          }
+        } else if (b.type === 'transfer' && b.isGiver && b.moved > 0) {
+          const n = Math.min(b.moved, outerList.length - used);
+          const startD = 0.52 * r;
+          const endD = Math.max(startD + 0.1 * r, b.dist - 0.52 * r);
+          for (let k = 0; k < n; k++) {
+            const e = outerList[used++];
+            assigned.add(e);
+            const phase = (t * 0.65 + k * 0.25) % 1.0;
+            const rawU = phase < 0.55 ? phase / 0.55 : (phase < 0.88 ? 1 : 0);
+            const u = rawU * rawU * (3 - 2 * rawU);
+            const distNow = startD + (endD - startD) * u;
+            const arcY = phase < 0.55 ? Math.sin(u * Math.PI) * 0.68 * r : 0;
+            const lat = (k - (n - 1) / 2) * 0.22 * r;
+            e.mesh.material = bondElecMat;
+            e.mesh.position.set(
+              ux * distNow + px * lat,
+              cy + arcY,
+              uz * distNow + pz * lat
+            );
+          }
+        }
+      }
+    }
+
     let frozenUsed = 0;
     for (let i = 0; i < electronTrackers.length; i++) {
       const e = electronTrackers[i];
-      if (e.outer && bondedAngles?.length && frozenUsed < bondedAngles.length) {
+      if (assigned.has(e)) continue;
+      e.mesh.material = elecMat;
+      if (!bondLinks?.length && e.outer && bondedAngles?.length && frozenUsed < bondedAngles.length) {
         const ang = bondedAngles[frozenUsed++];
         e.mesh.position.set(e.rad * Math.cos(ang), cy, e.rad * Math.sin(ang));
         continue;

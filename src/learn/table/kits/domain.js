@@ -17,10 +17,10 @@ import * as THREE from 'three';
 import { registerKit } from './registry.js';
 import {
   planHubJoin, hubPairable, paintHubKind, printedHub, faceKeyHub, paintHubLink, hubLinkRods, paintHubFixture, settleHubs,
-  HUB_R, ARM_R, turnOf, openingView, hubRead
+  HUB_R, ARM_R, turnOf, tiltOf, flipHubPiece, openingView, hubRead
 } from './domain-hub.js';
 import {
-  planFieldJoin, fieldPairable, runPlates, paintFieldKind, printedField, faceKeyField, paintFieldFixture, MOL_RECT, STREAM_RECT,
+  planFieldJoin, fieldPairable, runPlates, paintFieldKind, printedField, faceKeyField, paintFieldFixture, fieldTapZones, MOL_RECT, STREAM_RECT,
   molRead, dmolPose, restVectors, viewFor, isFieldMol, arrowsOn
 } from './domain-field.js';
 import { buildMolModel } from '../../engine/ligar-mol3d.js';
@@ -157,11 +157,15 @@ function piecePose3d(p, state, c) {
     const v = r.plan.vectors[idx].v;
     const view = openingView(r.plan.vectors);
     const yaw = view.yaw + turnOf(state, hub);
+    const tilt = tiltOf(state, hub);
 
-    // Rotate unit vector around vertical Y axis
-    const wx = v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw);
-    const wy = v[1];
-    const wz = -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw);
+    // Rotate unit vector around vertical Y axis (yaw), then around X axis (tilt) for smooth 3D joystick orbiting
+    const x1 = v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw);
+    const y1 = v[1];
+    const z1 = -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw);
+    const wx = x1;
+    const wy = y1 * Math.cos(tilt) - z1 * Math.sin(tilt);
+    const wz = y1 * Math.sin(tilt) + z1 * Math.cos(tilt);
     const dir = new THREE.Vector3(wx, wy, wz).normalize();
 
     const plHub = c.toPlate(hub.at);
@@ -222,6 +226,7 @@ export const DOMAIN_KIT = {
   },
   planJoin,
   pairable,
+  flip: flipHubPiece,
   run,
   settle,
   piece3d,
@@ -233,7 +238,8 @@ export const DOMAIN_KIT = {
   faceKey,
   paintLink,
   linkRods,
-  paintFixture
+  paintFixture,
+  tapZones: fieldTapZones
 };
 
 registerKit(DOMAIN_KIT);

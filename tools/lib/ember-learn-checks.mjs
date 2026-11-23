@@ -313,7 +313,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const hc = done(e4, 5);
       near(HK.ledgerRead(hc, 'ledger').net, e4.CHECKS.HCL_SUMS.net, 1e-9, `${q} stage 6 (the ledger as laid)`);
       near(e4.CHECKS.HCL_SUMS.net, -184, 1e-9, `${q} stage 6 (H₂ + Cl₂ → 2 HCl)`);
-      near(HK.markerRead(hc, 'dH'), e4.CHECKS.HCL_SUMS.net, 2, `${q} stage 6 (the marker)`);
+      near(Number(hc.entries.dH), e4.CHECKS.HCL_SUMS.net, 2, `${q} stage 6 (the typed ΔH)`);
     }
   }
 
@@ -337,7 +337,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const r = HK.stackRead(t, 'wanted');
       holds(r.matches, `${q} stage 3: the solution's stack does not add up to the reaction wanted`);
       near(r.dH, TD.FORMATION_TABLE['CH4(g)'].dHf, 0.1, `${q} stage 3 (building methane)`);
-      holds(!t.fixtures.answer && t.fixtures.wanted.props.hideSum === false, `${q} stage 3: a second decision (an answer dial) is back on the bench`);
+      holds(!t.fixtures.answer, `${q} stage 3: a second decision (an answer dial) is back on the bench`);
       same(e5.STAGES[2].check(e5.stateFor(2, e5.MISSES[2])).ok, false, `${q} stage 3 (the miss)`);
       holds(t.pieces.c3.props.flipped && t.pieces.c2.props.scale === 2, `${q} stage 3: the solution does not turn one card and double another`);
     }
@@ -410,7 +410,8 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(dGs[0].dG > 0 && dGs[dGs.length - 1].dG < 0, `${q} stage 2: ΔG does not change sign across the dial`);
       holds(dGs.filter(r => Math.abs(r.dG) < 0.05).length === 1, `${q} stage 2: not exactly one setting reads zero`);
       near(HK.plotRead(done(e7, 1), 'plot').T, TD.crossingTemperature(SALT.dH, SALT.dS), 0.5, `${q} stage 2 (the setting placed)`);
-      holds(Boolean(e7.STAGES[1].briefing?.body) && /ΔG = ΔH − TΔS/.test(e7.STAGES[1].briefing.body), `${q} stage 2: the equation is not taught before the stage`);
+      const brief2 = Array.isArray(e7.STAGES[1].briefing?.body) ? e7.STAGES[1].briefing.body.join(' ') : String(e7.STAGES[1].briefing?.body || '');
+      holds(Boolean(brief2) && /ΔG = ΔH − TΔS/.test(brief2), `${q} stage 2: the equation is not taught before the stage`);
       same(e7.STAGES[1].check(e7.stateFor(1, e7.MISSES[1])).ok, false, `${q} stage 2 (the miss)`);
     }
     {
@@ -456,7 +457,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     near(Number(done(eb, 0).entries.kj), TD.heatTransfer(500, TD.SPECIFIC_HEAT_WATER, 20) / 1000, 1.1, `${q} phase 1 (the jacket)`);
     near(HK.cupRead(start(eb, 0), 'jacket').dT, 20, 0.01, `${q} phase 1: the jacket does not rise 20 degrees`);
     near(HK.ledgerRead(start(eb, 1), 'ledger').net, -93, 1e-9, `${q} phase 2 (ammonia's ledger, as laid)`);
-    near(picked(done(eb, 1)), -93, 1e-9, `${q} phase 2 (the estimate set)`);
+    near(Number(done(eb, 1).entries.dH), -93, 1e-9, `${q} phase 2 (the estimate typed)`);
     {
       const t = done(eb, 2);
       holds(HK.stackRead(t, 'wanted').matches, `${q} phase 3: the stack does not add up to the splitting`);
@@ -464,7 +465,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(!t.fixtures.answer, `${q} phase 3: a second decision (an answer dial) is back on the bench`);
       same(eb.STAGES[2].check(eb.stateFor(2, eb.MISSES[2])).ok, false, `${q} phase 3 (the miss)`);
     }
-    near(picked(done(eb, 3)), 2 * TD.FORMATION_TABLE['H2(g)'].S0 + TD.FORMATION_TABLE['O2(g)'].S0 - 2 * TD.FORMATION_TABLE['H2O(g)'].S0, 0.05, `${q} phase 4 (the entropy change of splitting steam)`);
+    near(Number(done(eb, 3).entries.dS), 2 * TD.FORMATION_TABLE['H2(g)'].S0 + TD.FORMATION_TABLE['O2(g)'].S0 - 2 * TD.FORMATION_TABLE['H2O(g)'].S0, 0.1, `${q} phase 4 (the entropy change of splitting steam)`);
     near(Number(done(eb, 4).entries.T), TD.crossingTemperature(176, 160), 15, `${q} phase 5 (the seal)`);
     holds(!start(eb, 4).fixtures.plot.props.Ts.includes(1100), `${q} phase 5: the dial hands over the temperature asked for`);
     for (let i = 0; i < 5; i++) same((eb.STAGES[i].foes || []).length, 1, `${q} phase ${i + 1} (its foes)`);

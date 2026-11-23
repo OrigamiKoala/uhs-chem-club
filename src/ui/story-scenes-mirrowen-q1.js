@@ -61,7 +61,7 @@ function statesThree(ctx, w, h, t) {
       const x = 45 + i * 300; const y = 150;
       const lens = jar(ctx, x, y, pw, i);
       text(ctx, name, x + pw / 2, y + 225, { size: 28, color: C.text, weight: 700 });
-      text(ctx, `${SOLID.length} molecules, ${lens.length / 2} drawn whole`, x + pw / 2, y + 262, { size: 20, color: C.dust });
+      text(ctx, `${SOLID.length} molecules, all intact`, x + pw / 2, y + 262, { size: 20, color: C.dust });
     });
     text(ctx, 'one jar of water, three ways', w / 2, 70, { size: 26, color: C.dust });
     ctx.globalAlpha = 1;
@@ -73,13 +73,14 @@ function statesThree(ctx, w, h, t) {
     const s = 2 * ease(win(t, 0.36, 0.6));
     const pw = 470; const x = 60; const y = 120;
     const lens = jar(ctx, x, y, pw, s);
-    const whole = lens.filter(l => Math.abs(l - 1) < 0.01).length;
+    const refLen = lens[0] || 1;
+    const whole = lens.filter(l => Math.abs(l - refLen) < 0.15).length;
     text(ctx, stateName(s), x + pw / 2, y + 340, { size: 34, color: C.text, weight: 700 });
     const rx = 640;
-    text(ctx, 'READER', rx, 150, { size: 20, color: C.dim, align: 'left' });
+    text(ctx, 'ANALYZER', rx, 150, { size: 20, color: C.dim, align: 'left' });
     text(ctx, SAMPLES.H2O.formula, rx, 190, { size: 46, color: C.amber, weight: 700, align: 'left' });
     text(ctx, `molecules  ${lens.length / 2}`, rx, 270, { size: 28, color: C.text, align: 'left' });
-    text(ctx, `bonds drawn whole  ${whole}`, rx, 320, { size: 28, color: C.text, align: 'left' });
+    text(ctx, `bonds intact  ${whole}`, rx, 320, { size: 28, color: C.text, align: 'left' });
     text(ctx, `bonds broken  ${lens.length - whole}`, rx, 370, { size: 28, color: C.amber, weight: 700, align: 'left' });
     ctx.globalAlpha = 1;
   }
@@ -95,7 +96,7 @@ function statesThree(ctx, w, h, t) {
       const bh = Math.max(2, (g / water1) * maxH * grow);
       ctx.fillStyle = C.amber; ctx.fillRect(x - 50, base - bh, 100, bh);
       text(ctx, name, x, base + 36, { size: 26, color: C.text, weight: 700 });
-      text(ctx, `${(g * grow < 1 ? (g * grow).toFixed(3) : String(Math.round(g * grow)))} g`, x, base - bh - 24, { size: 26, color: C.text, weight: 700 });
+      text(ctx, `${(g < 1 ? g.toFixed(3) : String(Math.round(g)))} g`, x, base - bh - 24, { size: 26, color: C.text, weight: 700 });
     });
     text(ctx, 'one litre of each', w / 2, 70, { size: 26, color: C.dust });
     const ratio = Math.round(water1 / steam1 / 100) * 100;

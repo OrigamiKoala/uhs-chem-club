@@ -29,6 +29,9 @@ export const PLATE_ZONE = Object.freeze({ x0: -2.4, x1: 2.4, z0: -0.65, z1: 0.65
 
 export const LEAN = Object.freeze({
   pitchDeg: 55,
+  /** A table with its instrument at the near edge and its options beyond (`table/near.js`): looked at more from above, so
+   * the far words lose less to the slant (about a sixth more height at the far edge, the near edge as it was). */
+  nearPitchDeg: 63,
   minDist: 0.8,
   maxDist: 9,
   /** Fraction of the free glass left empty round the zones. */

@@ -20,6 +20,7 @@ import { contentTop } from './heat-draw.js';
 import { GLYPHS, inkOf } from './matter-parts.js';
 import { placeIn, speedAt, gasAt, shakeAt, slideAt, glide, h01 } from './matter-motion.js';
 import { addTourText } from '../tour.js';
+import { gliding } from '../glide.js';
 import {
   SAMPLES, SQUEEZE_NAMES, stateAt, squeezeRatio, pourShape, arrange, FRAME, windowMolecules, readerNames, jarMass
 } from '../../engine/matterdata-window.js';
@@ -47,21 +48,23 @@ const EXTRA_GLYPHS = {
 const glyphFor = id => EXTRA_GLYPHS[id] || GLYPHS[id] || { atoms: [[id, 0, 0]], bonds: [] };
 
 /** One molecule turned by `ang`, `unit` pixels to a bond. Atoms are drawn a little bigger than matter-parts' skeleton so a small card still shows them. */
-export function paintMolecule(ctx, id, cx, cy, unit, ang = 0) {
+export function paintMolecule(ctx, id, cx, cy, unit, ang = 0, bondsOnly = false) {
   const g = glyphFor(id);
   const c = Math.cos(ang); const s = Math.sin(ang);
   const at = ([, x, y]) => [cx + (x * c - y * s) * unit, cy - (x * s + y * c) * unit];
-  ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, unit * 0.16);
+  ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1.2, unit * 0.2);
   for (const [i, j] of g.bonds) {
     const [x0, y0] = at(g.atoms[i]); const [x1, y1] = at(g.atoms[j]);
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
     if (g.double) { const nx = (y1 - y0) / Math.hypot(x1 - x0, y1 - y0 || 1) * unit * 0.2; const ny = -(x1 - x0) / Math.hypot(x1 - x0 || 1, y1 - y0) * unit * 0.2; ctx.beginPath(); ctx.moveTo(x0 + nx, y0 + ny); ctx.lineTo(x1 + nx, y1 + ny); ctx.stroke(); }
   }
-  for (const a of g.atoms) {
-    const [x, y] = at(a);
-    ctx.fillStyle = inkOf(a[0]);
-    ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, unit * (a[0] === 'H' ? 0.3 : 0.44)), 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = STEEL; ctx.lineWidth = 1; ctx.stroke();
+  if (!bondsOnly) {
+    for (const a of g.atoms) {
+      const [x, y] = at(a);
+      ctx.fillStyle = inkOf(a[0]);
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, unit * (a[0] === 'H' ? 0.3 : 0.44)), 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = STEEL; ctx.lineWidth = 1; ctx.stroke();
+    }
   }
   ctx.lineWidth = 1;
 }
@@ -87,7 +90,7 @@ function paintCrowd(ctx, parts, px, py, pw, ph, unitK = 1, mot = null) {
     ctx.strokeStyle = PHOS; ctx.lineWidth = Math.max(1, unit * 0.12); ctx.globalAlpha = 0.5;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - Math.cos(m.ang2) * m.tail * k * 0.5, y - Math.sin(m.ang2) * m.tail * k * 0.5); ctx.stroke();
     ctx.globalAlpha = 1;
-    paintMolecule(ctx, m.mol, x, y, unit, ang);
+    paintMolecule(ctx, m.mol, x, y, unit, ang, Boolean(mot?.bondsOnly));
     if (i === 0) first = [x, y];
   });
   // The analyzer has read this window: a ring pulses round the molecule it examined.
@@ -183,10 +186,12 @@ export function jarDots(ctx, F, st, region, t, T = 20, n = 36) {
   const cols = Math.max(1, Math.round(Math.sqrt(n * region.w / Math.max(1, region.h))));
   const rows = Math.ceil(n / cols);
   const pitch = Math.min(region.w / cols, region.h / rows);
-  const box = { x0: region.x0 + 0.4, y0: region.y0 + 0.4, w: region.w - 0.8, h: region.h - 0.8 };
+  const box = { x0: region.x0 + 0.6, y0: region.y0 + 0.6, w: Math.max(0.5, region.w - 1.2), h: Math.max(0.5, region.h - 1.2) };
   for (let i = 0; i < n; i++) {
     const home = [region.x0 + ((i % cols) + 0.5) * (region.w / cols), region.y0 + (Math.floor(i / cols) + 0.5) * (region.h / rows)];
-    const [x, y] = placeIn(st, i, t, T, home, box, pitch * 0.3);
+    const [rx, ry] = placeIn(st, i, t, T, home, box, pitch * 0.28);
+    const x = Math.max(box.x0, Math.min(box.x0 + box.w, rx));
+    const y = Math.max(box.y0, Math.min(box.y0 + box.h, ry));
     ctx.beginPath(); ctx.arc(F.x(x), F.y(y), r, 0, Math.PI * 2); ctx.fill();
   }
 }
@@ -202,8 +207,13 @@ function paintPress(ctx, f, state, b) {
   let pistonY = CYL.y0;
   if (r.jar && !r.poured) {
     const sh = AREA / cw; // the height a liquid stands at
-    const top = r.st === 'gas' ? CYL.y1 - H * r.ratio : r.st === 'solid' ? CYL.y1 - BLOCK.h : CYL.y1 - sh;
-    const free = CYL.y1 - H / (r.level === 1 ? 1 : [1, 1.5, 2, 3][r.level - 1]);
+    // While the hand drags the piston it stands between the squeeze steps, where the hand is (`glide.js`).
+    const g = gliding(f, 'squeeze');
+    const lv = g ?? r.level;
+    const between = fn => { const lo = Math.max(1, Math.min(4, Math.floor(lv))); const hi = Math.min(4, lo + 1); return fn(lo) + (fn(hi) - fn(lo)) * Math.max(0, Math.min(1, lv - lo)); };
+    const ratio = g == null ? r.ratio : between(l => squeezeRatio(r.st, l));
+    const top = r.st === 'gas' ? CYL.y1 - H * ratio : r.st === 'solid' ? CYL.y1 - BLOCK.h : CYL.y1 - sh;
+    const free = CYL.y1 - H / between(l => [1, 1.5, 2, 3][l - 1]);
     pistonY = Math.min(free, top);
     if (r.st === 'gas') {
       if (!b.bodies) jarDots(ctx, F, 'gas', { x0: CYL.x0, y0: pistonY + 1.4, w: cw, h: CYL.y1 - pistonY - 1.4 }, b.clock || 0, r.jar.props.T ?? 20);
@@ -254,6 +264,12 @@ function settlePress(state) {
   for (const f of Object.values(state.fixtures)) {
     if (f.kind !== 'press') continue;
     const seated = seatedIn(state, f.props.slot);
+    const seatedId = seated?.id || null;
+    // Reset the piston to 1 atm whenever a different jar is seated so a new jar never starts already squeezed.
+    if (f.props.lastJar !== seatedId) {
+      f.props.lastJar = seatedId;
+      if (f.dials?.squeeze) f.dials.squeeze.value = 1;
+    }
     for (const p of Object.values(state.pieces)) {
       if (p.kind !== 'jar') continue;
       if (p !== seated && p.props.poured) delete p.props.poured;
@@ -283,7 +299,7 @@ export function pressFixture(id, at, { w = 90, title = 'Piston and tank' } = {})
       dials: { squeeze: { min: 1, max: 4, step: 1, value: 1, label: 'Piston', labels: [...SQUEEZE_NAMES] } },
       props: { backdrop: true, slot: slotId }
     },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 9.5 }, size: { w: 24, h: 17 } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 11.5 }, size: { w: 22, h: 16 } },
     slotId, size: { w, h }
   };
 }
@@ -309,14 +325,14 @@ function paintWindow(ctx, f, state, b) {
   const F = frameOf(b);
   const r = windowRead(state, f.id);
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(CELL.x0), F.y(CELL.y0), F.len(CELL.w), F.len(CELL.h));
-  if (r.jar && !b.bodies) {
+  if (r.jar) {
     const parts = arrange({ state: r.st, T: r.T, mols: r.mols, seed: `win${r.jar.id}` });
-    paintCrowd(ctx, parts, F.x(CELL.x0), F.y(CELL.y0), F.len(CELL.w), F.len(CELL.h), 1, { state: r.st, T: r.T, clock: b.clock || 0, mark: Boolean(r.here) });
+    paintCrowd(ctx, parts, F.x(CELL.x0), F.y(CELL.y0), F.len(CELL.w), F.len(CELL.h), 1, { state: r.st, T: r.T, clock: b.clock || 0, mark: Boolean(r.here), bondsOnly: Boolean(b.bodies) });
   }
   ctx.strokeStyle = STEEL;
   ctx.strokeRect(Math.round(F.x(CELL.x0)) + 0.5, Math.round(F.y(CELL.y0)) + 0.5, Math.round(F.len(CELL.w)), Math.round(F.len(CELL.h)));
   // What the reader has named, one line for every temperature it was pressed at.
-  say(ctx, 'ANALYZER', F.x(3), F.y(31.4), F.size(1.9, 5.8), { color: DIM });
+  say(ctx, 'ANALYZER', F.x(3), F.y(32.8), F.size(2.0, 6.2), { color: DUST, weight: 700 });
   const rows = r.jar ? Object.entries(r.reads).map(([T, n]) => [Number(T), n]).sort((a, c) => a[0] - c[0]) : [];
   rows.slice(0, 3).forEach(([T, n], i) => {
     const here = T === r.T;
@@ -343,9 +359,9 @@ export function windowFixture(id, at, { Ts, title = 'Window' } = {}) {
     fixture: {
       id, kind: 'window', label: title, at: { ...at }, size: { w, h }, runLabel: 'Read Molecule',
       dials: { heat: { min: 1, max: Ts.length, step: 1, value: 1, label: 'Heater', labels: Ts.map(degC) } },
-      props: { backdrop: true, slot: slotId, Ts: [...Ts] }
+      props: { backdrop: true, slot: slotId, Ts: [...Ts], tickLabels: true }
     },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 9.5 }, size: { w: 24, h: 17 } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 12.2 }, size: { w: 22, h: 16 } },
     slotId, size: { w, h }
   };
 }
@@ -364,7 +380,7 @@ export function scaleRead(state, fid) {
 function paintScale(ctx, f, state, b) {
   const F = frameOf(b);
   const r = scaleRead(state, f.id);
-  say(ctx, r.weighed ? `${fmtMass(r.value)} g` : r.jar ? '—' : '', F.x(31), F.y(17), F.size(4.6, 9), { color: r.weighed ? AMBER : DUST, weight: 700 });
+  say(ctx, r.weighed ? `${fmtMass(r.value)} g` : '0 g', F.x(33), F.y(18), F.size(4.4, 9), { color: r.weighed ? AMBER : DUST, weight: 700 });
   // The balance's needle swings to the weight and settles, a damped swing: heavier jars swing further. (The printed mass is the reading.)
   const cx = f.size.w - 11; const cy = 13; const R = 6.5;
   ctx.strokeStyle = DIM; ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), F.len(R), Math.PI, Math.PI * 2); ctx.stroke();
@@ -395,7 +411,7 @@ export function scaleFixture(id, at, { litres = 1, lines = [], title = 'Balance'
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   return {
     fixture: { id, kind: 'jarscale', label: title, at: { ...at }, size: { w, h }, runLabel: 'Weigh', dials: {}, props: { backdrop: true, slot: slotId, litres, lines } },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 9.5 }, size: { w: 24, h: 17 } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 11.5 }, size: { w: 22, h: 16 } },
     slotId, size: { w, h }
   };
 }

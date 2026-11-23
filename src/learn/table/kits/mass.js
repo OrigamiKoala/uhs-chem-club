@@ -42,6 +42,7 @@ import { CARDS_KIT } from './cards.js';
 import { planPour, packBin } from '../../engine/assay.js';
 import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import { BUILTIN_TOOLS } from '../tools.js';
+import { gliding } from '../glide.js';
 
 export const MASS_KIT_ID = 'mass';
 const AMBER = PLATE_COLORS.amber;
@@ -366,7 +367,8 @@ function paintAssay(ctx, f, state, b) {
   if (!read.sample) {
     plateText(ctx, 'chute empty', b.x0 + 2 * sc, b.y0 + h * 0.36, { size, color: PLATE_COLORS.dim });
   }
-  const px = read.beam ? xOf(read.pivot) : (b.x0 + b.x1) / 2;
+  // The fulcrum rides with the knob while the hand drags it (`glide.js`); the beam tips by the setting's moment.
+  const px = read.beam ? xOf(gliding(f, 'pivot') ?? read.pivot) : (b.x0 + b.x1) / 2;
   const span = ruler.max - ruler.min;
   const half = Math.max(1, read.total) * span * 0.5;
   const tilt = read.poured && read.beam ? Math.max(-1, Math.min(1, read.net / half)) : 0;

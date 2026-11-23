@@ -36,7 +36,7 @@ export function storyScene(spec, lines) {
 
   return {
     id: spec.id,
-    beats: shots.map(s => ({ dur: s.dur, say: s.say === 'arrival' ? lines[0] : s.say === 'objective' ? lines[1] : undefined })),
+    beats: shots.map(s => ({ dur: s.dur, say: s.say === 'arrival' ? lines[0] : s.say === 'objective' ? lines[1] : (typeof s.say === 'string' ? s.say : undefined) })),
     duration: total,
     paint
   };

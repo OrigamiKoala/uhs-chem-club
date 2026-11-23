@@ -13,42 +13,42 @@ import { addTourDemo, stageDemo } from '../tour-demo.js';
 const T = (title, text) => ({ title, text, dials: false });
 
 addTourText({
-  'matter:press': T('Piston and tank', 'Drag the piston down on the sample. "Pour" tips it into the tank.'),
-  'matter:window': T('Particle window', 'Turn the "Heater" dial. "Read Molecule" names the molecule in the window.'),
+  'matter:press': T('Piston and tank', 'Drag the piston down, or press "Pour" to tip the jar into the tank.'),
+  'matter:window': T('Particle window', 'Turn the "Heater" dial. "Read Molecule" names the molecules in the window.'),
   'matter:jarscale': T('Balance', 'Put a jar on the pan and press "Weigh".'),
-  'matter:probe': T('Probe', 'Put a card in the slot. "Separate" shows what attracts its molecules and prints the heat.'),
+  'matter:probe': T('Probe', 'Put a card in the slot and press the button to measure the heat.'),
   'matter:well': T('Bond', 'Drag one atom away from the other. The meter shows the energy.'),
-  'matter:vapour': T('Flask and pressure gauge', 'Put a liquid in the flask and press "Settle". The gauge shows where pressure levels off.'),
+  'matter:vapour': T('Flask and pressure reading', 'Put a liquid in the flask and press "Settle". The reading shows where pressure levels off.'),
   'matter:surface': T('Surface plate', 'Put a liquid in the slot and press "Test".'),
   'matter:cell': T('Equal boxes', 'Put a sample in the box and press "Weigh".'),
-  'matter:solidtest': T('Tester', 'Put a sample in. Turn the "Test" dial and press "Test".'),
-  'matter:heatcurve': T('Heater and recorder', 'Press "Heat". The pen draws temperature against the heat added.'),
+  'matter:solidtest': T('Tester', 'Put a sample in, set the Mode dial, and press the button.'),
+  'matter:heatcurve': T('Heater and recorder', 'Set any prediction dial first, then press "Heat". The pen draws temperature against heat added.'),
   'matter:cooler': T('Cooler', 'Put a sample in the slot and press "Cool".'),
   'matter:phasemap': T('Pressure and temperature', 'Pick a pressure with the dial and press "Heat".'),
-  'matter:flask': T('Flask bench', 'Drag a sample onto the balance or the flask. The window shows its particles.'),
-  'matter:filter': T('Filter', 'Put a mixture in the slot and press the key to pour it through.'),
+  'matter:flask': T('Flask bench', 'Drag a sample onto the balance or into the flask. The window shows its particles.'),
+  'matter:filter': T('Filter', 'Put a mixture in the slot and press "Pour Through".'),
   'matter:strip': T('Paper strip', 'Put an ink in the slot and press "Run Strip".'),
-  'matter:still': T('Still', 'Press the key to heat the flask and fill the next vial.'),
+  'matter:still': T('Still', 'Press "Collect Cut" to heat the flask and fill the next vial.'),
   'matter:boiler': T('Boiling flask', 'Put a card in the slot, set the "Dissolved" dial and press "Boil".'),
-  'matter:plan': T('Plan board', 'Lay step cards on the row. The board shows where each part ends.'),
+  'matter:plan': T('Plan board', 'Order the step cards along the rail, then press Submit.'),
   'matter:plaque': T('Plate', 'Facts for the stage. It does not change.'),
-  'matter:lead': T('Watch first', 'A similar case plays by itself.'),
-  'matter:mlead': T('Watch first', 'A similar case plays by itself.'),
-  'matter:marker': T('Number dial', 'Drag the knob to your number.'),
-  'matter:selector': T('Answer dial', 'Drag the knob to your answer.')
+  'matter:lead': T('Watch first', 'Watch what happens to the particles before you choose your prediction.'),
+  'matter:mlead': T('Watch first', 'Watch what happens to the particles before you choose your prediction.'),
+  'matter:marker': T('Number dial', 'Drag the knob or click along the track to set your number.'),
+  'matter:selector': T('Answer dial', 'Drag the knob or click along the track to pick your answer.')
 }, {
-  'matter:jar': ['Jar', 'Drag it into an instrument, then into a tray.'],
-  'matter:pbox': ['Molecule picture', 'The molecules in a jar. Drag it to where it belongs.'],
-  'matter:mol': ['Molecule card', 'Drag it into the probe, onto the rail, or into a tray.'],
-  'matter:liquid': ['Liquid card', 'Drag it into the flask or plate, then to where it belongs.'],
-  'matter:pack': ['Picture box', 'Count the discs. Drag it to where it belongs.'],
-  'matter:solid': ['Solid sample', 'Drag it into the tester, then into a tray.'],
-  'matter:hsamp': ['Sample card', 'Drag it into the cooler, then onto the rail.'],
-  'matter:sample': ['Sample card', 'Drag it onto the balance or the flask, then into a tray.'],
-  'matter:smp': ['Sample card', 'Drag it into an instrument, onto the strip or into a tray.'],
-  'matter:note': ['Card', 'Drag it to the slot.'],
-  'matter:tag': ['Name card', 'Drag it to where it belongs.'],
-  'matter:stmt': ['Statement', 'Drag it to where it belongs.']
+  'matter:jar': ['Jar', 'Drag a jar into the piston, then into one of the labelled boxes.'],
+  'matter:pbox': ['Molecule picture', 'The molecules in a jar. Drag it into its matching jar tray.'],
+  'matter:mol': ['Molecule card', 'Drag a card into the probe, then onto the rail or into a tray.'],
+  'matter:liquid': ['Liquid card', 'Drag a liquid into the instrument, then onto the rail or into a slot.'],
+  'matter:pack': ['Picture box', 'Compare the two arrangements and drag each box to its matching tray.'],
+  'matter:solid': ['Solid sample', 'Drag a sample into the tester, then into a tray.'],
+  'matter:hsamp': ['Sample card', 'Drag a sample card into the cooler to test it.'],
+  'matter:sample': ['Sample card', 'Drag a sample card onto the balance or into the flask.'],
+  'matter:smp': ['Sample card', 'Drag a sample card into the instrument to test it.'],
+  'matter:note': ['Card', 'Drag your chosen card into the slot.'],
+  'matter:tag': ['Name card', 'Drag each card into its matching tray.'],
+  'matter:stmt': ['Statement', 'Drag each card into its matching slot.']
 });
 
 const unit = f => () => import(`../../quests/unit06/${f}.js`);
@@ -59,8 +59,8 @@ async function idleDemo(file, index) {
   return { table: MODEL.createTable(stage.table, stage.title), steps: [], loop: 8 };
 }
 
-demo('fx_press', 'q1-states', 0, { max: 4 });
-demo('pc_matter_jar', 'q1-states', 0, { max: 4 });
+demo('fx_press', 'q1-states', 0, { max: 1 });
+demo('pc_matter_jar', 'q1-states', 0, { max: 1 });
 demo('pc_matter_pbox', 'q1-states', 1, { max: 4 });
 addTourDemo('matter:fx_lead', () => idleDemo('q1-states', 2));
 addTourDemo('matter:fx_mlead', () => idleDemo('q2-grip', 2));

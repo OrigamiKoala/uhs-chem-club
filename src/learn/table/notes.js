@@ -22,10 +22,24 @@ import { pieceRect } from './audit.js';
 
 /** Clear space kept round every other thing, in table units. */
 const MARGIN = 0.8;
+/** Clear space kept beside another printed word on the same line: closer, a how-to line reads as the end of a tray's label. */
+const WORD_GAP = 6;
 /** The distance between two lines of one block, in table units. */
 const PITCHK = 1.5;
 
 const hit = (a, b, gap = 0) => a.x0 < b.x1 + gap && b.x0 < a.x1 + gap && a.y0 < b.y1 + gap && b.y0 < a.y1 + gap;
+
+/** The strips of a table printed with words (zone labels, how-to lines, tool captions). */
+export function wordRects(state, kit) {
+  const out = [];
+  for (const [kind, zs] of [['tray', state.zones.trays], ['slot', state.zones.slots], ['container', state.zones.containers]]) {
+    for (const z of Object.values(zs)) out.push(...labelRects(state, kind, z));
+  }
+  if (state.zones.rail) out.push(...labelRects(state, 'rail', state.zones.rail));
+  for (const n of state.notes || []) out.push(noteRect(n));
+  for (const p of Object.values(state.pieces)) if (p.caption && !p.hidden) out.push(captionRect(kit, p));
+  return out;
+}
 
 /** Every rectangle of a stage's opening table that a printed line must stay clear of. */
 export function occupied(state, kit) {
@@ -53,26 +67,39 @@ export function occupied(state, kit) {
  * Find a spot for a block of `lines` (strings) on the table `spec` declares: the rectangle the block fills, as `{x, y}` of its first
  * line's left edge and baseline, or null when no clear strip is wide and tall enough.
  */
-export function findNoteSpot(spec, lines, { size = LABEL.note, foe = false } = {}) {
-  const state = createTable(spec, 'notes');
+export function findNoteSpot(spec, lines, { size = LABEL.note, foe = false, packed = false } = {}) {
+  // Placed on the table as the quest draws it: `near.js` then moves the line with the band it stands in.
+  const state = createTable({ ...spec, layout: 'as-drawn' }, 'notes');
   const kit = getKit(state.kit);
   const { w, h } = state.bounds;
   const busy = occupied(state, kit);
   // A stage that is a fight keeps the foe's corner clear (`layout.js` `FOE_PAD`); a line of words does not stand there.
   if (foe) busy.push(foePadOf(state.bounds).rect);
+  // Another printed word on the same line is kept further off than a thing is (`WORD_GAP`), across the line only.
+  const words = wordRects(state, kit);
   const width = Math.max(...lines.map(l => textUnits(l, size)));
   const height = (lines.length - 1) * size * PITCHK + size * 1.35;
+  // The middle of what is on the table: a line is centred on it where the strip allows.
+  const span = busy.reduce((a, r) => ({ x0: Math.min(a.x0, r.x0), x1: Math.max(a.x1, r.x1) }), { x0: Infinity, x1: -Infinity });
+  const mid = Number.isFinite(span.x0) ? (span.x0 + span.x1) / 2 : w / 2;
   const best = [];
   for (let y = 2.4; y + height < h - 1; y += 0.4) {
     for (let x = 2.4; x + width < w - 1.6; x += 0.8) {
       const r = { x0: x, x1: x + width, y0: y, y1: y + height };
       if (busy.some(b => hit(r, b, MARGIN))) continue;
-      best.push({ x, y });
+      const level = words.filter(b => b.y0 < r.y1 + MARGIN && r.y0 < b.y1 + MARGIN);
+      const crowded = level.some(b => r.x0 < b.x1 + WORD_GAP && b.x0 < r.x1 + WORD_GAP);
+      best.push({ x, y, alone: !level.length, roomy: !crowded });
     }
   }
   if (!best.length) return null;
-  // The lowest free strip, then the left-most: near the player's hands, where the pieces start, reading left to right.
-  best.sort((a, b) => b.y - a.y || a.x - b.x);
+  // A strip clear of the next word on its line by `WORD_GAP` (only a table with no such strip has one closer); a strip with no other words on its line (beside a tray's label, a line reads as part of it); then the lowest (near
+  // the player's hands); then the place on it nearest the middle of the table: a line set in whatever corner is left
+  // over reads as dropped there.
+  const off = c => Math.abs(c.x + width / 2 - mid);
+  // A block placed a line at a time (`withNotes`' last resort) packs each line lowest and left-most, so it leaves the most room for the next.
+  if (packed) best.sort((a, b) => b.y - a.y || a.x - b.x);
+  else best.sort((a, b) => (b.roomy - a.roomy) || (b.alone - a.alone) || b.y - a.y || off(a) - off(b));
   const pick = best[0];
   // `lineBox` takes a baseline: the first line's box top is `y`, so its baseline is a little under.
   return { x: pick.x, y: pick.y + size * 1.05 };
@@ -96,7 +123,7 @@ export function withNotes(spec, lines, opts = {}) {
   for (const text of lines) {
     let placed = null;
     for (const size of [LABEL.note, 2.3, LABEL.min]) {
-      const at = findNoteSpot(current, [text], { size, foe });
+      const at = findNoteSpot(current, [text], { size, foe, packed: true });
       if (at) { placed = { at, size }; break; }
     }
     if (!placed) throw new Error(`notes: no clear strip for "${text}" (${spec.pieces?.length || 0} pieces)`);

@@ -30,9 +30,11 @@
  * not LED, amber only for the piece in the hand and the key that is laid.
  */
 
+import { paintStripped } from '../table/solids.js';
 import { PlateBench, PLATE_COLORS, plateText, raster, aperture, lampMark } from './plates.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { SIZES, rectOf, railPositions, zoneAt } from '../table/snap.js';
+import { knobFrac } from '../table/glide.js';
 import { lineOf, readY, plotUnits } from '../table/recorder.js';
 import { fixtureLayout, pieceTargets, sitePlate, LABEL, labelLines, captionLine } from '../table/layout.js';
 import { paintMat, paintStencil, roundRectPath, MAT } from './table-surface.js';
@@ -288,13 +290,17 @@ export function drawTable(ctx, w, h, state, view = {}) {
     if (f.label && !f.props?.hideLabel) words(f.label, lay.box.x0 + (f.kind === 'slate' ? 5 : 1.5), lay.box.y0 + (f.kind === 'slate' ? 5.2 : 3.6), { size: 2.6, color: ink.label });
     // A kit paints what a fixture shows (a needle, a beam's path, a reading) in the box, flat:
     // the built table paints it into the plate's own picture, so the two cannot differ.
-    kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay, bodies: view.piles === false, clock: view.clock || 0, scope: view.scope || "" });
+    const fb = { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay, bodies: view.piles === false, clock: view.clock || 0, scope: view.scope || "" };
+    // At `3D On` the atoms and molecules a fixture draws stand up as solids (`table/solids.js`): the plate keeps the rest of its picture.
+    const solid = kit.paintFixture && view.solids?.(f);
+    if (solid) paintStripped(ctx, c => kit.paintFixture(c, f, state, fb), sc, solid);
+    else kit.paintFixture?.(ctx, f, state, fb);
     // A dial's name and where it stands are printed on the plate in both views; only its track and
     // knob are the drawn table's own (the built table stands a real knob on it).
     for (const d of lay.dials) {
-      if (f.kind === 'view') continue;
+      if (f.kind === 'view' || f.props?.joystick) continue;
       const dial = f.dials[d.name];
-      const frac = dial.max === dial.min ? 0 : (dial.value - dial.min) / (dial.max - dial.min);
+      const frac = knobFrac(f.id, d.name, dial);
       if (view.controls !== false) {
         ctx.strokeStyle = PLATE_COLORS.steel;
         ctx.beginPath();
@@ -311,20 +317,29 @@ export function drawTable(ctx, w, h, state, view = {}) {
         ? dial.label.replace('_', shown)
         : `${dial.label || d.name} ${shown}`;
       // The address strip stacks its dials close, and a knob at the low end of one stands over the first letter of its own name: its words start clear of it.
-      const indent = f.kind === 'finder' || f.kind === 'writer' ? 3.6 : (f.props?.dialIndent ?? 0);
+      // On the built table the knob is a cylinder (up to 2.2 units across its middle) that rests on the track's low end and stands over
+      // the start of a line of words printed just above: its words start past it.
+      const indent = Math.max(f.kind === 'finder' || f.kind === 'writer' ? 3.6 : (f.props?.dialIndent ?? 0), mat ? 4.6 : 0);
       words(dialText, d.x0 + indent, Math.max(d.y - DIAL_WORDS_ABOVE, lay.box.y0 + 6.3), { size: 2.4, color: ink.text, maxW: d.x1 - d.x0 - indent });
       // A tick under every step of a stepped dial, so the knob has places to be and the player sees how many.
-      if (mat && dial.step && dial.max > dial.min) {
+      if (dial.step && dial.max > dial.min) {
         const n = Math.round((dial.max - dial.min) / dial.step);
         if (n > 0 && n <= 12) {
-          ctx.strokeStyle = MAT.paintDim;
-          ctx.lineWidth = Math.max(1, sc * 0.16);
+          ctx.strokeStyle = mat ? PLATE_COLORS.dust : PLATE_COLORS.steel;
+          ctx.lineWidth = Math.max(1.2, sc * 0.2);
           for (let i = 0; i <= n; i++) {
             const tx = X(d.x0 + (i / n) * (d.x1 - d.x0));
             ctx.beginPath();
-            ctx.moveTo(tx, Y(d.y) + sc * 1.3);
-            ctx.lineTo(tx, Y(d.y) + sc * 2.3);
+            ctx.moveTo(tx, Y(d.y) + sc * 1.1);
+            ctx.lineTo(tx, Y(d.y) + sc * 2.4);
             ctx.stroke();
+            if (f.props?.tickLabels && dial.labels && n <= 6) {
+              const raw = String(dial.labels[i] ?? '').split(',')[0].trim();
+              if (raw) {
+                const align = i === 0 ? 'left' : i === n ? 'right' : 'center';
+                words(raw, d.x0 + (i / n) * (d.x1 - d.x0), d.y + 3.7, { size: 1.85, color: ink.dim, align, maxW: (d.x1 - d.x0) / Math.max(2, n) });
+              }
+            }
           }
           ctx.lineWidth = 1;
         }
@@ -496,7 +511,7 @@ export class Table2D extends PlateBench {
     for (const p of Object.values(state.pieces)) {
       if (first || !this.shown[p.id]) this.shown[p.id] = { ...p.at };
     }
-    this.gestures.gesture = null;
+    this.gestures.tableChanged(first || Boolean(opts.newStage));
     this.drag = null;
     this.railGap = null;
     const box = this.plates[0]?.canvas?.parentElement;

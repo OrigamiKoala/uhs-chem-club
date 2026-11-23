@@ -189,6 +189,83 @@ export function removeOne(mol, placed, target) {
   return { refused: `There is nothing on ${m.syms[i]} to lift out.` };
 }
 
+/**
+ * Where a drawing's atoms stand when they arrange themselves (the loose slate, `atoms.js`): each bonded group of atoms is
+ * spread round its most-bonded atom, and round every atom its bonds and its lone pairs (and single electrons) are spaced
+ * evenly, so a bond or a lone pair is never drawn on top of another. Atoms with no bond are `parked`.
+ *
+ * Returns `{pos, lone, comps, parked}`: `pos[i]` is `{x, y}` in bond lengths (y down) within its group, or null for a
+ * parked atom; `lone[i]` lists the directions (radians, y down) of the atom's lone pairs, then its single electrons;
+ * `comps` lists each bonded group's atoms. A flat drawing: the real shape of a molecule is a later bench's.
+ */
+export function poseDrawing(mol, placed) {
+  const m = molOf(mol);
+  const n = m.syms.length;
+  const nb = Array.from({ length: n }, () => []);
+  for (const [a, b] of m.links) {
+    if ((placed.bonds[linkKey(a, b)] || 0) > 0) { nb[a].push(b); nb[b].push(a); }
+  }
+  const loneOf = i => (placed.lone[i] || 0) + (placed.dots[i] || 0);
+  const pos = new Array(n).fill(null);
+  const lone = Array.from({ length: n }, () => []);
+  const comps = [];
+  const parked = [];
+  const seen = new Array(n).fill(false);
+  const UP = -Math.PI / 2;
+  for (let s = 0; s < n; s++) {
+    if (seen[s]) continue;
+    if (!nb[s].length) { seen[s] = true; parked.push(s); continue; }
+    const comp = [];
+    const queue = [s];
+    seen[s] = true;
+    while (queue.length) {
+      const i = queue.shift();
+      comp.push(i);
+      for (const j of nb[i]) if (!seen[j]) { seen[j] = true; queue.push(j); }
+    }
+    comp.sort((a, b) => nb[b].length - nb[a].length || (m.syms[a] === 'H') - (m.syms[b] === 'H') || a - b);
+    const root = comp[0];
+    const kids = nb[root].slice().sort((a, b) => a - b);
+    const d = kids.length + loneOf(root);
+    const step = (2 * Math.PI) / d;
+    // One neighbour: the bond lies flat, left to right. More: the bonds centre on the near side.
+    const start = kids.length === 1 ? 0 : Math.PI / 2 - ((kids.length - 1) / 2) * step;
+    let dirs = Array.from({ length: d }, (_, k) => start + k * step);
+    // A lone pair pointing straight away from the player hides behind its atom: turn the whole star half a step.
+    if (dirs.slice(kids.length).some(t => Math.cos(t - UP) > 0.94)) dirs = dirs.map(t => t + step / 2);
+    pos[root] = { x: 0, y: 0 };
+    lone[root] = dirs.slice(kids.length);
+    const placedSet = new Set([root]);
+    const walk = [];
+    kids.forEach((k, idx) => {
+      pos[k] = { x: Math.cos(dirs[idx]), y: Math.sin(dirs[idx]) };
+      placedSet.add(k);
+      walk.push([k, dirs[idx]]);
+    });
+    while (walk.length) {
+      const [c, inDir] = walk.shift();
+      const back = inDir + Math.PI;
+      const others = nb[c].filter(j => !placedSet.has(j)).sort((a, b) => a - b);
+      const dc = 1 + others.length + loneOf(c);
+      const st = (2 * Math.PI) / dc;
+      const out = Array.from({ length: dc - 1 }, (_, k) => back + (k + 1) * st);
+      others.forEach((j, idx) => {
+        pos[j] = { x: pos[c].x + Math.cos(out[idx]), y: pos[c].y + Math.sin(out[idx]) };
+        placedSet.add(j);
+        walk.push([j, out[idx]]);
+      });
+      lone[c] = out.slice(others.length);
+    }
+    comps.push(comp.slice().sort((a, b) => a - b));
+  }
+  // A parked atom's own electrons stand round it evenly, starting at the near side.
+  for (const i of parked) {
+    const k = loneOf(i);
+    lone[i] = Array.from({ length: k }, (_, j) => Math.PI / 2 + (j * 2 * Math.PI) / Math.max(1, k));
+  }
+  return { pos, lone, comps, parked };
+}
+
 /** Every drawing in a list that reads as a finished structure, as comparison keys. */
 export function distinctDrawings(mol, list) {
   const seen = new Set();

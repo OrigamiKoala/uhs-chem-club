@@ -27,8 +27,8 @@ function heatColour(T, lo, hi) {
   return `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], f))).join(',')})`;
 }
 
-/* ---- q2-calorimetry: a hot block goes into cool water; what the block loses the water gains, and both settle on one temperature ---- */
-const BLOCK = { m: 50, c: SPECIFIC_HEATS.aluminum.c, T: 100 };
+/* ---- q2-calorimetry: a hot copper fitting goes into cool water; what it loses the water gains, and both settle on one temperature ---- */
+const BLOCK = { m: 50, c: SPECIFIC_HEATS.copper.c, T: 65.4 };
 const WATER = { m: 100, c: SPECIFIC_HEAT_WATER, T: 20 };
 const T_FINAL = equilibriumTemp(BLOCK.m, BLOCK.c, BLOCK.T, WATER.m, WATER.c, WATER.T);
 const Q_BLOCK = heatTransfer(BLOCK.m, BLOCK.c, T_FINAL - BLOCK.T);
@@ -51,7 +51,7 @@ function heatSwap(ctx, w, h, t) {
   ctx.globalAlpha = 1;
   const blockY = lerp(110, by + bh - 90, drop);
   box(ctx, bx + bw / 2 - 45, blockY, 90, 70, heatColour(Tb, 15, 100), C.dust, 2);
-  text(ctx, 'metal', bx + bw / 2, blockY + 35, { size: 20, color: '#16140f', weight: 700 });
+  text(ctx, 'copper', bx + bw / 2, blockY + 35, { size: 20, color: '#16140f', weight: 700 });
   text(ctx, `${BLOCK.m} g`, bx + 40, 100, { size: 20, color: C.dust });
   text(ctx, `${WATER.m} g water`, bx + bw / 2, by + bh + 28, { size: 20, color: C.dust });
   // Heat leaving the block and entering the water: dots streaming out, as many as the temperature gap still holds.
@@ -96,14 +96,14 @@ function heatSwap(ctx, w, h, t) {
   // Each side's heat, from q = m × c × ΔT, drawn as bars of equal length.
   const bars = ease(win(t, 0.66, 0.84));
   if (bars > 0) {
-    const bw2 = 150 * (Math.abs(Q_BLOCK) / 3400) * bars;
+    const bw2 = 150 * (Math.abs(Q_BLOCK) / 1000) * bars;
     ctx.globalAlpha = bars;
-    text(ctx, `${BLOCK.m} × ${BLOCK.c} × ${(BLOCK.T - T_FINAL).toFixed(1)}`, gx, 420, { size: 18, color: C.dust, align: 'left' });
-    ctx.fillStyle = C.warm; ctx.fillRect(gx + 200, 408, bw2, 18);
-    text(ctx, `${WATER.m} × ${WATER.c} × ${(T_FINAL - WATER.T).toFixed(1)}`, gx, 460, { size: 18, color: C.dust, align: 'left' });
-    ctx.fillStyle = C.cold; ctx.fillRect(gx + 200, 448, 150 * (Math.abs(Q_WATER) / 3400) * bars, 18);
-    text(ctx, `lost ${Math.round(-Q_BLOCK)} J`, gx + 200 + bw2 + 12, 417, { size: 18, color: C.text, align: 'left' });
-    text(ctx, `gained ${Math.round(Q_WATER)} J`, gx + 200 + 150 * (Math.abs(Q_WATER) / 3400) * bars + 12, 457, { size: 18, color: C.text, align: 'left' });
+    text(ctx, `copper: ${BLOCK.m} g × ${BLOCK.c} × ${(BLOCK.T - T_FINAL).toFixed(1)} °C`, gx - 30, 420, { size: 16, color: C.warm, align: 'left' });
+    ctx.fillStyle = C.warm; ctx.fillRect(gx + 220, 408, bw2, 18);
+    text(ctx, `water: ${WATER.m} g × ${WATER.c} × ${(T_FINAL - WATER.T).toFixed(1)} °C`, gx - 30, 460, { size: 16, color: C.cold, align: 'left' });
+    ctx.fillStyle = C.cold; ctx.fillRect(gx + 220, 448, 150 * (Math.abs(Q_WATER) / 1000) * bars, 18);
+    text(ctx, `lost ${Math.round(-Q_BLOCK)} J`, gx + 220 + bw2 + 12, 417, { size: 18, color: C.text, align: 'left' });
+    text(ctx, `gained ${Math.round(Q_WATER)} J`, gx + 220 + 150 * (Math.abs(Q_WATER) / 1000) * bars + 12, 457, { size: 18, color: C.text, align: 'left' });
     ctx.globalAlpha = 1;
   }
   if (t < 0.25) { text(ctx, `${BLOCK.T} °C`, bx + bw / 2 + 80, 140, { size: 24, color: C.warm, weight: 700 }); text(ctx, `${WATER.T} °C`, bx + bw - 40, by + 40, { size: 24, color: C.cold, weight: 700 }); }
@@ -121,7 +121,7 @@ function fuelBars(ctx, w, h, t) {
     const gx = 130; const gy = 110; const gw = 700; const gh = 300;
     line(ctx, gx, gy, gx, gy + gh, C.steel, 2);
     line(ctx, gx, gy + gh, gx + gw, gy + gh, C.steel, 2);
-    text(ctx, 'heat given out (kJ)', gx + 6, gy - 20, { size: 20, color: C.dim, align: 'left' });
+    text(ctx, 'heat given out by hydrogen (kJ)', gx + 6, gy - 20, { size: 20, color: C.dim, align: 'left' });
     text(ctx, 'moles burned', gx + gw, gy + gh + 34, { size: 20, color: C.dim, align: 'right' });
     const maxN = 0.4; const maxQ = maxN * Math.abs(one.dHc);
     const X = n => gx + (n / maxN) * gw; const Y = q => gy + gh - (q / maxQ) * gh;
@@ -188,7 +188,7 @@ function bondLedger(ctx, w, h, t) {
     const y0 = zero - level * k; const y1 = zero - (level + s.v * g) * k;
     ctx.fillStyle = s.col;
     ctx.fillRect(x, Math.min(y0, y1), 110, Math.abs(y1 - y0));
-    if (g > 0.9) text(ctx, s.label, x + 55, s.v > 0 ? Math.min(y0, y1) - 18 : Math.max(y0, y1) + 22, { size: 16, color: C.text });
+    if (g > 0.9) text(ctx, s.label, x + 55, s.v > 0 ? Math.min(y0, y1) - 18 : Math.max(y0, y1) + (i === 3 ? 28 : 22), { size: 15, color: C.text });
     if (i < 3 && g > 0.5) line(ctx, x + 110, y1, x + 150, y1, C.dim, 1);
     level += s.v * g;
   });
@@ -208,7 +208,8 @@ function bondLedger(ctx, w, h, t) {
   if (t > 0.8) {
     const a = ease(win(t, 0.8, 0.92));
     ctx.globalAlpha = a;
-    text(ctx, `+${hh + cc} in, −${2 * hc} out: ${net} kJ`, w / 2, 70, { size: 30, color: C.amber, weight: 700 });
+    const netSign = net.net >= 0 ? '+' : '−';
+    text(ctx, `+${hh + cc} in, −${2 * hc} out: ${netSign}${Math.abs(net.net)} kJ`, w / 2, 42, { size: 26, color: C.amber, weight: 700 });
     ctx.globalAlpha = 1;
   }
 }
@@ -226,7 +227,7 @@ function spreadCount(ctx, w, h, t) {
     const [u, v] = placeOf(p, t * 11);
     const x = u * reach;
     if (x < 0.5) left++;
-    disc(ctx, bx + 12 + x * (bw - 24), by + 12 + v * (bh - 24), 9, x < 0.5 ? C.pale : C.amber);
+    disc(ctx, bx + 12 + x * (bw - 24), by + 12 + v * (bh - 24), 9, C.pale);
   });
   // The partition lifts away.
   const lift = open;

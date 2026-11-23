@@ -214,12 +214,13 @@ export function rig(id, at, o = {}) {
   if (temps) dials.temp = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => tempLabel(t, tempList)) };
   if (amounts) dials.amount = { min: 1, max: amounts.length, step: 1, value: amountStart, label: 'Gas in', labels: amounts.map(n => `${n} mol`) };
   const nd = Object.keys(dials).length;
+  const rowPitch = nd >= 2 ? 7.5 : 5;
   const key = ['gauge', 'ideal', 'off', 'volume', 'temperature', 'amount', 'knocks', 'speed', 'energy', 'kelvin', 'z', 'mass', 'room', 'pull', 'pullShare'];
   const on = k => (['gauge', 'volume', 'temperature', 'amount'].includes(k) ? show[k] !== false : Boolean(show[k]));
   const lines = key.filter(on).length;
   const cols = o.cols ?? (compact || speedScreen ? 1 : 2);
   const rows = Math.ceil(lines / cols);
-  const topRel = nd ? Math.max(8 + Math.max(0, nd - 1) * 5 + 7, 14) : 12;
+  const topRel = nd ? Math.max(9.6 + Math.max(0, nd - 1) * rowPitch + 9.5, 16) : 12;
   const BH = compact ? 5.6 : 7;
   const block = BH + 3.4 + rows * 3.3;
   const pitch = rowH ?? (block + 2.6);
@@ -230,13 +231,15 @@ export function rig(id, at, o = {}) {
   // A lone full-size cylinder names itself in the panel's title; the glass leans over any name printed above the barrel.
   const titled = cyls.length === 1;
   const titleOf = titled ? o.title || `${cyls[0].label || `${label} A`}${cyls[0].sealed || !GASES[cyls[0].gas] ? '' : `  ${GASES[cyls[0].gas].sym}`}` : null;
+  const grab = Object.fromEntries(Object.keys(dials).map(k => [k, 2.2]));
   const props = {
     cyls: cyls.map((c, i) => ({ id: c.id || String.fromCharCode(97 + i), ...c, label: c.label || `${label} ${String.fromCharCode(65 + i)}` })),
     ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), ...(amounts ? { amounts } : {}),
-    show, vmax, units, compact, speedScreen, speedMax, rowH: pitch, cols,
+    show, vmax, units, compact, speedScreen, speedMax, rowH: pitch, cols, rowPitch, tickLabels: true, grab,
     ...(plot ? { plot } : {}), ...(bar != null ? { bar } : {}), ...(target != null ? { target } : {}), ...(words ? { words } : {}),
     ...(pellet ? { pellet } : {}), ...(screenH ? { screenH } : {}), ...(screenRef != null ? { screenRef } : {}), ...(T != null ? { T } : {}),
     ...(trueSize ? { trueSize: true } : {}), ...(titled ? { titled: true } : {}),
+    ...(o.overWater ? { overWater: true } : {}), ...(o.attractions ? { attractions: true } : {}),
     ...(o.hideUntilCommit ? { hideUntilCommit: o.hideUntilCommit } : {}),
     ...(o.gate ? { gate: o.gate } : {}),
     ...(o.gateMsg ? { gateMsg: o.gateMsg } : {}),
@@ -260,7 +263,7 @@ export function box(id, at, { gas = 'N2', n = 1, V = 10, T = 300, temps = null, 
   const h = Math.round((lastDial + 18 + side + 6.4 + (plot ? 6.4 : 0)) * 10) / 10;
   return {
     id, kind: 'box', label, at: { ...at }, size: { w, h }, dials, ...(plot ? { runLabel } : { noRun: true }),
-    props: { gas, n, V, T, ...(temps ? { temps, tempList } : {}), gaugeMax, units, side, ...(plot ? { plot } : {}), seen: { ...(temps ? { temp: [tempStart] } : {}) } }
+    props: { gas, n, V, T, ...(temps ? { temps, tempList } : {}), gaugeMax, units, side, tickLabels: true, ...(plot ? { plot } : {}), seen: { ...(temps ? { temp: [tempStart] } : {}) } }
   };
 }
 
@@ -283,15 +286,16 @@ export function scaleFixture(id, at, { w = 42, h = 34 } = {}) {
  * The common tank: a room (`V` litres, `T` kelvin, or dials for them) that every tank standing in its place has opened into. Returns the
  * fixture and the place (`tray`) to put the tanks in. `show.partials` prints each gas's own push, `show.fraction` its share of the particles.
  */
-export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volumes = null, volumeStart = 1, volumeNames = null, volumeLabel = 'Room', temps = null, tempList = 'C', tempStart = 1, show = {}, w = 64, cap = null, label = 'Common tank', words = 3, record = false, runLabel = 'Record', units = 'kpa', hideUntilCommit = null, gate = null, gateMsg = null } = {}) {
+export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volumes = null, volumeStart = 1, volumeNames = null, volumeLabel = 'Volume', temps = null, tempList = 'C', tempStart = 1, show = {}, w = 64, cap = null, label = 'Common tank', words = 3, record = false, runLabel = 'Record', units = 'kpa', hideUntilCommit = null, gate = null, gateMsg = null } = {}) {
   const dials = {};
   if (volumes) dials.volume = { min: 1, max: volumes.length, step: 1, value: volumeStart, label: volumeLabel, labels: volumeNames || volumes.map(v => `${v} L`) };
   if (temps) dials.temp = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => tempLabel(t, tempList)) };
   const nd = Object.keys(dials).length;
-  const top = nd ? 8 + (nd - 1) * 5 + 3.6 : 8.5;
+  const rowPitch = nd >= 2 ? 7.5 : 5;
+  const top = nd ? 9.6 + (nd - 1) * rowPitch + 4.2 : 8.5;
   const tankH = 17;
   const trayH = 17;
-  const trayY = top + (show.partials ? 14.2 + 3.4 * words + 2.5 : tankH + 3.5);
+  const trayY = top + (show.partials ? 15.5 + 3.4 * words + 3.5 : tankH + 4.5);
   const h = Math.round((trayY + trayH + 3 + (record ? 6.4 : 0)) * 10) / 10;
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
@@ -299,11 +303,11 @@ export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volum
     fixture: {
       id, kind: 'common', label, at: { ...at }, size: { w, h }, ...(record ? { runLabel } : { noRun: true }), dials,
       props: {
-        backdrop: true, of, V, T, ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), show, tankH, top, units,
+        backdrop: true, of, V, T, ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), show, tankH, top, units, rowPitch, tickLabels: true,
         ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {})
       }
     },
-    tray: { id: of, label: 'Valves open into the tank', at: { x: x0 + w / 2, y: y0 + trayY + trayH / 2 }, size: { w: w - 4, h: trayH }, cell: 15, ...(cap ? { cap } : {}) },
+    tray: { id: of, label: 'Drop tanks here to open them', at: { x: x0 + w / 2, y: y0 + trayY + trayH / 2 }, size: { w: w - 4, h: trayH }, cell: 15, ...(cap ? { cap } : {}) },
     size: { w, h }
   };
 }
@@ -319,14 +323,15 @@ export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = fal
     dials[name] = { min: 1, max: p.gases.length, step: 1, value: p.start ?? 1, label: p.label || 'Gas', labels: p.gases.map(g => (p.withMass ? `${GASES[g].name}, ${Math.round(GASES[g].M)} g/mol` : GASES[g].name)) };
   }
   const nd = Object.keys(dials).length;
+  const rowPitch = nd >= 2 ? 7.5 : 5;
   const width = w ?? (chambers.length > 1 ? 66 : 44);
-  const height = h ?? (8 + (nd - 1) * 5 + 3.6 + 7 + chamberH + 6 + (showHalf ? 4.5 : 0) + (record ? 6.4 : 2.4));
+  const height = h ?? (9.6 + (nd - 1) * rowPitch + 5 + 7 + chamberH + 6 + (showHalf ? 4.5 : 0) + (record ? 6.4 : 2.4));
   return {
     id, kind: 'pinhole', label: 'Pinhole', at: { ...at }, size: { w: width, h: Math.round(height * 10) / 10 }, dials,
     ...(record ? { runLabel } : { noRun: true }),
     props: {
       chambers: chambers.map(c => (typeof c.pick === 'string' ? { ...c, pick: { dial: c.pick, gases: picks[c.pick].gases.slice() } } : c)),
-      times, showHalf, recordIndex, chamberH, T,
+      times, showHalf, recordIndex, chamberH, T, rowPitch, tickLabels: true,
       ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {})
     }
   };

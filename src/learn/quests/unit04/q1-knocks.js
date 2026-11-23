@@ -28,7 +28,6 @@ export const VOCABULARY = [
   { term: /\babsolute zero\b/i, introducedAt: 3 },
   { term: /\bkelvin\b/i, introducedAt: 3 },
   { term: /\bboyle.?s law\b/i, introducedAt: 4 },
-  { term: /\bmaxwell.boltzmann\b/i, introducedAt: 6 },
   { term: /\bkinetic energy\b/i, introducedAt: 7 }
 ];
 
@@ -74,7 +73,7 @@ export const COLLISION_CARDS = [
 /** Stage 5's volume beyond the dial (litres). */
 const BEYOND = 1.5;
 /** Stage 6's heater, in degrees C, and the shared scale of its screen and snapshots. */
-const SPREAD = [-73, 27, 127, 227, 327, 427, 527];
+const SPREAD = [-73, 27, 227, 527];
 const REF_SPEEDS = Math.max(...speedBins('N2', toKelvin(SPREAD[0], 'C'), 24, 2400));
 
 /** Which wall a box reads highest, or 'same' when no wall reads more than the others. */
@@ -95,12 +94,12 @@ export const STAGES = [
     ...predictStage({
       key: QUEST_KEY,
       title: 'Three Pressure Meters',
-      prompt: 'A sealed box of gas has a pressure meter on its roof, its side wall and its floor: which reads highest?',
+      prompt: 'In a sealed box of gas with pressure meters on its roof, side wall, and floor, which meter reads highest?',
       items: GUESSES,
       hints: [
-        'Lay one card in the slot.',
-        'Picture one gas particle flying inside the box and ask which walls it can reach.',
-        'Ask what a meter fixed to a wall can feel: the weight of the gas above it, or the particles hitting it.'
+        'Think about how gas particles move inside a sealed box: do they settle on the floor or bounce everywhere?',
+        'Picture a single gas particle bouncing around inside the box and think about which walls it hits.',
+        'A pressure meter responds to particles hitting its wall, not to gas piling up at the bottom.'
       ],
       reward: {
         log: 'Prediction recorded.',
@@ -110,42 +109,44 @@ export const STAGES = [
     }),
     briefing: {
       speaker: 'Vess',
-      body: 'A pressure meter measures how hard a gas presses on the wall it is fixed to.'
+      body: 'A pressure meter measures how hard gas particles press against a wall when they hit it.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const b = box(BOX, { x: 34, y: 33 }, {
-      gas: 'N2', n: 1, V: 10, T: 300, temps: BOX_TEMPS, tempList: 'C', tempStart: 1, units: 'plain', gaugeMax: 600, label: 'Sealed box'
+    const b = box(BOX, { x: 35, y: 33 }, {
+      gas: 'N2', n: 1, V: 10, T: 300, temps: BOX_TEMPS, tempList: 'C', tempStart: 1, units: 'kpa', gaugeMax: 600, w: 62, side: 19, label: 'Sealed box'
     });
     return {
       title: 'Pressure on Every Wall',
-      prompt: 'Which statement do the three pressure meters support?',
+      prompt: 'Which statement matches the three pressure meters as you heat the box?',
       widget,
       table: gasTable({
-        pieces: cardColumn(GUESSES, { x: 0 }).map((c, i) => ({ ...c, at: { x: 90 + (i % 2) * 38, y: 44.5 + Math.floor(i / 2) * 13 } })),
+        pieces: cardColumn(GUESSES, { x: 0 }).map((c, i) => ({ ...c, at: { x: 92 + (i % 2) * 38, y: 44.5 + Math.floor(i / 2) * 13 } })),
         fixtures: [b],
-        zones: { slots: [{ id: 'show', label: 'What the meters show', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
+        zones: { slots: [{ id: 'show', label: 'What the meters show', at: { x: 111, y: 27 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Turn the Heater dial, then place a card in the slot.',
-        'Compare the three meters with each other as the temperature changes.',
-        'Watch which walls the particles hit as you warm the box, and check whether any meter reads differently.'
+        'Watch all three wall readings (ROOF, SIDE WALL, FLOOR) as you heat the box.',
+        'Compare the three meters with each other at two different temperatures.',
+        'Notice whether any wall gets a higher reading than the others as the gas warms.'
       ],
       check(state) {
         const t = state.table;
+        const seen = t.fixtures[BOX].props.seen?.temp || [1];
+        if (seen.length < 2) return { ok: false, notYet: true, msg: 'Turn the Heater dial to a warmer setting first so you can compare all three meters.' };
         const card = cardIn(t, 'show');
         if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
-        const want = wallMost(boxRead(t, BOX));
+        const q = boxRead(t, BOX);
+        const want = wallMost(q);
         if (card.id === want) return { ok: true };
-        const names = { roof: 'roof', side: 'side wall', floor: 'floor' };
-        return { ok: false, msg: `The ${names[card.id] || 'side wall'} meter does not read higher than the other two.` };
+        return { ok: false, msg: `At ${Math.round(q.tC)} °C, the roof, side wall, and floor all read ${Math.round(q.P)} kPa.` };
       },
       reward: {
-        log: 'All three meters read alike.',
+        log: 'All three meters read the same.',
         title: 'Pressure',
-        body: 'The particles fly in every direction and collide with every wall alike. Those collisions are the gas\'s pressure, measured in kilopascals, kPa.'
+        body: 'Gas particles fly in every direction and collide equally with every wall. Those collisions create pressure, measured in kilopascals (kPa).'
       }
     };
   })(),
@@ -160,30 +161,30 @@ export const STAGES = [
       title: 'Where Pressure Runs Out',
       briefing: {
         speaker: 'Vess',
-        body: 'Cooling a gas slows its particles, so they collide with the walls less hard and the pressure falls. Record the pressure at several temperatures and follow the line down.'
+        body: 'Cooling slows gas particles down, so their wall collisions weaken and the pressure drops.'
       },
-      prompt: 'At what temperature would the pressure of this gas fall to zero?',
+      prompt: 'At what temperature would this gas\'s pressure reach zero if you kept cooling it?',
       widget,
       table: gasTable({
-        fixtures: [b, markerFixture('zero', 'Pressure reaches zero at', { x: 108, y: 55 }, { min: -400, max: 0, step: 10, start: 0, unit: '°C', w: 50 })],
+        fixtures: [b, markerFixture('zero', 'Pressure reaches zero at', { x: 112, y: 55 }, { min: -400, max: 0, step: 10, start: 0, unit: '°C', w: 50 })],
         tools: ['straightedge']
-      }, { recorder: { at: { x: 112, y: 24 }, size: { w: 42, h: 28 }, xLabel: 'Temperature', xUnit: '°C', yLabel: 'Pressure', yUnit: 'kPa', range: { xMin: -300, xMax: 200, yMin: 0, yMax: 400 } } }),
+      }, { recorder: { at: { x: 112, y: 23 }, size: { w: 50, h: 32 }, xLabel: 'Temperature', xUnit: '°C', yLabel: 'Pressure', yUnit: 'kPa', range: { xMin: -300, xMax: 200, yMin: 0, yMax: 400 } } }),
       hints: [
-        'Turn the Heater dial and press Record at several temperatures.',
-        'Read how the pressure drops in equal steps as temperature falls on the cooled box.',
-        'Extend the equal steps down to zero pressure.'
+        'Record the pressure at several temperatures on the Heater dial to plot points on the graph.',
+        'Notice that the plotted points form a straight line sloping down toward 0 kPa.',
+        'Press Straightedge to extend the line to 0 kPa, then set the marker to that temperature.'
       ],
       check(state) {
         const t = state.table;
         const v = markerRead(t, 'zero');
-        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the temperature you read off the line.' };
+        if (v === 0) return { ok: false, notYet: true, msg: 'At 0 °C the pressure is still 222 kPa. Move the marker to where the line crosses 0 kPa.' };
         if (Math.abs(v - (-273.15)) <= ZERO_TOL) return { ok: true };
-        return { ok: false, msg: t.recorder.tool ? 'The laid line reaches zero pressure at a different temperature from the marker.' : 'There is no line on the strip yet: record some readings and lay the straightedge across them.' };
+        return { ok: false, msg: t.recorder.tool ? `At ${v} °C the line is not at 0 kPa; check where the extended line crosses zero on the graph.` : 'Record at least two temperatures and press Straightedge to extend the line to 0 kPa.' };
       },
       reward: {
         log: 'Pressure reaches zero at −273 °C.',
         title: 'Absolute Zero and Kelvin',
-        body: 'The line reaches zero at −273 °C, called absolute zero. The kelvin scale counts from there: K = °C + 273, so 27 °C is 300 K.'
+        body: 'The line hits zero at −273 °C, called absolute zero. The kelvin scale starts there (K = °C + 273), so 27 °C is 300 K.'
       }
     };
   })(),
@@ -204,9 +205,9 @@ export const STAGES = [
         zones: { slots: [answerSlot('Collisions')] }
       }),
       hints: [
-        'Turn the Piston dial to compare two volumes where one is half the other.',
-        'Watch the particles, the COLLISIONS counter and the pressure as you halve the volume.',
-        'Ask what happens to how often the same particles hit the walls in half the space.'
+        'Use the Piston dial to compare two volumes where one is half the other, such as 24 L and 12 L.',
+        'Compare the COLLISIONS counter and the pressure at both volumes.',
+        'Think about how often the same particles hit the walls when they only have half the space to cross.'
       ],
       check(state) {
         const t = state.table;
@@ -222,79 +223,79 @@ export const STAGES = [
       reward: {
         log: 'Half the volume gives twice the collisions and twice the pressure.',
         title: 'Boyle\'s Law',
-        body: 'Half the volume gives twice the collisions and twice the pressure, so pressure × volume stays the same at one temperature. This is Boyle\'s law.'
+        body: 'Halving the volume doubles the wall collisions each second and doubles the pressure. This relationship is Boyle\'s law.',
+        model: { type: 'bellows-scene', scene: 'boyle' }
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const r = rig(RIG, { x: 36, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24,
+    const r = rig(RIG, { x: 75, y: 31 }, {
+      cyls: [{ id: 'a', label: 'Cylinder', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24, w: 76,
       show: { speed: false, kelvin: true }, label: 'Cylinder'
     });
     return {
       title: 'Using Boyle\'s Law',
       briefing: {
         speaker: 'Vess',
-        body: 'At one temperature, pressure × volume is the same before and after: P₁V₁ = P₂V₂.',
-        worked: ['200 kPa × 6.0 L = 1200', 'new volume 2.0 L', '1200 ÷ 2.0 = 600 kPa']
+        body: 'At a fixed temperature, pressure × volume stays constant (P₁V₁ = P₂V₂).'
       },
-      prompt: `What would the pressure be at ${BEYOND} L?`,
+      prompt: `What would the pressure of this gas be if compressed to ${BEYOND} L?`,
       entry: { id: 'ans', label: `Pressure at ${BEYOND} L`, unit: 'kPa' },
       widget,
       table: gasTable({ fixtures: [r] }),
       hints: [
-        'Turn the Piston dial and read the pressure and volume at each setting.',
-        'Check whether pressure × volume stays the same at every Piston setting.',
-        'Use P₁V₁ = P₂V₂ from the worked example to find the pressure at the new volume.'
+        'Multiply pressure and volume (P × V) at any Piston setting on the cylinder.',
+        'Verify that P × V stays the same at other Piston settings.',
+        'Since P₁V₁ = P₂V₂, divide that constant product by 1.5 L using the Calc button.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the pressure in kPa.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the pressure in kPa.' };
         const a = rigAt(t, RIG, { volume: 1 })[0];
         const want = (a.P * a.V) / BEYOND;
         if (Math.abs(v - want) / want < 0.02) return { ok: true };
         return {
           ok: false,
           msg: v < a.P
-            ? 'That pressure is lower than at 24 L, and compressing a gas cannot lower its pressure.'
+            ? 'That pressure is lower than at 24 L, and compressing a gas always raises its pressure.'
             : `At ${((a.P * a.V) / v).toFixed(1)} L this gas would read ${v} kPa, not at ${BEYOND} L.`
         };
       },
       reward: {
         log: 'Pressure × volume stays about 2490 kPa·L.',
         title: 'Using Boyle\'s Law',
-        body: 'Pressure × volume stays about 2490 kPa·L, so at 1.5 L the pressure is about 1660 kPa.'
+        body: 'Because pressure × volume stays about 2490 kPa·L, compressing to 1.5 L raises the pressure to about 1660 kPa.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const r = rig(RIG, { x: 31, y: 27 }, {
+    const r = rig(RIG, { x: 29, y: 29 }, {
       cyls: [{ id: 'a', label: 'Cylinder', gas: 'N2', n: 1, hold: 'V', V: 20, T: T0 }], temps: SPREAD, tempList: 'C', tempStart: 2, vmax: 20,
-      speedScreen: true, screenRef: REF_SPEEDS, show: { amount: false, kelvin: true }, w: 54, label: 'Cylinder'
+      speedScreen: true, screenRef: REF_SPEEDS, show: { amount: false, kelvin: true }, w: 52, label: 'Cylinder'
     });
     const snap = (id, label, C) => histCard(id, label, { x: 0, y: 0 }, 'N2', toKelvin(C, 'C'), REF_SPEEDS);
     return {
       title: 'Speeds in a Gas',
       briefing: {
         speaker: 'Vess',
-        body: 'The speed screen sorts the particles by how fast they are moving: each bar counts the particles near that speed.'
+        body: 'The speed screen groups particles by speed: taller bars mean more particles at that speed. Each snapshot captures that screen at one temperature.'
       },
-      prompt: 'Put the four speed snapshots in order from coldest on the left to hottest on the right.',
+      prompt: 'Order the four speed snapshots from coldest (left) to hottest (right).',
       widget,
       table: gasTable({
         pieces: [snap('a', 'SNAPSHOT A', 527), snap('b', 'SNAPSHOT B', 27), snap('c', 'SNAPSHOT C', 227), snap('d', 'SNAPSHOT D', -73)],
         fixtures: [r],
-        zones: { rail: { id: 'rail', at: { x: 103, y: 42 }, size: { w: 88, h: 22 }, first: 'Coldest', last: 'Hottest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
+        zones: { rail: { id: 'rail', at: { x: 103, y: 42 }, size: { w: 92, h: 22 }, first: 'Coldest', last: 'Hottest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
       }),
       hints: [
-        'Turn the Heater dial and drag the snapshots onto the strip, coldest on the left.',
-        'Compare the speed screen at each heater setting with the four snapshots.',
-        'Notice how heating shifts the speed spread higher, and order the snapshots by their spread.'
+        'Turn the Heater dial and compare the cylinder\'s speed screen with the four snapshots.',
+        'Match each heater temperature (−73, 27, 227, and 527 °C) to the snapshot with the same bar shape.',
+        'Heating shifts the peak to higher speeds and spreads the curve wider, so colder snapshots stay narrower on the left.'
       ],
       check(state) {
         const t = state.table;
@@ -303,12 +304,17 @@ export const STAGES = [
         const temp = id => t.pieces[id].props.T;
         const want = ['a', 'b', 'c', 'd'].sort((x, y) => temp(x) - temp(y));
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Two neighbouring snapshots on the strip are the wrong way round.' };
+        for (let i = 0; i < order.length - 1; i++) {
+          if (temp(order[i]) > temp(order[i + 1])) {
+            return { ok: false, msg: `${t.pieces[order[i]].label} is hotter than ${t.pieces[order[i + 1]].label}: swap them so colder is on the left.` };
+          }
+        }
+        return { ok: false, msg: 'Two adjacent snapshots on the strip are in the wrong order.' };
       },
       reward: {
-        log: 'Every gas has a spread of speeds.',
+        log: 'Every gas has a range of speeds.',
         title: 'Speeds in a Gas',
-        body: 'The particles do not all move at one speed. Heating shifts the spread to higher speeds and widens it; this spread is the Maxwell–Boltzmann distribution.'
+        body: 'Gas particles move at a range of speeds. Heating shifts the whole curve to higher speeds and spreads it wider.'
       }
     };
   })(),
@@ -317,49 +323,48 @@ export const STAGES = [
   (() => {
     const rg = (id, at, label, gas, n, extra) => rig(id, at, {
       cyls: [{ id: 'a', label, gas, n, hold: 'V', V: 20, T: T0, ...(extra.T ? { T: extra.T } : {}) }],
-      ...(extra.temps ? { temps: extra.temps, tempList: 'K', tempStart: 1 } : {}), vmax: 20, compact: true, w: 34,
+      ...(extra.temps ? { temps: extra.temps, tempList: 'K', tempStart: 1 } : {}), vmax: 20, compact: true, w: 40,
       show: { gauge: false, volume: false, temperature: true, kelvin: true, speed: true, energy: true },
-      words: { speed: 'SPEED', energy: 'KINETIC ENERGY' },
-      ...(extra.hide ? { hideUntilCommit: extra.hide } : {})
+      words: { speed: 'SPEED', energy: 'KINETIC ENERGY' }
     });
     return {
       title: 'Mass and Kinetic Energy',
       briefing: {
         speaker: 'Vess',
-        body: 'Kinetic energy is energy of motion. A particle has more of it if it is heavier or moving faster.'
+        body: 'Kinetic energy is energy of motion (measured in zeptojoules, zJ). A particle has more kinetic energy if it is heavier or moving faster.'
       },
       prompt: 'At what temperature do carbon dioxide (CO₂) particles have the same average kinetic energy as helium (He) particles at 300 K?',
       widget,
       table: gasTable({
         fixtures: [
-          rg('ra', { x: 20, y: 25 }, 'Cylinder A', 'He', 1, { T: 300 }),
-          rg('rb', { x: 58, y: 25 }, 'Cylinder B', 'CO2', 2, { temps: [200, 250, 300, 350, 400], hide: ['energy'] })
+          rg('ra', { x: 45, y: 28 }, 'Cylinder A', 'He', 1, { T: 300 }),
+          rg('rb', { x: 105, y: 28 }, 'Cylinder B', 'CO2', 2, { temps: [200, 250, 300, 350, 400] })
         ]
       }),
       hints: [
-        'Turn Cylinder B\'s Heater dial and watch its KINETIC ENERGY and SPEED readings.',
-        'Compare the KINETIC ENERGY and SPEED readings of both cylinders.',
-        'Compare the temperatures of the two cylinders when their KINETIC ENERGY readings match.'
+        'Turn Cylinder B\'s Heater dial and watch its KINETIC ENERGY reading change.',
+        'Compare the KINETIC ENERGY and SPEED readings of both cylinders as Cylinder B warms up.',
+        'Look at both temperatures when the two KINETIC ENERGY readings match.'
       ],
       check(state) {
         const t = state.table;
         const a = cylRead(t, 'ra', 0);
         const b = cylRead(t, 'rb', 0);
         if (Math.round(t.fixtures.rb.dials.temp.value) === 1 && Math.abs(a.energy - b.energy) > 1e-9) {
-          return { ok: false, notYet: true, msg: 'Cylinder B\'s heater is where it started: turn it and watch its KINETIC ENERGY reading.' };
+          return { ok: false, notYet: true, msg: 'Turn Cylinder B\'s Heater dial first and watch its KINETIC ENERGY reading.' };
         }
         if (Math.abs(a.energy - b.energy) <= 1e-9) return { ok: true };
         return {
           ok: false,
           msg: a.energy > b.energy
-            ? 'Cylinder B\'s particles have less kinetic energy than Cylinder A\'s.'
-            : 'Cylinder B\'s particles have more kinetic energy than Cylinder A\'s.'
+            ? `At ${Math.round(b.T)} K, Cylinder B's kinetic energy (${b.energy.toFixed(2)} zJ) is lower than Cylinder A's (${a.energy.toFixed(2)} zJ).`
+            : `At ${Math.round(b.T)} K, Cylinder B's kinetic energy (${b.energy.toFixed(2)} zJ) is higher than Cylinder A's (${a.energy.toFixed(2)} zJ).`
         };
       },
       reward: {
-        log: 'The same kinetic energy at the same temperature.',
+        log: 'Same kinetic energy at the same temperature.',
         title: 'Temperature and Kinetic Energy',
-        body: 'The energies match at 300 K, the same temperature, though helium moves about three times as fast. Temperature measures the average kinetic energy of the particles, whatever their mass.',
+        body: 'Both gases have the same average kinetic energy at 300 K, even though lighter helium moves three times faster. Temperature measures average kinetic energy, no matter the particle mass.',
         last: true
       }
     };
@@ -386,7 +391,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'Summary',
-      body: 'Gas pressure comes from particles colliding with the walls, equally in every direction. Cooling slows the particles toward absolute zero at −273 °C, where the kelvin scale begins; compressing a gas doubles collisions when volume halves; and temperature measures average kinetic energy.'
+      body: 'Gas pressure comes from particles colliding equally with every wall. Compressing a gas increases collisions, cooling slows particles toward absolute zero (−273 °C, or 0 K), and temperature measures average kinetic energy.'
     }
   ]
 };
@@ -399,9 +404,9 @@ export const SOLUTIONS = [
   [put('floor', 'slot:predict')],
   [dial(BOX, 'temp', 3), dial(BOX, 'temp', 5), put('same', 'slot:show')],
   [dial(BOX, 'temp', 1), { run: BOX }, dial(BOX, 'temp', 3), { run: BOX }, dial(BOX, 'temp', 5), { run: BOX }, { lay: { kind: 'straightedge', through: [0, 2] } }, dial('zero', 'value', -270)],
-  [dial(RIG, 'volume', 1), dial(RIG, 'volume', 2), put('twice', 'slot:answer')],
+  [dial(RIG, 'volume', 2), put('twice', 'slot:answer')],
   [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), typed('ans', '1660')],
-  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
+  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
   [dial('rb', 'temp', 3)]
 ];
 

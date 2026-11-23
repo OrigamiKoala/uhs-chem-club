@@ -24,6 +24,7 @@ import { cardTable, cardSlot, elementCard, slotCard } from '../../table/kits/car
 import { massTable, balanceTable, crate, pourSteps, balanceRead } from '../../table/kits/mass.js';
 import { CARDS } from './q3-catalogue.js';
 import { session } from '../../../session.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -375,3 +376,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
+markFights(STAGES);

@@ -61,7 +61,7 @@ const mass = id => `${SUBSTANCES[id].M.toFixed(SUBSTANCES[id].M < 100 ? 1 : 0)} 
 const at = (n, y = 54, x0 = 24, pitch = 22) => Array.from({ length: n }, (_, i) => ({ x: x0 + i * pitch, y }));
 /** Where a card returns to when the flask is given another: a shelf at the right, clear of the bottom rail. */
 const shelf = n => Array.from({ length: n }, (_, i) => ({ x: 104 + (i % 2) * 24, y: 12 + Math.floor(i / 2) * 22 }));
-const RAIL = (n, first, last) => ({ at: { x: 75, y: 60 }, size: { w: 24 * n + 8, h: 16 }, first, last });
+const RAIL = (n, first, last) => ({ at: { x: 75, y: 60 }, size: { w: Math.min(138, 28 * n + 10), h: 16 }, labelLift: 3.2, first, last });
 
 /* ------------------------------------------------------------------
    THE FIGURES THE STAGES GRADE AGAINST (each recomputed in tools/lib/mirrowen/q3-boil.mjs from the CRC)
@@ -111,17 +111,19 @@ export const ICE_PICTURE = 'pb';
 /** The refusal for a rank: the first neighbours that read the wrong way round, with what each read. */
 function rankMiss(t, order, read, fmt, unit, instrument, name = id => t.pieces[id].label) {
   const cards = order.map(id => t.pieces[id]);
-  if (cards.some(p => read(p) == null)) return { ok: false, msg: `Not every card on the rail has been through the ${instrument} yet.` };
+  if (cards.some(p => read(p) == null)) return { ok: false, msg: `Test every card on the rail in the ${instrument} first.` };
   const k = cards.findIndex((p, i) => i > 0 && read(cards[i - 1]) > read(p));
   const a = cards[k - 1]; const b = cards[k];
-  return { ok: false, msg: `${name(a.id)} sits left of ${name(b.id)}, and the ${instrument} read ${fmt(read(a))} ${unit} for the one and ${fmt(read(b))} ${unit} for the other.` };
+  return { ok: false, msg: `${name(a.id)} (${fmt(read(a))} ${unit}) is left of ${name(b.id)} (${fmt(read(b))} ${unit}), so they are out of order.` };
 }
 
 function railCheck(want, read, fmt, unit, instrument) {
   return state => {
     const t = state.table;
     const order = t.zones.rail.order;
-    if (order.length < want.length) return { ok: false, notYet: true, msg: `Put all ${want.length} cards on the rail.` };
+    if (order.length < want.length) return { ok: false, notYet: true, msg: `Place all ${want.length} cards on the rail.` };
+    const cards = order.map(id => t.pieces[id]);
+    if (cards.some(p => read(p) == null)) return { ok: false, msg: `Test every card on the rail in the ${instrument} first.` };
     if (order.join() === want.join()) return { ok: true };
     return rankMiss(t, order, read, fmt, unit, instrument);
   };
@@ -138,7 +140,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
     const flask = flaskFixture('flask', { x: 52, y: 22 }, { rates: true });
-    const ether = liquidCard('ether', 'ether', 'ether', { x: 18, y: 53.5 });
+    const ether = liquidCard('ether', 'ether', 'ether', { x: 18, y: 53.5 }, { shown: 'evaporates fast' });
     const choices = [
       stmt('none', 'None are leaving any more', { x: 126, y: 8 }),
       stmt('equal', 'As many return as leave', { x: 126, y: 22 }),
@@ -147,32 +149,33 @@ export const STAGES = [
     return {
       id: 's1-equilibrium',
       title: 'Leaving and Returning',
+      briefing: { speaker: SPEAKER, body: 'Ether evaporates quickly, showing the same process as canal water in less time. Watch the bars after pressing "Settle".' },
       prompt: 'When the pressure stops rising, what are the molecules at the surface doing?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
         pieces: [ether, ...choices],
         fixtures: [flask.fixture],
-        zones: { slots: [flask.slot, { id: 'answer', label: 'At steady pressure', at: { x: 126, y: 50 }, size: { w: 38, h: 14 } }] }
+        zones: { slots: [flask.slot, { id: 'answer', label: 'At steady pressure', at: { x: 126, y: 50 }, size: { w: 40, h: 15 } }] }
       }),
       hints: [
-        'Use ether, the flask, its "Settle" key and the slot.',
-        'Watch the LEAVING and RETURNING counters after you press "Settle".',
-        'Compare the LEAVING and RETURNING numbers once the pressure levels off: they tell you what the molecules are doing.'
+        'Put ether in the flask and press "Settle", then place one card in the slot.',
+        'Watch how the LEAVING and RETURNING bars change as the pressure levels off.',
+        'Compare the height of the LEAVING and RETURNING bars once the pressure stops climbing.'
       ],
       check(state) {
         const t = state.table;
         const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
+        if (!flaskRead(t, 'flask').valid) return { ok: false, msg: 'Put ether in the flask and press "Settle" first.' };
         if (card.id === 'equal') return { ok: true };
-        if (!flaskRead(t, 'flask').valid) return { ok: false, msg: 'Put ether in the flask and press "Settle" to see the two counters.' };
-        if (card.id === 'none') return { ok: false, msg: 'Look at the LEAVING counter after the flask settles: molecules are still leaving the surface.' };
-        return { ok: false, msg: 'Look at both counters after the flask settles; if more left than came back, the pressure would still be climbing.' };
+        if (card.id === 'none') return { ok: false, msg: 'Look at the LEAVING bar after the flask settles: molecules are still leaving the surface.' };
+        return { ok: false, msg: 'Look at both bars after the flask settles: if more molecules left than returned, the pressure would keep rising.' };
       },
       reward: {
         log: 'Molecules still leave and return at equal rates.',
         title: 'Vapor Pressure',
-        body: 'Molecules still leave and return, at equal rates. The steady pressure of the vapor is the liquid\'s vapor pressure.'
+        body: 'Molecules keep leaving and returning at equal rates. That steady pressure of the vapor above the liquid is called its vapor pressure.'
       }
     };
   })(),
@@ -180,31 +183,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const flask = flaskFixture('flask', { x: 41, y: 22 });
-    flask.fixture.props.gate = { railChanged: ['ethanol', 'ether', 'h2o'] };
-    flask.fixture.props.gateMsg = 'Rank the liquids on the rail first, then settle each in the flask.';
     const pos = shelf(3);
     const cards = S2_LIQ.map((s, i) => liquidCard(idOf(s), s, SUBSTANCES[s].name.replace('diethyl ', ''), pos[i]));
     return {
       id: 's2-sealed',
       title: 'Sealed Liquids',
-      prompt: 'Which liquid has the lowest vapor pressure and which the highest?',
+      prompt: 'Order the three liquids from lowest vapor pressure to highest.',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [flask.fixture],
-        zones: { slots: [flask.slot], rail: { ...RAIL(3, 'Lowest vapor pressure', 'Highest vapor pressure'), items: cards.map(c => c.id), start: ['ethanol', 'ether', 'h2o'] } }
+        zones: { slots: [flask.slot], rail: { ...RAIL(3, 'Lowest vapor pressure', 'Highest vapor pressure'), items: cards.map(c => c.id) } }
       }),
       hints: [
-        'Rank the liquids on the rail first, then use the flask and its "Settle" key.',
-        'Compare the vapor pressure each card settled at with the attractions you measured on the second bench.',
-        'Think which liquid\'s molecules leave the surface most easily.'
+        'Test each liquid in the flask with "Settle", then order them on the rail.',
+        'Compare the vapor pressure (kPa) each liquid settled at in the flask.',
+        'Weaker attractions let molecules leave the surface more easily, producing a higher vapor pressure.'
       ],
       check: railCheck(VP25_ORDER.map(idOf), vpOf, fmtP, 'kPa', 'flask'),
       reward: {
-        log: 'Weak attractions gave a high vapor pressure.',
+        log: 'Weaker attractions gave a higher vapor pressure.',
         title: 'Attractions Set Vapor Pressure',
-        body: 'The weaker the attraction between molecules, the more easily they leave the liquid, so the higher the vapor pressure.'
+        body: 'Weaker attractions let molecules escape the liquid more easily, producing a higher vapor pressure.'
       }
     };
   })(),
@@ -212,31 +213,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const flask = flaskFixture('flask', { x: 41, y: 22 });
-    flask.fixture.props.gate = { railChanged: ['ether', 'acetone', 'h2o', 'ethanol'] };
-    flask.fixture.props.gateMsg = 'Rank the samples on the rail first, then settle each in the flask.';
     const pos = shelf(4);
     const cards = S3.map((s, i) => liquidCard(s.id, s.sub, s.label, pos[i], { shown: `${s.T} °C`, T: s.T }));
     return {
       id: 's3-warm',
       title: 'Warm and Cold',
-      prompt: 'Which sample has the lowest vapor pressure and which the highest?',
+      prompt: 'At the temperatures shown, order the four samples from lowest vapor pressure to highest.',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [flask.fixture],
-        zones: { slots: [flask.slot], rail: { ...RAIL(4, 'Lowest vapor pressure', 'Highest vapor pressure'), items: cards.map(c => c.id), start: ['ether', 'acetone', 'h2o', 'ethanol'] } }
+        zones: { slots: [flask.slot], rail: { ...RAIL(4, 'Lowest vapor pressure', 'Highest vapor pressure'), items: cards.map(c => c.id) } }
       }),
       hints: [
-        'Rank the samples on the rail first, then use the flask and its "Settle" key.',
-        'Compare the vapor pressure each card settled at with the temperature printed on it.',
-        'Rank the cards by the vapor pressure each one settled at, from the lowest to the highest, whatever the liquid.'
+        'Test each sample in the flask with "Settle", then order them on the rail.',
+        'Compare the vapor pressure each sample reached at the temperature printed on its card.',
+        'Order the cards by their measured vapor pressures, from lowest to highest.'
       ],
       check: railCheck(WARM_ORDER, vpOf, fmtP, 'kPa', 'flask'),
       reward: {
-        log: 'Warm water had a higher vapor pressure than cold ether.',
-        title: 'Heat Raises It',
-        body: 'Warming a liquid sends more of its molecules into the vapor, so its vapor pressure climbs steeply with temperature. Warm water settled above cold ether, though water\'s attraction is far stronger.'
+        log: 'Hot water had a higher vapor pressure than cold ether.',
+        title: 'Heat Raises Vapor Pressure',
+        body: 'Warming a liquid sends more molecules into the vapor, so vapor pressure climbs steeply with temperature. Even with stronger attractions, hot water reached a higher vapor pressure than cold ether.'
       }
     };
   })(),
@@ -247,25 +246,25 @@ export const STAGES = [
     title: 'On the Mountain',
     // A PREDICT STAGE: the flask is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: `Where the outside air pressure is only ${MOUNTAIN_KPA} kPa, as on a high mountain, at what temperature will water boil?`,
+    prompt: `On a mountain where air pressure is lower (${MOUNTAIN_KPA} kPa instead of 101 kPa), will water boil below, above, or at 100 °C?`,
     widget,
     table: matterTable({
       pieces: [
         note('always', 'It still boils at 100 °C', { x: 30, y: 14 }),
-        note('lower', 'It boils below 100 °C', { x: 78, y: 14 }),
+        note('lower', 'It boils below 100 °C', { x: 74, y: 14 }),
         note('higher', 'It boils above 100 °C', { x: 30, y: 34 })
       ],
       fixtures: [mleadFixture('lead', { x: 117, y: 52 }, { scene: 'sealed', w: 44, h: 24 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 40, h: 15 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
-      'Think about what the last two stages showed vapor pressure doing as a liquid was warmed.',
-      'Commit to the card you believe, and the next bench tests it.'
+      'Read the three prediction cards and drag your choice into the slot.',
+      'Think about how vapor pressure changes as a liquid warms.',
+      'Pick the boiling behavior you expect at lower outside pressure.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -275,7 +274,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, find where water boils at that pressure with the flask.'
+      body: 'Next, use the flask to find where water boils at 65 kPa.'
     }
   },
 
@@ -286,35 +285,35 @@ export const STAGES = [
     return {
       id: 's5-boil',
       title: 'Where It Boils',
-      briefing: 'Bubbles of vapor can form inside a liquid only when its vapor pressure equals the pressure pressing on it. That is boiling.',
+      briefing: 'Bubbles of vapor can form inside a liquid only when its vapor pressure reaches the outside air pressure. That temperature is its boiling point.',
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You guessed ${GUESS_LABEL[guess]}: at what temperature does water boil when the outside pressure is ${MOUNTAIN_KPA} kPa?`
+          ? `You predicted ${GUESS_LABEL[guess]}. At what temperature does water boil when the outside pressure is ${MOUNTAIN_KPA} kPa?`
           : `At what temperature does water boil when the outside pressure is ${MOUNTAIN_KPA} kPa?`;
       },
       entry: { id: 'bp', label: 'Water boils at', unit: '°C' },
       widget,
       table: matterTable({ pieces: [water], fixtures: [flask.fixture], zones: { slots: [flask.slot] } }),
       hints: [
-        'Use the water card, the Heater and Outside dials, the "Settle" key and the number field.',
-        'Compare the line of readings on the plot with the amber line for the outside pressure, and see which heater step the flask boils at.',
-        'Read the temperature where the plotted line meets the amber line, between two heater steps, and type it.'
+        'Put water in the flask, set the Outside pressure dial to 65 kPa, step the Heater dial, and press "Settle".',
+        'Compare the plotted vapor pressure curve with the outside pressure line, and watch when bubbles form.',
+        'Find the temperature where the vapor pressure curve reaches the outside pressure line, and enter it below.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'bp');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter your answer in the field at the bottom.' };
         if (Math.abs(v - BP_MOUNTAIN) <= BP_TOL) return { ok: true };
-        return { ok: false, msg: `At ${fixed(v, 0)} °C the flask's pressure is ${fmtP(vaporPressure('H2O', v))} kPa, and the outside pressure is ${MOUNTAIN_KPA} kPa.` };
+        return { ok: false, msg: `At ${fixed(v, 0)} °C, water's vapor pressure is ${fmtP(vaporPressure('H2O', v))} kPa, which does not match the ${MOUNTAIN_KPA} kPa outside pressure.` };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
-        const verdict = guess === 'lower' ? 'The flask agreed with your guess. ' : guess && GUESS_LABEL[guess] ? 'The flask did not agree with your guess. ' : '';
+        const verdict = guess === 'lower' ? 'The flask matched your prediction. ' : guess && GUESS_LABEL[guess] ? 'The flask disagreed with your prediction. ' : '';
         return {
-          log: 'Water reached the outside pressure well below 100 °C.',
+          log: 'Water boiled well below 100 °C at 65 kPa.',
           title: 'Boiling Point',
-          body: `${verdict}A liquid boils when its vapor pressure reaches the pressure outside it, and that temperature is its boiling point. Water gets there below 100 °C on a mountain.`
+          body: `${verdict}A liquid's boiling point is the temperature where its vapor pressure reaches the outside pressure, which happens below 100 °C on a mountain.`
         };
       }
     };
@@ -329,35 +328,36 @@ export const STAGES = [
     return {
       id: 's6-rank',
       title: 'Four Boiling Points',
-      prompt: 'Which liquid has the lowest boiling point and which the highest?',
+      briefing: { speaker: SPEAKER, body: 'Stronger attractions between molecules take more heat to overcome, giving a higher boiling point.' },
+      prompt: 'Order the four liquids from lowest boiling point to highest.',
       widget,
       table: matterTable({
         pieces: cards,
         fixtures: [probe.fixture],
-        zones: { slots: [probe.slot], rail: { at: { x: 107, y: 34 }, size: { w: 84, h: 16 }, first: 'Boils lowest', last: 'Boils highest', items: cards.map(c => c.id), start: ['h2o', 'c4h10', 'acetone', 'c5h12'] } }
+        zones: { slots: [probe.slot], rail: { at: { x: 105, y: 34 }, size: { w: 88, h: 16 }, labelLift: 3.2, first: 'Boils lowest', last: 'Boils highest', items: cards.map(c => c.id) } }
       }),
       hints: [
-        'Use the probe, its key and the rail.',
-        'Compare each reading with the mass on its card, and look at which cards are drawn with + and − marks.',
-        'Rank the cards by boiling point, using what the probe read for each and what the flask showed about liquids with weak attractions.'
+        'Separate each liquid in the probe, then order them on the rail.',
+        'Compare the heat each liquid needed in the probe with its molar mass.',
+        'Stronger attractions require more heat to separate and lead to a higher boiling point.'
       ],
       check: state => {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all 4 cards on the rail.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Place all 4 cards on the rail.' };
+        const cards = order.map(id => t.pieces[id]);
+        if (cards.some(p => gripOf(p) == null)) return { ok: false, msg: 'Test every card on the rail in the probe first.' };
         const want = BP_ORDER.map(idOf);
         if (order.join() === want.join()) return { ok: true };
-        const cards = order.map(id => t.pieces[id]);
-        if (cards.some(p => gripOf(p) == null)) return { ok: false, msg: 'Not every card on the rail has been through the probe yet.' };
         const rank = p => want.indexOf(p.id);
         const k = cards.findIndex((p, i) => i > 0 && rank(cards[i - 1]) > rank(p));
         const a = cards[k - 1]; const b = cards[k];
-        return { ok: false, msg: `${a.label} sits left of ${b.label}, and the probe read ${kj(gripOf(a))} kJ for the one and ${kj(gripOf(b))} kJ for the other.` };
+        return { ok: false, msg: `${a.label} (${kj(gripOf(a))} kJ) is left of ${b.label} (${kj(gripOf(b))} kJ), so their boiling points are out of order.` };
       },
       reward: {
-        log: 'Light water boiled hotter than heavier butane.',
-        title: 'The Attraction Sets the Boiling Point',
-        body: 'Boiling pulls molecules away from their neighbours, so the stronger the attraction, the more heat it takes and the higher the boiling point. Light water boils far hotter than heavier butane.'
+        log: 'Light water boiled much higher than heavier butane.',
+        title: 'Attractions Set the Boiling Point',
+        body: 'Boiling separates molecules from their neighbors, so stronger attractions require a higher boiling point. Even though water is lighter than butane, its hydrogen bonds make it boil much higher.'
       }
     };
   })(),
@@ -368,17 +368,18 @@ export const STAGES = [
     const answer = selectorFixture('answer', 'Highest surface tension', { x: 118, y: 24 }, { options: S7_OPTIONS, start: S7_OPTIONS.length, w: 46 });
     const pos = at(3);
     const names = { H2O: 'water', ethanol: 'ethanol', hexane: 'hexane' };
-    const cards = S7.map((s, i) => liquidCard(idOf(s), s, names[s], pos[i], { shown: gripText(s) }));
+    const cards = S7.map((s, i) => liquidCard(idOf(s), s, names[s], pos[i]));
     return {
       id: 's7-surface',
       title: 'Surface Tension',
+      briefing: { speaker: SPEAKER, body: 'Surface tension is how strongly a liquid\'s surface resists being stretched or broken, like a water drop beading up. Higher mN/m means stronger surface tension.' },
       prompt: 'Which of the three liquids has the highest surface tension?',
       widget,
       table: matterTable({ pieces: cards, fixtures: [plate.fixture, answer], zones: { slots: [plate.slot] } }),
       hints: [
-        'Use the plate, its "Test" key and the answer dial.',
-        'Compare the surface tension of each liquid with the attraction printed on its card.',
-        'A stronger attraction between molecules pulls the surface inward more strongly.'
+        'Test each liquid on the plate with "Test", then set the answer dial.',
+        'Compare the surface tension reading (mN/m) for each liquid on the surface plate.',
+        'Stronger attractions between molecules pull the liquid surface inward more tightly.'
       ],
       check(state) {
         const t = state.table;
@@ -386,14 +387,14 @@ export const STAGES = [
         if (v === S7_OPTIONS.length) return { ok: false, notYet: true, msg: 'Point the answer dial at one of the three liquids.' };
         if (v === FOLLOWS) return { ok: true };
         const rows = surfaceRows(t, 'plate');
-        if (rows.length < S7.length) return { ok: false, msg: `The table has a row for ${rows.length} of the 3 liquids; test all three on the plate to compare them.` };
-        const line = id => `${SUBSTANCES[id].name} ${fixed(surfacePull(id), 1)} mN/m on attraction ${(SUBSTANCES[id].grip + 1e-9).toFixed(1)} kJ`;
-        return { ok: false, msg: `The table reads ${S7.map(line).join('; ')}.` };
+        if (rows.length < S7.length) return { ok: false, msg: `You have tested ${rows.length} of the 3 liquids; test all three on the plate first.` };
+        const picked = S7_OPTIONS[v - 1];
+        return { ok: false, msg: `${picked} read lower than water (72.8 mN/m); compare all three readings on the plate.` };
       },
       reward: {
         log: 'Water had the highest surface tension.',
         title: 'Surface Tension',
-        body: 'Water: its molecules attract each other most strongly, so its surface resists being broken. That resistance is surface tension.'
+        body: 'Water has the highest surface tension because its molecules attract each other most strongly, pulling the surface inward.'
       }
     };
   })(),
@@ -407,11 +408,11 @@ export const STAGES = [
       liquidCard('water', 'H2O', 'water', pos[1], { shown: '0 °C', phase: 'water' })
     ];
     const pics = [packCard('pa', 'A', { x: 68, y: 54 }, 'packed'), packCard('pb', 'B', { x: 96, y: 54 }, 'open')];
-    const tray = (id, label, x) => ({ id, label, at: { x, y: 26 }, size: { w: 30, h: 36 }, cell: 26, cellH: 21 });
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 26 }, size: { w: 30, h: 36 }, cell: 26, cellH: 21, single: true });
     return {
       id: 's8-ice',
       title: 'Two Pictures',
-      prompt: 'Which picture shows ice and which liquid water?',
+      prompt: 'Which molecule picture shows ice, and which shows liquid water at 0 °C?',
       widget,
       table: matterTable({
         pieces: [...samples, ...pics],
@@ -419,41 +420,31 @@ export const STAGES = [
         zones: { slots: [cell.slot], trays: [tray('ice', 'Ice', 96), tray('water', 'Water at 0 °C', 132)] }
       }),
       hints: [
-        'Use the equal cubes and its "Weigh" key, and drag each picture into a tray.',
-        'Compare the two masses, and count the molecules in each picture.',
-        'Fewer molecules in the same space means less mass in one cubic centimetre.'
+        'Weigh both equal-volume samples in the box, then drag each molecule picture into its matching tray.',
+        'Compare the masses of the two equal cubes and count how many molecules fit in each picture.',
+        'Fewer molecules in the same volume means less mass per cubic centimeter.'
       ],
       check(state) {
         const t = state.table;
         const inTray = id => whereIs(t, id);
-        if (!t.zones.trays[inTray('pa')] || !t.zones.trays[inTray('pb')]) return { ok: false, notYet: true, msg: 'Every picture needs a tray.' };
+        if (!t.zones.trays[inTray('pa')] || !t.zones.trays[inTray('pb')]) return { ok: false, notYet: true, msg: 'Place both molecule pictures in trays.' };
         if (inTray('pb') === 'ice' && inTray('pa') === 'water') return { ok: true };
         const bad = inTray('pb') !== 'ice' ? 'pb' : 'pa';
         const other = bad === 'pb' ? 'pa' : 'pb';
         const n = id => t.pieces[id].props.n;
-        return { ok: false, msg: `Picture ${t.pieces[bad].label} holds ${n(bad)} molecules and picture ${t.pieces[other].label} holds ${n(other)}, and picture ${t.pieces[bad].label} sits in the "${t.zones.trays[inTray(bad)].label}" tray.` };
+        return { ok: false, msg: `Picture ${t.pieces[bad].label} has ${n(bad)} molecules and Picture ${t.pieces[other].label} has ${n(other)}, so Picture ${t.pieces[bad].label} does not match "${t.zones.trays[inTray(bad)].label}".` };
       },
       reward: {
-        log: 'Ice weighs less than water in the same space.',
+        log: 'Ice has less mass than liquid water in the same volume.',
         title: 'Why Ice Floats',
-        body: 'Hydrogen bonds hold the molecules of ice in an open lattice with more space between them than in liquid water. The same molecules take more space, so ice is less dense than water and floats.'
+        body: 'Hydrogen bonds lock ice into an open crystal lattice with more empty space between molecules than liquid water has. Because ice is less dense than liquid water, it floats.'
       }
     };
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag ether into the flask,', 'press "Settle", then put', 'one card in the slot.'],
-  2: ['Drag a card into the flask,', 'press its key, then put the', 'card on the rail.'],
-  3: ['Drag a card into the flask,', 'press its key, then put the', 'card on the rail.'],
-  4: ['Drag the card you choose', 'into the slot.'],
-  5: ['Drag the water into the flask,', 'set the dials, press its key', 'at a heater step, then type', 'your answer.'],
-  6: ['Drag a card into the probe,', 'press its key, then put the', 'card on the rail.'],
-  7: ['Drag a card into the plate,', 'press its key, then turn', 'the answer dial.'],
-  8: ['Drag a sample into the cube,', 'press its key, then drag', 'each picture into a tray.']
-};
-applyNotes(STAGES, NOTES);
+/** How-to lines removed from the plate: the prompt is the only instruction; how-to belongs in the Tour. */
+applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -463,7 +454,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A liquid in a sealed flask settles at its vapor pressure, which rises with temperature and falls with a stronger attraction. It boils where its vapor pressure meets the pressure outside, so its boiling point is not fixed at 100 °C.'
+      body: 'A liquid in a sealed flask settles at its vapor pressure, which increases with temperature and decreases when attractions are stronger. Boiling occurs when vapor pressure reaches the outside pressure, so water\'s boiling point drops at lower air pressure.'
     }
   ]
 };
@@ -483,8 +474,8 @@ const SEALED_ALL = ['ether', 'ethanol', 'h2o'];
 
 export const SOLUTIONS = [
   [put('ether', FLASK_WELL), settle, put('equal', 'slot:answer')],
-  [...rail(VP25_ORDER.map(idOf)), ...settleAll(SEALED_ALL), ...rail(VP25_ORDER.map(idOf))],
-  [...rail(WARM_ORDER), ...settleAll(S3.map(s => s.id)), ...rail(WARM_ORDER)],
+  [...settleAll(SEALED_ALL), ...rail(VP25_ORDER.map(idOf))],
+  [...settleAll(S3.map(s => s.id)), ...rail(WARM_ORDER)],
   [put('lower', 'slot:guess')],
   [put('h2o', FLASK_WELL), dial('flask', 'outside', 3), ...heatSteps(HEATER_STEPS, [60, 70, 80, 90, 100]), typed('bp', '88')],
   [...S6.flatMap(s => [put(idOf(s), PROBE_WELL), { run: 'probe' }]), ...rail(BP_ORDER.map(idOf))],
@@ -495,8 +486,8 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [put('ether', FLASK_WELL), settle, put('more', 'slot:answer')],
-  [...rail([...VP25_ORDER].reverse().map(idOf)), ...settleAll(SEALED_ALL), ...rail([...VP25_ORDER].reverse().map(idOf))],
-  [...rail(WARM_SLIP), ...settleAll(S3.map(s => s.id)), ...rail(WARM_SLIP)],
+  [...settleAll(SEALED_ALL), ...rail([...VP25_ORDER].reverse().map(idOf))],
+  [...settleAll(S3.map(s => s.id)), ...rail(WARM_SLIP)],
   [],
   [put('h2o', FLASK_WELL), dial('flask', 'outside', 3), ...heatSteps(HEATER_STEPS, [60, 80, 100]), typed('bp', '100')],
   [...S6.flatMap(s => [put(idOf(s), PROBE_WELL), { run: 'probe' }]), ...rail(MASS_ORDER.map(idOf))],

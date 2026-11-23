@@ -32,6 +32,7 @@ import {
   cuvetteTable, cuvette, dropper, rinser, spectro, plaqueFixture, markerFixture, markerRead
 } from '../../table/kits/cuvette.js';
 import { session } from '../../../session.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -389,3 +390,5 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
 export { planPhotocell, planAbsorb, rackPull, readOf, MEASURED, LAMPS, CELL_BRIGHT, LADDER_LINE, CORE };
+
+markFights(STAGES);

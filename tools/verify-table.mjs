@@ -167,7 +167,8 @@ function checkTableStage(label, stage, solution, misses) {
   for (const p of Object.values(t0.pieces)) {
     const r = REG.radiusOf(kit, p);
     if (p.at.x - r < 0 || p.at.y - r < 0 || p.at.x + r > w || p.at.y + r > h) fail(`${label}: piece ${p.id} starts off the table`);
-    if (p.hidden && !t0.fetch[p.fetchFrom]) fail(`${label}: piece ${p.id} is hidden and nothing can fetch it`);
+    // A loose Lewis board's empty joint is hidden until two atoms bond across it (`atoms.js` `settleLooseSlates`).
+    if (p.hidden && !t0.fetch[p.fetchFrom] && !(p.kind === 'joint' && t0.fixtures[p.props?.slate]?.props?.loose)) fail(`${label}: piece ${p.id} is hidden and nothing can fetch it`);
   }
   const rects = [
     // An orbit is a round place round a fixed middle: the middle stands on it by design (the `backdrop` flag).
@@ -182,11 +183,13 @@ function checkTableStage(label, stage, solution, misses) {
     ...Object.values(t0.fetch).filter(z => z.at).map(z => [`site plate ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.site)])
   ];
   // A piece that starts loose starts on open table: clear of every zone and of its neighbours.
-  const loose = Object.values(t0.pieces).filter(p => !p.zone);
+  const loose = Object.values(t0.pieces).filter(p => !p.zone && !p.hidden);
   for (const p of loose) {
     for (const [name, r, backdrop] of rects) {
       // A fixed piece stands ON a fixture by design (the atoms of a slate stand on its board), and a middle stands on its orbit.
       if (backdrop || (p.fixed && name.startsWith('fixture '))) continue;
+      // The atoms of a loose Lewis board stand on that board by design, and move only as the board arranges them.
+      if (p.props?.slate && name === `fixture ${p.props.slate}`) continue;
       if (p.at.x > r.x0 && p.at.x < r.x1 && p.at.y > r.y0 && p.at.y < r.y1) fail(`${label}: loose piece ${p.id} starts inside ${name}`);
     }
   }

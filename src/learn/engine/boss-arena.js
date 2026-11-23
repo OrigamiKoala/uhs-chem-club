@@ -600,9 +600,9 @@ export class BossArena {
       return;
     }
     this.queuedHit = rig;
-    const wind = this.reduced ? 0.2 : 0.55;
-    // The view goes up as it winds up and stays for the bolt's flight and the blow.
-    this.gaze(wind + 1.5);
+    const wind = this.reduced ? 0.15 : 0.35;
+    // Brief gaze up for the bolt, then back to the bench so the miss message stays readable.
+    this.gaze(wind + 0.65);
     this.monster.triggerTelegraph(wind);
     this.fx?.chargeOrb(() => this.mouthPoint(), wind, this.look.attack);
   }

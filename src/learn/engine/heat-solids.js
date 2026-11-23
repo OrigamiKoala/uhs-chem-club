@@ -172,8 +172,9 @@ export function buildPhaseCard(c, p) {
     t.position.set(x - Math.cos(ang) * len / 2, y, z + Math.sin(ang) * len / 2);
     g.add(t);
   });
-  const name = c.label(p.label, hw * 2 * 0.9, hh * 2 * 0.2);
-  name.position.set(0, CARD_H + 0.0006, hh * 0.78);
+  const title = p.props.T != null ? `${p.label} · ${p.props.T} °C` : p.label;
+  const name = c.label(title, hw * 2 * 0.94, hh * 2 * 0.24);
+  name.position.set(0, CARD_H + 0.0006, hh * 0.76);
   g.add(name);
   g.userData.height = CARD_H + boxH;
   return g;

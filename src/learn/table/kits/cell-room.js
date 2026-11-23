@@ -30,7 +30,8 @@ export function occupied(state, kit, { foe = false } = {}) {
 
 /** The largest empty rectangle (table units) at least `minW` by `minH`, no wider than `maxW` and no taller than `maxH`, or null. */
 export function freeRect(spec, { minW = 54, minH = 24, maxW = 150, maxH = 54, foe = false } = {}) {
-  const state = createTable(spec, 'room');
+  // Found on the table as the quest draws it: `near.js` then moves what is placed here with its band.
+  const state = createTable({ ...spec, layout: 'as-drawn' }, 'room');
   const kit = getKit(state.kit);
   const W = Math.floor(state.bounds.w); const H = Math.floor(state.bounds.h);
   const blocked = Array.from({ length: H + 1 }, () => new Uint8Array(W + 1));

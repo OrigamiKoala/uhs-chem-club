@@ -128,10 +128,9 @@ function bathPart(ctx, t, alpha) {
 
 function solutionDrop(ctx, w, h, t) {
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, w, h);
-  crystalPart(ctx, t, fadeOf(t, -0.1, 0.3));
-  countPart(ctx, t, fadeOf(t, 0.28, 0.56));
-  dilutePart(ctx, t, fadeOf(t, 0.54, 0.82));
-  bathPart(ctx, t, ease(win(t, 0.8, 0.84)));
+  crystalPart(ctx, t, fadeOf(t, -0.1, 0.35));
+  countPart(ctx, t, fadeOf(t, 0.33, 0.68));
+  dilutePart(ctx, t, ease(win(t, 0.66, 0.72)));
 }
 
 export const Q6_SCENES = {

@@ -18,6 +18,19 @@ import {
   entropyOfHeating
 } from '../../engine/thermodata.js';
 import { clusterOf } from '../snap.js';
+import { gliding } from '../glide.js';
+
+/**
+ * A list read at a setting counted from 1 that need not be whole: between two settings, the straight line between their entries.
+ * A picture the hand is dragging (`glide.js`) is drawn from it; every reading that is graded uses a whole setting.
+ */
+const atSetting = (list, s) => {
+  const i = Math.max(0, Math.min(list.length - 1, s - 1));
+  const lo = Math.floor(i); const hi = Math.min(list.length - 1, lo + 1);
+  return list[lo] + (list[hi] - list[lo]) * (i - lo);
+};
+/** The setting a dial is drawn at: where the hand has it while `shown` and it is being dragged, else its whole setting. */
+const settingOf = (f, name, shown) => (shown ? gliding(f, name) : null) ?? Math.round(f.dials[name].value);
 
 export {
   SPECIFIC_HEAT_WATER, SPECIFIC_HEATS, BOND_ENTHALPIES, FORMATION_TABLE, FUELS, heatTransfer, equilibriumTemp, blockSpecificHeat,
@@ -120,11 +133,11 @@ export function cupRead(state, fid) {
    ------------------------------------------------------------------ */
 
 /** The change a pair of shelves draws: the stage's own ΔH, or the one the player has built with the shelf dial, turned round if reversed. */
-export function shelvesRead(state, fid) {
+export function shelvesRead(state, fid, shown = false) {
   const f = state.fixtures[fid];
   const p = f.props;
   const d = f.dials;
-  const dH = d.after ? p.afterList[Math.round(d.after.value) - 1] : (p.dH ?? 0);
+  const dH = d.after ? atSetting(p.afterList, settingOf(f, 'after', shown)) : (p.dH ?? 0);
   const rev = d.dir ? Math.round(d.dir.value) === 2 : Boolean(p.reverse);
   const signed = rev ? -dH : dH;
   return { dH: signed, up: signed > 0, down: signed < 0, rev, from: rev ? p.productsLabel : p.reactantsLabel, to: rev ? p.reactantsLabel : p.productsLabel, built: Boolean(d.after) };
@@ -140,15 +153,17 @@ export const shelfCardRead = p => ({ dH: p.props.dH, up: p.props.dH > 0, down: p
 /** How much of a bond's well has been climbed at each of the crank's seven settings. */
 export const WELL = Object.freeze([0, 0.1, 0.38, 0.72, 0.9, 0.98, 1]);
 
-export function wellRead(state, fid) {
+export function wellRead(state, fid, shown = false) {
   const f = state.fixtures[fid];
   const p = f.props;
   const k = Math.round(f.dials.pull.value) - 1;
   const D = p.D ?? BOND_ENTHALPIES[p.which].dH;
   // Let fall: the dial runs from the free atoms (1) toward the bond (7), so the climb that is left is the well at the far end.
-  const frac = p.forming ? WELL[WELL.length - 1 - k] : WELL[k];
+  // `shown`: where the crank is while the hand drags it, between settings (`glide.js`).
+  const s = settingOf(f, 'pull', shown);
+  const frac = atSetting(WELL, p.forming ? WELL.length + 1 - s : s);
   const free = frac >= 1;
-  return { D, frac, E: D * frac, free, bound: frac <= 0, step: k + 1, forming: Boolean(p.forming), released: p.forming ? D * (1 - frac) : 0 };
+  return { D, frac, E: D * frac, free, bound: frac <= 0, step: k + 1, at: s, forming: Boolean(p.forming), released: p.forming ? D * (1 - frac) : 0 };
 }
 
 /* ------------------------------------------------------------------
@@ -299,10 +314,10 @@ export function shakesOf(state, fid) {
    THE PLOT (free energy against temperature)
    ------------------------------------------------------------------ */
 
-export function plotRead(state, fid) {
+export function plotRead(state, fid, shown = false) {
   const f = state.fixtures[fid];
   const p = f.props;
-  const T = p.Ts[Math.round(f.dials.temp.value) - 1];
+  const T = atSetting(p.Ts, settingOf(f, 'temp', shown));
   return plotAtT(p, T);
 }
 

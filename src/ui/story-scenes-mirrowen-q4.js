@@ -125,7 +125,7 @@ function histogram(ctx, arr, x0, y0, w, h, label) {
   });
   [60, 120, 180].forEach(v => text(ctx, `${v}°`, x0 + ((v - 60) / 120) * w, y0 + h + 20, { size: 18, color: C.dust }));
   const used = bins.filter(n => n > 0).length;
-  text(ctx, `${label}: ${used} ${used === 1 ? 'angle' : 'angles'} at the silicon`, x0 + w / 2, y0 - 14, { size: 22, color: C.text });
+  text(ctx, `${label} (${used} ${used === 1 ? 'angle' : 'angles'})`, x0 + w / 2, y0 - 14, { size: 20, color: C.text });
 }
 
 function whyDifferent(ctx, t, clock, a) {

@@ -56,9 +56,9 @@ export const UNIT_03 = {
     {
       id: 'q4-dots',
       title: 'Lewis Structures',
-      line: 'Construct Lewis structures and apply the octet rule.',
+      line: 'Count valence electrons and draw Lewis structures.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 10,
       status: 'live',
       module: () => import('../quests/unit03/q4-dots.js')
     },
@@ -76,7 +76,7 @@ export const UNIT_03 = {
       title: 'Molecular Shape',
       line: 'Predict three-dimensional geometries using VSEPR theory.',
       arena: 'bench',
-      stageCount: 10,
+      stageCount: 11,
       status: 'live',
       module: () => import('../quests/unit03/q6-shape.js')
     },

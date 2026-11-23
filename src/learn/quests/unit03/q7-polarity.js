@@ -31,6 +31,7 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
+import { createTable } from '../../table/model.js';
 import { RIG_MOLECULES, planDipole, bondKind, EN, ionicPercent, BOND_DIPOLE, E_DEBYE_PER_ANGSTROM } from '../../engine/vsepr.js';
 import {
   domainTable, plates, marker, markerValue, molCard, molOf, molRead, arrowsTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
@@ -90,7 +91,7 @@ export const STAGES = [
     title: 'How Evenly Is It Shared',
     briefing: {
       speaker: SPEAKER,
-      body: 'Electronegativity is how strongly an atom pulls on electrons it shares; each card prints it for both of its atoms. Atoms with equal values share a pair equally, and a very large difference lets one atom take the pair altogether.'
+      body: 'Electronegativity measures how strongly an atom pulls on shared electrons; each card prints both atoms\' values. Equal values mean equal sharing, while a very large difference means one atom takes the electron completely.'
     },
     prompt: 'How evenly does each pair of atoms share its bonding electrons?',
     widget: { type: 'table', label: 'The bench' },
@@ -100,15 +101,15 @@ export const STAGES = [
         molCard('d', 'HCl', pullRow(3), { show: ['pulls'] })
       ],
       zones: { trays: [
-        { id: 'none', label: TRAY_NAME.none, at: { x: 26, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
-        { id: 'part', label: TRAY_NAME.part, at: { x: 75, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
-        { id: 'taken', label: TRAY_NAME.taken, at: { x: 124, y: 20 }, size: { w: 46, h: 24 }, cell: 22 }
+        { id: 'none', label: TRAY_NAME.none, at: { x: 22, y: 20 }, size: { w: 36, h: 26 }, cell: 26 },
+        { id: 'part', label: TRAY_NAME.part, at: { x: 75, y: 20 }, size: { w: 58, h: 26 }, cell: 28 },
+        { id: 'taken', label: TRAY_NAME.taken, at: { x: 128, y: 20 }, size: { w: 36, h: 26 }, cell: 26 }
       ] }
     }),
     hints: [
       'Each card prints the electronegativity of its two atoms; drag each card into a tray.',
-      'Compare the two values on one card with each other, then compare that difference with the other cards\'.',
-      'The atom with the higher value pulls the shared pair toward itself, and the larger the difference, the further the pair shifts.'
+      'Find the difference between the two values on each card, then compare those differences across the four cards.',
+      'The atom with the higher electronegativity pulls the shared electrons closer; the larger the difference, the more unequal the sharing.'
     ],
     check(state) {
       const t = state.table;
@@ -117,13 +118,14 @@ export const STAGES = [
       if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all four cards into trays.' };
       const band = id => { const d = molRead(t.pieces[id]).net; return d < 0.4 ? 'none' : d < 1.7 ? 'part' : 'taken'; };
       const wrong = ids.find(id => where[id] !== band(id));
-      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in "${TRAY_NAME[where[wrong]]}", but the two electronegativities on its card differ by ${molRead(t.pieces[wrong]).net.toFixed(1)}.` };
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in "${TRAY_NAME[where[wrong]]}", but its two electronegativities differ by ${molRead(t.pieces[wrong]).net.toFixed(1)}.` };
       return { ok: true };
     },
     reward: {
       log: 'The bigger the difference, the less evenly the pair is shared.',
       title: 'Electronegativity Difference',
-      body: 'H₂ shares equally, HBr and HCl unequally, and in KF fluorine takes the electron. The larger the difference in electronegativity, the more unequal the sharing.'
+      body: 'H₂ shares equally, HBr and HCl share unequally, and in KF fluorine takes the electron. The larger the electronegativity difference, the more unequal the sharing.',
+      model: { type: 'electronegativity-pull', left: 'H', right: 'Cl', enLeft: 2.2, enRight: 3.2, caption: 'More electronegative chlorine pulls the shared electrons closer.' }
     }
   },
 
@@ -132,29 +134,29 @@ export const STAGES = [
     title: 'Which End',
     briefing: {
       speaker: SPEAKER,
-      body: 'When a pair is shared unequally, the atom it sits closer to is slightly negative, written δ−, and the other slightly positive, δ+: these are partial charges. A bond with partial charges is a polar covalent bond, and its two charged ends are called a dipole.'
+      body: 'When electrons are shared unequally, the atom they sit closer to is slightly negative (δ−) and the other is slightly positive (δ+): these are partial charges. A bond with partial charges is a polar covalent bond, and its two charged ends form a dipole.'
     },
-    prompt: 'Which end of a hydrogen chloride molecule faces the positive plate when the field is on?',
+    prompt: 'Which way should HCl face so the electric field does not rotate it?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
-      pieces: [molCard('a', 'HCl', rowAt(0), { turn: true, show: ['pulls'] }), arrowsTool('ar', { x: 130, y: 14 })],
-      fixtures: [plates('pl', PLATES_BIG.at, { size: PLATES_BIG.size })]
+      pieces: [molCard('a', 'HCl', { x: 75, y: 53 }, { turn: true, show: ['pulls'], extra: { showDipoles: true } })],
+      fixtures: [plates('pl', { x: 75, y: 21 }, { size: PLATES_BIG.size, flipPiece: 'a' })]
     }),
     hints: [
-      'Drag the molecule between the plates and turn it end for end; "Switch Field" turns the field on and off.',
-      'Compare the electronegativities of hydrogen and chlorine printed on the card, and which way the dipole arrow points.',
-      'Opposite charges attract, so decide which atom is δ− and which plate that end is drawn to.'
+      'Drag the molecule between the plates, press "Rotate Molecule" to flip it end for end, and press "Switch Field" to test if it turns.',
+      'Compare the electronegativities of hydrogen and chlorine on the card, and check which way the bond dipole arrow points.',
+      'Opposite charges attract, so point the slightly negative end (δ−) toward the positive (+) plate.'
     ],
     check(state) {
       const b = dmolBehaviour(state.table.pieces.a, state.table);
       if (!b.around) return { ok: false, notYet: true, msg: 'Put the molecule between the plates.' };
       if (b.aligned) return { ok: true };
-      return { ok: false, msg: 'Set this way the molecule swings round when the field is on: the end facing the positive plate is not its δ− end.' };
+      return { ok: false, msg: 'The molecule still turns when the field switches on. Rotate it so the negative end faces the positive (+) plate.' };
     },
     reward: {
       log: 'The chlorine end faces the positive plate.',
       title: 'Polar Covalent Bond',
-      body: 'The chlorine end. Chlorine is more electronegative, so the shared pair sits closer to it and the partial charges are δ− on chlorine and δ+ on hydrogen: a polar covalent bond.',
+      body: 'The chlorine end faces the positive plate. Chlorine is more electronegative, so the shared electrons sit closer to it, giving partial charges δ− on chlorine and δ+ on hydrogen: a polar covalent bond.',
       model: { type: 'shape', mol: 'HCl', caption: 'HCl · Polar' }
     }
   },
@@ -163,16 +165,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Two Bond Dipoles',
-    prompt: 'Both bonds in carbon dioxide, O=C=O, are polar: does the whole molecule turn in an electric field?',
+    prompt: 'Both bonds in carbon dioxide (O=C=O) are polar: does the whole molecule turn in an electric field?',
     cards: GUESSES,
     hints: [
-      'Lay one of the two cards in the slot.',
-      'Carbon dioxide is linear, so its two bonds point in opposite directions from the carbon atom.',
-      'A prediction is never graded, so lay the card you think most likely.'
+      'Drag one of the two prediction cards into the slot.',
+      'Carbon dioxide is linear, so its two bonds point in opposite directions from carbon.',
+      'Predictions are never graded, so pick the card you think is most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'The next stage puts carbon dioxide and four other molecules between the plates.'
+      body: 'The next stage tests carbon dioxide and four other molecules between the plates.'
     }
   }),
 
@@ -181,7 +183,7 @@ export const STAGES = [
     title: 'Five Molecules',
     briefing: {
       speaker: SPEAKER,
-      body: 'A molecule that has a δ− side and a δ+ side turns in an electric field and is called polar. One whose bond dipoles balance symmetrically around the centre has no such sides and is called nonpolar.'
+      body: 'A molecule with a δ− side and a δ+ side turns in an electric field and is polar. One whose bond dipoles cancel out symmetrically around the center has no charged sides and is nonpolar.'
     },
     get prompt() {
       return testPrompt(QUEST_KEY, GUESSES, 'which of these five molecules are polar?');
@@ -189,17 +191,19 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
-        molCard('a', 'CO2', rowAt(0), { field: true }), molCard('b', 'H2O', rowAt(1), { field: true }), molCard('c', 'CCl4', rowAt(2), { field: true }),
-        molCard('d', 'NH3', rowAt(3), { field: true }), molCard('e', 'CHCl3', rowAt(4), { field: true }),
-        arrowsTool('ar', { x: 69, y: 22 })
+        molCard('a', 'CO2', rowAt(0), { field: true, extra: { showDipoles: true } }),
+        molCard('b', 'H2O', rowAt(1), { field: true, extra: { showDipoles: true } }),
+        molCard('c', 'CCl4', rowAt(2), { field: true, extra: { showDipoles: true } }),
+        molCard('d', 'NH3', rowAt(3), { field: true, extra: { showDipoles: true } }),
+        molCard('e', 'CHCl3', rowAt(4), { field: true, extra: { showDipoles: true } })
       ],
-      zones: { trays: [{ id: 'turns', label: 'Polar', at: { x: 100, y: 18 }, size: { w: 32, h: 22 }, cell: 22 }, { id: 'stays', label: 'Nonpolar', at: { x: 133, y: 18 }, size: { w: 32, h: 22 }, cell: 22 }] },
-      fixtures: [plates('pl', { x: 27, y: 21 }, { size: { w: 52, h: 40 } })]
+      zones: { trays: [{ id: 'turns', label: 'Polar', at: { x: 96, y: 18 }, size: { w: 46, h: 24 }, cell: 22 }, { id: 'stays', label: 'Nonpolar', at: { x: 134, y: 18 }, size: { w: 28, h: 24 }, cell: 22 }] },
+      fixtures: [plates('pl', { x: 34, y: 21 }, { size: { w: 62, h: 40 } })]
     }),
     hints: [
-      'Drag a molecule between the plates and press "Switch Field"; drag the dipole arrows onto a molecule to see each bond\'s dipole.',
-      'Compare the directions of the bond dipole arrows in a molecule that turned with those in one that did not.',
-      'Equal arrows spread evenly round the central atom leave no side of the molecule more negative than another.'
+      'Drag each molecule between the plates and press "Switch Field"; each card already shows its bond dipole arrows.',
+      'Compare the directions of the bond dipole arrows in a molecule that turned with one that did not.',
+      'Equal bond dipoles spaced symmetrically around the central atom cancel out, leaving neither side more negative than the other.'
     ],
     check(state) {
       const t = state.table;
@@ -207,14 +211,14 @@ export const STAGES = [
       const where = Object.fromEntries(ids.map(id => [id, ['turns', 'stays'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
       if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all five molecules into trays.' };
       const wrong = ids.find(id => where[id] !== (molRead(t.pieces[id]).polar ? 'turns' : 'stays'));
-      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that does not match what it did between the plates: test it again with the field on.` };
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in the wrong tray: test it again between the plates with the field on.` };
       return { ok: true };
     },
     get reward() {
       return {
         log: 'Water, ammonia and chloroform turned. Carbon dioxide and carbon tetrachloride did not.',
         title: 'Polar and Nonpolar Molecules',
-        body: `${verdictLine(QUEST_KEY, 'stays')}In CO₂ and CCl₄ equal bond dipoles are spread evenly round the central atom and balance, so the molecules are nonpolar. In H₂O, NH₃ and CHCl₃ they do not balance, so those molecules are polar.`,
+        body: `${verdictLine(QUEST_KEY, 'stays')}In CO₂ and CCl₄, equal bond dipoles are arranged symmetrically around the central atom and cancel, so they are nonpolar. In H₂O, NH₃, and CHCl₃ they do not cancel, so those molecules are polar.`,
         model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Polar' }
       };
     }
@@ -225,11 +229,11 @@ export const STAGES = [
     title: 'How Ionic Is It',
     briefing: {
       speaker: SPEAKER,
-      body: 'The size of a dipole is measured in debye, D. If one atom took the shared pair completely the dipole would be as large as it can be, and percent ionic character is the measured dipole as a percent of that.',
+      body: 'Dipole strength is measured in debye (D). Full electron transfer would produce the maximum possible dipole, and percent ionic character is the measured dipole as a percentage of that maximum:',
       worked: [
-        'Hydrogen fluoride: measured dipole 1.82 D.',
-        `Full transfer would give ${fullDipole('HF').toFixed(2)} D.`,
-        `1.82 ÷ ${fullDipole('HF').toFixed(2)} = 0.41, so 41%.`
+        'Hydrogen fluoride: measured dipole = 1.82 D.',
+        `Full electron transfer would give ${fullDipole('HF').toFixed(2)} D.`,
+        `1.82 ÷ ${fullDipole('HF').toFixed(2)} = 0.41, or 41%.`
       ]
     },
     prompt: 'What is the percent ionic character of the H–Cl bond?',
@@ -239,21 +243,21 @@ export const STAGES = [
       fixtures: [marker('ionic', { x: 104, y: 32 }, { label: 'Percent', max: 100 })]
     }),
     hints: [
-      'The card prints the measured dipole of H–Cl and the dipole a full transfer would give; the dial sets your answer.',
-      'Compare the measured dipole with the full-transfer dipole: the bar on the card shows how far the shared pair has shifted.',
-      'The worked case for hydrogen fluoride shows where the two dipoles go in the division.'
+      'The card prints the measured dipole of H–Cl and the dipole a full transfer would give; set your answer on the dial.',
+      'Compare the measured dipole with the full-transfer dipole; the bar on the card shows how far the shared electrons have shifted.',
+      'Divide the measured dipole by the full-transfer dipole and convert to a percent, just like in the HF example.'
     ],
     check(state) {
       const v = markerValue(state.table, 'ionic');
       if (!v) return { ok: false, notYet: true, msg: 'Set the dial to a percent.' };
       const want = Math.round(ionicPercent('HCl'));
       if (Math.abs(v - want) <= 2) return { ok: true };
-      return { ok: false, msg: `${v}% of the full-transfer dipole would be ${(v / 100 * fullDipole('HCl')).toFixed(2)} D, which is not the dipole measured.` };
+      return { ok: false, msg: `${v}% of the full-transfer dipole would be ${(v / 100 * fullDipole('HCl')).toFixed(2)} D, which does not match the measured dipole.` };
     },
     reward: {
       log: 'The measured dipole is about 18% of a full transfer.',
       title: 'Percent Ionic Character',
-      body: 'About 18%: the shared pair is shifted toward chlorine but far from transferred. Percent ionic character puts a number on how unequal the sharing is.',
+      body: 'About 18%: the shared electrons shift toward chlorine but are far from completely transferred. Percent ionic character puts a number on how unequal the sharing is.',
       last: true
     }
   }
@@ -271,11 +275,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The more two atoms differ in electronegativity, the less equally they share a pair. Unequal sharing gives a bond a δ− end and a δ+ end: a polar covalent bond.'
+      body: 'The larger the electronegativity difference between two atoms, the less equally they share electrons. Unequal sharing gives a bond a δ− end and a δ+ end: a polar covalent bond.'
     },
     {
       heading: 'Whole Molecules',
-      body: 'A molecule is polar only if its bond dipoles do not balance. Shape decides: linear CO₂ is nonpolar although its bonds are polar, and bent H₂O is polar.'
+      body: 'A molecule is polar only if its bond dipoles do not cancel. Shape decides: linear CO₂ is nonpolar even though its bonds are polar, while bent H₂O is polar.'
     },
     {
       heading: 'Next',
@@ -291,7 +295,13 @@ export const DEBRIEF = {
    field switched, a card put in a tray: nothing here says what a molecule does in a field.
    ------------------------------------------------------------------ */
 
-const gap = (id, x = 37, y = 21) => ({ place: { piece: id, to: `free:${x},${y}` } });
+/** How far stage `n`'s field plates stand from where they are drawn (`table/near.js` may move the rig nearer the player). */
+const rigDy = n => {
+  const built = createTable(STAGES[n].table, STAGES[n].title);
+  const drawn = createTable({ ...STAGES[n].table, layout: 'as-drawn' }, STAGES[n].title);
+  return built.fixtures.pl.at.y - drawn.fixtures.pl.at.y;
+};
+const gap = (id, n, x = 37, y = 21) => ({ place: { piece: id, to: `free:${x},${y + rigDy(n)}` } });
 const lay = (toolId, id) => ({ join: [toolId, id] });
 const field = { run: 'pl' };
 const into = (id, zone) => ({ place: { piece: id, to: `tray:${zone}` } });
@@ -300,11 +310,11 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
   [into('b', 'part'), into('d', 'part'), into('a', 'none'), into('c', 'taken')],
-  [gap('a'), { flip: 'a' }],
+  [gap('a', 1, 75), { flip: 'a' }],
   [guess('stays')],
   [
-    gap('a'), lay('ar', 'a'), field, into('a', 'stays'),
-    gap('b'), into('b', 'turns'), gap('c'), into('c', 'stays'), gap('d'), into('d', 'turns'), gap('e'), into('e', 'turns')
+    gap('a', 3, 34), field, into('a', 'stays'),
+    gap('b', 3, 34), into('b', 'turns'), gap('c', 3, 34), into('c', 'stays'), gap('d', 3, 34), into('d', 'turns'), gap('e', 3, 34), into('e', 'turns')
   ],
   [{ setDial: { fixture: 'ionic', dial: 'value', value: 18 } }]
 ];
@@ -312,7 +322,7 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [into('a', 'part'), into('b', 'none'), into('c', 'none'), into('d', 'none')],
-  [gap('a')],
+  [gap('a', 1, 75)],
   [],
   [into('a', 'turns'), into('b', 'turns'), into('c', 'stays'), into('d', 'turns'), into('e', 'turns')],
   [{ setDial: { fixture: 'ionic', dial: 'value', value: 100 } }]

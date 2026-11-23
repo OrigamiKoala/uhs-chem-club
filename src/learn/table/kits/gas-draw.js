@@ -216,11 +216,11 @@ function paintHist(ctx, p, state, o) {
   const px = box.x0 + 2 * sc; const pw = box.w - 4 * sc;
   const base = box.y0 + box.h - 4.4 * sc; const ph = box.h - 9 * sc;
   const bw = pw / 24;
-  ctx.fillStyle = PHOS;
-  for (let i = 0; i < 24; i++) { const h = Math.min(1, bins[i] / ref) * ph; ctx.fillRect(px + i * bw + 0.5, base - h, Math.max(1, bw - 1), h); }
-  ctx.strokeStyle = STEEL;
+  ctx.fillStyle = '#a8d85a';
+  for (let i = 0; i < 24; i++) { const h = Math.min(1, bins[i] / ref) * ph; ctx.fillRect(px + i * bw + 0.5, base - h, Math.max(1.5, bw - 0.8), h); }
+  ctx.strokeStyle = DUST;
   ctx.beginPath(); ctx.moveTo(px, base + 0.5); ctx.lineTo(px + pw, base + 0.5); ctx.stroke();
-  say(ctx, `0 to ${max} m/s`, box.x0 + 1.3 * sc, box.y0 + box.h - 1.8 * sc, Math.max(6, 1.7 * sc), { color: DIM, maxW: box.w - 2 * sc });
+  say(ctx, `0 to ${max} m/s`, box.x0 + 1.3 * sc, box.y0 + box.h - 1.8 * sc, Math.max(7, 2.0 * sc), { color: DUST, maxW: box.w - 2 * sc });
 }
 
 const PAINTERS = { tank: paintTank, stmt: paintStmt, num: paintNum, curve: paintCurve, hist: paintHist, pellet: paintPellet, chip: paintChip };
@@ -258,7 +258,7 @@ export function rigGeometry(f, lay) {
   const compact = Boolean(f.props.compact);
   const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : b.y0 + 6;
   // The glass tube stands up from the plate and leans over what is behind it, so it starts clear of the dial row.
-  const top = lay.dials.length ? Math.max(lastDial + 7, b.y0 + 14) : b.y0 + 12;
+  const top = lay.dials.length ? Math.max(lastDial + 9.5, b.y0 + 16) : b.y0 + 12;
   const screenW = f.props.speedScreen ? (f.props.screenW ?? Math.min(30, (b.x1 - b.x0) * 0.46)) : 0;
   const bl = b.x0 + 2 + 1.4;
   const br = b.x1 - 2 - (screenW ? screenW + 2.5 : 0);
@@ -276,7 +276,7 @@ export const KEYS = ['gauge', 'ideal', 'off', 'volume', 'kelvin', 'temperature',
 export function rigLines(q, f, state = null) {
   const show = f.props.show || {};
   const hide = hiddenKeys(f, state);
-  const w = { gauge: 'PRESSURE', ideal: 'IDEAL LAW', off: 'DIFFERENCE', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'COLLISIONS', speed: 'SPEED', energy: 'KINETIC ENERGY', z: 'PV / nRT', mass: 'GAS MASS', room: 'ROOM TAKEN', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
+  const w = { gauge: 'PRESSURE', ideal: 'IDEAL LAW', off: 'DIFFERENCE', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'COLLISIONS', speed: 'SPEED', energy: 'KINETIC ENERGY', z: 'PV / nRT', mass: 'GAS MASS', room: 'PARTICLE VOLUME', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
   const on = k => (k === 'gauge' || k === 'volume' || k === 'temperature' || k === 'amount' ? show[k] !== false : Boolean(show[k]));
   const units = f.props.units || 'kpa';
   const out = [];
@@ -304,7 +304,7 @@ export function rigLines(q, f, state = null) {
     else if (k === 'amount') v = `${sig(q.n, 3)} mol`;
     else if (k === 'knocks') v = sig(q.knocks, 3);
     else if (k === 'speed') v = `${Math.round(q.mean)} m/s`;
-    else if (k === 'energy') v = sig(q.energy, 3);
+    else if (k === 'energy') v = `${sig(q.energy, 3)} zJ`;
     else if (k === 'z') v = sig(q.Z, 4);
     else if (k === 'mass') v = `${sig(q.mass, 3)} g`;
     else if (k === 'room') { v = `+${sig(Math.max(0, q.room), 3)} kPa`; tone = DUST; }
@@ -340,23 +340,57 @@ function paintBarrel(ctx, F, g, cj, q, f, b) {
   const room = Math.max(1, pxp - bx0 - 2);
   ctx.fillStyle = PHOS;
   ctx.strokeStyle = PHOS;
+  const pts = [];
   // The built table stands the particles up as bodies in the glass (`gas-3d.js`); the same count is drawn here when it does not.
   for (let i = 0; i < (b.bodies ? 0 : q.dots); i++) {
     const x = bx0 + 1.5 + rnd() * room;
     const y = by0 + 1.2 + rnd() * Math.max(1, by1 - by0 - 2.4);
+    pts.push([x, y]);
     ctx.beginPath(); ctx.arc(x, y, dr, 0, Math.PI * 2); ctx.fill();
     if (streak > 2) { ctx.globalAlpha = 0.45; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(Math.max(bx0 + 1, x - streak), y); ctx.stroke(); ctx.globalAlpha = 1; }
   }
-  // The piston: a plate across the barrel; free ones carry a weight on the rod, driven ones a plain rod to the edge.
-  ctx.fillStyle = DUST;
-  ctx.fillRect(pxp - F.len(0.8), by0 - F.len(0.5), F.len(1.6), by1 - by0 + F.len(1.0));
+  // When a real-gas stage shows attractions between particles, draw dashed pull lines between close pairs when cold.
+  if (f.props.attractions && q.T <= 400) {
+    const strength = Math.max(0.2, Math.min(0.85, (450 - q.T) / 250));
+    const pullPts = pts.length ? pts : Array.from({ length: Math.min(18, q.dots) }, () => [bx0 + 1.5 + rnd() * room, by0 + 1.2 + rnd() * Math.max(1, by1 - by0 - 2.4)]);
+    ctx.save();
+    ctx.strokeStyle = AMBER;
+    ctx.globalAlpha = strength;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash?.([2, 2]);
+    const thresh = Math.max(14, (by1 - by0) * 0.85);
+    for (let i = 0; i < pullPts.length; i++) {
+      for (let j = i + 1; j < pullPts.length; j++) {
+        if (Math.hypot(pullPts[i][0] - pullPts[j][0], pullPts[i][1] - pullPts[j][1]) < thresh) {
+          ctx.beginPath(); ctx.moveTo(pullPts[i][0], pullPts[i][1]); ctx.lineTo(pullPts[j][0], pullPts[j][1]); ctx.stroke();
+        }
+      }
+    }
+    ctx.setLineDash?.([]);
+    ctx.restore();
+  }
+  // When a gas is collected over water, draw a visible water band along the bottom of the vessel.
+  if (f.props.overWater) {
+    const wh = Math.max(4, (by1 - by0) * 0.28);
+    ctx.fillStyle = 'rgba(72, 130, 180, 0.42)';
+    ctx.fillRect(bx0 + 1, by1 - wh, Math.max(1, pxp - bx0 - 2), wh - 1);
+    ctx.strokeStyle = 'rgba(130, 190, 235, 0.8)';
+    ctx.beginPath(); ctx.moveTo(bx0 + 1, by1 - wh); ctx.lineTo(pxp - 1, by1 - wh); ctx.stroke();
+    say(ctx, 'WATER (24 mmHg)', bx0 + F.len(1.4), by1 - wh / 2, F.size(1.8, 6), { color: '#b7daf2', maxW: Math.max(20, pxp - bx0 - 4) });
+  }
+  // The piston: a plate across the barrel; sealed rigid tanks (`hold === 'V'`) have a fixed end cap instead of a movable piston.
   if (cj.c.hold !== 'V') {
+    ctx.fillStyle = DUST;
+    ctx.fillRect(pxp - F.len(0.8), by0 - F.len(0.5), F.len(1.6), by1 - by0 + F.len(1.0));
     ctx.strokeStyle = DUST;
     ctx.beginPath(); ctx.moveTo(pxp, (by0 + by1) / 2); ctx.lineTo(bx1 + F.len(0.5), (by0 + by1) / 2); ctx.stroke();
     if (cj.c.hold === 'P') {
       ctx.fillStyle = STEEL;
       ctx.fillRect(Math.min(bx1 - F.len(3), pxp + F.len(2)), (by0 + by1) / 2 - F.len(1.7), F.len(3), F.len(3.4));
     }
+  } else {
+    ctx.fillStyle = STEEL;
+    ctx.fillRect(bx1, by0, F.len(1.4), by1 - by0);
   }
   // Analogue round pressure gauge with swinging needle atop the barrel
   const gr = Math.max(7, F.len(3.8));
@@ -456,7 +490,7 @@ export function boxGeometry(f, lay) {
   // The glass cube stands up from the plate and leans over what is behind it, so it starts a cube's height below the dials.
   const y0 = lastDial + 18;
   const x0 = b.x0 + 4;
-  return { vessel: { x0, x1: x0 + side, y0, y1: y0 + side }, side, roofAt: y0 - 1.6, floorAt: y0 + side + 3.8, sideAt: x0 + side + 3 };
+  return { vessel: { x0, x1: x0 + side, y0, y1: y0 + side }, side, roofAt: y0 - 1.6, floorAt: y0 + side + 3.8, sideAt: x0 + side + 5.2 };
 }
 
 /** The sealed box: a vessel of gas, and a gauge on its roof, its side wall and its floor, each reading printed beside its wall. */
@@ -585,7 +619,7 @@ function paintCommon(ctx, f, state, b) {
     say(ctx, v, F.x(f.size.w * 0.5), F.y(top + 2.2 + i * 3.4), F.size(2.6, 6.5), { color: hide?.has('gauge') && i === 0 ? DIM : PHOS, weight: 700, align: 'right', maxW: F.len(f.size.w * 0.26) });
   });
   if (show.partials) {
-    say(ctx, 'EACH GAS PUSHES', F.x(2), F.y(top + 12.6), F.size(2.1, 6), { color: DIM, maxW: F.len(f.size.w * 0.3) });
+    say(ctx, 'PRESSURE OF EACH GAS', F.x(2), F.y(top + 12.6), F.size(2.1, 6), { color: DIM, maxW: F.len(f.size.w * 0.34) });
     if (show.share) say(ctx, 'SHARE', F.x(f.size.w * 0.5), F.y(top + 12.6), F.size(2.1, 6), { color: DIM, align: 'right', maxW: F.len(f.size.w * 0.12) });
     kinds.forEach((k, i) => {
       const y = top + 15.2 + i * 3.4;
@@ -683,7 +717,7 @@ function paintTube(ctx, f, state, b) {
   if (r.met && !gated) {
     ctx.fillStyle = '#e8e2d4';
     ctx.fillRect(px(r.ringFromLeft) - F.len(0.5), F.y(top), Math.max(2, F.len(1)), F.len(h));
-    say(ctx, `RING AT ${Math.round(r.ringFromLeft)} cm`, F.x(x0 + w / 2), F.y(top + h + 3.3), F.size(2.6, 6.5), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w) });
+    say(ctx, `RING AT ${Math.round(r.ringFromLeft)} cm OF ${r.length} cm`, F.x(x0 + w / 2), F.y(top + h + 3.3), F.size(2.6, 6.5), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w) });
   } else {
     say(ctx, gated ? 'PLACE PREDICTION FIRST' : 'NO RING YET', F.x(x0 + w / 2), F.y(top + h + 3.3), F.size(2.4, 6), { align: 'center', color: DIM });
   }

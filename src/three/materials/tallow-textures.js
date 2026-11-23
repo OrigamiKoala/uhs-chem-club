@@ -359,7 +359,7 @@ export function createBleachedPlateTexture(size = 512, tint = '#9a9080', code = 
     ctx.save();
     ctx.globalAlpha = 0.3;
     ctx.fillStyle = '#4a4036';
-    ctx.font = `700 ${Math.round(size * 0.2)}px "Share Tech Mono", monospace`;
+    ctx.font = `700 ${Math.round(size * 0.2)}px "Quantico", "JetBrains Mono", monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(code, size * 0.5, size * 0.26);
@@ -528,10 +528,10 @@ export function createSalvageCrateTexture(size = 512, guildCode = 'MM', serial =
   ctx.save();
   ctx.globalAlpha = 0.46;
   ctx.fillStyle = '#d6cdb6';
-  ctx.font = `700 ${Math.round(size * 0.17)}px "Share Tech Mono", monospace`;
+  ctx.font = `700 ${Math.round(size * 0.17)}px "Quantico", "JetBrains Mono", monospace`;
   ctx.textAlign = 'center';
   ctx.fillText(guildCode, size * 0.5, size * 0.33);
-  ctx.font = `700 ${Math.round(size * 0.1)}px "Share Tech Mono", monospace`;
+  ctx.font = `700 ${Math.round(size * 0.1)}px "Quantico", "JetBrains Mono", monospace`;
   ctx.fillText(serial, size * 0.5, size * 0.78);
   ctx.globalAlpha = 1;
   ctx.restore();
@@ -787,7 +787,7 @@ export function createSealedDoorTexture(size = 512, siteCode = '03') {
   ctx.save();
   ctx.globalAlpha = 0.34;
   ctx.fillStyle = '#cfc5ae';
-  ctx.font = `700 ${Math.round(size * 0.22)}px "Share Tech Mono", monospace`;
+  ctx.font = `700 ${Math.round(size * 0.22)}px "Quantico", "JetBrains Mono", monospace`;
   ctx.textAlign = 'center';
   ctx.fillText(siteCode, size * 0.5, size * 0.42);
   ctx.globalCompositeOperation = 'destination-out';

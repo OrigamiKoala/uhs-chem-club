@@ -76,7 +76,7 @@ const PIECE = {
 
 /** Tool keys the table can carry on its foot dock. */
 const TOOL = {
-  straightedge: ['Straightedge (Line of Best Fit)', 'Press "Straightedge" to draw a line of best fit through your plotted data points and read its slope and y-intercept.']
+  straightedge: ['Straightedge', 'Press "Straightedge" to extend a straight line through your recorded points and see where it crosses zero.']
 };
 
 /**
@@ -127,7 +127,7 @@ function fallbackFixture(f) {
 /** The title and text of a fixture: concise, one sentence, no dial boilerplate appended. */
 function fixtureStep(f, kitId, table) {
   const own = ligarFixture(f, kitId, table);
-  if (own) return { title: own.title, text: own.text };
+  if (own) return { title: own.title, text: own.text, key: own.key };
   const entry = EXTRA.fixtures[`${kitId}:${f.kind}`] || FIXTURE[`${kitId}:${f.kind}`] || FIXTURE[f.kind];
   if (!entry) return { title: f.label, text: fallbackFixture(f) };
   const runSentence = f.runLabel ? `Press "${f.runLabel}" to record.` : '';
@@ -179,15 +179,20 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
     steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, isBriefing: true, ...(worked?.length ? { lines: worked.slice() } : {}) });
   }
 
-  // The instruments, in the order they stand on the plate (top to bottom, left to right). One step per fixture kind.
-  const fixtures = Object.values(table.fixtures || {}).sort((a, b) => a.at.y - b.at.y || a.at.x - b.at.x);
+  // The instruments, in the order they stand on the plate (top to bottom, left to right). One step per fixture kind,
+  // preferring a fixture that carries dials so multi-cylinder benches highlight the controllable cylinder.
+  const fixtures = Object.values(table.fixtures || {}).sort((a, b) => {
+    const da = Object.keys(a.dials || {}).length ? 0 : 1;
+    const db = Object.keys(b.dials || {}).length ? 0 : 1;
+    return da - db || a.at.y - b.at.y || a.at.x - b.at.x;
+  });
   for (const f of fixtures) {
     if (f.props?.backdrop && f.noRun && !Object.keys(f.dials || {}).length) continue;
     if (SKIP_FIXTURES.has(f.kind)) continue;
     const twin = steps.some(st => st.flag === `tour_${kit}_fx_${f.kind}`);
     if (twin) continue;
-    const { title, text } = fixtureStep(f, kit, table);
-    add(`fx_${f.kind}`, title, text, { fx: f.id });
+    const { title, text, key } = fixtureStep(f, kit, table);
+    add(key || `fx_${f.kind}`, title, text, { fx: f.id });
   }
 
   const hasFixture = kind => Object.values(table.fixtures || {}).some(f => f.kind === kind);
@@ -228,7 +233,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
       continue;
     }
     const lig = ligarPiece(kind, kit, table);
-    if (lig) { add(`pc_${kind}`, lig[0], lig[1], { pc: p.id }); continue; }
+    if (lig) { add(lig[2] || `pc_${kind}`, lig[0], lig[1], { pc: p.id }); continue; }
     const entry = EXTRA.pieces[`${kit}:${kind}`] || PIECE[kind];
     if (!entry) continue;
     add(`pc_${kind.replace(':', '_')}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''), { pc: p.id });
@@ -257,6 +262,16 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
       tool: t,
       ...(demoOf(`tool_${t}`) ? { demo: demoOf(`tool_${t}`) } : {})
     });
+  }
+  if (!steps.length) {
+    const slot = Object.values(table.zones?.slots || {}).find(z => z.label && /predict/i.test(z.label));
+    if (slot) {
+      steps.push({
+        flag: `tour_${kit}_predict_slot`,
+        name: 'Make a prediction',
+        desc: `Drag the card you think is right into the "${slot.label}" slot. Your prediction is not graded — the next bench tests it.`
+      });
+    }
   }
   return steps;
 }

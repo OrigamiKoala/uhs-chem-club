@@ -63,7 +63,7 @@ import { revealTable, isRevealed } from './commit-gate.js';
 import { LIGAR_SKIN, buildAtomBall, buildToolCap, buildJointSocket, ligarDeck } from '../../engine/ligar-props.js';
 import { planJoin as planPair, shellPlan } from '../../engine/joinbench.js';
 import {
-  VALENCE, MOLECULES, planLewis, linkKey as lewisKey, addBond, addLone, addDot, removeOne, gaugeLength
+  VALENCE, MOLECULES, planLewis, linkKey as lewisKey, addBond, addLone, addDot, removeOne, gaugeLength, poseDrawing
 } from '../../engine/lewis.js';
 import { clusterOf, linkKey as pairKey } from '../snap.js';
 import { buildUnits, drawScopeField, planSettle, planCut, TINTS } from '../../engine/scope.js';
@@ -72,6 +72,7 @@ import { zOf, nameOf } from '../../engine/electrons.js';
 import { EN } from '../../engine/vsepr.js';
 import { PLATE_COLORS, plateText, mulberry32, hashId, lampMark } from '../../engine/plates.js';
 import { buildScatterFoil, buildBeamSource, buildChargePlate } from '../../engine/lab-props.js';
+import './atoms-tour-demos.js';
 
 export const ATOMS_KIT_ID = 'atoms';
 
@@ -539,7 +540,7 @@ function planDeal(a, b, state) {
     return done(addDot(sl.placed, target.i).placed, 'A single electron went onto the atom.');
   }
   // a pair
-  if (sl.left < 2) return refuse('The tray has no pair left.');
+  if (sl.left < 2) return refuse(sl.fixture.props.loose ? 'No electrons are left to place.' : 'The tray has no pair left.');
   if (b.kind === 'joint') {
     const r = addBond(sl.mol, sl.placed, target.a, target.b);
     return r.refused ? refuse(r.refused) : done(r.placed, 'A pair went into the joint between two atoms.');
@@ -594,6 +595,142 @@ export function slateParts(id, molKey, points, { chip = null, prefill = null, hi
 /** The radius of a slate's atoms and joints: targets, never grabbed (a slate's pieces are fixed). */
 export const SLATE_R = 4.4;
 export const JOINT_R = 3;
+
+/* ------------------------------------------------------------------
+   THE LOOSE SLATE (Ligar `q4-dots`, rebuilt 2026-11-21)
+
+   The same board, but its atoms are not pinned where the molecule puts them. They start apart in a row,
+   and the player bonds two by dragging one onto the other: a pair is shared between them (`addBond`, the
+   same deal a pair dropped in a joint makes). After every action the board arranges itself
+   (`settleLooseSlates`, the kit's `settle`): each bonded group stands round its most-bonded atom with its
+   bonds and lone pairs spaced evenly (`lewis.js` `poseDrawing`), and unbonded atoms wait in a row along the
+   far edge. A joint stands only where a bond is (a pair dropped on it shares one more; Remove takes one
+   back); an empty one is hidden. Nothing is arranged for the player: only where things are DRAWN moves.
+   ------------------------------------------------------------------ */
+
+/** The band along a loose slate's far edge that holds its name and its count, in table units. */
+const LOOSE_HEAD = 6.5;
+/** How far a lone pair's dots stand from the middle of its atom, past the atom's rim. */
+const LONE_OUT = 2.6;
+
+/**
+ * Where a loose slate's atoms and joints stand for a drawing: `{atoms: [{x, y}], joints: {jid: {x, y, hidden}}}`.
+ * `f` is the slate fixture (its rect and `props.loose`), `r` the atoms' radius.
+ */
+function looseLayout(f, placed, r) {
+  const mol = MOLECULES[f.props.mol];
+  const pose = poseDrawing(mol, placed);
+  const x0 = f.at.x - f.size.w / 2 + 2;
+  const x1 = f.at.x + f.size.w / 2 - 2;
+  const y0 = f.at.y - f.size.h / 2 + LOOSE_HEAD;
+  const y1 = f.at.y + f.size.h / 2 - 1.5;
+  const out = new Array(mol.syms.length).fill(null);
+  const reach = i => r + ((placed.lone[i] || 0) + (placed.dots[i] || 0) ? LONE_OUT + 1.6 : 0.6);
+  // The parked row: along the far edge when something is bonded, through the middle when nothing is.
+  const row = pose.parked;
+  const rowY = pose.comps.length ? y0 + r + 1.6 : (y0 + y1) / 2;
+  const pitch = Math.min(2 * r + 9, (x1 - x0) / Math.max(1, row.length));
+  row.forEach((i, k) => { out[i] = { x: (x0 + x1) / 2 + (k - (row.length - 1) / 2) * pitch, y: rowY }; });
+  if (pose.comps.length) {
+    const top = row.length ? rowY + r + 3 : y0;
+    // Each bonded group's extent at a bond length of one, then the bond length the space allows.
+    const ext = pose.comps.map(c => ({
+      c,
+      minX: Math.min(...c.map(i => pose.pos[i].x)), maxX: Math.max(...c.map(i => pose.pos[i].x)),
+      minY: Math.min(...c.map(i => pose.pos[i].y)), maxY: Math.max(...c.map(i => pose.pos[i].y)),
+      pad: Math.max(...c.map(reach))
+    }));
+    const want = f.props.loose.reach || 15;
+    const gap = 4;
+    const fitW = L => ext.reduce((w, e) => w + (e.maxX - e.minX) * L + 2 * e.pad, 0) + gap * (ext.length - 1);
+    const fitH = L => Math.max(...ext.map(e => (e.maxY - e.minY) * L + 2 * e.pad));
+    let L = want;
+    while (L > 2 * r + 2.5 && (fitW(L) > x1 - x0 || fitH(L) > y1 - top)) L -= 0.5;
+    let x = (x0 + x1) / 2 - fitW(L) / 2;
+    const midY = (top + y1) / 2;
+    for (const e of ext) {
+      const cx = x + e.pad - e.minX * L;
+      const cy = midY - ((e.minY + e.maxY) / 2) * L;
+      for (const i of e.c) out[i] = { x: cx + pose.pos[i].x * L, y: cy + pose.pos[i].y * L };
+      x += (e.maxX - e.minX) * L + 2 * e.pad + gap;
+    }
+  }
+  const r1 = v => Math.round(v * 100) / 100;
+  const atoms = out.map(p => ({ x: r1(p.x), y: r1(p.y) }));
+  const joints = {};
+  for (const [jid, i, j] of f.props.joints) {
+    joints[jid] = { x: r1((atoms[i].x + atoms[j].x) / 2), y: r1((atoms[i].y + atoms[j].y) / 2), hidden: !((placed.bonds[lewisKey(i, j)] || 0) > 0) };
+  }
+  return { atoms, joints, lone: pose.lone };
+}
+
+/**
+ * A loose slate's pieces and fixture inside the rectangle `rect` ({x0, y0, x1, y1}, table units): its atoms
+ * start apart in a row. `bond` is the bond length it draws when there is room; `r` its atoms' radius.
+ */
+export function looseSlateParts(id, molKey, rect, { bond = 15, r = SLATE_R, hideTotal = false } = {}) {
+  const mol = MOLECULES[molKey];
+  const r1 = v => Math.round(v * 10) / 10;
+  const fixture = {
+    id, kind: 'slate', label: mol.label, noRun: true,
+    at: { x: r1((rect.x0 + rect.x1) / 2), y: r1((rect.y0 + rect.y1) / 2) }, size: { w: r1(rect.x1 - rect.x0), h: r1(rect.y1 - rect.y0) },
+    props: {
+      mol: molKey, loose: { reach: bond }, atoms: mol.syms.map((_, i) => `${id}${i}`),
+      joints: mol.links.map(([i, j]) => [`${id}j${i}${j}`, i, j]), ...(hideTotal ? { hideTotal } : {})
+    }
+  };
+  const lay = looseLayout(fixture, { bonds: {}, lone: {}, dots: {} }, r);
+  const atoms = mol.syms.map((el, i) => ({ id: `${id}${i}`, kind: 'atom', label: el, r, at: { ...lay.atoms[i] }, props: { el, slate: id } }));
+  const joints = mol.links.map(([i, j]) => {
+    const jid = `${id}j${i}${j}`;
+    return { id: jid, kind: 'joint', label: 'Bond', r: JOINT_R, fixed: true, hidden: true, at: { x: lay.joints[jid].x, y: lay.joints[jid].y }, props: { slate: id, a: `${id}${i}`, b: `${id}${j}`, i, j } };
+  });
+  return { pieces: [...atoms, ...joints], fixture };
+}
+
+/** The kit's `settle`: every loose slate on the table arranges itself round the drawing it now holds. */
+function settleLooseSlates(state) {
+  for (const f of Object.values(state.fixtures || {})) {
+    if (f.kind !== 'slate' || !f.props?.loose) continue;
+    const sl = slateOf(state, f.id);
+    const r = state.pieces[f.props.atoms[0]]?.r || SLATE_R;
+    const lay = looseLayout(f, sl.placed, r);
+    f.props.atoms.forEach((id, i) => {
+      const p = state.pieces[id];
+      p.at = { ...lay.atoms[i] };
+      p.home = { ...lay.atoms[i] };
+      p.zone = null;
+      if (p.joinedTo?.length) p.joinedTo = [];
+    });
+    for (const [jid] of f.props.joints) {
+      const jp = state.pieces[jid];
+      jp.at = { x: lay.joints[jid].x, y: lay.joints[jid].y };
+      jp.home = { ...jp.at };
+      jp.hidden = lay.joints[jid].hidden;
+    }
+  }
+}
+
+/**
+ * One atom of a loose slate dropped on another of the same slate: they share one more pair, exactly as a pair
+ * dropped in the joint between them would (`addBond`). The atom goes back and the board arranges itself.
+ */
+function planAtomDrop(a, b, state) {
+  const refuse = reason => ({ holds: false, home: true, reason });
+  const sl = slateOf(state, a.props.slate);
+  const i = sl.atoms.indexOf(a.id);
+  const j = sl.atoms.indexOf(b.id);
+  const jt = sl.fixture.props.joints.find(([, x, y]) => (x === i && y === j) || (x === j && y === i));
+  if (!jt) return refuse(`In ${sl.mol.label}, those two atoms are not bonded to each other.`);
+  if (sl.left < 2) return refuse('No electrons are left to place.');
+  const r = addBond(sl.mol, sl.placed, i, j);
+  if (r.refused) return refuse(r.refused);
+  const n = r.placed.bonds[lewisKey(i, j)];
+  return {
+    holds: true, once: true, setPieces: { [jt[0]]: { pairs: n } },
+    reason: n === 1 ? 'The two atoms share an electron pair: a bond.' : `The two atoms now share ${n} electron pairs.`
+  };
+}
 
 /* ------------------------------------------------------------------
    THE SCOPE'S PICTURE OF A DISH
@@ -1259,7 +1396,7 @@ function paintDispenser(ctx, p, state, o) {
     ctx.moveTo(o.x + o.r * 0.28, o.y - o.r * 0.5); ctx.lineTo(o.x - o.r * 0.28, o.y + o.r * 0.06);
     ctx.stroke();
   }
-  plateText(ctx, p.label, o.x, o.y + o.r * 0.56, { size: Math.max(7, Math.round(o.r * (p.label.length > 5 ? 0.3 : 0.36))), weight: 700, align: 'center', base: 'middle', color: '#16140f' });
+  plateText(ctx, p.label, o.x, o.y + o.r * 0.56, { size: Math.max(7, Math.round(o.r * (p.label.length > 5 ? 0.3 : 0.36))), weight: 700, align: 'center', base: 'middle', color: '#16140f', maxW: o.r * 1.6 });
 }
 
 const PAINTERS = {
@@ -1491,6 +1628,7 @@ function paintSlate(ctx, f, state, b) {
     const ny = dx / len;
     const n = jp.props.pairs || 0;
 
+    if (!n && f.props.loose) continue;
     if (!n) {
       // Empty joint: faint dashed guide line between atoms, and a subtle drop indicator at the midpoint
       ctx.strokeStyle = jp.lit ? AMBER : PLATE_COLORS.rim;
@@ -1512,11 +1650,13 @@ function paintSlate(ctx, f, state, b) {
       ctx.stroke();
       ctx.setLineDash?.([]);
     } else {
-      // Bond lines fully connecting the two atoms (Lewis diagram)
+      // Bond lines fully connecting the two atoms (Lewis diagram): as thick as the rods between joined atoms on
+      // the other benches, and far enough apart that a double or a triple bond is counted at a glance.
       ctx.strokeStyle = jp.lit ? AMBER : PLATE_COLORS.phosphor;
-      ctx.lineWidth = Math.max(1.8, b.sc * 0.24);
+      ctx.lineWidth = Math.max(3, b.sc * 0.95);
+      ctx.lineCap = 'round';
       ctx.setLineDash?.([]);
-      const off = Math.max(2.8, b.sc * 0.42);
+      const off = Math.max(6, b.sc * 2.1);
       for (let k = 0; k < n; k++) {
         const d = (k - (n - 1) / 2) * off;
         ctx.beginPath();
@@ -1524,6 +1664,7 @@ function paintSlate(ctx, f, state, b) {
         ctx.lineTo(bx + nx * d, by + ny * d);
         ctx.stroke();
       }
+      ctx.lineCap = 'butt';
     }
 
     // Bond length gauge reading if measured
@@ -1546,8 +1687,28 @@ function paintSlate(ctx, f, state, b) {
     }
   }
 
-  // 2. Electron lone pairs drawn as dots around the central / atom chips instead of on them
+  // 2. Lone pairs (two dots) and single electrons (one dot) round each atom, clear of its rim. A loose slate puts
+  // them where its layout spaced them (`poseDrawing`), between the bonds.
+  const loosePose = f.props.loose ? poseDrawing(sl.mol, sl.placed) : null;
+  const dotR = Math.max(2.6, b.sc * 0.72);
+  const spread = Math.max(3.6, b.sc * 1.05);
   for (const aid of f.props.atoms) {
+    const ap = state.pieces[aid];
+    if (!ap || !loosePose) continue;
+    const i = f.props.atoms.indexOf(aid);
+    const a = slateAtom(ap, state);
+    const dirs = loosePose.lone[i] || [];
+    const dist = ((ap.r || SLATE_R) + LONE_OUT) * b.sc;
+    ctx.fillStyle = PLATE_COLORS.phosphor;
+    dirs.forEach((ang, k) => {
+      const cx = b.X(ap.at.x) + Math.cos(ang) * dist;
+      const cy = b.Y(ap.at.y) + Math.sin(ang) * dist;
+      const pts = k < a.lone ? [[-Math.sin(ang) * spread, Math.cos(ang) * spread], [Math.sin(ang) * spread, -Math.cos(ang) * spread]] : [[0, 0]];
+      for (const [dx, dy] of pts) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, dotR, 0, Math.PI * 2); ctx.fill(); }
+    });
+  }
+  for (const aid of f.props.atoms) {
+    if (loosePose) break;
     const ap = state.pieces[aid];
     if (!ap) continue;
     const a = slateAtom(ap, state);
@@ -1571,8 +1732,7 @@ function paintSlate(ctx, f, state, b) {
     const gap = n > 3 ? 0.85 : 1.1;
     const atomX = b.X(ap.at.x);
     const atomY = b.Y(ap.at.y);
-    const dotDist = (SLATE_R + 1.8) * b.sc;
-    const dotR = Math.max(1.8, b.sc * 0.38);
+    const dotDist = (SLATE_R + 2.2) * b.sc;
     ctx.fillStyle = PLATE_COLORS.phosphor;
 
     for (let k = 0; k < n; k++) {
@@ -1586,7 +1746,6 @@ function paintSlate(ctx, f, state, b) {
         ctx.fill();
       } else {
         // Lone pair: two dots side-by-side tangent to the circle
-        const spread = Math.max(2.6, b.sc * 0.52);
         const tx = -Math.sin(ang) * spread;
         const ty = Math.cos(ang) * spread;
         ctx.beginPath();
@@ -1602,7 +1761,7 @@ function paintSlate(ctx, f, state, b) {
   // 3. Tray count & charge
   const size = Math.max(8, Math.round(2.3 * b.sc));
   // A stage that asks the player to count the electrons does not print the count (`props.hideTotal`).
-  if (!f.props.hideTotal) plateText(ctx, `${sl.left} OF ${sl.total} LEFT`, b.x1 - 8, b.y0 + size * 1.6, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
+  if (!f.props.hideTotal) plateText(ctx, f.props.loose ? `ELECTRONS LEFT: ${sl.left} OF ${sl.total}` : `${sl.left} OF ${sl.total} LEFT`, b.x1 - 8, b.y0 + size * 1.6, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
   if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 8, b.y0 + size * 2.9, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
 }
 
@@ -1743,7 +1902,8 @@ function planJoin(a, b, state) {
     return { holds: true, once: true, set: { b: { settled: true } }, reason: 'The shaker passes under the dish.' };
   }
   if (isAtom(a) && isAtom(b)) {
-    // An atom on a slate stands where the molecule puts it: nothing joins it, nothing is joined to it.
+    // Two atoms of one loose slate share a pair; an atom on a slate is otherwise joined to nothing.
+    if (a.props.slate && a.props.slate === b.props.slate && state.fixtures[a.props.slate]?.props?.loose) return planAtomDrop(a, b, state);
     if (a.props.slate || b.props.slate) return { holds: false, reason: 'That atom is fixed on the slate.' };
     return planBond(a, b, state);
   }
@@ -1879,6 +2039,7 @@ export const ATOMS_KIT = {
     shaker: { r: 6.5, tool: true }
   },
   planJoin,
+  settle: settleLooseSlates,
   formulaOf,
   chargeOf,
   readPiece,

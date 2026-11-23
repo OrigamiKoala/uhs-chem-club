@@ -351,6 +351,7 @@ export class BellowsWorld {
       if (!deployed && anchor.open) this.benchesOpen--;
       anchor.open = deployed;
     }
+    if (this.effects?.group) this.effects.group.visible = this.benchesOpen === 0;
   }
 
   benchAnchor(questId) {

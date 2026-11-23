@@ -49,7 +49,7 @@ export const TANK_GUESSES = [['same', 'Stays the same'], ['sixth', 'Falls by abo
 /** Stage 2: the volume doubles at twice the kelvin temperature (586 K), which lies between two dial stops. */
 export const DOUBLE_K = 2 * T20;
 export const DOUBLE_TOL = 6;
-export const DOUBLE_TEMPS = [293, 313, 400, 500, 650];
+export const DOUBLE_TEMPS = [293, 350, 450, 550, 650];
 
 /** Stage 3's heater, in kelvin; the volume is asked for at BEYOND_K, past the last setting. */
 const REACH_TEMPS = [300, 350, 400, 450];
@@ -79,12 +79,12 @@ export const STAGES = [
   predictStage({
     key: KEY_ROOM,
     title: 'Temperature and Volume',
-    prompt: 'A gas under a freely moving piston is warmed from 20 °C to 40 °C: how much bigger does its volume get?',
+    prompt: 'When a gas under a free piston warms from 20 °C to 40 °C, how much larger does its volume get?',
     items: ROOM_GUESSES,
     hints: [
-      'Lay one card in the slot.',
-      'A free piston rises until the gas inside has the same pressure as the air outside.',
-      'Think about whether 40 °C is twice as hot as 20 °C on the kelvin scale.'
+      'Convert 20 °C and 40 °C to kelvin before picking a card.',
+      'A free piston moves until the gas inside has the same pressure as the air outside.',
+      'Ask whether 40 °C is really twice as hot as 20 °C on the kelvin scale.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -96,71 +96,71 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const base = { gas: 'He', n: 1, hold: 'P', V: 24, T: T20, P0: P_ATM };
-    const a = rig('ra', { x: 20, y: 25 }, { cyls: [{ id: 'a', label: 'Cylinder A', ...base }], vmax: 60, compact: true, w: 34, show: { gauge: false, amount: false, kelvin: true } });
-    const b = rig('rb', { x: 58, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder B', ...base }], temps: DOUBLE_TEMPS, tempList: 'K', tempStart: 1, vmax: 60, compact: true, w: 34, show: { gauge: false, amount: false, kelvin: true }
+    const a = rig('ra', { x: 45, y: 28 }, { cyls: [{ id: 'a', label: 'Cylinder A', ...base }], vmax: 60, compact: true, w: 40, show: { gauge: false, amount: false, kelvin: true } });
+    const b = rig('rb', { x: 105, y: 28 }, {
+      cyls: [{ id: 'a', label: 'Cylinder B', ...base }], temps: DOUBLE_TEMPS, tempList: 'K', tempStart: 1, vmax: 60, compact: true, w: 40, show: { gauge: false, amount: false, kelvin: true }
     });
     return {
       title: 'Doubling the Volume',
-      prompt: 'At what kelvin temperature does Cylinder B have twice the volume of Cylinder A at 293 K?',
+      prompt: 'To what kelvin temperature must Cylinder B be heated to double Cylinder A\'s volume (at 293 K)?',
       entry: { id: 'ans', label: 'Cylinder B at', unit: 'K' },
       widget,
       table: gasTable({ fixtures: [a, b] }),
       hints: [
-        'Turn Cylinder B\'s Heater dial and watch its volume and kelvin temperature.',
-        'Notice that volume is in step with the kelvin temperature, not °C.',
-        'Find the kelvin temperature that is double Cylinder A\'s starting kelvin temperature.'
+        'Turn Cylinder B\'s Heater dial and watch how its volume changes with kelvin temperature.',
+        'Notice that volume scales directly with kelvin temperature, not Celsius.',
+        'Find the kelvin temperature where Cylinder B would reach twice Cylinder A\'s 24.0 L.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in K.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the temperature in K.' };
         const ratio = v / T20;
         if (Math.abs(v - DOUBLE_K) <= DOUBLE_TOL) return { ok: true };
-        return { ok: false, msg: `At ${v} K Cylinder B's volume is ${ratio.toFixed(2)} times Cylinder A's.` };
+        return { ok: false, msg: `At ${v} K, Cylinder B's volume is ${ratio.toFixed(2)} times Cylinder A's, not twice.` };
       },
       reward: {
         log: 'Twice the volume took 586 K, not 40 °C.',
         title: 'Charles\'s Law',
-        body: 'The volume doubled at 586 K, twice 293 K, which is 313 °C and not 40 °C. At constant pressure, volume is in step with kelvin temperature: Charles\'s law.'
+        body: '20 °C to 40 °C is only 293 K to 313 K (a 7% rise). Doubling volume takes twice the kelvin temperature, 586 K (313 °C), which is Charles\'s law.',
+        model: { type: 'bellows-scene', scene: 'charles' }
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const r = rig(RIG, { x: 36, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder', gas: 'He', n: 1, hold: 'P', V: 24, T: T20, P0: P_ATM }], temps: REACH_TEMPS, tempList: 'K', tempStart: 1, vmax: 60,
+    const r = rig(RIG, { x: 75, y: 31 }, {
+      cyls: [{ id: 'a', label: 'Cylinder', gas: 'He', n: 1, hold: 'P', V: 24, T: T20, P0: P_ATM }], temps: REACH_TEMPS, tempList: 'K', tempStart: 1, vmax: 60, w: 76,
       show: { gauge: false, amount: false, kelvin: true }, label: 'Cylinder'
     });
     return {
       title: 'Using Charles\'s Law',
       briefing: {
         speaker: 'Vess',
-        body: 'At constant pressure, volume ÷ kelvin is the same before and after: V₁ ÷ T₁ = V₂ ÷ T₂.',
-        worked: ['12 L at 300 K', '12 ÷ 300 = 0.040 L for each kelvin', 'at 450 K: 0.040 × 450 = 18 L']
+        body: 'At constant pressure, volume divided by kelvin temperature stays constant (V₁ ÷ T₁ = V₂ ÷ T₂). Convert °C to kelvin with K = °C + 273.'
       },
-      prompt: `What volume would this gas fill at ${BEYOND_K} K?`,
-      entry: { id: 'ans', label: `Volume at ${BEYOND_K} K`, unit: 'L' },
+      prompt: 'What volume would this gas fill at 327 °C?',
+      entry: { id: 'ans', label: 'Volume at 327 °C', unit: 'L' },
       widget,
       table: gasTable({ fixtures: [r] }),
       hints: [
-        'Turn the Heater dial and read the volume and kelvin temperature at each setting.',
-        'Check whether volume ÷ kelvin stays the same at every setting.',
-        'Use V₁ ÷ T₁ = V₂ ÷ T₂ from the worked example to find the volume at the new temperature.'
+        'Convert 327 °C to kelvin first using K = °C + 273.',
+        'Check that volume divided by kelvin temperature stays constant at every Heater setting.',
+        'Compare 300 K with 600 K and scale the cylinder\'s 300 K volume by that same factor.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the volume in L.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the volume in L.' };
         const a = rigAt(t, RIG, { temp: 1 })[0];
         const want = (a.V / a.T) * BEYOND_K;
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
-        return { ok: false, msg: 'That volume does not match the readings on the cylinder.' };
+        return { ok: false, msg: `At 300 K the cylinder holds ${a.V.toFixed(1)} L; 327 °C is 600 K (twice as hot), so check your scaling.` };
       },
       reward: {
-        log: 'Volume over kelvin stayed the same.',
+        log: 'Volume divided by kelvin stayed constant.',
         title: 'Using Charles\'s Law',
-        body: 'Volume ÷ kelvin stays about 0.082 L per K, so at 600 K the gas fills about 49 L.'
+        body: '327 °C is 600 K (twice 300 K), and volume ÷ kelvin stays about 0.082 L per K, so at 600 K the gas fills about 49 L.'
       }
     };
   })(),
@@ -169,80 +169,86 @@ export const STAGES = [
   predictStage({
     key: KEY_TANK,
     title: 'Temperature and Pressure',
-    prompt: 'A sealed tank cools from 293 K to 243 K: what happens to its pressure?',
+    prompt: 'When a rigid sealed tank cools from 293 K to 243 K, what happens to its pressure?',
     items: TANK_GUESSES,
     hints: [
-      'Lay one card in the slot.',
-      'The tank is rigid, so its volume cannot change: ask what cooling does to the collisions on its walls.',
-      'Ask how the pressure changes when the kelvin temperature drops by about a sixth.'
+      'Think about how cooling affects particle speed inside a rigid tank that cannot shrink.',
+      'With volume fixed, slower particles hit the tank walls less often and less hard.',
+      'Compare how much the kelvin temperature drops (50 K out of 293 K) to predict the pressure drop.'
     ],
     reward: {
       log: 'Prediction recorded.',
       title: 'Prediction Recorded',
-      body: 'Your guess is locked in. Next, a sealed tank will be cooled on the bench.'
+      body: 'Your guess is locked in. Next, you will cool a sealed tank on the bench.'
     }
   }),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const r = rig(RIG, { x: 36, y: 25 }, {
+    const r = rig(RIG, { x: 36, y: 27 }, {
       cyls: [{ id: 'a', label: 'Sealed tank', gas: 'N2', n: 1, hold: 'V', V: 10, T: T20 }], temps: COOL_TEMPS, tempList: 'K', tempStart: 4, vmax: 10,
-      show: { amount: false, volume: false, kelvin: true }, plot: { x: 'T', y: 'P' }, label: 'Sealed tank'
+      show: { amount: false, volume: false, kelvin: true }, label: 'Sealed tank'
     });
     return {
       title: 'Pressure in the Cold',
-      prompt: 'By about what fraction does the pressure fall when the tank cools from 293 K to 243 K?',
+      prompt: 'By about what fraction does the sealed tank\'s pressure drop when cooled from 293 K to 243 K?',
       widget,
       table: gasTable({
-        pieces: cardColumn(TANK_GUESSES, { x: 0 }).map((c, i) => ({ ...c, at: i < 2 ? { x: 90 + i * 38, y: 44.5 } : { x: 109, y: 57.5 } })),
+        pieces: cardColumn(TANK_GUESSES, { x: 0 }).map((c, i) => ({ ...c, at: i < 2 ? { x: 92 + i * 38, y: 44.5 } : { x: 111, y: 57.5 } })),
         fixtures: [r],
-        zones: { slots: [{ id: 'show', label: 'What the pressure did', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
-      }, { recorder: { at: { x: 109, y: 11 }, size: { w: 36, h: 14 }, xLabel: 'Temperature', xUnit: 'K', yLabel: 'Pressure', yUnit: 'kPa' } }),
+        zones: { slots: [{ id: 'show', label: 'What the pressure did', at: { x: 111, y: 27 }, size: { w: 38, h: 12 } }] }
+      }),
       hints: [
-        'Turn the Heater dial to 243 K, then place a card in the slot.',
-        'Compare the pressure at 243 K with the starting pressure at 293 K.',
-        'Compare the drop in pressure with the drop in kelvin temperature.'
+        'Turn the Heater dial to 243 K and compare the pressure with the starting reading at 293 K.',
+        'Find how many kPa the pressure dropped and compare that drop with the starting 244 kPa.',
+        'Notice that the pressure drops by the same fraction as the kelvin temperature (50 out of 293).'
       ],
       check(state) {
         const t = state.table;
         const card = cardIn(t, 'show');
-        if (Math.round(t.fixtures[RIG].dials.temp.value) !== COOL_AT) return { ok: false, notYet: true, msg: 'Turn the Heater dial to 243 K.' };
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
-        const want = fallCard(rigAt(t, RIG, { temp: 4 })[0].P, rigAt(t, RIG, { temp: COOL_AT })[0].P);
+        if (Math.round(t.fixtures[RIG].dials.temp.value) !== COOL_AT) return { ok: false, notYet: true, msg: 'Turn the Heater dial to 243 K first.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
+        const p0 = rigAt(t, RIG, { temp: 4 })[0].P;
+        const p1 = rigAt(t, RIG, { temp: COOL_AT })[0].P;
+        const want = fallCard(p0, p1);
         if (card.id === want) return { ok: true };
-        return { ok: false, msg: 'The pressure at 243 K did not fall by the fraction that card says.' };
+        return { ok: false, msg: `Pressure fell from ${Math.round(p0)} kPa to ${Math.round(p1)} kPa (about a sixth), not what that card says.` };
       },
       reward: {
-        log: 'The pressure fell with the kelvin temperature.',
+        log: 'Pressure dropped with kelvin temperature.',
         title: 'Gay-Lussac\'s Law',
-        body: 'The kelvin temperature fell by about a sixth and so did the pressure. At constant volume, pressure is in step with kelvin temperature: Gay-Lussac\'s law.'
+        body: 'Cooling by 50 K from 293 K drops pressure by about a sixth (Gay-Lussac\'s law), so a sealed tank in freezing wind should lose pressure.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const r = rig(RIG, { x: 36, y: 25 }, {
+    const r = rig(RIG, { x: 75, y: 31 }, {
       cyls: [{ id: 'a', label: 'Cylinder', gas: 'He', n: 0.24056, hold: 'dial', V: 6, T: 300 }],
       volumes: [6, 4, 3, 2], volumeStart: 1,
       temps: [300, 450, 600], tempList: 'K', tempStart: 1,
-      vmax: 8, show: { amount: false, kelvin: true }, label: 'Cylinder'
+      vmax: 8, w: 76, show: { amount: false, kelvin: true }, label: 'Cylinder'
     });
     return {
       title: 'Two Changes at Once',
+      briefing: {
+        speaker: 'Vess',
+        body: 'When both volume and kelvin temperature change at once, find each factor separately and multiply them together.'
+      },
       prompt: 'What is the pressure after the volume is cut to a third and the gas is heated from 300 K to 900 K?',
       entry: { id: 'ans', label: 'Final pressure', unit: 'kPa' },
       widget,
       table: gasTable({ fixtures: [r] }),
       hints: [
-        'Use the Piston and Heater dials to see how each change multiplies the starting pressure.',
-        'Check the factor from cutting the volume to a third, and the factor from tripling the kelvin temperature.',
-        'Multiply the starting pressure by both factors.'
+        'Use the Piston and Heater dials to see how each change multiplies the starting 100 kPa pressure.',
+        'Find what factor cutting volume to a third multiplies pressure by, and what factor heating from 300 K to 900 K multiplies it by.',
+        'Multiply the starting 100 kPa pressure by both the volume factor and the temperature factor.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the pressure in kPa.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the pressure in kPa.' };
         const a = rigAt(t, RIG, { volume: 1, temp: 1 })[0];
         const want = a.P * 3 * (900 / 300);
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
@@ -252,7 +258,7 @@ export const STAGES = [
       reward: {
         log: 'Volume and temperature changes multiply the pressure.',
         title: 'Two Changes at Once',
-        body: 'A third of the volume triples the pressure and three times the kelvin temperature triples it again: 100 kPa becomes 900 kPa.',
+        body: 'A third of the volume triples the pressure, and three times the kelvin temperature triples it again: 100 kPa becomes 900 kPa.',
         last: true
       }
     };

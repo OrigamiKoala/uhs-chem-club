@@ -275,7 +275,9 @@ export class Router {
     // Show storyline briefing BEFORE take off and before travel/landing animation
     const m = matchParamRoute(raw);
     const worldId = target.key === 'erebus' ? 'erebus' : (m?.params?.worldId || target.key);
-    const isAlreadyOnDest = stage.mode === 'world' && v?.parked?.key === target.key;
+    // The briefing goes with a flight to a world, not with every bench on it: aboard the ship parked on the
+    // destination, or standing on it, there is no flight to brief.
+    const isAlreadyOnDest = v?.parked?.key === target.key;
 
     if (!isAlreadyOnDest) {
       const prevHash = this.currentHash || '#/starmap';

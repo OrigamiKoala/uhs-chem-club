@@ -22,13 +22,13 @@ export const UNIT_04 = {
   place: 'Cloud deck',
   title: 'Gases',
   line: 'Gas laws, the ideal gas equation, and kinetic molecular theory.',
-  brief: 'Investigate gas pressure, empirical gas laws, the ideal gas equation, partial pressures, and kinetic molecular theory across six benches.',
+  brief: 'Explore how gas pressure, volume, temperature, amount, and particle speed connect across six benches.',
 
   quests: [
     {
       id: 'q1-knocks',
       title: 'What Pressure Is',
-      line: 'Learn what a pressure gauge measures and what temperature does.',
+      line: 'Learn what a pressure meter measures and what temperature does.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -37,7 +37,7 @@ export const UNIT_04 = {
     {
       id: 'q2-laws',
       title: 'The Gas Laws',
-      line: 'Compress, heat, and add gas to find its laws.',
+      line: 'Compress, heat, and cool a gas to find its laws.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -46,7 +46,7 @@ export const UNIT_04 = {
     {
       id: 'q3-ideal',
       title: 'The Ideal Gas Law',
-      line: 'Count sealed tanks with one equation.',
+      line: 'Find how much gas sits inside a sealed tank with one equation.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -64,7 +64,7 @@ export const UNIT_04 = {
     {
       id: 'q5-speed',
       title: 'Speed and Escape',
-      line: 'Race gases through holes and tubes.',
+      line: 'Compare how fast light and heavy gases escape and spread.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -74,7 +74,7 @@ export const UNIT_04 = {
     {
       id: 'q6-real',
       title: 'Real Gases',
-      line: 'Find where the gas law stops holding.',
+      line: 'Find when real gases stop following the ideal gas law.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -83,7 +83,7 @@ export const UNIT_04 = {
     {
       id: 'boss-compressor',
       title: 'The Compressor',
-      line: 'Read the rogue machine bench by bench.',
+      line: 'Balance the rogue compressor using every gas law you learned.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

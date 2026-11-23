@@ -98,40 +98,40 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
     const rec = REC({
-      title: 'Ice · 18.0 g', T0: -20, phase0: 'solid', pulses: [1, 3, 8], pulseStart: 2, window: false, cursor: 'mk',
+      title: 'Ice · 18.0 g', T0: -20, phase0: 'solid', pulses: [1, 3, 8], pulseStart: 1, window: false, cursor: 'mk',
       plot: { xMin: 0, xMax: 10, yMin: -30, yMax: 40, xStep: 2, yStep: 10 }
     });
     rec.props.gate = { fixtureDial: 'mk', dial: 'value', start: 0 };
-    rec.props.gateMsg = 'Set your prediction on the number dial first, then press "Heat".';
+    rec.props.gateMsg = 'Set your guess on the Answer dial first, then press "Heat".';
     return {
       id: 's1-curve',
       title: 'Ice on the Heater',
-      briefing: 'A heating curve plots a sample\'s temperature against the heat added to it.',
-      prompt: 'How much heat does this ice take in while its temperature stays at 0 °C?',
+      briefing: 'A heating curve graphs a sample\'s temperature against the heat added to it.',
+      prompt: 'At what total heat added (kJ) does this ice finish melting at 0 °C?',
       widget,
       table: matterTable({
-        fixtures: [rec, markerFixture('mk', 'Number dial', { x: 126, y: 14 }, { min: 0, max: 10, step: 0.5, start: 0, unit: 'kJ' })]
+        fixtures: [rec, markerFixture('mk', 'Answer (kJ)', { x: 126, y: 14 }, { min: 0, max: 10, step: 0.5, start: 0, unit: 'kJ' })]
       }),
       hints: [
-        'Set your prediction on the number dial first, then use the "Heat per press" dial and press "Heat".',
-        'Watch the thermometer and the pen as the heat added grows.',
-        'Read the heat on the bottom axis where the line leaves its level stretch, and set the number dial to it.'
+        'Set your prediction on the Answer dial first, then press "Heat" to trace the curve.',
+        'Watch the thermometer and the curve as more heat is added.',
+        'Read the heat on the bottom axis where the flat stretch ends, and set the Answer dial there.'
       ],
       check(state) {
         const t = state.table;
         const r = heatRead(t, 'rec');
-        if (!r.presses) return { ok: false, notYet: true, msg: 'Press "Heat" to start the line.' };
+        if (!r.presses) return { ok: false, notYet: true, msg: 'Press "Heat" to start tracing the curve.' };
         const have = r.q / 1000;
-        if (have < FLAT_END) return { ok: false, msg: `The pen has drawn to ${fixed(have, 1)} kJ, and the line has not yet stood still and climbed again.` };
+        if (have < FLAT_END) return { ok: false, msg: `You have added ${fixed(have, 1)} kJ so far. Keep pressing "Heat" until the curve flattens out and starts climbing again.` };
         const v = markerRead(t, 'mk');
         if (Math.abs(v - FLAT_END) <= 0.6) return { ok: true };
-        const where = v < FLAT_START ? 'is still on its first climb' : v < FLAT_END ? 'is level' : 'is already climbing again';
-        return { ok: false, msg: `The number dial stands at ${v} kJ, and the line there ${where}.` };
+        const where = v < FLAT_START ? 'is still warming the solid ice' : v < FLAT_END ? 'is still on the flat melting stretch' : 'is already climbing again as liquid water';
+        return { ok: false, msg: `At ${v} kJ, the curve ${where}. Set the dial to where the flat stretch ends.` };
       },
       reward: {
-        log: 'Ice at −20 °C stood at 0 °C while about 6 kJ went in.',
+        log: 'Ice stayed at 0 °C while about 6 kJ melted it.',
         title: 'The Heating Curve',
-        body: 'A heating curve is a graph of temperature against the heat added. This ice stood still at 0 °C while about 6 kJ went in, so heat added does not always raise the temperature.'
+        body: 'A heating curve graphs temperature against heat added. The temperature stayed flat at 0 °C while 6 kJ melted the ice, showing that added heat does not always raise temperature.'
       }
     };
   })(),
@@ -142,25 +142,25 @@ export const STAGES = [
     title: 'Where Did It Go?',
     // A PREDICT STAGE: the recorder is not on the table. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'The temperature stood still while the ice took in heat: where did that heat go?',
+    prompt: 'Where did the added heat go while the ice stayed at 0 °C?',
     widget,
     table: matterTable({
       pieces: [
         note('lost', 'It leaks out of the cup into the air', { x: 30, y: 14 }),
-        note('apart', 'It works against the attraction between molecules', { x: 78, y: 14 }),
-        note('other', 'It warms the cup and the air, not the ice', { x: 30, y: 34 })
+        note('apart', 'It frees the molecules from each other', { x: 74, y: 14 }),
+        note('other', 'It warms the cup walls instead of the ice', { x: 30, y: 34 })
       ],
       fixtures: [mleadFixture('lead', { x: 117, y: 52 }, { scene: 'pull', w: 44, h: 24 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 40, h: 15 } }] }
     }),
     hints: [
-      'Drag the card you choose into the slot.',
-      'Think about what the thermometer read and what else the heat could be doing.',
-      'Commit to the card you would bet on; the next part tests it.'
+      'Drag your chosen prediction card into the slot.',
+      'Think about what the thermometer showed and what else the heat could be doing to the ice.',
+      'Pick the explanation you expect to see when you look inside the ice next.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -170,7 +170,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, warm the ice again with a window on twelve of its molecules, and watch what the heat does while the thermometer stands still.'
+      body: 'Next, heat the ice again with a particle window to see what happens while the temperature stays flat.'
     }
   },
 
@@ -183,32 +183,27 @@ export const STAGES = [
     return {
       id: 's3-window',
       title: 'Twelve Molecules',
-      get prompt() {
-        const guess = recall(QUEST_KEY);
-        return guess && GUESS_LABEL[guess]
-          ? `You guessed ${GUESS_LABEL[guess]}: what does the heat do to the molecules while the thermometer stands still?`
-          : 'What does the heat do to the molecules while the thermometer stands still?';
-      },
+      prompt: 'Watch the 12 molecules as you heat the ice until all 12 are flying free as steam.',
       widget,
       table: matterTable({ fixtures: [rec] }),
       hints: [
-        'Use the "Heat per press" dial and the "Heat" key, and watch the window.',
-        'Compare the window with the thermometer while the line is level, and again after it climbs.',
-        'Keep adding heat through both level stretches until no molecule is left near another.'
+        'Use the "Heat per press" dial and "Heat" button, and watch the particle window.',
+        'Compare the particle window with the thermometer while the curve is flat and while it climbs.',
+        'Keep adding heat through both flat stretches until all 12 molecules are moving freely as gas.'
       ],
       check(state) {
         const r = heatRead(state.table, 'rec');
-        if (!r.presses) return { ok: false, notYet: true, msg: 'Press "Heat" to start the line.' };
+        if (!r.presses) return { ok: false, notYet: true, msg: 'Press "Heat" to start tracing the curve.' };
         if (r.crowd.gas >= 12) return { ok: true };
-        return { ok: false, msg: `At ${fixed(r.q / 1000, 1)} kJ the window shows ${r.crowd.gas} of the twelve molecules flying free.` };
+        return { ok: false, msg: `At ${fixed(r.q / 1000, 1)} kJ, only ${r.crowd.gas} of the 12 molecules are flying free. Keep heating.` };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
-        const verdict = guess === 'apart' ? 'You guessed this, and the window agrees. ' : guess && GUESS_LABEL[guess] ? 'The window does not agree with your guess, which is how a guess gets better. ' : '';
+        const verdict = guess === 'apart' ? 'The particle window matched your prediction. ' : guess && GUESS_LABEL[guess] ? 'The particle window disagreed with your prediction. ' : '';
         return {
-          log: 'The molecules were freed from each other while the temperature stood still.',
+          log: 'The molecules broke free from each other while the temperature stayed flat.',
           title: 'Heat Against the Attraction',
-          body: `${verdict}While the thermometer stood still, the molecules were being freed: first from their places in the ice, then from one another as steam. The heat did not make them move faster; it worked against the attraction between them.`
+          body: `${verdict}While the temperature stayed flat, the heat overcame attractions between molecules: first freeing them from ice, then separating them into steam.`
         };
       }
     };
@@ -224,26 +219,26 @@ export const STAGES = [
       id: 's4-melt',
       title: 'More Ice',
       briefing: 'The heat needed to melt one mole of a solid at its melting point is its heat of fusion.',
-      prompt: 'How much heat melts 36.0 g of ice at 0 °C, in kilojoules?',
+      prompt: 'How many kilojoules of heat does it take to melt 36.0 g of ice at 0 °C?',
       entry: { id: 'kj', label: 'Heat to melt', unit: 'kJ' },
       widget,
-      table: matterTable({ fixtures: [rec, plaqueFixture('ref', 'What you may use', { x: 126, y: 14 }, ['1 mol of water is 18.0 g'], { w: 44 })] }),
+      table: matterTable({ fixtures: [rec, plaqueFixture('ref', 'What you may use', { x: 126, y: 14 }, ['1 mol of water = 18.0 g', '36.0 g = 2.00 mol'], { w: 44 })] }),
       hints: [
-        'Use the "Heat per press" dial and the "Heat" key on the cup, then type in the field.',
-        'Watch the window and the line to see how much heat melts the ice in the cup, and what that ice weighs.',
-        'Find the heat for one mole from the cup, then scale it to the number of moles in 36.0 g.'
+        'Use the "Heat" button to melt the 18.0 g cup of ice, then enter your answer below.',
+        'Check how much heat melted the 18.0 g (1.00 mol) cup of ice on the heating curve.',
+        'Scale the heat needed for 1.00 mol of ice to the number of moles in 36.0 g.'
       ],
       check(state) {
         const v = typed(state.table, 'kj');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the heat in kilojoules.' };
         if (Math.abs(v - MELT_36) <= 0.8) return { ok: true };
         const grams = v / (flatsOf(1).fus / 1000);
-        return { ok: false, msg: `${fixed(v, 1)} kJ melts about ${fixed(grams, 1)} g of ice at the rate the cup showed, not 36.0 g.` };
+        return { ok: false, msg: `${fixed(v, 1)} kJ only melts about ${fixed(grams, 1)} g of ice, not 36.0 g.` };
       },
       reward: {
-        log: 'Melting a mole of ice takes 6.01 kJ.',
+        log: 'Melting one mole of ice takes 6.01 kJ.',
         title: 'Heat of Fusion',
-        body: 'Melting one mole of ice at 0 °C takes 6.01 kJ: its heat of fusion. The heat is the number of moles times that figure, so 36.0 g, which is 2.00 mol, takes 12.0 kJ.'
+        body: 'Melting one mole of ice at 0 °C takes 6.01 kJ (its heat of fusion). Because 36.0 g is 2.00 mol, melting it takes 12.0 kJ.'
       }
     };
   })(),
@@ -258,15 +253,15 @@ export const STAGES = [
       id: 's5-whole',
       title: 'Water to Steam',
       briefing: {
-        body: 'A sloping stretch takes mass × c × ΔT. A level stretch takes moles × the heat of fusion or of vaporization, the heat to boil one mole.',
+        body: 'A sloped stretch takes mass × specific heat (c) × temperature change (ΔT). A flat stretch takes moles × heat of fusion or vaporization.',
         worked: [
-          '18.0 g of ice at 0 °C to water at 100 °C:',
-          'melt: 1.00 mol × 6.01 = 6.01 kJ',
-          'warm: 18.0 g × 4.18 × 100 = 7.52 kJ',
-          'total 13.5 kJ'
+          'Example: 9.0 g (0.50 mol) of ice at 0 °C to water at 50 °C:',
+          'melt: 0.50 mol × 6.01 = 3.01 kJ',
+          'warm: 9.0 g × 4.184 × 50 = 1.88 kJ',
+          'total 4.89 kJ'
         ]
       },
-      prompt: 'How much heat takes 18.0 g of water at 0 °C to steam at 100 °C, in kilojoules?',
+      prompt: 'How many kilojoules of heat turn 18.0 g of liquid water at 0 °C into steam at 100 °C?',
       entry: { id: 'kj', label: 'Heat needed', unit: 'kJ' },
       widget,
       table: matterTable({
@@ -275,20 +270,20 @@ export const STAGES = [
         ], { w: 44 })]
       }),
       hints: [
-        'Use the recorder to see the path, the plate for the figures, and the field for your answer.',
-        'Follow the sample from water at 0 °C to steam at 100 °C and count both stretches: one slope and one level stretch.',
-        'Find the heat for the slope (mass × c × ΔT) and the level stretch (moles × heat of vaporization), then add them.'
+        'Use the heating curve to trace the path, the plate for the constants, and the field below for your answer.',
+        'Break the path from liquid water at 0 °C to steam at 100 °C into two parts: one slope and one flat stretch.',
+        'Find the heat for warming the liquid and the heat for boiling it, then combine them.'
       ],
       check(state) {
         const v = typed(state.table, 'kj');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the heat in kilojoules.' };
         if (Math.abs(v - UP) <= 0.4) return { ok: true };
         return { ok: false, msg: `${fixed(v, 1)} kJ would leave the 18.0 g ${leftAs(18.0, WATER_0, v)}.` };
       },
       reward: {
-        log: 'Water at 0 °C to steam at 100 °C took 48.1 kJ.',
+        log: 'Water at 0 °C to steam at 100 °C took 48.2 kJ.',
         title: 'Heat of Vaporization',
-        body: 'Warming the water takes 7.53 kJ and boiling it takes 40.6 kJ, adding to 48.1 kJ. Boiling a mole takes 40.65 kJ, the heat of vaporization, almost seven times the heat of fusion.'
+        body: 'Warming the water takes 7.53 kJ and boiling it takes 40.65 kJ, totaling 48.2 kJ. Boiling a mole of water takes 40.65 kJ (heat of vaporization), nearly seven times its heat of fusion.'
       }
     };
   })(),
@@ -308,7 +303,7 @@ export const STAGES = [
     return {
       id: 's6-burn',
       title: 'A Burn',
-      prompt: 'Steam at 100 °C gives a hand far more heat than water at 100 °C: where does the extra come from?',
+      prompt: 'Why does 100 °C steam release far more heat onto a hand than 100 °C liquid water?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
@@ -317,25 +312,25 @@ export const STAGES = [
         zones: { slots: [cool.slot, { id: 'answer', label: 'Extra heat comes', at: { x: 126, y: 50 }, size: { w: 38, h: 14 } }] }
       }),
       hints: [
-        'Use the cooler and its "Cool" key on both samples, then put a card in the slot.',
-        'Compare the two lines on the cooler plot: steam starts with a long level stretch before it cools.',
-        'Ask what happens to steam at 100 °C along that level stretch before its temperature drops.'
+        'Cool both samples in the cooler with "Cool", then place a card in the slot.',
+        'Compare the two cooling curves: steam starts with a long flat stretch before its temperature drops.',
+        'Think about what phase change steam undergoes at 100 °C during that flat stretch.'
       ],
       check(state) {
         const t = state.table;
         const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (card.id === 'condense') return { ok: true };
         if (t.pieces.w100.props.gave == null || t.pieces.s100.props.gave == null) {
-          return { ok: false, msg: 'Cool both samples first to compare how much heat each gives.' };
+          return { ok: false, msg: 'Cool both samples first to compare how much heat each releases.' };
         }
-        if (card.id === 'hotter') return { ok: false, msg: 'Both samples start at 100 °C, yet steam gives 2.52 kJ and water gives 0.26 kJ.' };
-        return { ok: false, msg: 'Both samples cool from 100 °C to 37 °C, which gives only 0.26 kJ; look at the long level stretch on steam\'s line.' };
+        if (card.id === 'hotter') return { ok: false, msg: 'Both samples start at 100 °C, yet steam releases 2.52 kJ while water releases 0.26 kJ.' };
+        return { ok: false, msg: 'Both samples cool from 100 °C to 37 °C, releasing only 0.26 kJ as liquid. Look at the long flat stretch on steam\'s curve.' };
       },
       reward: {
-        log: 'Steam at 100 °C gave a hand about ten times the heat of water at 100 °C.',
+        log: 'Steam at 100 °C released about ten times more heat than liquid water at 100 °C.',
         title: 'Why Steam Burns',
-        body: 'Steam at 100 °C gave 2.52 kJ a gram, water at 100 °C only 0.26 kJ. Most of the steam\'s heat comes out as it condenses to liquid water, before it cools at all.'
+        body: 'Steam at 100 °C released 2.52 kJ per gram, while liquid water at 100 °C released only 0.26 kJ. Most of steam\'s heat comes from condensing into liquid water before it even cools.'
       }
     };
   })(),
@@ -347,43 +342,35 @@ export const STAGES = [
       id: 's7-diagram',
       title: 'Skipping the Liquid',
       briefing: 'The state of water depends on pressure as well as temperature. A phase diagram maps the state at each pressure and temperature.',
-      prompt: 'At what pressure does warming ice never make liquid water?',
+      prompt: 'At which pressure does warming ice turn straight into vapor without ever forming liquid water?',
       widget,
       table: matterTable({
-        fixtures: [map, plaqueFixture('exam', 'Water\'s states', { x: 126, y: 14 }, ['Phase diagrams map', 'state by pressure and T.'], { w: 44 })]
+        fixtures: [map, plaqueFixture('exam', 'Water\'s states', { x: 126, y: 14 }, ['Phase diagrams map state', 'by pressure & temperature.'], { w: 46 })]
       }),
       hints: [
-        'Use the "Pressure" dial and the "Heat" key.',
-        'Compare the states listed for sweeps at low pressure and at high pressure.',
-        'Sweep at several pressures and find where the liquid stretch of the line shrinks to nothing.'
+        'Pick a pressure on the "Pressure" dial and press "Heat" to test it.',
+        'Compare the phases listed as you heat ice at low pressure versus high pressure.',
+        'Find a pressure where the liquid phase disappears and ice turns straight into vapor.'
       ],
       check(state) {
         const t = state.table;
         const r = mapRead(t, 'map');
-        if (!r.rows.length) return { ok: false, notYet: true, msg: 'Press "Heat" to warm the ice at the pressure the dial shows.' };
+        if (!r.rows.length) return { ok: false, notYet: true, msg: 'Press "Heat" to warm the ice at the selected pressure.' };
         if (sweptWithoutLiquid(t, 'map')) return { ok: true };
         const last = r.rows[r.rows.length - 1].y;
-        return { ok: false, msg: `At ${pressureText(last)} the ice melted to liquid water before it went further.` };
+        return { ok: false, msg: `At ${pressureText(last)}, the ice melted into liquid water before turning to vapor. Try a lower pressure.` };
       },
       reward: {
-        log: 'Below 0.611 kPa ice turned straight to vapour.',
+        log: 'Below 0.611 kPa, ice turned straight to vapor.',
         title: 'Phase Diagrams',
-        body: 'On water\'s phase diagram, below 0.611 kPa (the triple point) ice turns straight to vapor. Far above it, past the critical point, liquid and vapor are no longer different.'
+        body: 'On water\'s phase diagram, ice turns straight to vapor below 0.611 kPa (the triple point). Above the critical point, liquid and vapor merge into one phase.'
       }
     };
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Press "Heat" to draw the line, then set the number dial.'],
-  2: ['Drag the card you choose into the slot.'],
-  3: ['Set the dial, press "Heat" and watch the window.'],
-  4: ['Heat the cup to see its line, then type your answer.'],
-  5: ['Type your answer in the field at the bottom.'],
-  7: ['Turn the "Pressure" dial and press "Heat".']
-};
-applyNotes(STAGES, NOTES);
+/** How-to lines removed from the plate. */
+applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -393,7 +380,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A heating curve climbs while heat warms a sample and stands still while it changes state, spending the heat against the attraction between molecules. Each flat costs moles times the heat of fusion or vaporization, and condensing gives that heat back out.'
+      body: 'A heating curve rises while heat warms a sample and stays flat during a phase change, when heat overcomes attractions between molecules. Each flat stretch takes moles × heat of fusion or vaporization, and condensing or freezing releases that same heat back.'
     }
   ]
 };
@@ -409,18 +396,18 @@ const typedAns = value => ({ type: { entry: 'kj', value } });
 const cookAll = ids => ids.flatMap(id => [put(id, 'slot:cooler.slot'), { run: 'cooler' }]);
 
 export const SOLUTIONS = [
-  [dial('mk', 'value', 7), ...heat(3)],
+  [dial('mk', 'value', 7), ...heat(8)],
   [put('apart', 'slot:guess')],
   [dial('rec', 'heat', 3), ...heat(3)],
   [...heat(3), typedAns('12.0')],
-  [typedAns('48.1')],
+  [typedAns('48.2')],
   [...cookAll(HAND.map(s => s.id)), put('condense', 'slot:answer')],
   [dial('map', 'pressure', 1), { run: 'map' }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [dial('mk', 'value', 1), ...heat(3)],
+  [dial('mk', 'value', 1), ...heat(8)],
   [],
   [...heat(1)],
   [typedAns('6.0')],

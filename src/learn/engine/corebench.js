@@ -560,7 +560,7 @@ function fieldNeedle(ctx, g, needle) {
 
   // Which way is which, stencilled on the case rather than left to be guessed.
   ctx.fillStyle = 'rgba(184, 175, 160, 0.5)';
-  ctx.font = `${Math.max(7, Math.round(r * 0.30))}px "Share Tech Mono", monospace`;
+  ctx.font = `${Math.max(7, Math.round(r * 0.30))}px "Quantico", "JetBrains Mono", monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('-', px - r * 0.96, py - r * 0.34);
@@ -582,7 +582,7 @@ function fieldNeedle(ctx, g, needle) {
 
   // The reading, in figures, because a pointer between two ticks is an argument.
   ctx.fillStyle = live ? AMBER : 'rgba(184, 175, 160, 0.6)';
-  ctx.font = `${Math.max(9, Math.round(r * 0.36))}px "Share Tech Mono", monospace`;
+  ctx.font = `${Math.max(9, Math.round(r * 0.36))}px "Quantico", "JetBrains Mono", monospace`;
   ctx.fillText(v > 0 ? `+${v}` : `${v}`, px, py + r * 0.17);
   ctx.textBaseline = 'alphabetic';
 }

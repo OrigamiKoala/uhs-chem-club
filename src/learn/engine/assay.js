@@ -250,7 +250,7 @@ export function drawAssayField(ctx, o) {
     ctx.fillStyle = PLATE;
     ctx.fillRect(g.chute.x - 3, g.chute.y + g.chute.h - 3, g.chute.w + 6, 5);
     ctx.fillStyle = 'rgba(184, 175, 160, 0.45)';
-    ctx.font = `${Math.max(7, Math.round(g.aperture * 0.09))}px "Share Tech Mono", monospace`;
+    ctx.font = `${Math.max(7, Math.round(g.aperture * 0.09))}px "Quantico", "JetBrains Mono", monospace`;
     ctx.textAlign = 'left';
     ctx.fillText('GATE SHUT', g.chute.x + g.chute.w + 8, g.chute.y + g.chute.h + 2);
   }
@@ -281,7 +281,7 @@ export function drawAssayField(ctx, o) {
     // Weight stencil under the bin. This is the bin's identity: the pieces
     // themselves are the same material and are drawn the same.
     ctx.fillStyle = poured ? AMBER : 'rgba(184, 175, 160, 0.45)';
-    ctx.font = `${Math.max(9, Math.round(g.labelBand * 0.62))}px "Share Tech Mono", monospace`;
+    ctx.font = `${Math.max(9, Math.round(g.labelBand * 0.62))}px "Quantico", "JetBrains Mono", monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`${b.mass}`, box.x + box.w / 2, g.labelY);

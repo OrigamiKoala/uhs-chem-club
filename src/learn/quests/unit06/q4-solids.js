@@ -53,8 +53,8 @@ const GUESS_LABEL = { alike: 'both would melt at one temperature', differ: 'the 
    ------------------------------------------------------------------ */
 
 const S1 = [
-  { id: 'ice', solid: 'ice', tray: 'grips' }, { id: 'iodine', solid: 'iodine', tray: 'grips' }, { id: 'naphthalene', solid: 'naphthalene', tray: 'grips' },
-  { id: 'gallium', solid: 'gallium', tray: 'stronger' }, { id: 'salt', solid: 'salt', tray: 'stronger' }
+  { id: 'ice', solid: 'ice', label: 'ice', tray: 'grips' }, { id: 'iodine', solid: 'iodine', label: 'iodine', tray: 'grips' }, { id: 'naphthalene', solid: 'naphthalene', label: 'mothball', tray: 'grips' },
+  { id: 'gallium', solid: 'gallium', label: 'gallium (metal)', tray: 'stronger' }, { id: 'salt', solid: 'salt', label: 'table salt', tray: 'stronger' }
 ];
 const S3 = [
   { id: 'quartz', solid: 'quartz', label: 'quartz', tray: 'one' }, { id: 'silica', solid: 'silica', label: 'fused silica', tray: 'range' },
@@ -110,12 +110,16 @@ function benchTable(items, tester, trays, cardPos = CARD_AT) {
 
 const trayLabel = (t, id) => t.zones.trays[id]?.label;
 
-/** Every sample in a tray, or why not. `say(card, tray label, item)` is the stage's refusal for the first misfiled one. */
-function fileCheck(items, say) {
+/** Every sample in a tray, or why not. `mustTest` ensures samples are tested before passing; `say` is the refusal for the first misfiled one. */
+function fileCheck(items, say, mustTest = null) {
   return state => {
     const t = state.table;
     const inTray = id => t.zones.trays[whereIs(t, id)];
-    if (items.some(s => !inTray(s.id))) return { ok: false, notYet: true, msg: 'Every sample needs a tray.' };
+    if (items.some(s => !inTray(s.id))) return { ok: false, notYet: true, msg: 'Sort every sample into a tray.' };
+    if (mustTest) {
+      const untested = mustTest(t);
+      if (untested) return { ok: false, msg: NOT_TESTED(untested) };
+    }
     const wrong = items.find(s => whereIs(t, s.id) !== s.tray);
     if (!wrong) return { ok: true };
     return { ok: false, msg: say(t.pieces[wrong.id], trayLabel(t, whereIs(t, wrong.id)), wrong, t) };
@@ -123,30 +127,30 @@ function fileCheck(items, say) {
 }
 
 const cap = text => text.charAt(0).toUpperCase() + text.slice(1);
-const NOT_TESTED = p => cap(`${p.label} has not been in the tester yet.`);
+const NOT_TESTED = p => cap(`${p.label} has not been tested yet.`);
 
 /** Stage 1: what the heater did to the sample, and the tray it sits in. */
 const meltSay = (p, tray) => {
   const m = p.props.melt;
   if (!m) return NOT_TESTED(p);
-  const did = m.held ? `stayed rigid to the top of the heater's range, ${m.maxT} °C` : `fell at ${meltText(m)}`;
-  const lamp = p.props.cur ? `, and its lamp ${p.props.cur.cold ? 'lit' : 'stayed dark'} cold` : ', and it has not had the lamp test';
-  return cap(`${p.label}'s trace ${did}${lamp}, and it sits in the "${tray}" tray.`);
+  const did = m.held ? `stayed solid up to ${m.maxT} °C` : `melted at ${meltText(m)}`;
+  const lamp = p.props.cur ? (p.props.cur.cold ? ', and conducted electricity when cold' : ', and did not conduct electricity when cold') : ', and has not been tested for conductivity';
+  return cap(`${p.label} ${did}${lamp}, so it does not belong in "${tray}".`);
 };
 
 /** Stage 3: the shape of the trace. */
 const traceSay = (p, tray) => {
   const m = p.props.melt;
   if (!m) return NOT_TESTED(p);
-  const did = m.hi === m.lo ? `stood flat to ${m.lo} °C and fell at once` : `fell a little at a time from ${m.lo} °C to ${m.hi} °C`;
-  return cap(`${p.label}'s trace ${did}, and it sits in the "${tray}" tray.`);
+  const did = m.hi === m.lo ? `stayed rigid up to ${m.lo} °C and melted all at once` : `softened gradually from ${m.lo} °C to ${m.hi} °C`;
+  return cap(`${p.label} ${did}, so it does not belong in "${tray}".`);
 };
 
 /** Stages 4 and 5: the whole record the sample's card kept. */
 const recordSay = (p, tray) => {
   const rows = cardRows(p).map(r => r[0]);
   if (!rows.length) return NOT_TESTED(p);
-  return `${p.label} showed ${rows.join(', ')}, and it sits in the "${tray}" tray.`;
+  return `${p.label} showed ${rows.join(', ')}, which does not match "${tray}".`;
 };
 
 /* ------------------------------------------------------------------
@@ -159,20 +163,20 @@ export const STAGES = [
     return {
       id: 's1-melt',
       title: 'Five Solids',
-      briefing: 'A molecular solid is made of whole molecules held together only by the attractions between them.',
-      prompt: 'Which of these are molecular solids?',
+      briefing: 'A molecular solid is made of whole molecules held together only by weak attractions between them. The lamp lights if a solid conducts electricity.',
+      prompt: 'Which of these five samples are molecular solids?',
       widget,
       table: benchTable(S1, tester, [['grips', 'Molecular solid'], ['stronger', 'Not molecular']]),
       hints: [
-        'Use the tester, its "Test" dial and key, and the two trays.',
-        'Compare each sample\'s melting trace with whether the lamp lit, cold and molten.',
-        'A solid belongs with the molecular solids only if its trace and its lamp both fit whole molecules held by weak attractions.'
+        'Test each sample in the tester with both Melt and Current, then sort them into the two trays.',
+        'Compare each sample\'s melting trace with whether it conducts electricity when cold or molten.',
+        'A molecular solid melts at a low temperature and does not conduct electricity.'
       ],
-      check: fileCheck(S1, meltSay),
+      check: fileCheck(S1, meltSay, t => S1.map(s => t.pieces[s.id]).find(p => !p.props.melt && !p.props.cur)),
       reward: {
-        log: 'Ice, iodine and naphthalene melted low and carried no current; gallium melted low and did.',
+        log: 'Ice, iodine, and naphthalene melted low and did not conduct; gallium melted low and conducted.',
         title: 'Molecular Solids',
-        body: 'Ice, iodine and naphthalene are whole molecules held by weak attractions, so little heat frees them and the lamp stays dark. Gallium melts low but its lamp lit, so it is not molecular.'
+        body: 'Ice, iodine, and naphthalene are molecular solids: weak attractions make them melt easily, and they do not conduct electricity. Gallium melts low too, but it conducts electricity because it is a metal.'
       }
     };
   })(),
@@ -183,25 +187,25 @@ export const STAGES = [
     title: 'Same Atoms',
     // A PREDICT STAGE: the tester is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Quartz and glass are both silicon and oxygen: how will each behave as it is heated?',
+    prompt: 'Quartz and glass are both made of silicon and oxygen. How will each behave when heated?',
     widget,
     table: matterTable({
       pieces: [
-        note('alike', 'Both stay hard, then melt at one temperature', { x: 30, y: 14 }),
-        note('differ', 'Quartz melts at one temperature; the glass goes soft gradually', { x: 78, y: 14 }),
-        note('higher', 'The glass holds its shape to a higher temperature than quartz', { x: 30, y: 34 })
+        note('alike', 'Both melt at one sharp temperature', { x: 30, y: 14 }),
+        note('differ', 'Quartz melts sharply; glass softens gradually', { x: 74, y: 14 }),
+        note('higher', 'Glass melts at a higher sharp temperature', { x: 30, y: 34 })
       ],
-      fixtures: [leadFixture('lead', { x: 117, y: 52 }, { scene: 'heater', w: 44, h: 24 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 117, y: 52 }, { scene: 'heater', w: 44, h: 24, leftLabel: 'SOLID' })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 40, h: 15 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
-      'Think about what the two solids share and what could still be different.',
-      'Commit to the way you expect each to behave as the temperature climbs.'
+      'Read the three prediction cards and drag your choice into the slot.',
+      'Think about what quartz and glass share (the same atoms) and what could still differ (how those atoms are arranged).',
+      'Pick how you expect quartz and glass to melt as they heat up.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -211,7 +215,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, heat quartz, fused silica glass and two more solids in the tester.'
+      body: 'Next, heat quartz, fused silica glass, and two other solids in the tester.'
     }
   },
 
@@ -224,24 +228,24 @@ export const STAGES = [
       get prompt() {
         const g = recall(QUEST_KEY);
         return g && GUESS_LABEL[g]
-          ? `You guessed ${GUESS_LABEL[g]}: which solids melt at one temperature and which soften over a range?`
-          : 'Which solids melt at one temperature and which soften over a range?';
+          ? `You predicted ${GUESS_LABEL[g]}. Which solids melt at one sharp temperature and which soften over a range?`
+          : 'Which solids melt at one sharp temperature and which soften over a range?';
       },
       widget,
       table: benchTable(S3, tester, [['one', 'Melts at one temperature'], ['range', 'Softens over a range']], CARD_AT_4),
       hints: [
-        'Use the tester, its "Heat" key and the two trays.',
-        'Compare the particle window with the shape of each stiffness trace as the temperature climbs.',
-        'Some samples have particles in a repeating pattern and melt at one temperature, while others soften a little at a time.'
+        'Heat each sample in the tester with "Heat", then sort them into the two trays.',
+        'Compare each sample\'s particle arrangement with how its stiffness curve drops as it heats up.',
+        'Particles in a repeating pattern break free all at once, while disordered particles soften gradually.'
       ],
-      check: fileCheck(S3, traceSay),
+      check: fileCheck(S3, traceSay, t => S3.map(s => t.pieces[s.id]).find(p => !p.props.melt)),
       get reward() {
         const g = recall(QUEST_KEY);
-        const verdict = g === 'differ' ? 'Your guess matched the traces. ' : g && GUESS_LABEL[g] ? 'The traces differed from your guess. ' : '';
+        const verdict = g === 'differ' ? 'The traces matched your prediction. ' : g && GUESS_LABEL[g] ? 'The traces disagreed with your prediction. ' : '';
         return {
-          log: 'Quartz melted at one temperature, and fused silica softened over a range.',
+          log: 'Quartz melted at one temperature, while fused silica softened over a range.',
           title: 'Crystalline and Amorphous',
-          body: `${verdict}The solids whose particles sit in a repeating pattern, crystalline solids, melt at one temperature. Glass has no pattern: it is amorphous, and softens gradually.`
+          body: `${verdict}Crystalline solids have a repeating pattern and melt at one sharp temperature, while amorphous solids like glass have no repeating pattern and soften gradually.`
         };
       }
     };
@@ -255,21 +259,21 @@ export const STAGES = [
       title: 'Four Sealed Solids',
       briefing: {
         speaker: 'Vess',
-        body: 'Metals hold ions in a sea of mobile electrons; ionic solids hold fixed ions that move only when molten; covalent network solids lock atoms in a full-crystal bond web, and molecular solids hold separate molecules.'
+        body: 'Test each sealed solid with Melt, Strike, and Current in the tester to compare how metals, ionic, network, and molecular solids behave.'
       },
       prompt: 'What kind of solid is each sealed sample?',
       widget,
       table: benchTable(S4, tester, [['metallic', 'Metallic'], ['ionic', 'Ionic'], ['network', 'Network'], ['molecular', 'Molecular']]),
       hints: [
-        'Use the tester: drag a sample in, turn the "Test" dial, and press "Test" for each test.',
-        'Compare the melt trace, the hammer result and the two lamps of each sample with the others.',
-        'Use the hammer, the heater and the lamp together: no single test separates all four kinds.'
+        'Drag a sample into the tester, pick Melt, Strike, or Current on the Mode dial, and press "Test".',
+        'Compare the melt trace, the hammer result, and whether each sample conducts electricity cold or molten.',
+        'Use the hammer, heater, and conductivity test together: no single test separates all four kinds.'
       ],
-      check: fileCheck(S4, recordSay),
+      check: fileCheck(S4, recordSay, t => S4.map(s => t.pieces[s.id]).find(p => !p.props.melt && !p.props.strike && !p.props.cur)),
       reward: {
         log: 'Each kind of solid left its own record.',
         title: 'Four Records',
-        body: 'Metals flatten and light the lamp cold; ionic solids shatter and light it only molten. Network solids shatter, never light it and melt highest; molecular solids crumble and melt low.'
+        body: 'Metals flatten and conduct when solid, while ionic solids shatter and conduct only when molten. Network solids shatter, never conduct, and melt highest, whereas molecular solids crumble and melt low.'
       }
     };
   })(),
@@ -288,25 +292,25 @@ export const STAGES = [
     return {
       id: 's5-sealed',
       title: 'Five Sealed Solids',
-      prompt: 'Use the hammer and current records on the cards and the melt-and-particle viewer to classify each solid.',
+      prompt: 'What kind of solid is each of X1 to X5?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
         recorder: { at: { x: 147.4, y: 2.4 }, size: { w: 5, h: 3.4 } },
         pieces: cards5,
         fixtures: [tester.fixture],
-        zones: { slots: [tester.slot], trays: trayRow([['metallic', 'Metallic'], ['ionic', 'Ionic'], ['network', 'Network'], ['molecular', 'Molecular'], ['amorphous', 'Amorphous']]) }
+        zones: { slots: [tester.slot], trays: trayRow([['metallic', 'Metallic'], ['ionic', 'Ionic'], ['network', 'Network'], ['molecular', 'Molecular'], ['amorphous', 'Amorphous (glass)']]) }
       }),
       hints: [
-        'Read the hammer and current records already on each card, then drop a sample into the viewer and press "Heat".',
-        'Two solids can agree on most tests, so compare every reading of every sample.',
-        'A trace that falls at one temperature and a trace that falls over a range mean different things about the particles.'
+        'Read the hammer and conductivity records on each card, then heat the look-alike samples in the viewer.',
+        'Two solids (X1 and X5) agree on the card records, so compare their melting traces.',
+        'A trace that drops at one sharp temperature is crystalline; one that softens over a range is amorphous.'
       ],
-      check: fileCheck(S5, recordSay),
+      check: fileCheck(S5, recordSay, t => ['x1', 'x5'].map(id => t.pieces[id]).find(p => !p.props.melt)),
       reward: {
-        log: 'The glass looked ionic in every test but the melt trace.',
+        log: 'X1 (window glass) matched the ionic solid in every test except its melt trace.',
         title: 'The Whole Record',
-        body: 'The window glass shattered, stayed dark cold and lit the lamp molten, just as the ionic solid did. Only its trace told them apart: no single melting temperature means no repeating pattern, so it is amorphous.'
+        body: 'X1 (window glass) and X5 (ionic) both shattered and conducted only when molten. Their melting traces told them apart: X1 softened over a range, proving it is amorphous.'
       }
     };
   })(),
@@ -314,23 +318,23 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   (() => {
     const tester = solidTestFixture('tester', TESTER_AT, { tests: ['melt', 'strike'], view: 'trace', w: 66, maxT: 500, title: 'Polymer Tester' });
-    const polySay = (card, tray) => `${cap(card.label)} sits in "${tray}": its melt trace (${meltText(card.props.melt)}) and hammer test (${card.props.strike}) show how its chains are held.`;
+    const polySay = (card, tray) => `${cap(card.label)} melted at ${meltText(card.props.melt)} and ${card.props.strike} under the hammer, which does not match "${tray}".`;
     return {
       id: 's6-polymers',
       title: 'Long Chains and Cross-Links',
       briefing: {
         speaker: SPEAKER,
-        body: 'Long polymer chains attract one another by dispersion forces that grow with chain length, yet soften when warmed; covalent cross-links between chains lock them into a rigid network.'
+        body: 'A polymer is made of long chain-like molecules. Heat and strike all three samples in the tester to compare how they soften and break.'
       },
       prompt: 'Which solids are held only by dispersion between molecules or chains, and which by covalent cross-links?',
       widget,
-      table: benchTable(S6, tester, [['chains', 'Dispersion between chains'], ['crosslink', 'Covalent cross-links']]),
+      table: benchTable(S6, tester, [['chains', 'Dispersion (molecules/chains)'], ['crosslink', 'Covalent cross-links']]),
       hints: [
         'Heat and strike each sample in the tester, then sort them into trays.',
         'Compare the softening temperature of polyethylene with naphthalene and with the cross-linked resin.',
         'Unlinked chains soften over a low range and flatten; covalent cross-links keep the solid rigid and brittle.'
       ],
-      check: fileCheck(S6, polySay),
+      check: fileCheck(S6, polySay, t => S6.map(s => t.pieces[s.id]).find(p => !p.props.melt && !p.props.strike)),
       reward: {
         log: 'Long chains softened over a range above naphthalene; cross-linked resin stayed rigid.',
         title: 'Polymers and Cross-Linking',
@@ -340,11 +344,8 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate. The bench tables are full, so only the prediction carries one; the tester's own plate and its Tour step say how it works. */
-const NOTES = {
-  2: ['Drag the card you choose into the slot.']
-};
-applyNotes(STAGES, NOTES);
+/** How-to lines removed from the plate. */
+applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -354,7 +355,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A molecular solid melts low because only the attractions between its molecules break. A crystalline solid melts at one temperature because its particles repeat in a pattern, and an amorphous solid such as glass softens over a range because it has none.'
+      body: 'Molecular solids melt at low temperatures because only weak attractions between molecules give way. Crystalline solids have repeating patterns and melt at one sharp temperature, whereas amorphous solids like glass have no repeating pattern and soften over a range.'
     }
   ]
 };

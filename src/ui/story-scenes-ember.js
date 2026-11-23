@@ -85,7 +85,7 @@ function twoRoutes(ctx, w, h, t) {
   const mx = (x0 + x1) / 2; const my = (y0 + y1) / 2;
   line(ctx, mx - 12, my - 12, mx + 12, my + 12, C.dust, 3);
   line(ctx, mx - 12, my + 12, mx + 12, my - 12, C.dust, 3);
-  text(ctx, 'sealed shaft', mx + w * 0.1, my - h * 0.07, { size: fs(h), color: C.dim });
+  text(ctx, 'sealed shaft', x0 + (x1 - x0) * 0.42, y0 + (y1 - y0) * 0.22, { size: fs(h), color: C.dim });
   // The stepped pipe, drawn on as time runs, with the heat of each step.
   const pts = [[x0, y0], [x0, y0 + (y1 - y0) * 0.5], [x1, y0 + (y1 - y0) * 0.5], [x1, y1]];
   const p = ease(win(t, 0.1, 0.65));
@@ -97,7 +97,7 @@ function twoRoutes(ctx, w, h, t) {
     line(ctx, pts[i - 1][0], pts[i - 1][1], pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f, C.amber, 4);
     left -= seg;
   }
-  text(ctx, 'stepped pipe', w * 0.5, y0 + (y1 - y0) * 0.5 - h * 0.06, { size: fs(h), color: C.dust });
+  text(ctx, 'stepped pipe', w * 0.5, y0 + (y1 - y0) * 0.5 + h * 0.065, { size: fs(h), color: C.dust });
   const show = ease(win(t, 0.55, 0.85));
   ctx.globalAlpha = show;
   text(ctx, `${STEPS[0]}`, x0 - w * 0.07, y0 + (y1 - y0) * 0.25, { size: fs(h), color: C.dust });
@@ -112,14 +112,14 @@ const T_ICE = crossingTemperature(ICE.dH, ICE.dS);
 
 function sealCrossing(ctx, w, h, t) {
   ground(ctx, w, h);
-  const px = w * 0.12; const pw = w * 0.76; const py = h * 0.12; const ph = h * 0.66;
+  const px = w * 0.12; const pw = w * 0.76; const py = h * 0.15; const ph = h * 0.63;
   const Tmin = 200; const Tmax = 350;
   const gMin = gibbsFreeEnergy(ICE.dH, ICE.dS, Tmax); const gMax = gibbsFreeEnergy(ICE.dH, ICE.dS, Tmin);
   const X = T => px + ((T - Tmin) / (Tmax - Tmin)) * pw;
   const Y = g => py + ph * (1 - (g - gMin) / (gMax - gMin));
   box(ctx, px, py, pw, ph, '#100f0c', C.rim);
   line(ctx, px, Y(0), px + pw, Y(0), C.dim, 1, [6, 6]);
-  text(ctx, 'net balance of melting ice', px + 6, py + 14, { size: fs(h), color: C.dim, align: 'left' });
+  text(ctx, 'net balance of melting ice (ΔG)', px, py - h * 0.045, { size: fs(h), color: C.dust, align: 'left' });
   text(ctx, 'below zero: melts', px + pw - 6, Y(0) + h * 0.07, { size: fs(h), color: C.dim, align: 'right' });
   const p = ease(win(t, 0.08, 0.7));
   const Tnow = Tmin + p * (Tmax - Tmin);

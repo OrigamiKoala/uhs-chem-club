@@ -27,6 +27,7 @@ import {
 } from '../../engine/eqdata.js';
 
 import { choiceFixture, pickable } from '../../table/kits/pans-choice.js';
+import { markFights } from '../../table/near.js';
 export const meta = { stageCount: 5 };
 
 export const BUILDS_ON = [
@@ -377,3 +378,5 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn` and `verify:teeter`, which hold every graded figure to the real tables. */
 export const CHECKS = { P1_PANS, P1_RUN, P1_PICK, P2_START, P2_TOL, P3_MIX, P3_WAY, P4, P4_VOL, P4_ANSWER, P5_START, P5_ICE, P5_TOL };
+
+markFights(STAGES);

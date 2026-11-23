@@ -117,17 +117,17 @@ function wellDepth(ctx, w, h, t) {
   line(ctx, mx, my, mx, sy - 30, C.dim, 1, [3, 5]);
   disc(ctx, mx, my, 9, C.amber);
   // Pushing in climbs the near wall; the bottom is where the push and the pull balance.
-  if (t > 0.18 && t < 0.5) text(ctx, 'too close: they push apart', X(80), zeroY + 70, { size: 18, color: C.dust, align: 'left' });
-  if (t > 0.3 && t < 0.52) text(ctx, 'rest here', X(P.r0), botY + 30, { size: 22, color: C.amber });
+  if (t > 0.18 && t < 0.5) text(ctx, 'too close: atoms push apart', X(80), zeroY + 70, { size: 18, color: C.dust, align: 'left' });
+  if (t > 0.3 && t < 0.52) text(ctx, 'bonded (lowest energy)', X(P.r0), botY + 30, { size: 22, color: C.amber });
   // Taking them apart: the energy that must be put in is the height of the climb back to zero.
   const taken = Math.max(0, morse('H-Cl', rr) - morse('H-Cl', P.r0));
   if (t > 0.5) {
     const dep = ease(win(t, 0.5, 0.62));
     line(ctx, X(P.r0), zeroY, X(P.r0), zeroY + (botY - zeroY) * dep, C.amber, 2);
     text(ctx, `${P.de} kJ/mol`, X(P.r0) + 14, (zeroY + botY) / 2, { size: 24, color: C.amber, align: 'left', weight: 700 });
-    text(ctx, `put in so far: ${Math.round(taken)}`, x1, botY + 30, { size: 20, color: C.dust, align: 'right' });
+    text(ctx, `energy added: ${Math.round(taken)} kJ/mol`, x1, botY + 30, { size: 20, color: C.dust, align: 'right' });
   }
-  if (t > 0.92) text(ctx, 'a charge must give more than the depth', w / 2, 505, { size: 22, color: C.amber });
+  if (t > 0.92) text(ctx, 'breaking a bond takes energy equal to its well depth', w / 2, 505, { size: 22, color: C.amber });
 }
 
 /* ---- q7-polarity: unequal pulls make a net pull; a field turns water until it lines up, and carbon dioxide, whose pulls cancel, does not move ---- */
@@ -342,21 +342,26 @@ function domainShapes(ctx, w, h, t, clock = 0) {
         ctx.globalAlpha = 1;
       }
       if (lone[i] > 0.02) {
-        // A lone pair is a lobe of charge standing out from the central atom, bigger than a bond and not ending in an atom.
-        const mid = project(v, yaw, tilt, cx, cy, K * 0.55);
+        // An elongated pear-shaped lone pair lobe that visibly expands as it pushes neighboring bonds closer together.
+        const mid = project(v, yaw, tilt, cx, cy, K * (0.48 + 0.14 * lone[i]));
         const ang = Math.atan2(tip[1] - base[1], tip[0] - base[0]);
         const len = Math.hypot(tip[0] - base[0], tip[1] - base[1]);
+        const rx = Math.max(36, len * (0.42 + 0.16 * lone[i]));
+        const ry = (24 + 18 * lone[i]) * mid[3];
         ctx.save();
-        ctx.globalAlpha = 0.85 * lone[i];
+        ctx.globalAlpha = 0.88 * lone[i];
         ctx.translate(mid[0], mid[1]);
         ctx.rotate(ang);
         ctx.beginPath();
-        ctx.ellipse(0, 0, Math.max(34, len * 0.45), 36 * mid[3], 0, 0, TAU);
-        ctx.fillStyle = 'rgba(229,155,36,0.3)';
+        ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
+        ctx.fillStyle = 'rgba(229,155,36,0.28)';
         ctx.fill();
         ctx.strokeStyle = C.amber;
         ctx.lineWidth = 2;
         ctx.stroke();
+        // Two bright electron dots inside the lone pair lobe
+        disc(ctx, rx * 0.35, -8, 4.5, '#fff0b8');
+        disc(ctx, rx * 0.35, 8, 4.5, '#fff0b8');
         ctx.restore();
         ctx.globalAlpha = 1;
       }
@@ -368,15 +373,28 @@ function domainShapes(ctx, w, h, t, clock = 0) {
     text(ctx, Q > 0.5 ? 'O' : P > 0.5 ? 'N' : 'C', c[0], c[1], { size: 26, color: '#16140f', weight: 700 });
   } });
   parts.sort((a, b) => a.depth - b.depth).forEach(p => p.draw());
-  // The angle is measured from the two arms that stay bonded in every shape.
+  // Visible repulsion arc between the two bonded H atoms as lone pairs push them closer together
+  const b2 = project(V[2], yaw, tilt, cx, cy, K);
+  const b3 = project(V[3], yaw, tilt, cx, cy, K);
+  const a2 = Math.atan2(b2[1] - c[1], b2[0] - c[0]);
+  const a3 = Math.atan2(b3[1] - c[1], b3[0] - c[0]);
+  let dAng = a3 - a2;
+  while (dAng > Math.PI) dAng -= TAU;
+  while (dAng < -Math.PI) dAng += TAU;
+  ctx.strokeStyle = C.amber;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(c[0], c[1], 68, a2, a2 + dAng, dAng < 0);
+  ctx.stroke();
+  // Cleanly spaced right-side readout with zero text overlap
   const dotp = V[2][0] * V[3][0] + V[2][1] * V[3][1] + V[2][2] * V[3][2];
   const ang = Math.acos(Math.max(-1, Math.min(1, dotp))) * 180 / Math.PI;
   const lones = Math.round(P + Q);
-  text(ctx, `${ang.toFixed(1)}°`, 790, 250, { size: 56, color: C.amber, weight: 700 });
-  text(ctx, 'bond angle', 790, 296, { size: 20, color: C.dust });
-  text(ctx, `${4} domains`, 790, 190, { size: 26, color: C.text });
-  text(ctx, `${4 - lones} bonds, ${lones} lone pair${lones === 1 ? '' : 's'}`, 790, 222, { size: 20, color: C.dust });
-  text(ctx, Q > 0.5 ? 'bent' : P > 0.5 ? 'trigonal pyramidal' : 'tetrahedral', 790, 340, { size: 24, color: C.text });
+  text(ctx, '4 domains', 770, 140, { size: 26, color: C.text, weight: 700 });
+  text(ctx, `${4 - lones} bonds, ${lones} lone pair${lones === 1 ? '' : 's'}`, 770, 178, { size: 20, color: C.dust });
+  text(ctx, `${ang.toFixed(1)}°`, 770, 265, { size: 54, color: C.amber, weight: 700 });
+  text(ctx, 'bond angle', 770, 315, { size: 19, color: C.dust });
+  text(ctx, Q > 0.5 ? 'bent' : P > 0.5 ? 'trigonal pyramidal' : 'tetrahedral', 770, 372, { size: 24, color: C.text, weight: 600 });
 }
 
 /* ---- q8-hybrid: an s and three p orbitals mix into four equal lobes; a double bond is a sigma on the axis plus a pi that a twist destroys ---- */

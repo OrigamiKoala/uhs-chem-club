@@ -42,6 +42,12 @@ async function bootstrapApp() {
   // Initialize PWA installation prompts and mobile orientation enforcement
   initPwaAndOrientation();
 
+  // Canvas text (bench cards, plaques, the mat's words) is painted once into a texture and kept: a face that is not loaded
+  // yet is painted in the browser's fallback and stays that way. A canvas never asks for a font, so ask for them here.
+  try {
+    for (const f of ['400 16px "Quantico"', '700 16px "Quantico"', '400 16px "JetBrains Mono"', '500 16px "JetBrains Mono"', '700 16px "JetBrains Mono"']) document.fonts?.load(f);
+  } catch (e) { /* no FontFaceSet: the fallback face */ }
+
   // 1. Initialize 3D Engine
   stage.init();
 

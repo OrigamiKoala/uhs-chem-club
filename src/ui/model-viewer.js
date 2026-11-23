@@ -21,6 +21,9 @@ import { mountBondOverlap } from './bond-overlap-animator.js';
 import { mountCuvetteExplainer } from './cuvette-explainer.js';
 import { mountPhotoelectricExplainer } from './photoelectric-explainer.js';
 import { mountRutherfordBeam, mountChargePlates, mountShellFill, mountMgCation, mountAbsorptionLadder } from './tallow-explainers.js';
+import { mountShapeExplainer } from './shape-explainer.js';
+import { mountElectronegativityExplainer } from './electronegativity-explainer.js';
+import { mountBellowsExplainer } from './bellows-explainers.js';
 
 export { mountDebriefOrbitalViewer };
 
@@ -1094,6 +1097,10 @@ function paintFlat(ctx, w, h, parts, t, ay, ax) {
  * @param {object} spec a `reward.model` spec
  */
 export function mountModel(host, spec) {
+  if (spec?.type === 'shape') {
+    const res = mountShapeExplainer(host, spec);
+    if (res) return res;
+  }
   const parts = modelParts(spec);
   const still = Boolean(session.reduceMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const wrap = document.createElement('div');
@@ -1102,6 +1109,26 @@ export function mountModel(host, spec) {
   wrap.innerHTML = `<div class="lq-model-view"></div>${caption ? `<p class="lq-model-caption">${caption}</p>` : ''}`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
+
+  if (parts.bellowsScene) {
+    const stop = mountBellowsExplainer(view, parts.bellowsScene, still);
+    return {
+      dispose() {
+        stop();
+        wrap.remove();
+      }
+    };
+  }
+
+  if (parts.electronegativityPull) {
+    const stop = mountElectronegativityExplainer(view, parts.electronegativityPull, still);
+    return {
+      dispose() {
+        stop();
+        wrap.remove();
+      }
+    };
+  }
 
   // Tallow custom experiment & atom animations (rutherford-beam, charge-plates, shell-fill, mg-cation)
   if (parts.customTallow) {

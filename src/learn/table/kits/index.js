@@ -34,3 +34,4 @@ import './rate.js';
 import './lode.js';
 import './thorn.js';
 import './nuke.js';
+import './solid-claims.js';

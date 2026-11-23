@@ -198,10 +198,10 @@ export class GuideArrow {
   update(camera, time = 0) {
     if (!this.route) return Infinity;
     const cp = camera.position;
-    const { s, total } = this._progress(cp.x, cp.z);
+    const { s, total, offRoute } = this._progress(cp.x, cp.z);
     const end = this.route[this.route.length - 1];
     const left = Math.hypot(end.x - cp.x, end.z - cp.z);
-    const remaining = Math.max(left, total - s);
+    const remaining = offRoute < 4 ? Math.max(left, total - s) : left;
 
     let p;
     if (remaining < ARRIVE + LEAD) {

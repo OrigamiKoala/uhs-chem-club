@@ -136,16 +136,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Two of the Same',
-    prompt: 'Two hydrogen atoms are brought together: what happens?',
+    prompt: 'What happens when two hydrogen atoms are brought together?',
     cards: GUESSES,
     hints: [
-      'Lay one of the three cards in the slot.',
-      'Each hydrogen atom is one positive nucleus and one negative electron, so think about what each nucleus does to the other atom\'s electron.',
-      'A prediction is never graded, so lay the card you think most likely.'
+      'Drag one of the three prediction cards into the slot.',
+      'Each hydrogen atom has one positive nucleus and one negative electron, so think about how each nucleus attracts the other atom\'s electron.',
+      'Predictions are never graded, so pick the card you think is most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'The next stage brings two hydrogen atoms together.'
+      body: 'The next stage brings two hydrogen atoms together to test your prediction.'
     }
   }),
 
@@ -154,7 +154,7 @@ export const STAGES = [
     title: 'What Holds Two Atoms',
     briefing: {
       speaker: SPEAKER,
-      body: 'Each nucleus attracts the other atom\'s electron, and the two nuclei repel each other. The curve shows the energy of the pair at each distance, and atoms left alone move toward lower energy.'
+      body: 'Each nucleus attracts the other atom\'s electron, while the two nuclei repel each other. The curve tracks the pair\'s energy at each distance, and atoms naturally settle at the lowest energy.'
     },
     get prompt() {
       return testPrompt(QUEST_KEY, GUESSES, 'at what distance apart do two hydrogen atoms settle?');
@@ -164,23 +164,23 @@ export const STAGES = [
       fixtures: [wells('w', [wellRow('a', 'H-H', 'Pair', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.17, components: true, plot: { y0: 26, foot: 9 } })]
     }),
     hints: [
-      'Drag the right-hand atom along the track and watch the curve and the two dotted traces being drawn.',
-      'Compare how fast the attraction trace and the repulsion trace change as the atoms get very close.',
-      'Find the distance where moving closer stops lowering the energy, and ask which of the two traces has taken over there.'
+      'Drag the right-hand atom along the track and watch the energy curve and the two dotted traces.',
+      'Compare how quickly the attraction trace and the repulsion trace change as the atoms get very close.',
+      'Find the distance where moving closer stops lowering the energy; repulsion takes over inside that point.'
     ],
     check(state) {
       const r = wellRead(state.table, 'w').rows[0];
       if (r.lo === r.hi) return { ok: false, notYet: true, msg: 'Drag the atom along the track to draw the curve.' };
       if (Math.abs(r.gap - r.r0) <= SETTLE_TOL) return { ok: true };
       return r.gap < r.r0
-        ? { ok: false, msg: `At ${r.gap} pm the repulsion trace has risen steeply and the energy is higher than it is a little further out.` }
-        : { ok: false, msg: `At ${r.gap} pm the energy is still falling as the atoms come closer.` };
+        ? { ok: false, msg: `At ${r.gap} pm, repulsion rises sharply and the energy is higher than it is a little farther out.` }
+        : { ok: false, msg: `At ${r.gap} pm, the energy is still falling as the atoms get closer.` };
     },
     get reward() {
       return {
         log: 'The lowest point of the curve.',
         title: 'Chemical Bond',
-        body: `${verdictLine(QUEST_KEY, 'hold')}The pair settles where the energy is lowest: close enough for each nucleus to attract both electrons, not so close that the nuclei repel strongly. Atoms held together this way are joined by a chemical bond.`
+        body: `${verdictLine(QUEST_KEY, 'hold')}The pair settles where energy is lowest: close enough for each nucleus to attract both electrons, without strong nuclear repulsion. Atoms held together this way form a chemical bond.`
       };
     }
   },
@@ -196,27 +196,27 @@ export const STAGES = [
       zones: { trays: [trayAt('bonded', TRAY_NAME.bonded, 36, 50, 44, 16), trayAt('apart', TRAY_NAME.apart, 92, 50, 44, 16)] }
     }),
     hints: [
-      'Drag one atom of a pair onto the other, let go, and watch whether the two stay joined.',
-      'Compare the outer shells drawn on the atoms in the pairs that stayed joined with those in the pairs that came apart.',
-      'A full outer shell has no place for another electron, so look for a lit ring in each pair before you press it.'
+      'Drag one atom onto its partner and let go to see if they stay joined.',
+      'Compare the outer shells of the pairs that stayed joined with those that came apart.',
+      'A full outer shell (shown by a lit ring) cannot accept another electron, so check each pair for a lit ring.'
     ],
     check(state) {
       const t = state.table;
       const pairs = readPairs(t, P2, ['bonded', 'apart']);
       if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
-      if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
+      if (pairs.some(p => p.split)) return { ok: false, msg: 'Both atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
       // A bonded pair stays joined; a pair that sprang apart is two loose atoms.
       const want = [true, false, true, false];
-      if (pairs.some(p => p.tray === 'bonded' && !p.joined)) return { ok: false, msg: `The atoms of a pair in "${TRAY_NAME.bonded}" are not joined on the table.` };
-      if (pairs.some(p => p.tray === 'apart' && p.joined)) return { ok: false, msg: `The atoms of a pair in "${TRAY_NAME.apart}" are joined on the table.` };
-      if (pairs.some((p, i) => (p.tray === 'bonded') !== want[i])) return { ok: false, msg: `A pair in "${TRAY_NAME.apart}" has not been pressed together yet.` };
+      if (pairs.some(p => p.tray === 'bonded' && !p.joined)) return { ok: false, msg: `A pair in "${TRAY_NAME.bonded}" is not joined on the table.` };
+      if (pairs.some(p => p.tray === 'apart' && p.joined)) return { ok: false, msg: `A pair in "${TRAY_NAME.apart}" is actually joined.` };
+      if (pairs.some((p, i) => (p.tray === 'bonded') !== want[i])) return { ok: false, msg: `A pair in "${TRAY_NAME.apart}" has not been tested together yet.` };
       return { ok: true };
     },
     reward: {
       log: 'Sodium with chlorine bonded. Neon with neon did not. Hydrogen with hydrogen bonded. Argon with hydrogen did not.',
       title: 'Which Atoms Bond',
-      body: 'Neon and argon have full outer shells, with no place for another electron, so the pairs with them did not bond. In the two pairs that bonded, each atom ended with a full outer shell.'
+      body: 'Neon and argon already have full outer shells, so they did not bond. Most atoms reach a full outer shell of 8 electrons (full s and p subshells) by bonding.'
     }
   },
 
@@ -225,9 +225,9 @@ export const STAGES = [
     title: 'Where the Electron Went',
     briefing: {
       speaker: SPEAKER,
-      body: 'Electronegativity, the number on each atom, is how strongly that atom pulls on electrons it shares with another atom. In an ionic bond one atom takes electrons from the other and the two ions attract; in a covalent bond the atoms share electrons in pairs.'
+      body: 'Electronegativity (the number on each atom) measures how strongly an atom pulls on shared electrons. In an ionic bond, one atom takes electrons from the other and the opposite ions attract. In a covalent bond, atoms share electron pairs.'
     },
-    prompt: 'Which pairs of atoms form an ionic bond and which a covalent bond?',
+    prompt: 'Which pairs form an ionic bond, and which form a covalent bond?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_PULL,
@@ -235,29 +235,30 @@ export const STAGES = [
       zones: { trays: [trayAt('ionic', TRAY_NAME.ionic, 36, 50, 44, 16), trayAt('covalent', TRAY_NAME.covalent, 92, 50, 44, 16)] }
     }),
     hints: [
-      'Press each pair together and watch whether an electron crosses to one atom or a pair settles between the two.',
-      'Compare the two electronegativity values in the pairs where an electron crossed with those in the pairs that share.',
-      'The atom with the higher electronegativity pulls the electrons harder, so think about what a very large difference does to a shared pair.'
+      'Press each pair together and watch whether an electron transfers to one atom or a pair is shared between them.',
+      'Compare the electronegativity values in the pairs that transfer an electron with those that share.',
+      'When two atoms have a very large electronegativity difference, one atom takes the electron instead of sharing it.'
     ],
     check(state) {
       const t = state.table;
       const pairs = readPairs(t, P3, ['ionic', 'covalent']);
       if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
-      if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
+      if (pairs.some(p => p.split)) return { ok: false, msg: 'Both atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
-      if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together.' };
+      if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together yet.' };
       const want = ['transfer', 'share', 'transfer', 'share'];
       const tray = { transfer: 'ionic', share: 'covalent' };
       const bad = pairs.findIndex((p, i) => p.tray !== tray[want[i]]);
       if (bad >= 0) {
-        return { ok: false, msg: pairs[bad].tray === 'ionic' ? `A pair in "${TRAY_NAME.ionic}" shows no charge on its atoms: no electron crossed.` : `A pair in "${TRAY_NAME.covalent}" shows a plus on one atom and a minus on the other: an electron crossed.` };
+        return { ok: false, msg: pairs[bad].tray === 'ionic' ? `A pair in "${TRAY_NAME.ionic}" has no charges, so no electron transferred.` : `A pair in "${TRAY_NAME.covalent}" shows + and − charges, so an electron transferred.` };
       }
       return { ok: true };
     },
     reward: {
       log: 'Two pairs transferred an electron, two shared a pair.',
       title: 'Ionic and Covalent Bonds',
-      body: 'Where the electronegativities differ greatly, one atom takes the electrons and the ions attract (ionic); where they are close, pairs are shared (covalent). No single value of the difference divides the two kinds sharply.'
+      body: 'When electronegativities differ greatly, one atom takes electrons and the ions attract strongly (ionic). When they are similar, atoms share pairs (covalent). Ionic bonds hold far more strongly than attractions between separate covalent molecules.',
+      model: { type: 'electronegativity-pull', left: 'H', right: 'Cl', enLeft: 2.2, enRight: 3.2, caption: 'A more electronegative atom pulls shared electrons closer.' }
     }
   },
 
@@ -266,31 +267,30 @@ export const STAGES = [
     title: 'How Many It Takes',
     briefing: {
       speaker: SPEAKER,
-      body: 'An atom that loses electrons becomes a positive ion, and one that gains them a negative ion. Ions bond in the numbers that make their charges add up to zero.'
+      body: 'Atoms keep bonding until their outer shells are full (8 electrons for most atoms). Bond chlorine atoms to magnesium until every joined atom has a full outer shell.'
     },
     prompt: 'How many chlorine atoms does one magnesium atom bond with?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
-      pieces: [atomAt('mg', 'Mg', 24, 22), atomAt('cl1', 'Cl', 60, 14), atomAt('cl2', 'Cl', 78, 14), atomAt('cl3', 'Cl', 96, 14), atomAt('cl4', 'Cl', 60, 30)],
-      fixtures: [{ id: 'needle', kind: 'needle', label: 'Total charge', at: { x: 99, y: 38 }, size: { w: 34, h: 16 }, noRun: true, props: { cluster: 'mg', range: 3 } }]
+      pieces: [atomAt('mg', 'Mg', 26, 26), atomAt('cl1', 'Cl', 60, 16), atomAt('cl2', 'Cl', 80, 16), atomAt('cl3', 'Cl', 100, 16), atomAt('cl4', 'Cl', 80, 34)]
     }),
     hints: [
-      'Drag chlorine atoms onto the magnesium atom; the charge meter reads the total charge of everything joined to it.',
-      'Compare the charge printed on the magnesium atom, and the electrons left in its outer shell, after each chlorine joins.',
-      'Every electron a chlorine atom gains comes from magnesium, so compare what one chlorine can take with what magnesium\'s outer shell holds.'
+      'Drag chlorine atoms onto the magnesium atom and watch the outer-shell rings on every joined atom.',
+      'Magnesium has 2 valence electrons to give away, while each chlorine only needs 1 to reach a full shell of 8.',
+      'Keep bonding chlorine atoms to magnesium until every joined atom has a full outer shell.'
     ],
     check(state) {
       const t = state.table;
       const unit = clusterOf(t, 'mg');
       if (unit.length === 1) return { ok: false, notYet: true, msg: 'Join a chlorine atom to the magnesium atom first.' };
-      if (!closureOf(unit, t).closed) return { ok: false, msg: 'The ring on one of the joined atoms is not lit: that atom\'s outer shell is not yet a full one.' };
+      if (!closureOf(unit, t).closed) return { ok: false, msg: 'One joined atom\'s ring is not lit yet, so its outer shell is still incomplete.' };
       return { ok: true };
     },
     reward: {
       log: 'Magnesium bonded with two chlorines.',
       title: 'Formula Ratios',
-      body: 'Magnesium loses two electrons and each chlorine gains one, so one magnesium bonds with two chlorines and the charges add up to zero. This is written MgCl₂.'
+      body: 'Magnesium gives up two electrons and each chlorine takes one, so one magnesium bonds with two chlorines to give every atom a full outer shell (MgCl₂).'
     }
   },
 
@@ -299,7 +299,7 @@ export const STAGES = [
     title: 'Multiple Bonds',
     briefing: {
       speaker: SPEAKER,
-      body: 'Two atoms can share more than one pair of electrons. One shared pair is a single bond, two a double bond and three a triple bond.'
+      body: 'Two atoms can share more than one pair of electrons: one pair is a single bond, two is a double bond, and three is a triple bond.'
     },
     prompt: 'How many electron pairs does each pair of atoms share?',
     widget: { type: 'table', label: 'The bench' },
@@ -309,25 +309,25 @@ export const STAGES = [
       zones: { trays: [trayAt('one', TRAY_NAME.one, 24, 50, 28, 16), trayAt('two', TRAY_NAME.two, 60, 50, 28, 16), trayAt('three', TRAY_NAME.three, 96, 50, 28, 16)] }
     }),
     hints: [
-      'Press a pair together to see the pairs of electrons that settle between its atoms.',
-      'Count how many electrons each atom is short of a full outer shell: hydrogen\'s is full with two, the others with eight.',
-      'Each shared pair counts toward both atoms\' outer shells, so compare the pairs shared with the electrons each atom was short.'
+      'Press each pair together to see how many electron pairs settle between the atoms.',
+      'Count how many electrons each atom needs to fill its outer shell: 2 for hydrogen, and 8 for the others.',
+      'Each shared pair counts toward both atoms, so compare the shared pairs with how many electrons each atom needed.'
     ],
     check(state) {
       const t = state.table;
       const pairs = readPairs(t, P5, ['one', 'two', 'three']);
       if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
-      if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
+      if (pairs.some(p => p.split)) return { ok: false, msg: 'Both atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
       const want = ['one', 'two', 'three', 'one'];
       const bad = pairs.findIndex((p, i) => p.tray !== want[i]);
-      if (bad >= 0) return { ok: false, msg: `A pair in "${TRAY_NAME[pairs[bad].tray]}" does not show that many pairs of electrons between its atoms when pressed together.` };
+      if (bad >= 0) return { ok: false, msg: `A pair in "${TRAY_NAME[pairs[bad].tray]}" does not share that many electron pairs.` };
       return { ok: true };
     },
     reward: {
       log: 'One pair, two pairs, three pairs.',
       title: 'Double and Triple Bonds',
-      body: 'H₂ and F₂ share one pair, O₂ two (a double bond) and N₂ three (a triple bond). In these pairs each atom shares as many pairs as it was short of a full outer shell.',
+      body: 'H₂ and F₂ share one pair (single bond), O₂ shares two (double bond), and N₂ shares three (triple bond). Each atom shares as many pairs as it needs to fill its outer shell.',
       last: true
     }
   }
@@ -336,8 +336,9 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   2: ['Drag the right-hand atom along its track.'],
-  3: ['A ring lights on an atom when its outer shell is full.'],
-  4: ['The number on each atom is its electronegativity.']
+  3: ['A ring lights on an atom when its outer shell is full (full s + p = 8 for most atoms).'],
+  4: ['The number on each atom is its electronegativity.'],
+  5: ['Atoms keep bonding until every outer shell is full.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -349,11 +350,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Two atoms bond when being together lowers their energy: each nucleus attracts the other atom\'s electrons. Atoms with full outer shells do not bond.'
+      body: 'Two atoms bond when coming together lowers their energy: each nucleus attracts the other atom\'s electrons. Most atoms reach a full outer shell of 8 electrons (full s and p subshells); atoms with full outer shells do not bond.'
     },
     {
       heading: 'Two Kinds of Bond',
-      body: 'Where electronegativities differ greatly, an electron is transferred and the ions attract: an ionic bond. Where they are close, electrons are shared in pairs: a covalent bond, which can be single, double or triple.'
+      body: 'When electronegativities differ greatly, an electron transfers and the opposite ions attract strongly (an ionic bond). When they are similar, atoms share electron pairs (a single, double, or triple covalent bond). Ionic bonds hold solids together much more strongly than separate covalent molecules.'
     },
     {
       heading: 'Next',

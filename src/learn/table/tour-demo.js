@@ -56,7 +56,7 @@ export async function playTourDemo(canvas, demo) {
       if (reduced || t < s.at - LEAD || t > s.at + 0.3) return;
       const k = Math.min(1, Math.max(0, (t - (s.at - LEAD)) / LEAD));
       if (s.drag) {
-        const from = d.table.pieces[s.drag.piece].at;
+        const from = s.drag.from || d.table.pieces[s.drag.piece].at;
         const pos = { x: from.x + (s.drag.to.x - from.x) * ease(k), y: from.y + (s.drag.to.y - from.y) * ease(k) };
         if (t < s.at) { shown[s.drag.piece] = pos; hand = pos; } else hand = s.drag.to;
       } else if (s.press) {
@@ -105,9 +105,14 @@ export async function stageDemo(load, index, { max = 4, gap = 1.6 } = {}) {
   };
   const steps = [];
   let at = 1.0;
+  // The table as it stands before each action: a join's hand goes from where the piece now is to where its target now is
+  // (a board that arranges itself moves both between actions).
+  let now = table;
   for (const action of actions) {
     const s = { at, action };
-    if (action.place?.piece && table.pieces[action.place.piece]) {
+    if (action.join && now.pieces[action.join[0]] && now.pieces[action.join[1]]) {
+      s.drag = { piece: action.join[0], from: { ...now.pieces[action.join[0]].at }, to: { ...now.pieces[action.join[1]].at } };
+    } else if (action.place?.piece && table.pieces[action.place.piece]) {
       const to = where(action.place.to);
       if (to) s.drag = { piece: action.place.piece, to };
     } else if (action.run) {
@@ -129,6 +134,7 @@ export async function stageDemo(load, index, { max = 4, gap = 1.6 } = {}) {
       }
     }
     steps.push(s);
+    now = MODEL.apply(now, action);
     at += gap;
   }
   return { table, steps, loop: at + 1.8 };
@@ -176,7 +182,17 @@ export async function buildLiveDemo(table, step) {
     const bedId = typeof f.props?.bed === 'string' && f.props.bed.startsWith('tray:') ? f.props.bed.slice(5) : null;
     const bedTray = bedId ? table.zones?.trays?.[bedId] : null;
 
-    if (f.kind === 'pulse' && nearSlots.length) {
+    if (f.kind === 'lead' || f.kind === 'rxn') {
+      // Predict clips and reaction viewers play in place; never swap the live bench to another stage.
+      return null;
+    } else if (f.kind === 'hotplate') {
+      const p = findDraggable(['slab', 'salt']);
+      if (p) {
+        const spot = { x: Math.round(f.at.x - 8), y: Math.round(f.at.y + 7) };
+        steps.push({ at, drag: { piece: p.id, to: spot }, action: { place: { piece: p.id, to: `free:${spot.x},${spot.y}` } } });
+        at += 1.3;
+      }
+    } else if (f.kind === 'pulse' && nearSlots.length) {
       // Pulse timer needs both a lamp and a detector placed before firing.
       const used = new Set();
       for (const sl of nearSlots) {
@@ -216,8 +232,8 @@ export async function buildLiveDemo(table, step) {
     } else if (Object.keys(f.dials || {}).length) {
       const [dName, d] = Object.entries(f.dials)[0];
       const track = lay.dials.find(x => x.name === dName);
-      // Avoid landing on power 4 (the answer to Tallow Q1 Stage 1) when demonstrating the scope dial.
-      const frac = f.kind === 'scope' ? 0.2 : 0.65;
+      // Avoid landing on power 4 (Tallow Q1 Stage 1) or 298 K (Gibbs answer region) when demonstrating a dial.
+      const frac = f.kind === 'scope' ? 0.2 : f.kind === 'plot' ? 0.22 : 0.65;
       const mid = d.min + Math.round(((d.max - d.min) * frac) / (d.step || 1)) * (d.step || 1);
       const val = mid === d.value ? Math.min(d.max, d.min + (d.step || 1)) : Math.min(d.max, Math.max(d.min, mid));
       const action = { setDial: { fixture: f.id, dial: dName, value: val } };
@@ -244,9 +260,32 @@ export async function buildLiveDemo(table, step) {
     }
   } else if (step.pc && table.pieces?.[step.pc]) {
     const p = table.pieces[step.pc];
-    if (p.kind === 'element') {
-      // Element cards are highlighted without a pointer animation.
+    if (p.kind === 'element' || p.kind === 'hub' || p.kind === 'shift' || p.kind === 'gcard') {
+      // Highlight without giving away a sort answer.
       return null;
+    } else if (p.kind === 'block') {
+      // Join two non-answer blocks (preferring the last two, or a valve/sample with a source) rather than dragging into a slot.
+      const blocks = Object.values(table.pieces).filter(q => !q.hidden && !q.fixed && q.kind === 'block');
+      const a = blocks.length >= 3 ? blocks[blocks.length - 1] : p;
+      const b = blocks.find(q => q.id !== a.id && q.id !== blocks[0]?.id) || blocks.find(q => q.id !== a.id);
+      if (a && b) {
+        steps.push({ at, drag: { piece: a.id, to: b.at }, action: { join: [a.id, b.id] } });
+        at += 1.5;
+      }
+    } else if (p.kind === 'charge') {
+      // Only drag a sample into a cup if this stage actually has a cup slot.
+      const cup = Object.values(table.fixtures || {}).find(f => f.kind === 'cup' && f.props?.slot);
+      const sl = cup && table.zones?.slots?.[cup.props.slot];
+      if (sl) {
+        steps.push({ at, drag: { piece: p.id, to: sl.at }, action: { place: { piece: p.id, to: `slot:${sl.id}` } } });
+        at += 1.5;
+      }
+    } else if (p.kind === 'hammer' || p.kind === 'leads') {
+      const slab = Object.values(table.pieces).find(q => q.id !== p.id && !q.hidden && q.kind === 'slab');
+      if (slab) {
+        steps.push({ at, drag: { piece: p.id, to: slab.at }, action: { join: [p.id, slab.id] } });
+        at += 1.5;
+      }
     } else if (p.props?.markable) {
       steps.push({ at, tap: { ...p.at }, action: { mark: p.id } });
       at += 1.4;
@@ -295,7 +334,7 @@ export async function buildLiveDemo(table, step) {
   }
 
   if (!steps.length) {
-    if (step.demo) return step.demo.build();
+    // Never swap the live bench to a canned demo from another stage.
     return null;
   }
   // Verify at least one step applies cleanly without error.

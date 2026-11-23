@@ -34,6 +34,7 @@
  * lamps. A host's own materials dress the fixtures (`opts.world.materials`).
  */
 
+import { solidsFor, fixtureSolids, pieceSolids, paintStripped } from '../table/solids.js';
 import * as THREE from 'three';
 import { BenchViewer3D, engravedPlaque, AMBER, PHOSPHOR } from './bench3d.js';
 import { benchHost, guideTo } from './bench-host.js';
@@ -43,6 +44,7 @@ import { SIZES, rectOf } from '../table/snap.js';
 import { plateMap, fixtureLayout, pieceTargets, foePadOf, FOE_HEADROOM_M, cardHalf, PLATE_M } from '../table/layout.js';
 import { usedRect } from '../table/audit.js';
 import { TableGestures, pendingFetch } from '../table/gestures.js';
+import { knobFrac } from '../table/glide.js';
 import { lineOf, readY } from '../table/recorder.js';
 import { drawTable, faceOf } from './table2d.js';
 import { weatherFace } from './table-surface.js';
@@ -56,7 +58,7 @@ import { makeLigarMaterials, LIGAR_SKIN } from './ligar-props.js';
 import { hashId } from './plates.js';
 import { TableKeys } from './table-keys.js';
 import { TrendPlot } from './trendplot.js';
-import { PLATE_SURFACE_Y } from './lean.js';
+import { PLATE_SURFACE_Y, LEAN } from './lean.js';
 import { pickAimTarget, aimBox } from '../../three/aim-target.js';
 import { fieldAimTargets, fieldPointById } from '../../three/field-points.js';
 
@@ -71,6 +73,16 @@ const PUCK_T = PUCK_H;
 const CARD_T = CARD_H;
 
 export { cardHalf };
+/** A kit's own dress and the solids standing over the same fixture, as one dress (either may be null). */
+function joinDress(THREE, a, b) {
+  if (!a || !b) return a || b;
+  const g = new THREE.Group();
+  g.add(a, b);
+  const both = k => (fx, st) => { a.userData?.[k]?.(fx, st); b.userData?.[k]?.(fx, st); };
+  g.userData = { ...a.userData, update: both('update'), sync: both('sync'), tick: (dt, still) => { a.userData?.tick?.(dt, still); b.userData?.tick?.(dt, still); } };
+  return g;
+}
+
 export class Table3D extends BenchViewer3D {
   /**
    * @param {HTMLElement} host where the drawn tabletop would go (unused, emptied)
@@ -183,6 +195,18 @@ export class Table3D extends BenchViewer3D {
   // A drag reports every pointer move, which can be several a frame; the plate is repainted once, on the next frame (`update`).
   setDrag(drag, gap) { this.drag = drag; this.railGap = gap; this.groundStale = true; }
   changed() { this.repaintGround(); }
+  /** A dragged knob rides with the hand (`table/glide.js`): the knobs move now, the plate's picture on the next frame. */
+  glided() {
+    this.groundStale = true;
+    for (const f of Object.values(this.state?.fixtures || {})) {
+      const rec = this.fixtures?.get(f.id);
+      if (!rec || rec.custom) continue;
+      for (const [name, d] of Object.entries(f.dials)) {
+        const k = rec.knobs[name];
+        if (k) k.knob.position.x = k.a.x + knobFrac(f.id, name, d) * (k.b.x - k.a.x);
+      }
+    }
+  }
   /** Where the world has a field point the player walks to it, so no plate is drawn or tapped. */
   showsSite(id) { return !fieldPointById(this.worldObject, id); }
 
@@ -280,7 +304,7 @@ export class Table3D extends BenchViewer3D {
     for (const p of Object.values(state.pieces)) {
       if (first || rebuilt || !this.shown[p.id]) this.shown[p.id] = { ...p.at };
     }
-    this.gestures.gesture = null;
+    this.gestures.tableChanged(first || rebuilt || stageChanged);
     this.drag = null;
     this.railGap = null;
 
@@ -319,6 +343,8 @@ export class Table3D extends BenchViewer3D {
       void pb;
     }
     this.leanZones = zones;
+    // A table with the instrument near and the options far is looked at more from above (`LEAN.nearPitchDeg`).
+    this.leanPitchDeg = state.near ? LEAN.nearPitchDeg : undefined;
     if (first || rebuilt || stageChanged) {
       // A table stood in a boss's arena flies in from the player's standing view, where the boss is in the glass, rather than cutting to the plate.
       this.leanIn({ instant: !(first && this.arenaFight), zones });
@@ -491,7 +517,10 @@ export class Table3D extends BenchViewer3D {
       const DECK_TOP = GROUND_Y;
       // A kit may dress an instrument with solid parts of its own (`kit.dress3d`: a glass envelope, a rail, a prism) on top of what
       // the flat picture shows; the controls below are still the table's.
-      const dress = kit.dress3d?.(f, state, { THREE, scale: s, mats: this.kitMats, toPlate: this.map.toPlate, own: m => this.mine(m), box: lay.box, ground: GROUND_Y, skin: this.skin });
+      const solidCfg = solidsFor(state.kit, 'fixture', f.kind, this.skin, f, state);
+      const dc3 = { THREE, scale: s, mats: this.kitMats, toPlate: this.map.toPlate, own: m => this.mine(m), box: lay.box, ground: GROUND_Y, skin: this.skin, solids: solidCfg };
+      // The atoms and molecules the fixture draws stand up as balls and sticks (`table/solids.js`); the plate's picture is painted without them.
+      const dress = joinDress(THREE, kit.dress3d?.(f, state, dc3), solidCfg && kit.paintFixture ? fixtureSolids((cx, fx, st, b) => kit.paintFixture(cx, fx, st, b), f, state, dc3, solidCfg, fx => fixtureLayout(fx)) : null);
       if (dress) {
         this.fixtureRoot.add(dress);
         // A dress may follow the table's state (`dress.userData.update(fixture, state)`): a thermometer's column, two atoms pulled apart.
@@ -507,20 +536,35 @@ export class Table3D extends BenchViewer3D {
       }
       const knobs = {};
       // A world with gear of its own turns a bigger knob in a wider groove: a dial that is hard to see is a dial nobody turns.
-      const knobR = this.skin ? Math.min(0.036, s * 2.2) : Math.min(0.026, s * 1.6);
+      const knobR = this.skin ? Math.min(0.042, s * 2.5) : Math.min(0.032, s * 1.9);
       for (const d of lay.dials) {
-        if (f.kind === 'view' && (d.name === 'turn' || d.name === 'tilt')) continue;
+        if ((f.kind === 'view' || f.props?.joystick) && (d.name === 'turn' || d.name === 'tilt')) continue;
         const a = this.map.toPlate({ x: d.x0, y: d.y });
         const b = this.map.toPlate({ x: d.x1, y: d.y });
-        // The groove the knob rides in: a dark slot cut in the deck, with a lit edge along it.
-        const groove = new THREE.Mesh(new THREE.BoxGeometry(b.x - a.x + knobR, 0.004, this.skin ? 0.02 : 0.012), this.kitMats.lining);
-        groove.position.set((a.x + b.x) / 2, DECK_TOP + 0.001, a.z);
+        const span = Math.max(0.02, b.x - a.x);
+        // The groove the knob rides in: a dark recessed track with a bright steel rail so it reads clearly on every deck.
+        const groove = new THREE.Mesh(new THREE.BoxGeometry(span + knobR * 1.2, 0.006, this.skin ? 0.026 : 0.018), this.kitMats.lining);
+        groove.position.set((a.x + b.x) / 2, DECK_TOP + 0.003, a.z);
         groove.receiveShadow = true;
         this.fixtureRoot.add(groove);
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(span, 0.005, 0.008), this.kitMats.brass || this.kitMats.labSteel || this.mats.top);
+        rail.position.set((a.x + b.x) / 2, DECK_TOP + 0.006, a.z);
+        this.fixtureRoot.add(rail);
+        const dial = f.dials[d.name];
+        if (dial?.step && dial.max > dial.min) {
+          const n = Math.round((dial.max - dial.min) / dial.step);
+          if (n >= 1 && n <= 8) {
+            for (let i = 0; i <= n; i++) {
+              const tk = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.004, 0.018), this.kitMats.labSteel || this.mats.top);
+              tk.position.set(a.x + (i / n) * (b.x - a.x), DECK_TOP + 0.005, a.z);
+              this.fixtureRoot.add(tk);
+            }
+          }
+        }
         const knob = buildKnob(knobR, { capMat: this.kitMats.brass, notchMat: this.kitMats.rubber });
-        knob.position.set(a.x, DECK_TOP, a.z);
+        knob.position.set(a.x, DECK_TOP + 0.002, a.z);
         this.fixtureRoot.add(knob);
-        knobs[d.name] = { knob, a, b, top: DECK_TOP };
+        knobs[d.name] = { knob, a, b, top: DECK_TOP + 0.002 };
       }
       if (!lay.run) { this.fixtures.set(f.id, { knobs, dress }); continue; }
       const rp = this.map.toPlate({ x: (lay.run.x0 + lay.run.x1) / 2, y: (lay.run.y0 + lay.run.y1) / 2 });
@@ -552,9 +596,15 @@ export class Table3D extends BenchViewer3D {
     this.table.add(this.hit);
     this.unGrab = this.addGrabbable({
       object: this.hit,
-      accepts: rc => {
+      accepts: (rc, e) => {
         const u = this.unitsAtRay(rc.ray);
-        return Boolean(u && this.gestures.wouldGrab(u));
+        if (!u) return false;
+        if (this.gestures.wouldGrab(u)) return true;
+        // A plain left-drag that starts on the tabletop plate (e.g. a few pixels off a small dial or inside a tray)
+        // must never tilt the bench camera; right-drag or Shift-drag still lets the player look around.
+        const b = this.state?.bounds;
+        const onPlate = b && u.x >= -2 && u.x <= b.w + 2 && u.y >= -2 && u.y <= b.h + 2;
+        return Boolean(onPlate && (!e || (e.button === 0 && !e.shiftKey && !e.altKey && !e.ctrlKey)));
       },
       onStart: e => { const u = this.unitsAt(e); if (u) this.gestures.pointerDown(u); },
       onMove: (dx, dy, e) => { const u = this.unitsAt(e); if (u) this.gestures.pointerMove(u); },
@@ -617,8 +667,10 @@ export class Table3D extends BenchViewer3D {
     const key = `${text}|${w}|${h}|${o.dim ? 1 : 0}|${o.bg || ''}`;
     let tex = this.plaques.get(key);
     if (!tex) {
+      // A margin round the words in step with the face (a word set to the very edge of a card reads as spilling off it), and a
+      // starting size a short word is not blown up past: two lines of a card's face, not one word filling it.
       tex = engravedPlaque(text, {
-        w, h, size: o.size || Math.round(h * 0.42), align: 'middle', pad: 6, tracking: 1,
+        w, h, size: o.size || Math.round(h * 0.3), align: 'middle', pad: Math.max(6, Math.round(Math.min(w, h) * 0.14)), tracking: 1,
         color: o.dim ? '#7a7264' : '#dcd6cc', bg: o.bg || '#16140f'
       });
       this.plaques.set(key, tex);
@@ -633,6 +685,7 @@ export class Table3D extends BenchViewer3D {
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
       look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom, drag: this.drag, screens: Boolean(this.skin),
+      solids: f => solidsFor(this.state.kit, 'fixture', f.kind, this.skin, f, this.state),
       clock: this.liveClock || 0,
       // Where the world has the field point, the player walks to it; a plate would only be a shortcut past it.
       sites: id => this.showsSite(id)
@@ -739,7 +792,7 @@ export class Table3D extends BenchViewer3D {
       for (const [name, d] of Object.entries(f.dials)) {
         const k = rec.knobs[name];
         if (!k) continue;
-        const frac = d.max === d.min ? 0 : (d.value - d.min) / (d.max - d.min);
+        const frac = knobFrac(f.id, name, d);
         k.knob.position.x = k.a.x + frac * (k.b.x - k.a.x);
       }
     }
@@ -750,13 +803,13 @@ export class Table3D extends BenchViewer3D {
     const state = this.state;
     const box = rectOf(state.recorder.box, { w: 30, h: 18 });
     const s = this.map.s;
-    const cw = 512;
-    const ch = Math.max(64, Math.round(cw * box.h / box.w));
+    const cw = 640;
+    const ch = Math.max(80, Math.round(cw * box.h / box.w));
     const canvas = document.createElement('canvas');
     canvas.width = cw;
     canvas.height = ch;
     // Seen from the player's seat the strip is small, so its figures are painted large.
-    const plot = new TrendPlot(canvas, { fontPx: 20 });
+    const plot = new TrendPlot(canvas, { fontPx: 24 });
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
     const mat = this.mine(new THREE.MeshBasicMaterial({ map: tex }));
@@ -779,8 +832,11 @@ export class Table3D extends BenchViewer3D {
     const sh = this.sheet;
     if (!sh) return;
     const rec = this.state.recorder;
-    sh.mesh.visible = rec.rows.length > 0;
-    if (!rec.rows.length) { sh.bar.visible = false; sh.rows = []; return; }
+    const ax = rec.axes || {};
+    const fixed = ax.range || null;
+    const showEmpty = Boolean(fixed);
+    sh.mesh.visible = rec.rows.length > 0 || showEmpty;
+    if (!rec.rows.length && !showEmpty) { sh.bar.visible = false; sh.rows = []; return; }
     const xs = rec.rows.map(r => r.x);
     const ys = rec.rows.map(r => r.y);
     const range = (a, floor) => {
@@ -790,9 +846,7 @@ export class Table3D extends BenchViewer3D {
       if (hi <= lo) hi = lo + 1;
       return [lo, hi];
     };
-    const ax = rec.axes || {};
     // A stage may fix what the strip shows (`recorder.range`), so a line laid across the readings runs on to where it meets an axis.
-    const fixed = ax.range || null;
     const [xMin, xMax] = fixed ? [fixed.xMin, fixed.xMax] : range(xs);
     const [yMin, yMax] = fixed ? [fixed.yMin, fixed.yMax] : range(ys);
     const ySpan = Math.abs(yMax - yMin);
@@ -806,44 +860,83 @@ export class Table3D extends BenchViewer3D {
     });
     sh.plot.points = rec.rows.map((r, i) => ({ x: r.x, y: r.y, active: i === rec.rows.length - 1 }));
     const line = lineOf(rec);
-    sh.plot.overlay = line
+    const markerFix = Object.values(this.state.fixtures || {}).find(f => f.kind === 'marker' && f.dials?.value);
+    const markerVal = markerFix ? markerFix.dials.value.value : null;
+    sh.plot.overlay = (line || markerVal != null)
       ? (ctx, pl) => {
-          const a = pl.pxOf(xMin, readY(line, xMin));
-          const b = pl.pxOf(xMax, readY(line, xMax));
-          // Kept inside the strip's axes: a line carried on past the readings never runs over the scale.
           const tl = pl.pxOf(xMin, yMax);
           const br = pl.pxOf(xMax, yMin);
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-          ctx.clip();
-          ctx.strokeStyle = '#e59b24';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-          ctx.restore();
+          if (line) {
+            const a = pl.pxOf(xMin, readY(line, xMin));
+            const b = pl.pxOf(xMax, readY(line, xMax));
+            // Kept inside the strip's axes: a line carried on past the readings never runs over the scale.
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+            ctx.clip();
+            ctx.strokeStyle = '#e59b24';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+            ctx.restore();
 
-          // Display slope & y-intercept badge on the plot/straightedge with smart precision
-          const fmt = v => Math.abs(v) < 1e-6 ? '0' : Math.abs(v) < 0.1 ? Number(v.toPrecision(3)) : Math.round(v * 100) / 100;
-          const text = `Slope = ${fmt(line.slope)}  |  b = ${fmt(line.intercept)}`;
-          ctx.save();
-          ctx.font = 'bold 18px ui-monospace, SFMono-Regular, Menlo, monospace';
-          ctx.textAlign = 'right';
-          ctx.textBaseline = 'top';
-          const tw = ctx.measureText(text).width;
-          const pad = 7;
-          const bx = br.x - 8;
-          const by = tl.y + 8;
-          ctx.fillStyle = 'rgba(16, 14, 11, 0.92)';
-          ctx.fillRect(bx - tw - pad * 2, by, tw + pad * 2, 28);
-          ctx.strokeStyle = '#e59b24';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(bx - tw - pad * 2, by, tw + pad * 2, 28);
-          ctx.fillStyle = '#ffbe40';
-          ctx.fillText(text, bx - pad, by + 5);
-          ctx.restore();
+            // If the line crosses y = 0 inside the plot, mark where it meets zero.
+            if (yMin <= 0 && yMax >= 0 && Math.abs(line.slope) > 1e-6) {
+              const xZero = -line.intercept / line.slope;
+              if (xZero >= xMin && xZero <= xMax) {
+                const zp = pl.pxOf(xZero, 0);
+                ctx.save();
+                ctx.fillStyle = '#e59b24';
+                ctx.beginPath();
+                ctx.arc(zp.x, zp.y, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.font = 'bold 20px ui-monospace, SFMono-Regular, Menlo, monospace';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(`0 at ${Math.round(xZero)}`, Math.min(br.x - 110, zp.x + 10), zp.y - 8);
+                ctx.restore();
+              }
+            }
+
+            // Display slope & y-intercept badge in the top-left corner, clear of the line.
+            const fmt = v => Math.abs(v) < 1e-6 ? '0' : Math.abs(v) < 0.1 ? Number(v.toPrecision(3)) : Math.round(v * 100) / 100;
+            const text = `Slope = ${fmt(line.slope)}  |  b = ${fmt(line.intercept)}`;
+            ctx.save();
+            ctx.font = 'bold 20px ui-monospace, SFMono-Regular, Menlo, monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            const tw = ctx.measureText(text).width;
+            const pad = 8;
+            const bx = tl.x + 8;
+            const by = tl.y + 8;
+            ctx.fillStyle = 'rgba(16, 14, 11, 0.92)';
+            ctx.fillRect(bx, by, tw + pad * 2, 32);
+            ctx.strokeStyle = '#e59b24';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(bx, by, tw + pad * 2, 32);
+            ctx.fillStyle = '#ffbe40';
+            ctx.fillText(text, bx + pad, by + 6);
+            ctx.restore();
+          }
+          if (markerVal != null && markerVal >= xMin && markerVal <= xMax) {
+            const mp = pl.pxOf(markerVal, Math.max(yMin, 0));
+            ctx.save();
+            ctx.strokeStyle = '#78a142';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(mp.x, tl.y);
+            ctx.lineTo(mp.x, br.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#78a142';
+            ctx.beginPath();
+            ctx.arc(mp.x, mp.y, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
         }
       : null;
     sh.plot.draw();
@@ -897,8 +990,12 @@ export class Table3D extends BenchViewer3D {
     ctx.fillStyle = bg || '#16140f';
     ctx.fillRect(0, 0, W, H);
     const at = this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at);
-    if (rect) kit.paintPiece(ctx, p, this.state, { x: W / 2, y: H / 2, r: rU * K, lit: false, sc: K, flat: true });
-    else kit.paintPiece(ctx, p, this.state, { x: N / 2, y: N / 2, r: N * 0.47, lit: false, sc: (N * 0.47) / rU, flat: true, at });
+    const o = rect ? { x: W / 2, y: H / 2, r: rU * K, lit: false, sc: K, flat: true } : { x: N / 2, y: N / 2, r: N * 0.47, lit: false, sc: (N * 0.47) / rU, flat: true, at };
+    // A piece whose atoms stand on it as solids (`table/solids.js`) has its face painted without them.
+    const solidCfg = this.inPiece3d ? null : solidsFor(this.state.kit, 'piece', p.kind, this.skin, p, this.state);
+    if (solidCfg) paintStripped(ctx, cx => kit.paintPiece(cx, p, this.state, o), o.sc, solidCfg);
+    else kit.paintPiece(ctx, p, this.state, o);
+    this.lastFace = { p: p.id, o, K: o.sc, cfg: solidCfg };
     weatherFace(ctx, Math.max(W, H), hashId(p.id), 0.7);
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -922,12 +1019,34 @@ export class Table3D extends BenchViewer3D {
 
   /** A mark a held piece wears: a ring clear of its edge. A mark, never a light. */
   heldRing(g, reach) {
-    const ring = new THREE.Mesh(new THREE.RingGeometry(reach * 1.06, reach * 1.2, 40), this.mine(new THREE.MeshBasicMaterial({ color: AMBER })));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(reach * 1.06, reach * 1.15, 40), this.mine(new THREE.MeshBasicMaterial({ color: AMBER })));
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.0006;
     ring.visible = false;
     g.add(ring);
     g.userData.ring = ring;
+  }
+
+  /** A thin rectangular outline for a held card piece so it never covers neighbouring cards. */
+  heldRect(g, hw, hh) {
+    const pad = 0.012;
+    const t = 0.01;
+    const mat = this.mine(new THREE.MeshBasicMaterial({ color: AMBER }));
+    const grp = new THREE.Group();
+    const w = (hw + pad) * 2;
+    const h = (hh + pad) * 2;
+    const top = new THREE.Mesh(new THREE.PlaneGeometry(w + t * 2, t), mat);
+    top.rotation.x = -Math.PI / 2; top.position.set(0, 0.0008, -(hh + pad + t / 2));
+    const bot = new THREE.Mesh(new THREE.PlaneGeometry(w + t * 2, t), mat);
+    bot.rotation.x = -Math.PI / 2; bot.position.set(0, 0.0008, (hh + pad + t / 2));
+    const left = new THREE.Mesh(new THREE.PlaneGeometry(t, h), mat);
+    left.rotation.x = -Math.PI / 2; left.position.set(-(hw + pad + t / 2), 0.0008, 0);
+    const right = new THREE.Mesh(new THREE.PlaneGeometry(t, h), mat);
+    right.rotation.x = -Math.PI / 2; right.position.set((hw + pad + t / 2), 0.0008, 0);
+    grp.add(top, bot, left, right);
+    grp.visible = false;
+    g.add(grp);
+    g.userData.ring = grp;
   }
 
   /** An engraved legend as a flat mesh, `w` x `h` metres, face up (a name on a housing, a tag on a carrier). */
@@ -971,6 +1090,17 @@ export class Table3D extends BenchViewer3D {
     return m;
   }
 
+  /** A claimed piece (`table/solids.js`) carries its atoms as balls and sticks on its face, which was painted without them. */
+  standSolids(kit, p, g) {
+    const cfg = solidsFor(this.state.kit, 'piece', p.kind, this.skin, p, this.state);
+    const face = this.lastFace;
+    if (!cfg || g.userData.ownSolid || !face || face.p !== p.id || !face.cfg || !kit.paintPiece) return g;
+    const top = new THREE.Box3().setFromObject(g).max.y;
+    const solids = pieceSolids(THREE, m => this.mine(m), kit.paintPiece, p, this.state, face.o, cfg, { K: face.K, s: this.map.s, top: Number.isFinite(top) ? top : 0.004 });
+    if (solids) g.add(solids);
+    return g;
+  }
+
   buildPiece(kit, p) {
     const s = this.map.s;
     const rU = radiusOf(kit, p);
@@ -989,6 +1119,7 @@ export class Table3D extends BenchViewer3D {
     };
 
     // A piece the kit builds itself (`kit.piece3d`): a lamp, a tube, a cuvette are solid things, not cards with a picture on them.
+    this.inPiece3d = true;
     const solid = kit.piece3d?.(p, this.state, {
       hw: kind?.rect ? kind.rect.hw * s : r, hh: kind?.rect ? kind.rect.hh * s : r, s, mats: k,
       own: m => this.mine(m),
@@ -1002,10 +1133,13 @@ export class Table3D extends BenchViewer3D {
       },
       skin: this.skin
     });
+    this.inPiece3d = false;
     if (solid) {
+      g.userData.ownSolid = true;
       g.add(solid);
       Object.assign(g.userData, solid.userData);
-      this.heldRing(g, kind?.rect ? Math.hypot(kind.rect.hw, kind.rect.hh) * s : r);
+      if (kind?.rect) this.heldRect(g, kind.rect.hw * s, kind.rect.hh * s);
+      else this.heldRing(g, r);
       return g;
     }
 
@@ -1021,7 +1155,7 @@ export class Table3D extends BenchViewer3D {
       g.add(modelMesh);
       g.userData.height = modelMesh.userData.height;
       g.userData.tick = modelMesh.userData.tick;
-      this.heldRing(g, Math.hypot(kind?.rect?.hw || 11, kind?.rect?.hh || 8) * s);
+      this.heldRect(g, (kind?.rect?.hw || 11) * s, (kind?.rect?.hh || 8) * s);
       return g;
     }
 
@@ -1029,7 +1163,7 @@ export class Table3D extends BenchViewer3D {
     if (kit.paintPiece && kind?.rect) {
       const { mat } = this.faceMaterial(kit, p, { rect: kind.rect });
       g.add(buildCard(kind.rect.hw * s, kind.rect.hh * s, mat, tone(k.paper)));
-      this.heldRing(g, Math.hypot(kind.rect.hw, kind.rect.hh) * s);
+      this.heldRect(g, kind.rect.hw * s, kind.rect.hh * s);
       return g;
     }
 
@@ -1171,7 +1305,7 @@ export class Table3D extends BenchViewer3D {
         e = null;
       }
       if (!e) {
-        const group = this.buildPiece(kit, p);
+        const group = this.standSolids(kit, p, this.buildPiece(kit, p));
         const at = this.shown[p.id] || p.at;
         const pl = this.map.toPlate(at);
         group.position.set(pl.x, GROUND_Y, pl.z);
@@ -1300,9 +1434,34 @@ export class Table3D extends BenchViewer3D {
       rod.rotation.z = Math.PI / 2;
       rod.rotation.y = -Math.atan2(B.z - A.z, B.x - A.x);
     }
+    // Build detailed per-atom bond metadata (covalent shared pairs & ionic transfer hops) for 3D atoms.
+    const bondLinksMap = new Map();
+    if (this.state?.kit === 'atoms' && this.state.links) {
+      for (const [key, link] of Object.entries(this.state.links)) {
+        if (!link || (link.type !== 'share' && link.type !== 'transfer')) continue;
+        const [a, b] = key.split('|');
+        const ea = this.entries.get(a)?.group;
+        const eb = this.entries.get(b)?.group;
+        if (!ea || !eb) continue;
+        const dx = eb.position.x - ea.position.x;
+        const dz = eb.position.z - ea.position.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist < 1e-5) continue;
+        const add = (id, entry) => {
+          let list = bondLinksMap.get(id);
+          if (!list) { list = []; bondLinksMap.set(id, list); }
+          list.push(entry);
+        };
+        add(a, { type: link.type, pairs: link.pairs || 0, moved: link.moved || 0, isGiver: link.giver === a, dx, dz, dist });
+        add(b, { type: link.type, pairs: link.pairs || 0, moved: link.moved || 0, isGiver: link.giver === b, dx: -dx, dz: -dz, dist });
+      }
+    }
     for (const [id, ent] of this.entries) {
       const atomG = ent.group.children.find(c => c.name === `atom-${id}`);
-      if (atomG) atomG.userData.bondedAngles = bondedMap.get(id) || null;
+      if (atomG) {
+        atomG.userData.bondedAngles = bondedMap.get(id) || null;
+        atomG.userData.bondLinks = bondLinksMap.get(id) || null;
+      }
     }
   }
 

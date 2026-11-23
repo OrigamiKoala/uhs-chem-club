@@ -64,7 +64,7 @@ function railHalf(state, zone) {
 
 /**
  * Where a zone's words are printed: `{x, baseline, align, text, size}` for each. A tray, a container and the rail carry their
- * label over their left end (the rail its two ends); a slot's name stands under it, centred. A word longer than its zone is set
+ * label over their left end (the rail its two ends, or under them when it is `labelsBelow`); a slot's name stands under it, centred. A word longer than its zone is set
  * smaller to stand in it (never below `LABEL.min`: past that the label is too long and `audit.js` says so).
  */
 export function labelLines(state, kind, zone) {
@@ -73,9 +73,16 @@ export function labelLines(state, kind, zone) {
     const out = [];
     // The ends are named above the PIECES on the rail, which may be taller than the rail's own strip (a block, a card): a word printed
     // under a piece that stands on it is a word nobody reads.
-    const top = Math.min(r.y0, zone.at.y - railHalf(state, zone));
-    if (zone.first) out.push({ x: r.x0, baseline: top - LABEL.above - (zone.labelLift || 0), align: 'left', text: zone.first, size: fitSize(zone.first, r.w / 2 - 1) });
-    if (zone.last) out.push({ x: r.x1, baseline: top - LABEL.above - (zone.labelLift || 0), align: 'right', text: zone.last, size: fitSize(zone.last, r.w / 2 - 1) });
+    const half = railHalf(state, zone);
+    const top = Math.min(r.y0, zone.at.y - half);
+    // A rail on the far side of the table (`near.js` sets `labelsBelow`) has its end words under its pieces: printed above,
+    // the pieces standing on it would hide them from a player leaning in from the near edge.
+    const bottom = Math.max(r.y1, zone.at.y + half);
+    const baseline = size => zone.labelsBelow ? bottom + LABEL.above + size * 1.05 : top - LABEL.above - (zone.labelLift || 0);
+    const sizeFirst = zone.first ? fitSize(zone.first, r.w / 2 - 1) : 0;
+    const sizeLast = zone.last ? fitSize(zone.last, r.w / 2 - 1) : 0;
+    if (zone.first) out.push({ x: r.x0, baseline: baseline(sizeFirst), align: 'left', text: zone.first, size: sizeFirst });
+    if (zone.last) out.push({ x: r.x1, baseline: baseline(sizeLast), align: 'right', text: zone.last, size: sizeLast });
     return out;
   }
   const r = rectOf(zone, kind === 'slot' ? SIZES.slot : kind === 'container' ? SIZES.container : SIZES.tray);
@@ -83,7 +90,11 @@ export function labelLines(state, kind, zone) {
     return zone.label?.trim() ? [{ x: r.x0 + r.w / 2, baseline: r.y1 + LABEL.slotBelow, align: 'center', text: zone.label, size: fitSize(zone.label, Math.max(r.w, 22)) }] : [];
   }
   const out = [];
-  if (zone.label?.trim()) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above - (kind === 'container' && state?.kit === 'mass' ? 1.7 : 0), align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
+  if (zone.label?.trim()) {
+    const size = fitSize(zone.label, r.w - 1.2);
+    const baseline = zone.labelBelow ? r.y1 + LABEL.slotBelow : r.y0 - LABEL.above - (kind === 'container' && state?.kit === 'mass' ? 1.7 : 0);
+    out.push({ x: r.x0 + 1.2, baseline, align: 'left', text: zone.label, size });
+  }
   return out;
 }
 
@@ -137,14 +148,15 @@ export function fixtureLayout(f) {
   // `grab` (per dial, in units) widens the band round a track in which a press takes the dial: a row of atoms
   // drawn on the track is its handle.
   const dials = names.map((name, i) => {
-    if (f.kind === 'view') {
+    if (f.kind === 'view' || f.props?.joystick) {
       const j = joystickGeometry(f);
       if (name === 'turn') return { name, x0: j.cx - j.r, x1: j.cx + j.r, y: j.cy - 2.5, grab: 2.8 };
       if (name === 'tilt') return { name, x0: j.cx - j.r, x1: j.cx + j.r, y: j.cy + 2.5, grab: 2.8 };
       if (name === 'slice') return { name, x0: f.at.x + 5, x1: f.at.x + 18, y: f.at.y + 1, grab: 3 };
     }
+    const rightPad = (f.kind === 'wells' && !f.props?.discs) ? 14 : 0;
     return {
-      name, x0: r.x0 + m, x1: r.x1 - m, y: top + i * pitch, grab: f.props?.grab?.[name] ?? 0
+      name, x0: r.x0 + m, x1: r.x1 - m - rightPad, y: top + i * pitch, grab: f.props?.grab?.[name] ?? 0
     };
   });
   const bottom = top + Math.max(0, names.length - 1) * pitch;

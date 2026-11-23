@@ -110,13 +110,13 @@ function paintBlock(ctx, p, state, o) {
   // A block standing in a bath reads what the bath settled at (`settle` keeps how far it fell).
   if (String(p.zone || '').startsWith('slot:') && p.props.trial) f.T = p.props.T - p.props.trial.fall;
   // The reading walks to its new value over a couple of seconds, as the energy crosses (flat table only: the built face has no clock).
-  if (o.clock > 0) f.T = glide(`${o.scope || ''}blk:${p.id}`, o.clock, blockRead(state, p.id).T0, f.T, BLOCK_GLIDE_S);
+  if (o.clock > 0) f.T = glide(`${o.scope || ''}${state?.title || ''}|blk:${p.id}`, o.clock, blockRead(state, p.id).T0, f.T, BLOCK_GLIDE_S);
   const hot = f.T > 45;
   const cold = f.T < 15;
   const box = slab(ctx, o, RECTS.block, hot ? '#321f15' : cold ? '#1b232b' : '#2a2620');
   const sc = o.sc;
-  say(ctx, f.label, o.x, box.y0 + 2.2 * sc, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
-  say(ctx, f.mass, o.x, box.y0 + 5.0 * sc, Math.max(6, 1.7 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
+  say(ctx, f.label, o.x, box.y0 + 2.2 * sc, Math.max(6.4, 2.1 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
+  say(ctx, f.mass, o.x, box.y0 + 5.2 * sc, Math.max(6.4, 2.05 * sc), { align: 'center', weight: 600, color: PLATE_COLORS.text, maxW: box.w - 2 * sc });
   // The thermometer: a short column that stands as high as the reading.
   const ink = inkOf(f.T);
   say(ctx, `${fixed(f.T, 1)} °C`, o.x, box.y0 + 9.6 * sc, Math.max(7, 2.9 * sc), { align: 'center', weight: 700, color: ink, maxW: box.w - 2 * sc });
@@ -129,15 +129,9 @@ function paintBlock(ctx, p, state, o) {
 function paintCharge(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.charge, '#1d1a16');
   const sc = o.sc;
-  const cup = Object.values(state.fixtures || {}).find(f => f.kind === 'cup');
-  const hideRise = Boolean(p.props.hideRiseUntilCommit || cup?.props?.hideRiseUntilCommit)
-    && !isCommitted(state, p.props.gate ?? cup?.props?.gate)
-    && !isRevealed(state);
-  const tried = p.props.rise != null && !hideRise;
-  say(ctx, p.label, o.x, box.y0 + (tried ? 2.5 : 3.0) * sc, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
-  say(ctx, p.props.shown ?? `${sig(p.props.moles, 3)} mol`, o.x, box.y0 + (tried ? 6.1 : 8.4) * sc, Math.max(6, 1.8 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
-  // A tin that has been in the cup keeps what the bath did, so the readings can be compared once the tins are out again.
-  if (tried) say(ctx, `bath ${fixed(p.props.rise, 1, true)} °C`, o.x, box.y0 + 9.6 * sc, Math.max(6, 1.9 * sc), { align: 'center', weight: 700, color: p.props.rise > 0.05 ? WARM : p.props.rise < -0.05 ? COLD : DUST, maxW: box.w - 2 * sc });
+  const sub = p.props.shown !== undefined ? p.props.shown : (p.props.moles != null ? `${sig(p.props.moles, 3)} mol` : '');
+  say(ctx, p.label, o.x, box.y0 + (sub ? 3.4 : 6.0) * sc, Math.max(6.5, 2.15 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
+  if (sub) say(ctx, sub, o.x, box.y0 + 8.2 * sc, Math.max(6.2, 1.9 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
 }
 
 function paintEqn(ctx, p, state, o) {
@@ -145,12 +139,12 @@ function paintEqn(ctx, p, state, o) {
   const marked = t.flipped || t.scale > 1;
   const box = slab(ctx, o, RECTS.eqn, marked ? '#2c2412' : '#2a2620');
   const sc = o.sc;
-  const size = Math.max(6, 2.0 * sc);
-  say(ctx, fmtEqn(t), o.x, box.y0 + 2.9 * sc, size, { align: 'center', weight: 600, maxW: box.w - 2.4 * sc });
+  const size = Math.max(6.6, 2.3 * sc);
+  say(ctx, fmtEqn(t), o.x, box.y0 + 3.0 * sc, size, { align: 'center', weight: 700, color: PLATE_COLORS.text, maxW: box.w - 2.2 * sc });
   const shown = p.props.hideDH ? '' : `${p.props.symbol || 'ΔH'} ${signedKJ(t.dH)} kJ`;
-  say(ctx, shown, o.x, box.y0 + 7.9 * sc, Math.max(6, 2.1 * sc), { align: 'center', weight: 700, color: AMBER, maxW: box.w - 3 * sc });
-  if (t.flipped) say(ctx, 'FLIPPED', box.x0 + 1.2 * sc, box.y0 + 7.9 * sc, Math.max(5.2, 1.4 * sc), { color: DUST });
-  if (t.scale > 1) say(ctx, `× ${t.scale}`, box.x0 + box.w - 1.2 * sc, box.y0 + 7.9 * sc, Math.max(6, 1.8 * sc), { align: 'right', weight: 700, color: AMBER });
+  say(ctx, shown, o.x, box.y0 + 8.0 * sc, Math.max(6.4, 2.2 * sc), { align: 'center', weight: 700, color: AMBER, maxW: box.w - 3 * sc });
+  if (t.flipped) say(ctx, 'FLIPPED', box.x0 + 1.2 * sc, box.y0 + 8.0 * sc, Math.max(5.5, 1.55 * sc), { color: DUST, weight: 700 });
+  if (t.scale > 1) say(ctx, `×${t.scale}`, box.x0 + box.w - 1.2 * sc, box.y0 + 8.0 * sc, Math.max(6.8, 2.3 * sc), { align: 'right', weight: 700, color: AMBER });
 }
 
 /** The picture of a bond: two atoms with the rod (or rods) between them, flat. The built table stands the same two atoms up as solids. */
@@ -250,7 +244,8 @@ function paintPhaseCard(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.phase, '#16140f');
   const sc = o.sc;
   if (!o.flat) particles(ctx, p, box.x0 + 1.4 * sc, box.y0 + 1.4 * sc, box.w - 2.8 * sc, box.h - 8 * sc, sc, o.clock || 0);
-  say(ctx, p.label, box.x0 + box.w / 2, box.y0 + box.h - 3.2 * sc, Math.max(6, 1.9 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
+  const title = p.props.T != null ? `${p.label} · ${p.props.T} °C` : p.label;
+  say(ctx, title, box.x0 + box.w / 2, box.y0 + box.h - 3.2 * sc, Math.max(6.4, 2.1 * sc), { align: 'center', weight: 700, color: PLATE_COLORS.text, maxW: box.w - 1.6 * sc });
 }
 
 function paintStmt(ctx, p, state, o) {
@@ -314,12 +309,19 @@ function paintTag(ctx, p, state, o) {
   lines.forEach((ln, i) => say(ctx, ln, o.x, o.y + (i - (lines.length - 1) / 2) * size * 1.2, size, { align: 'center', weight: 600, maxW: box.w - 2 * o.sc, color: marked ? AMBER : PLATE_COLORS.text }));
 }
 
+/** A note card's lines and their size in table units: as large as the card takes (24 to a line at 2.5 units) where the words
+ * go in three lines, else 30 to a line at 1.95. `printed` reads the same lines. */
+export function noteLines(label) {
+  const big = wrapN(label, 24, 99).length <= 3;
+  return big ? { lines: wrapN(label, 24, 3), units: 2.5 } : { lines: wrapN(label, 30, 3), units: 1.95 };
+}
+
 function paintNote(ctx, p, state, o) {
   const marked = Boolean(p.props.flipped);
   const box = slab(ctx, o, RECTS.note, marked ? '#33290f' : '#2a2620');
   if (marked) { ctx.strokeStyle = AMBER; ctx.lineWidth = 2; ctx.strokeRect(box.x0 + 1.5, box.y0 + 1.5, box.w - 3, box.h - 3); ctx.lineWidth = 1; }
-  const size = Math.max(5.8, 1.95 * o.sc);
-  const lines = wrapN(p.label, 30, 3);
+  const { lines, units } = noteLines(p.label);
+  const size = Math.max(5.8, units * o.sc);
   lines.forEach((ln, i) => say(ctx, ln, o.x, o.y + (i - (lines.length - 1) / 2) * size * 1.25, size, { align: 'center', weight: 600, maxW: box.w - 3 * o.sc, color: marked ? AMBER : PLATE_COLORS.text }));
 }
 
@@ -328,6 +330,12 @@ function paintGCard(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.gcard, '#16140f');
   const sc = o.sc;
   const { dH, dS, Tmin, Tmax } = p.props;
+  if (p.props.hideCurve && !isRevealed(state)) {
+    const lines = wrap(p.label, 16);
+    const sz = Math.max(6.8, 2.35 * sc);
+    lines.forEach((ln, idx) => say(ctx, ln, o.x, o.y + (idx - (lines.length - 1) / 2) * sz * 1.35, sz, { align: 'center', weight: 700, color: PLATE_COLORS.text, maxW: box.w - 2.4 * sc }));
+    return;
+  }
   say(ctx, p.label, box.x0 + 1.3 * sc, box.y0 + 1.9 * sc, Math.max(5.8, 1.8 * sc), { weight: 700, maxW: box.w - 2 * sc });
   const px = box.x0 + 2 * sc; const py = box.y0 + 4.2 * sc; const pw = box.w - 4 * sc; const ph = box.h - 7.2 * sc;
   const dG = T => dH - (T * dS) / 1000;
@@ -437,8 +445,10 @@ function paintCup(ctx, f, state, b) {
     ctx.strokeStyle = AMBER; ctx.setLineDash([4, 3]);
     ctx.strokeRect(F.x(1.5), F.y(top - 0.5), F.len(23), F.len(20.3));
     ctx.setLineDash([]);
+    say(ctx, 'SYSTEM', F.x(13), F.y(top + 1.4), F.size(1.85, 5.6), { align: 'center', weight: 700, color: AMBER });
+    say(ctx, 'SURROUNDINGS', F.x((cx0 + cx1) / 2), F.y(cy1 - 6.2), F.size(1.7, 5.2), { align: 'center', weight: 700, color: COLD });
   }
-  say(ctx, `${sig(r.mWater, 4)} g`, F.x((cx0 + cx1) / 2), F.y(cy1 - 3), F.size(2.4, 6), { align: 'center', color: DUST });
+  say(ctx, `${sig(r.mWater, 4)} g`, F.x((cx0 + cx1) / 2), F.y(cy1 - 2.6), F.size(2.4, 6), { align: 'center', color: DUST });
   // The thermometer column: its fill stands as high as the reading, between 0 and 100.
   const tx = 27; const ty0 = top + 1; const ty1 = top + 31;
   ctx.strokeStyle = DUST;
@@ -449,16 +459,18 @@ function paintCup(ctx, f, state, b) {
   ctx.fillStyle = hideReadings ? DIM : inkOf(shown);
   ctx.fillRect(F.x(tx) + 1, F.y(ty1 - (ty1 - ty0) * frac), F.len(3) - 1, F.len((ty1 - ty0) * frac));
   // The readouts.
+  const isMetal = Math.abs(r.c - 4.184) > 0.01;
   let line = 0;
   const put = (k, v, color = PHOS) => { say(ctx, k, F.x(32), F.y(top + 3 + line * 6), F.size(1.9, 5.8), { color: DIM }); say(ctx, v, F.x(32), F.y(top + 5.7 + line * 6), F.size(2.7, 6.5), { color, weight: 700, maxW: F.len(f.size.w - 34) }); line++; };
-  put('BATH', hideReadings ? '— °C' : `${fixed(shown, 1)} °C`, hideReadings ? DIM : inkOf(shown));
+  put(isMetal ? 'TEMP' : 'BATH', hideReadings ? '— °C' : `${fixed(shown, 1)} °C`, hideReadings ? DIM : inkOf(shown));
   put('RISE', hideReadings ? '— °C' : `${fixed(shown - r.T0, 1, true)} °C`, hideReadings ? DIM : shown - r.T0 > 0.05 ? WARM : shown - r.T0 < -0.05 ? COLD : DUST);
   if (p.showHeat) put('HEAT', `${Math.round(r.q).toLocaleString('en-US')} J`, AMBER);
   if (p.showVerdict) put('BATH', r.dT > 0.05 ? 'WARMED' : r.dT < -0.05 ? 'COOLED' : 'SAME', DUST);
   if (p.showLid && r.lidOff) say(ctx, 'LID OFF', F.x(32), F.y(top + 29), F.size(2.2, 6), { color: AMBER, weight: 700 });
-  // Whose particles the rings are (the filled dots are the bath's own): a sample under the mouth, or the heater's element on the floor.
+  // Only show the legend ring when there is an active sample or a real heater dial on this stage.
   const g = cupParts(f, r);
-  if ((g.sample && !r.item.props.latent) || g.heater) {
+  const hasHeaterDial = Boolean(f.dials?.heat);
+  if ((g.sample && !r.item.props.latent) || hasHeaterDial) {
     ctx.strokeStyle = DUST; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(F.x(33), F.y(top + 31.6), Math.max(2, F.len(0.72)), 0, Math.PI * 2); ctx.stroke();
     say(ctx, g.sample ? 'SAMPLE' : 'HEATER', F.x(34.8), F.y(top + 31.6), F.size(1.9, 5.8), { color: DIM, maxW: F.len(f.size.w - 36) });
@@ -485,7 +497,7 @@ function paintLatticeFace(ctx, f, state, b) {
       ctx.beginPath(); ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); ctx.stroke();
       ctx.setLineDash([]);
     }
-    say(ctx, q.label.toUpperCase(), F.x(q.x + q.w / 2), F.y(q.y - 1.9), F.size(1.9, 5.8), { color: DUST, align: 'center', maxW: F.len(q.w - 0.6) });
+    say(ctx, q.label.toUpperCase(), F.x(q.x + q.w / 2), F.y(q.y - 1.9), F.size(1.85, 5.6), { color: PLATE_COLORS.text, align: 'center', maxW: F.len(Math.max(4, q.w - 2.4)) });
   }
 }
 
@@ -494,18 +506,38 @@ function paintLeadFace(ctx, f, state, b) {
   const F = frameOf(b);
   const w = f.size.w; const h = f.size.h;
   if (f.props.scene === 'meet') {
-    const cw = LEAD_MEET.cw(w);
-    say(ctx, 'HOT BLOCK', F.x(w / 2 - cw / 2), F.y(h - 2.6), F.size(1.9, 5.8), { color: WARM, align: 'center', maxW: F.len(cw) });
-    say(ctx, 'COLD BLOCK', F.x(w / 2 + cw / 2), F.y(h - 2.6), F.size(1.9, 5.8), { color: COLD, align: 'center', maxW: F.len(cw) });
+    if (f.props.asymmetric) {
+      say(ctx, 'TINY HOT SPECK', F.x(w * 0.18), F.y(h - 2.6), F.size(1.85, 5.6), { color: WARM, align: 'center', maxW: F.len(w * 0.34) });
+      say(ctx, 'LARGE FROZEN VALVE', F.x(w * 0.66), F.y(h - 2.6), F.size(1.85, 5.6), { color: COLD, align: 'center', maxW: F.len(w * 0.56) });
+    } else {
+      const cw = LEAD_MEET.cw(w);
+      say(ctx, 'HOT BLOCK', F.x(w / 2 - cw / 2), F.y(h - 2.6), F.size(1.9, 5.8), { color: WARM, align: 'center', maxW: F.len(cw) });
+      say(ctx, 'COLD BLOCK', F.x(w / 2 + cw / 2), F.y(h - 2.6), F.size(1.9, 5.8), { color: COLD, align: 'center', maxW: F.len(cw) });
+    }
   } else if (f.props.scene === 'heater') {
-    say(ctx, 'WATER', F.x(4), F.y(h - 3.9), F.size(1.9, 5.8), { color: DIM });
-    say(ctx, 'HEATER', F.x(w - 4), F.y(h - 3.9), F.size(1.9, 5.8), { color: WARM, align: 'right' });
+    const halfW = (w - 10) / 2;
+    say(ctx, f.props.leftLabel || 'WATER', F.x(3 + halfW / 2), F.y(h - 2.4), F.size(1.9, 5.8), { color: COLD, align: 'center', weight: 700 });
+    say(ctx, 'IRON', F.x(7 + halfW * 1.5), F.y(h - 2.4), F.size(1.9, 5.8), { color: WARM, align: 'center', weight: 700 });
+    say(ctx, 'SAME HEATER', F.x(w / 2), F.y(4.2), F.size(1.75, 5.4), { color: AMBER, align: 'center' });
+  } else if (f.props.scene === 'air') {
+    say(ctx, 'N₂ AND O₂ PAIRS IN AIR', F.x(w / 2), F.y(h - 2.2), F.size(1.8, 5.5), { color: DUST, align: 'center' });
+  } else if (f.props.scene === 'routes') {
+    say(ctx, '1 STEP: C → CO₂', F.x(w * 0.26), F.y(h - 2.4), F.size(1.85, 5.6), { color: AMBER, align: 'center', maxW: F.len(w * 0.44) });
+    say(ctx, '2 STEPS: C → CO → CO₂', F.x(w * 0.74), F.y(h - 2.4), F.size(1.85, 5.6), { color: PHOS, align: 'center', maxW: F.len(w * 0.44) });
+  } else if (f.props.scene === 'shut') {
+    say(ctx, '4 PARTICLES · WALL SHUT', F.x(w / 2), F.y(h - 2.2), F.size(1.8, 5.5), { color: AMBER, align: 'center' });
+  } else if (f.props.scene === 'salt') {
+    say(ctx, 'SALT CRYSTAL IN WATER', F.x(w / 2), F.y(h - 2.2), F.size(1.8, 5.5), { color: COLD, align: 'center' });
+  } else if (f.props.scene === 'bond') {
+    say(ctx, 'H — H BOND', F.x(w / 2), F.y(h - 2.2), F.size(1.9, 5.8), { color: DUST, align: 'center' });
   }
 }
 
 function paintShelves(ctx, f, state, b) {
   const F = frameOf(b);
   const r = shelvesRead(state, f.id);
+  // The shelves follow the dial while the hand drags it (`glide.js`); the printed change is the setting's.
+  const g = shelvesRead(state, f.id, true);
   const p = f.props;
   const { top } = cupGeometry(f, b.lay);
   const x0 = b.X(b.lay.box.x0 + 2); const w = F.len(f.size.w - 4);
@@ -513,7 +545,7 @@ function paintShelves(ctx, f, state, b) {
   // The shelves, as high as their energies: the scale is the stage's own, so two charts on one table are drawn alike.
   const scale = p.scale || Math.max(Math.abs(r.dH), 1);
   const mid = y0 + h * 0.5;
-  const dy = Math.max(-0.42, Math.min(0.42, r.dH / (scale * 2.2))) * h;
+  const dy = Math.max(-0.42, Math.min(0.42, g.dH / (scale * 2.2))) * h;
   let ya = mid + dy * 0.5; let yb = mid - dy * 0.5;
   // A reaction-progress diagram: the shelves stand at their printed levels and a curve climbs over the barrier between them.
   const lv = p.levels;
@@ -544,17 +576,19 @@ function paintShelves(ctx, f, state, b) {
 function paintWell(ctx, f, state, b) {
   const F = frameOf(b);
   const r = wellRead(state, f.id);
+  // The atoms, the bond and the dot follow the crank while the hand drags it (`glide.js`); the printed energy is the setting's.
+  const g = wellRead(state, f.id, true);
   const p = f.props;
   const { top } = cupGeometry(f, b.lay);
   // Two atoms, as far apart as the crank has pulled them, and the bond between while there is one.
   const ay = top + 6;
-  const gap = 2 + r.frac * (f.size.w - 20);
+  const gap = 2 + g.frac * (f.size.w - 20);
   const cx = f.size.w / 2;
   // A bonded pair shakes along the bond; a free pair drifts a little. Not on the built table, whose solid atoms are its own.
-  const shk = b.clock > 0 && !b.bodies ? Math.sin(b.clock * 9) * (r.frac < 0.98 ? 0.5 * (1 - r.frac) + 0.15 : 0.1) : 0;
+  const shk = b.clock > 0 && !b.bodies ? Math.sin(b.clock * 9) * (g.frac < 0.98 ? 0.5 * (1 - g.frac) + 0.15 : 0.1) : 0;
   const x1 = cx - gap / 2 - shk; const x2 = cx + gap / 2 + shk;
-  ctx.strokeStyle = r.frac < 0.98 ? AMBER : DIM;
-  ctx.lineWidth = Math.max(1, F.len(1.4 * (1 - r.frac)));
+  ctx.strokeStyle = g.frac < 0.98 ? AMBER : DIM;
+  ctx.lineWidth = Math.max(1, F.len(1.4 * (1 - g.frac)));
   ctx.beginPath(); ctx.moveTo(F.x(x1), F.y(ay)); ctx.lineTo(F.x(x2), F.y(ay)); ctx.stroke();
   ctx.lineWidth = 1;
   ctx.fillStyle = '#2a2620'; ctx.strokeStyle = DUST;
@@ -563,7 +597,7 @@ function paintWell(ctx, f, state, b) {
     say(ctx, t, F.x(x), F.y(ay), F.size(2.6, 6.5), { align: 'center', weight: 700 });
   }
   // The well: the energy against the distance, at the crank's seven settings, and a dot where the atoms are.
-  const wy0 = top + 12; const wy1 = top + 25; const wx0 = 4; const wx1 = f.size.w - 4;
+  const wy0 = top + 11; const wy1 = Math.min(top + 24, f.size.h - 7.5); const wx0 = 4; const wx1 = f.size.w - 4;
   ctx.strokeStyle = DIM;
   ctx.beginPath(); ctx.moveTo(F.x(wx0), F.y(wy0)); ctx.lineTo(F.x(wx0), F.y(wy1)); ctx.lineTo(F.x(wx1), F.y(wy1)); ctx.stroke();
   const fracAt = k => (r.forming ? WELL[WELL.length - 1 - k] : WELL[k]);
@@ -571,9 +605,9 @@ function paintWell(ctx, f, state, b) {
   ctx.beginPath();
   WELL.forEach((_, k) => { const x = wx0 + 1 + (k / (WELL.length - 1)) * (wx1 - wx0 - 2); const y = wy1 - fracAt(k) * (wy1 - wy0 - 1); if (k) ctx.lineTo(F.x(x), F.y(y)); else ctx.moveTo(F.x(x), F.y(y)); });
   ctx.stroke(); ctx.lineWidth = 1;
-  const dx = wx0 + 1 + ((r.step - 1) / (WELL.length - 1)) * (wx1 - wx0 - 2);
+  const dx = wx0 + 1 + ((g.at - 1) / (WELL.length - 1)) * (wx1 - wx0 - 2);
   ctx.fillStyle = AMBER;
-  ctx.beginPath(); ctx.arc(F.x(dx), F.y(wy1 - r.frac * (wy1 - wy0 - 1)), F.len(1.2), 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(F.x(dx), F.y(wy1 - g.frac * (wy1 - wy0 - 1)), F.len(1.2), 0, Math.PI * 2); ctx.fill();
   say(ctx, p.bondLabel || '', F.x(2), F.y(f.size.h - 3.4), F.size(2.4, 6), { color: DUST, weight: 700 });
   const tested = state.recorder.rows.some(r => r.label === f.id);
   if (!p.hideCost || tested) {
@@ -681,10 +715,10 @@ function paintChamber(ctx, f, state, b) {
     ctx.fillRect(F.x(x0 + (i - 1) * cw), F.y(y0), F.len(cw - 0.8), F.len(9));
     ctx.strokeStyle = STEEL;
     ctx.strokeRect(Math.round(F.x(x0 + (i - 1) * cw)) + 0.5, Math.round(F.y(y0)) + 0.5, Math.round(F.len(cw - 0.8)), Math.round(F.len(9)));
-    if (!(b.clock > 0) && last.includes(i)) { ctx.fillStyle = PHOS; ctx.beginPath(); ctx.arc(F.x(x0 + (i - 1) * cw + (cw - 0.8) / 2), F.y(y0 + 4.5), F.len(2.1), 0, Math.PI * 2); ctx.fill(); }
+    if (!b.bodies && !(b.clock > 0) && last.includes(i)) { ctx.fillStyle = PHOS; ctx.beginPath(); ctx.arc(F.x(x0 + (i - 1) * cw + (cw - 0.8) / 2), F.y(y0 + 4.5), F.len(2.1), 0, Math.PI * 2); ctx.fill(); }
   }
-  // Each bead flies from its old cell to its new one, then shakes in place until the next shake.
-  if (b.clock > 0 && last.length) {
+  // Each bead flies from its old cell to its new one, then shakes in place until the next shake (2D flat view only; 3D uses uniform gold spheres).
+  if (!b.bodies && b.clock > 0 && last.length) {
     const fl = chamberFlight(`${b.scope || ''}chamber:${f.id}`, b.clock, shakes, f);
     const centre = c => [x0 + (c - 1) * cw + (cw - 0.8) / 2, y0 + 4.5];
     last.forEach((c, k) => {
@@ -696,20 +730,22 @@ function paintChamber(ctx, f, state, b) {
       ctx.arc(F.x(a[0] + (z[0] - a[0]) * e + jx), F.y(a[1] + (z[1] - a[1]) * e - lift + jy), F.len(2.1), 0, Math.PI * 2); ctx.fill();
     });
   }
-  // Where the particles were, shake after shake: how many stood in the left half, 0 to all.
+  // Where the particles were, shake after shake: leave space on the right for the Shake button so bar 4 is never covered.
   const counts = Array.from({ length: p.particles + 1 }, () => 0);
   for (const s of shakes) counts[s.filter(c => c <= p.cells / 2).length]++;
-  const hy1 = f.size.h - 7; const hh = f.size.h - top - 24;
-  const bw = (f.size.w - 8) / counts.length;
+  const hy1 = f.size.h - 6.5; const hh = f.size.h - top - 25;
+  const bw = (f.size.w - 22) / counts.length;
   const mx = Math.max(1, ...counts);
   counts.forEach((n, i) => {
     ctx.fillStyle = i === p.particles ? WARM : PHOS;
     const hgt = (n / mx) * hh;
-    ctx.fillRect(F.x(4 + i * bw), F.y(hy1) - F.len(hgt), F.len(bw - 1.2), F.len(hgt));
-    say(ctx, String(i), F.x(4 + i * bw + (bw - 1.2) / 2), F.y(hy1 + 2.4), F.size(2.1, 5.8), { align: 'center', color: DUST });
+    const bx = 4 + i * bw;
+    ctx.fillRect(F.x(bx), F.y(hy1) - F.len(hgt), F.len(bw - 1.4), F.len(hgt));
+    say(ctx, String(n), F.x(bx + (bw - 1.4) / 2), F.y(hy1 - hgt - 2.0), F.size(2.0, 5.6), { align: 'center', weight: 700, color: n > 0 ? PLATE_COLORS.text : DIM });
+    say(ctx, String(i), F.x(bx + (bw - 1.4) / 2), F.y(hy1 + 2.4), F.size(2.1, 5.8), { align: 'center', weight: 700, color: DUST });
   });
   say(ctx, `SHAKES ${shakes.length}`, F.x(2.5), F.y(top + 12.4), F.size(2.4, 6), { color: DUST });
-  say(ctx, 'PARTICLES IN THE LEFT HALF', F.x(f.size.w - 2.5), F.y(top + 12.4), F.size(2.1, 5.8), { color: DIM, align: 'right' });
+  say(ctx, 'PARTICLES IN LEFT HALF (0–4)', F.x(f.size.w - 2.5), F.y(top + 12.4), F.size(2.0, 5.6), { color: DIM, align: 'right' });
 }
 
 function drawCompBars(ctx, F, b, bx, by, bw, bh, dH, TdS, { words = false } = {}) {
@@ -736,9 +772,11 @@ function paintPlot(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
   const r = plotRead(state, f.id);
+  // The line and the bars follow the temperature while the hand drags it (`glide.js`); the printed numbers are the setting's.
+  const g = plotRead(state, f.id, true);
   const { top } = cupGeometry(f, b.lay);
   const totalW = f.size.w - 10;
-  const px = 6; const pw = p.bars ? totalW * 0.62 : totalW; const py = top + 1; const ph = f.size.h - top - 12;
+  const px = 6; const pw = p.bars ? totalW * 0.56 : totalW; const py = top + 1; const ph = f.size.h - top - 12;
   const Tmin = p.Ts[0]; const Tmax = p.Ts[p.Ts.length - 1];
   const dGat = T => p.dH - (T * p.dS) / 1000;
   const lo = Math.min(dGat(Tmin), dGat(Tmax), 0) ; const hi = Math.max(dGat(Tmin), dGat(Tmax), 0);
@@ -750,6 +788,10 @@ function paintPlot(ctx, f, state, b) {
   ctx.setLineDash([3, 3]);
   ctx.beginPath(); ctx.moveTo(F.x(px), F.y(Yv(0))); ctx.lineTo(F.x(px + pw), F.y(Yv(0))); ctx.stroke();
   ctx.setLineDash([]);
+  say(ctx, '0', F.x(px - 1.2), F.y(Yv(0)), F.size(1.8, 5.2), { align: 'right', color: DUST });
+  say(ctx, p.words ? 'NET' : 'ΔG', F.x(px + 1.4), F.y(py + 2.0), F.size(1.8, 5.2), { color: PHOS, weight: 700 });
+  say(ctx, `${Tmin} K`, F.x(px), F.y(py + ph + 2.1), F.size(1.65, 5.0), { color: DIM });
+  say(ctx, `${Tmax} K`, F.x(px + pw), F.y(py + ph + 2.1), F.size(1.65, 5.0), { align: 'right', color: DIM });
   ctx.strokeStyle = PHOS; ctx.lineWidth = Math.max(1.4, b.sc * 0.3);
   ctx.beginPath(); ctx.moveTo(F.x(X(Tmin)), F.y(Yv(dGat(Tmin)))); ctx.lineTo(F.x(X(Tmax)), F.y(Yv(dGat(Tmax)))); ctx.stroke(); ctx.lineWidth = 1;
   if (r.cross != null && r.cross > Tmin && r.cross < Tmax && !p.hideCrossing) {
@@ -757,9 +799,9 @@ function paintPlot(ctx, f, state, b) {
     say(ctx, `${Math.round(r.cross)} K`, F.x(X(r.cross)), F.y(Yv(0)) + F.len(3.4), F.size(2.1, 5.8), { align: 'center', color: AMBER });
   }
   ctx.strokeStyle = AMBER;
-  ctx.beginPath(); ctx.moveTo(F.x(X(r.T)), F.y(py)); ctx.lineTo(F.x(X(r.T)), F.y(py + ph)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(F.x(X(g.T)), F.y(py)); ctx.lineTo(F.x(X(g.T)), F.y(py + ph)); ctx.stroke();
   if (p.bars) {
-    drawCompBars(ctx, F, b, px + pw + 3, py, totalW - pw - 3, ph - 2, r.dH, r.TdS, { words: p.words });
+    drawCompBars(ctx, F, b, px + pw + 3, py, totalW - pw - 3, ph - 2, g.dH, g.TdS, { words: p.words });
   }
   const y = f.size.h - 3.6;
   say(ctx, `${Math.round(r.T)} K`, F.x(2.5), F.y(y), F.size(2.6, 6.4), { color: DUST, weight: 700 });
@@ -809,14 +851,21 @@ function paintCurveFace(ctx, f, state, b) {
   const top = contentTopOf(f);
   const gx = 29; const gw = f.size.w - gx - 4; const gy = top + 1; const gh = f.size.h - top - curveFoot(f);
   const path = curvePath(f.props);
-  say(ctx, '°C', F.x(gx + 1.2), F.y(gy + 1.8), F.size(1.9, 5.8), { color: DIM });
-  say(ctx, path.rising ? 'HEAT ADDED →' : 'HEAT REMOVED →', F.x(gx + gw), F.y(gy + gh + 2.3), F.size(1.9, 5.8), { color: DIM, align: 'right' });
+  const lo = Math.min(...path.list.map(q => Math.min(q.a, q.b)));
+  const hi = Math.max(...path.list.map(q => Math.max(q.a, q.b)));
+  const py = T => gy + gh - ((T - lo) / Math.max(1, hi - lo)) * (gh - 2) - 1;
+  say(ctx, `${f.props.m} g`, F.x(14), F.y(gy + 2.0), F.size(2.0, 5.8), { align: 'center', weight: 700, color: AMBER });
+  say(ctx, 'T (°C)', F.x(gx + 1.4), F.y(gy + 1.8), F.size(1.85, 5.5), { color: DUST });
+  say(ctx, `${Math.round(hi)}°`, F.x(gx - 1.0), F.y(py(hi)), F.size(1.65, 5.0), { align: 'right', color: DIM });
+  if (lo < 0 && hi > 0) say(ctx, '0°', F.x(gx - 1.0), F.y(py(0)), F.size(1.65, 5.0), { align: 'right', color: DUST });
+  say(ctx, `${Math.round(lo)}°`, F.x(gx - 1.0), F.y(py(lo)), F.size(1.65, 5.0), { align: 'right', color: DIM });
+  say(ctx, path.rising ? 'HEAT ADDED (J) →' : 'HEAT REMOVED (J) →', F.x(gx + gw), F.y(gy + gh + 2.3), F.size(1.85, 5.6), { color: DUST, align: 'right' });
   if (!f.props.readout) return;
   const u = curveShown(f, b);
   const at = curveAt(path, u);
   const y = f.size.h - 2.6;
   say(ctx, `${Math.round(at.T)} °C`, F.x(3), F.y(y), F.size(2.7, 6.5), { color: inkOf(at.T), weight: 700 });
-  if (f.props.readout === 'both') say(ctx, `HEAT ${path.rising ? 'ADDED' : 'REMOVED'} ${sig(u * path.total, 3).toLocaleString('en-US')} J`, F.x(f.size.w - 3), F.y(y), F.size(2.6, 6.4), { color: AMBER, weight: 700, align: 'right', maxW: F.len(f.size.w - 20) });
+  if (f.props.readout === 'both') say(ctx, `HEAT ${path.rising ? 'ADDED' : 'REMOVED'} ${sig(u * path.total, 3).toLocaleString('en-US')} J`, F.x(f.size.w - 3), F.y(y), F.size(2.5, 6.2), { color: AMBER, weight: 700, align: 'right', maxW: F.len(f.size.w - 18) });
 }
 
 function paintPlaque(ctx, f, state, b) {

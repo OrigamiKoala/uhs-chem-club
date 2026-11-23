@@ -20,6 +20,7 @@ import {
   planDomains, angleBetween, domainStrain, bestStrain, socketAngle, hubHeight, hubThickness, IDEAL
 } from '../../engine/vsepr.js';
 import { PLATE_COLORS, plateText } from '../../engine/plates.js';
+import { joystickGeometry } from '../layout.js';
 import {
   YAW0, PITCH, AMBER, project, atomDisc, rods, balloon
 } from './domain-draw.js';
@@ -48,10 +49,60 @@ export function armsOn(state, hubId) {
 
 const toArm = p => (p.kind === 'balloon' ? { kind: 'lone' } : { kind: 'atom', sym: p.props.sym, mult: p.props.mult || 1 });
 
-/** How far the plate's dial has turned the hub from the view it opens at, in radians. */
+/** How far the plate's joystick/dial has turned the hub in yaw (radians). */
 export function turnOf(state, hub) {
-  const d = state.fixtures[hub.props.turner]?.dials.turn;
-  return d ? d.value * RAD : 0;
+  const f = state.fixtures[hub.props.turner];
+  const d = f?.dials?.turn;
+  if (!d) return 0;
+  return f.props?.joystick ? (d.value - 6) * 30 * RAD : d.value * RAD;
+}
+
+/** How far the plate's joystick has tilted the hub in pitch (radians). */
+export function tiltOf(state, hub) {
+  const f = state.fixtures[hub.props.turner];
+  const d = f?.dials?.tilt;
+  if (!d) return 0;
+  return d.value * 24 * RAD;
+}
+
+/** The angle between the two arms clicked directly on the hub (atom -> center -> atom or atom -> atom), or null. */
+export function pickedAngle(state, hubId) {
+  const hub = state.pieces[hubId];
+  const picked = (hub?.props?.picked || []).filter(id => {
+    const p = state.pieces[id];
+    return live(p) && p.joinedTo?.includes(hubId);
+  });
+  if (picked.length < 2) return null;
+  const r = hubRead(state, hubId);
+  const ia = r.index(picked[0]);
+  const ib = r.index(picked[1]);
+  if (ia < 0 || ib < 0) return null;
+  const angle = angleBetween(r.plan, ia, ib);
+  return angle == null ? null : { hub: hubId, a: picked[0], b: picked[1], angle };
+}
+
+/** Handle clicking an attached arm (or central hub) to measure bond angles directly without a protractor. */
+export function flipHubPiece(s, p) {
+  if (p.kind === 'hub') {
+    p.props.hubClicked = true;
+    return { picked: p.props.picked || [] };
+  }
+  if (!isArm(p)) return null;
+  const hubId = p.joinedTo?.find(id => s.pieces[id]?.kind === 'hub');
+  if (!hubId) return null;
+  const hub = s.pieces[hubId];
+  const prev = (hub.props.picked || []).filter(id => s.pieces[id]?.joinedTo?.includes(hubId));
+  let next;
+  if (prev.length >= 2) {
+    next = [p.id];
+  } else if (prev.includes(p.id)) {
+    next = prev.filter(id => id !== p.id);
+  } else {
+    next = [...prev, p.id];
+  }
+  hub.props.picked = next;
+  hub.props.hubClicked = false;
+  return { picked: next };
 }
 
 /**
@@ -125,8 +176,9 @@ export function settleHubs(s) {
     if (!r.n) continue;
     const view = openingView(r.plan.vectors);
     const yaw = view.yaw + turnOf(s, hub);
+    const pitch = view.pitch + tiltOf(s, hub);
     r.plan.vectors.forEach((v, i) => {
-      const p = project(v.v, yaw, view.pitch);
+      const p = project(v.v, yaw, pitch);
       const at = { x: round3(hub.at.x + p.x * POSE), y: round3(hub.at.y + p.y * POSE) };
       const arm = r.arms[i];
       arm.at = { x: Math.max(ARM_R, Math.min(s.bounds.w - ARM_R, at.x)), y: Math.max(ARM_R, Math.min(s.bounds.h - ARM_R, at.y)) };
@@ -328,7 +380,7 @@ export function paintHubLink(ctx, link, o) {
 
 export const hubLinkRods = link => (link?.hub ? (link.lone ? 0 : link.mult || 1) : undefined);
 
-/** The plate behind a hub: how many arms it holds and the angle the protractor last read. */
+/** The plate behind a hub: how many arms it holds and the angle between clicked arms (or protractor). */
 function paintHubPlate(ctx, f, state, b) {
   const hub = state.pieces[f.props.hub];
   const r = hub ? hubRead(state, hub.id) : null;
@@ -337,10 +389,83 @@ function paintHubPlate(ctx, f, state, b) {
   let row = b.y0 + 3.6 * b.sc;
   const line = (text, color = PLATE_COLORS.dust) => { plateText(ctx, text, x, row, { size, weight: 700, align: 'right', base: 'middle', color }); row += 2.9 * b.sc; };
   line(`DOMAINS ${r ? r.n : 0}`, PLATE_COLORS.phosphor);
-  const read = protractorReadings(state).find(q => q.hub === f.props.hub);
-  line(read ? `ANGLE ${read.angle}°` : 'ANGLE', read ? AMBER : PLATE_COLORS.dim);
+  const read = pickedAngle(state, f.props.hub) || protractorReadings(state).find(q => q.hub === f.props.hub);
+  const pickedCount = (hub?.props?.picked || []).filter(id => state.pieces[id]?.joinedTo?.includes(f.props.hub)).length;
+  if (read) {
+    line(`ANGLE ${read.angle}°`, AMBER);
+    // Draw a crisp amber angle arc between the two selected arms on the plate.
+    const pa = state.pieces[read.a];
+    const pb = state.pieces[read.b];
+    if (hub && pa && pb) {
+      const hx = b.X(hub.at.x); const hy = b.Y(hub.at.y);
+      const a1 = Math.atan2(b.Y(pa.at.y) - hy, b.X(pa.at.x) - hx);
+      const a2 = Math.atan2(b.Y(pb.at.y) - hy, b.X(pb.at.x) - hx);
+      let diff = a2 - a1;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = Math.max(1.8, 0.28 * b.sc);
+      ctx.beginPath();
+      ctx.arc(hx, hy, 9.5 * b.sc, a1, a1 + diff, diff < 0);
+      ctx.stroke();
+    }
+  } else if (pickedCount === 1) {
+    line('CLICK 2ND ATOM', AMBER);
+  } else {
+    line(r && r.n >= 2 ? 'CLICK 2 ATOMS' : 'ANGLE', PLATE_COLORS.dim);
+  }
   if (f.props.gauge === 'thick' && r) line(`DEPTH ${r.thick.toFixed(2)}`, r.thick > 0.01 ? AMBER : PLATE_COLORS.dim);
   else if (f.props.gauge && r) line(r.height == null ? 'HEIGHT' : `HEIGHT ${r.height.toFixed(2)}`, r.height ? AMBER : PLATE_COLORS.dim);
+}
+
+/** Paint a smooth circular 3D joystick socket and stick knob for `turner`. */
+function paintJoystickTurner(ctx, f, state, b) {
+  const j = joystickGeometry(f);
+  const cx = b.X(j.cx);
+  const cy = b.Y(j.cy);
+  const R = j.r * b.sc;
+  const turn = f.dials?.turn?.value ?? 6;
+  const tilt = f.dials?.tilt?.value ?? 0;
+  const fx = Math.max(-1, Math.min(1, (turn - 6) / 6));
+  const fy = Math.max(-1, Math.min(1, -tilt / 3));
+  const dist = Math.hypot(fx, fy);
+  const k = dist > 1 ? 1 / dist : 1;
+  const kx = cx + fx * k * R * 0.72;
+  const ky = cy + fy * k * R * 0.72;
+
+  ctx.fillStyle = '#14120e';
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = PLATE_COLORS.steel;
+  ctx.lineWidth = Math.max(1.4, 0.2 * b.sc);
+  ctx.stroke();
+
+  // Crosshair ticks
+  ctx.strokeStyle = 'rgba(132,124,110,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - R * 0.75, cy); ctx.lineTo(cx + R * 0.75, cy);
+  ctx.moveTo(cx, cy - R * 0.75); ctx.lineTo(cx, cy + R * 0.75);
+  ctx.stroke();
+
+  // Stick stem + amber knob
+  ctx.strokeStyle = PLATE_COLORS.dust;
+  ctx.lineWidth = Math.max(2, 0.35 * b.sc);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(kx, ky);
+  ctx.stroke();
+
+  ctx.fillStyle = AMBER;
+  ctx.beginPath();
+  ctx.arc(kx, ky, Math.max(4, R * 0.28), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#16140f';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  plateText(ctx, '3D VIEW', cx, b.y0 + 2.4 * b.sc, { size: Math.max(7, Math.round(1.9 * b.sc)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
 }
 
 /** The frame: spokes to the sockets and the hub's own disc. */
@@ -371,6 +496,7 @@ function paintSockets(ctx, f, state, b) {
 export function paintHubFixture(ctx, f, state, b) {
   if (f.kind === 'hubplate') { paintHubPlate(ctx, f, state, b); return true; }
   if (f.kind === 'sockets') { paintSockets(ctx, f, state, b); return true; }
+  if (f.kind === 'turner' && f.props?.joystick) { paintJoystickTurner(ctx, f, state, b); return true; }
   return false;
 }
 
@@ -380,7 +506,7 @@ export function paintHubFixture(ctx, f, state, b) {
 
 /**
  * A hub on its plate: the fixture that holds its readings and the hub piece at its middle, and (when `turner` names a place) a
- * small fixture with the dial that turns the view. `at` is the middle of the plate's box.
+ * smooth 3D joystick fixture that orbits the view in yaw and pitch. `at` is the middle of the plate's box.
  */
 export function hubSet(id, sym, at, { label = 'Hub', size = { w: 66, h: 60 }, gauge = false, turner = null } = {}) {
   const turnerId = turner ? `${id}-turn` : null;
@@ -388,8 +514,12 @@ export function hubSet(id, sym, at, { label = 'Hub', size = { w: 66, h: 60 }, ga
     fixture: { id: `${id}-plate`, kind: 'hubplate', label, at, size, noRun: true, dials: {}, props: { hub: id, gauge, backdrop: true } },
     piece: { id, kind: 'hub', label: sym, at: { ...at }, fixed: true, props: { sym, plate: `${id}-plate`, turner: turnerId } },
     turner: turner ? {
-      id: turnerId, kind: 'turner', label: 'View', at: turner, size: { w: 44, h: 16 }, noRun: true,
-      dials: { turn: { min: 0, max: 355, step: 5, value: 0, label: 'Turn' } }, props: { margin: 4, top: 9 }
+      id: turnerId, kind: 'turner', label: 'View', at: turner, size: { w: 24, h: 16 }, noRun: true,
+      dials: {
+        turn: { min: 0, max: 12, step: 0.05, value: 6, label: 'Turn' },
+        tilt: { min: -3, max: 3, step: 0.05, value: 0, label: 'Tilt' }
+      },
+      props: { joystick: true, hideLabel: true }
     } : null
   };
 }

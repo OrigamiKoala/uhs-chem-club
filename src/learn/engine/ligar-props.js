@@ -526,30 +526,56 @@ export function buildArmBall(c, { face, body, mult = 1 }) {
   return done(g, cy + R * 0.88);
 }
 
-/** A lone pair: a translucent lobe like a balloon held by a brass collar, standing on a short post. */
+/** A lone pair: an elongated translucent pear-shaped electron cloud lobe with two bright electrons inside its outer bulb. */
 export function buildBalloonLobe(c) {
   const { hw, mats: m } = c;
   const g = new THREE.Group();
-  const R = hw * 0.78;
-  const stand = mesh(lathe([[0, 0], [R * 0.5, 0], [R * 0.54, R * 0.1], [R * 0.3, R * 0.2], [0, R * 0.2]], 24), m.ligIron);
+  const R = hw * 0.72;
+  const stand = mesh(lathe([[0, 0], [R * 0.48, 0], [R * 0.52, R * 0.1], [R * 0.28, R * 0.2], [0, R * 0.2]], 24), m.ligIron);
   g.add(stand);
 
   const lobeGroup = new THREE.Group();
   lobeGroup.name = 'balloon-lobe-content';
 
-  const lobeMat = c.own(new THREE.MeshPhysicalMaterial({ color: 0xb9a56a, roughness: 0.18, metalness: 0, transparent: true, opacity: 0.62, clearcoat: 1, clearcoatRoughness: 0.1 }));
-  const geo = new THREE.SphereGeometry(R, 28, 18);
-  geo.scale(1, 1.25, 0.82);
-  const balloon = mesh(geo, lobeMat, { cast: false });
-  lobeGroup.add(balloon);
+  // Teardrop / pear profile: tapered narrow neck near the central atom, wide rounded electron-cloud bulb at the far end.
+  const pts = [];
+  const L = R * 2.4;
+  for (let i = 0; i <= 16; i++) {
+    const u = i / 16; // 0 = neck, 1 = tip
+    const y = (u - 0.5) * L;
+    const rad = R * 0.96 * Math.sin(u * Math.PI) * (0.28 + 0.92 * Math.pow(u, 0.75));
+    pts.push([Math.max(0.0005, rad), y]);
+  }
+  const lobeMat = c.own(new THREE.MeshPhysicalMaterial({
+    color: 0xe5a83b,
+    emissive: 0x4a2a04,
+    emissiveIntensity: 0.35,
+    roughness: 0.14,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.36,
+    clearcoat: 1,
+    clearcoatRoughness: 0.1,
+    depthWrite: false
+  }));
+  const lobeMesh = mesh(lathe(pts, 28), lobeMat, { cast: false });
+  lobeGroup.add(lobeMesh);
 
-  // A knot at the neck.
-  const knot = mesh(new THREE.TorusGeometry(R * 0.2, R * 0.07, 6, 14), m.ligBrassWorn);
-  knot.rotation.x = Math.PI / 2;
-  knot.position.y = -R * 1.05;
-  lobeGroup.add(knot);
+  // Two bright electron dots nestled side-by-side inside the bulbous outer end of the lone pair lobe.
+  const eMat = c.own(new THREE.MeshStandardMaterial({
+    color: 0xfff0b8,
+    emissive: 0xe59b24,
+    emissiveIntensity: 0.9,
+    roughness: 0.2
+  }));
+  const eGeo = new THREE.SphereGeometry(R * 0.16, 12, 10);
+  for (const sx of [-1, 1]) {
+    const em = mesh(eGeo, eMat, { cast: false });
+    em.position.set(sx * R * 0.28, L * 0.22, 0);
+    lobeGroup.add(em);
+  }
 
-  const cy = R * 0.2 + R * 1.25;
+  const cy = R * 0.2 + L * 0.5;
   lobeGroup.position.y = cy;
   g.add(lobeGroup);
 
@@ -558,7 +584,60 @@ export function buildBalloonLobe(c) {
   g.userData.cy = cy;
   g.userData.R = R;
   g.userData.joinY = cy;
-  return done(g, cy + R * 1.25);
+  return done(g, cy + L * 0.5);
+}
+
+/** A floating 3D ball-and-stick geometry in midair above a prediction card (`cross`, `tetra`, `pyramid3`). */
+export function buildDomainGuess3D(c, shape) {
+  const { hw, hh, mats: m } = c;
+  const g = new THREE.Group();
+  const baseH = 0.008;
+  const pad = mesh(roundedSlab(hw * 1.9, hh * 1.9, baseH, 0.012, 0.002), m.ligSlate || m.ligIron);
+  g.add(pad);
+
+  const mol = new THREE.Group();
+  const armLen = Math.min(hw, hh) * 0.88;
+  const cy = baseH + armLen * 1.15;
+  mol.position.y = cy;
+
+  const centerMat = c.own(new THREE.MeshStandardMaterial({ color: 0x8c8376, roughness: 0.35, metalness: 0.25 }));
+  const atomMat = c.own(new THREE.MeshStandardMaterial({ color: 0xe5c07b, roughness: 0.3, metalness: 0.18 }));
+  const rodMat = c.own(new THREE.MeshStandardMaterial({ color: 0xb8afa0, roughness: 0.4, metalness: 0.35 }));
+
+  const cR = armLen * 0.26;
+  const aR = armLen * 0.22;
+  mol.add(mesh(new THREE.SphereGeometry(cR, 18, 12), centerMat));
+
+  let dirs;
+  if (shape === 'cross') {
+    dirs = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
+  } else if (shape === 'pyramid3') {
+    dirs = [[0, 1, 0], [1, 0, 0], [-0.5, 0, 0.866], [-0.5, 0, -0.866]];
+  } else {
+    // tetrahedral
+    const k = 1 / Math.sqrt(3);
+    dirs = [[0, 1, 0], [Math.sqrt(8 / 9), -1 / 3, 0], [-Math.sqrt(2 / 9), -1 / 3, Math.sqrt(2 / 3)], [-Math.sqrt(2 / 9), -1 / 3, -Math.sqrt(2 / 3)]];
+    void k;
+  }
+
+  const up = new THREE.Vector3(0, 1, 0);
+  const atomGeo = new THREE.SphereGeometry(aR, 16, 10);
+  const rodGeo = new THREE.CylinderGeometry(aR * 0.22, aR * 0.22, armLen, 8);
+  for (const [vx, vy, vz] of dirs) {
+    const dir = new THREE.Vector3(vx, vy, vz).normalize();
+    const a = mesh(atomGeo, atomMat);
+    a.position.copy(dir).multiplyScalar(armLen);
+    mol.add(a);
+    const rod = mesh(rodGeo, rodMat);
+    rod.position.copy(dir).multiplyScalar(armLen * 0.5);
+    rod.quaternion.setFromUnitVectors(up, dir);
+    mol.add(rod);
+  }
+  g.add(mol);
+  g.userData.tick = (delta, still) => {
+    if (!still) mol.rotation.y += delta * 0.55;
+  };
+  return done(g, cy + armLen + aR);
 }
 
 /** A protractor: a disc of clear acrylic, its degrees (the kit's painted face, with the reading) engraved in it, a brass pivot at the middle. */

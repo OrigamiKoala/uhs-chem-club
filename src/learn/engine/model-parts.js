@@ -142,6 +142,19 @@ export function gasParts(spec) {
 
 /** The parts of any model spec, side by side where it lists several atoms. */
 export function modelParts(spec) {
+  if (spec.type === 'bellows-scene') {
+    return { spheres: [{ pos: [0, 0, 0], r: 0.4, color: '#e59b24', kind: 'core' }], bonds: [], rings: [], electrons: [], radius: 2, bellowsScene: spec };
+  }
+  if (spec.type === 'electronegativity-pull') {
+    return {
+      spheres: [
+        { pos: [-1, 0, 0], r: 0.35, color: '#c8c2b6', kind: 'atom' },
+        { pos: [1, 0, 0], r: 0.42, color: '#4b8f5c', kind: 'atom' }
+      ],
+      bonds: [], rings: [], electrons: [], radius: 2,
+      electronegativityPull: spec
+    };
+  }
   if (spec.type === 'rutherford-beam' || spec.type === 'charge-plates' || spec.type === 'shell-fill' || spec.type === 'mg-cation' || spec.type === 'absorption-ladder') {
     return { spheres: [{ pos: [0, 0, 0], r: 0.4, color: '#e59b24', kind: 'core' }], bonds: [], rings: [], electrons: [], radius: 2, customTallow: spec };
   }

@@ -1206,7 +1206,7 @@ console.log('The foes — spoil standing in the wells\n');
   let stages = 0;
   let presses = 0;
 
-  for (const q of allQuests().filter(x => x.status === 'live')) {
+  for (const q of allQuests().filter(x => x.status === 'live' && (!process.env.BENCH_ONLY || process.env.BENCH_ONLY.split(',').includes(x.key)))) {
     const mod = await q.module();
     const tableStages = (mod.STAGES || []).map((s, i) => [s, i]).filter(([s]) => s.widget?.type === 'table');
     if (!tableStages.length) continue;

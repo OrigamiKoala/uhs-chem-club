@@ -104,9 +104,9 @@ export function build3DMaterialBlock(c, opts = {}) {
   // 1. BASE AND CRUCIBLE CASING
   // ------------------------------------------------------------------
   if (sealed) {
-    // Sealed crate (Stage 5): welded steel container with hazard bands
+    // Sealed crate (Stage 5): welded steel container with a recessed status readout window on top
     g.add(at(new THREE.Mesh(roundedSlab(w, d, bodyH, 0.016, 0.003), m.ligIron), 0, 0, 0));
-    g.add(at(new THREE.Mesh(roundedSlab(w * 0.98, d * 0.22, 0.006, 0.003, 0.0012), m.ligHazard), 0, bodyH, d * 0.38));
+    g.add(at(new THREE.Mesh(roundedSlab(w * 0.98, d * 0.09, 0.004, 0.002, 0.001), m.ligHazard), 0, bodyH, d * 0.45));
     for (const sx of [-1, 1]) {
       for (const sz of [-1, 1]) {
         const boltGeo = new THREE.CylinderGeometry(0.004, 0.0045, 0.004, 6);
@@ -115,6 +115,27 @@ export function build3DMaterialBlock(c, opts = {}) {
         g.add(boltMesh);
       }
     }
+    // Top melt-state indicator window on the sealed lid so the player can see exactly when it melts.
+    const winW = fw * 0.86;
+    const winD = fd * 0.72;
+    const winMesh = c.paint(winW, winD, (ctx, W, H) => {
+      ctx.fillStyle = molten ? '#3b1d08' : '#161412';
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = molten ? AMBER : '#484238';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, W - 4, H - 4);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 22px "JetBrains Mono", monospace';
+      ctx.fillStyle = molten ? '#ffbe44' : '#8a8275';
+      ctx.fillText(molten ? 'MOLTEN' : 'SOLID', W / 2, H * 0.46);
+      ctx.font = '600 11px "JetBrains Mono", monospace';
+      ctx.fillStyle = molten ? '#e59b24' : '#666055';
+      ctx.fillText('SEALED CASE', W / 2, H * 0.76);
+    }, { seed: `sealed-win|${seedId}|${molten ? 1 : 0}`, px: 256 });
+    winMesh.rotation.x = -Math.PI / 2;
+    winMesh.position.set(0, bodyH + 0.0035, basinCenterZ);
+    g.add(winMesh);
   } else {
     // Open Crucible Pedestal: Refractory dark stone body with brass rim
     const stoneCol = 0x242220;
@@ -375,12 +396,13 @@ export function build3DMaterialBlock(c, opts = {}) {
       metalness: 0.88
     }));
     const subMat = isBrass ? own(new THREE.MeshStandardMaterial({ color: 0xe8da9e, roughness: 0.24, metalness: 0.85 })) : null;
-    const intMat = isSteel ? own(new THREE.MeshStandardMaterial({ color: 0x1e1c1a, roughness: 0.7 })) : null;
+    // Bright contrasting interstitial carbon spheres so they stand out clearly in the gaps between iron rows.
+    const intMat = isSteel ? own(new THREE.MeshStandardMaterial({ color: 0xe8a838, emissive: 0x3b2204, roughness: 0.32, metalness: 0.25 })) : null;
 
     const rCat = 0.0056;
     const catGeo = new THREE.SphereGeometry(rCat, 16, 12);
     const subGeo = isBrass ? new THREE.SphereGeometry(rCat * 1.25, 16, 12) : null;
-    const intGeo = isSteel ? new THREE.SphereGeometry(rCat * 0.48, 12, 8) : null;
+    const intGeo = isSteel ? new THREE.SphereGeometry(rCat * 0.46, 12, 8) : null;
 
     // 2 close-packed layers
     const nx = 5;
@@ -390,12 +412,24 @@ export function build3DMaterialBlock(c, opts = {}) {
     const stepX = spanX / (nx - 1);
     const stepZ = spanZ / (nz - 1);
 
+    // Visual hammer deformation: pure metal shears strongly sideways, substitutional alloy dents slightly in the middle, interstitial holds rigid.
+    const blow = phase === 'struck' ? (opts.blow || (decl.alloy === 'sub' ? 'dented' : decl.alloy === 'int' ? 'held' : 'bent')) : null;
+    const isBent = blow === 'bent';
+    const isDented = blow === 'dented';
+
     // Bottom layer
     for (let iz = 0; iz < nz; iz++) {
       for (let ix = 0; ix < nx; ix++) {
-        const px = -spanX / 2 + ix * stepX;
+        let px = -spanX / 2 + ix * stepX;
         const pz = basinCenterZ - spanZ / 2 + iz * stepZ;
-        const py = baseY + 0.0075;
+        let py = baseY + 0.0075;
+        if (isBent) {
+          // Rows slide visibly across each other under the hammer blow.
+          px += (iz - 1) * stepX * 0.28;
+          py -= 0.0012;
+        } else if (isDented && ix >= 1 && ix <= 3 && iz === 1) {
+          py -= 0.0022;
+        }
 
         const isSubstituted = isBrass && (ix + iz * 2) % 4 === 1;
         createAtomNode(px, py, pz, isSubstituted ? subGeo : catGeo, isSubstituted ? subMat : metalMat);
@@ -405,15 +439,41 @@ export function build3DMaterialBlock(c, opts = {}) {
     // Top staggered layer
     for (let iz = 0; iz < nz - 1; iz++) {
       for (let ix = 0; ix < nx - 1; ix++) {
-        const px = -spanX / 2 + (ix + 0.5) * stepX;
-        const pz = basinCenterZ - spanZ / 2 + (iz + 0.5) * stepZ;
-        const py = baseY + 0.0075 + rCat * 1.45;
+        let px = -spanX / 2 + (ix + 0.5) * stepX;
+        let pz = basinCenterZ - spanZ / 2 + (iz + 0.5) * stepZ;
+        let py = baseY + 0.0075 + rCat * 1.45;
+        if (isBent) {
+          // Top layer shears far to the right and flattens downward so the bend is unmistakable.
+          px += stepX * 0.45 + (iz - 0.5) * stepX * 0.22;
+          pz += 0.003;
+          py -= 0.0035;
+        } else if (isDented && (ix === 1 || ix === 2)) {
+          // Center atoms depress into a slight dent.
+          py -= 0.0032;
+          px += 0.002;
+        }
 
         createAtomNode(px, py, pz, catGeo, metalMat);
+      }
+    }
 
-        // Interstitial carbon atoms in steel
-        if (isSteel && (ix + iz) % 2 === 0) {
-          createAtomNode(px, baseY + 0.0075 + rCat * 0.5, pz, intGeo, intMat);
+    // Interstitial carbon atoms in steel: visibly nestled in the gaps between the neat iron rows.
+    if (isSteel) {
+      for (let iz = 0; iz < nz; iz++) {
+        for (let ix = 0; ix < nx - 1; ix++) {
+          if ((ix + iz) % 2 !== 0) continue;
+          const gx = -spanX / 2 + (ix + 0.5) * stepX;
+          const gz = basinCenterZ - spanZ / 2 + iz * stepZ;
+          const gy = baseY + 0.0075 + rCat * 0.72;
+          createAtomNode(gx, gy, gz, intGeo, intMat);
+        }
+      }
+      for (let iz = 0; iz < nz - 1; iz++) {
+        for (let ix = 0; ix < nx - 2; ix++) {
+          const gx = -spanX / 2 + (ix + 1) * stepX;
+          const gz = basinCenterZ - spanZ / 2 + (iz + 0.5) * stepZ;
+          const gy = baseY + 0.0075 + rCat * 1.65;
+          createAtomNode(gx, gy, gz, intGeo, intMat);
         }
       }
     }

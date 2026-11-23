@@ -399,7 +399,7 @@ export function drawJoinField(ctx, o) {
     // The code plate, stencilled under the piece. A bench that made you guess
     // which clamp held which kind would be unreadable at 375 px.
     ctx.fillStyle = o.probe === side ? AMBER : 'rgba(184, 175, 160, 0.55)';
-    ctx.font = `${Math.max(8, Math.round(Math.min(w, h) * 0.055))}px "Share Tech Mono", monospace`;
+    ctx.font = `${Math.max(8, Math.round(Math.min(w, h) * 0.055))}px "Quantico", "JetBrains Mono", monospace`;
     ctx.textAlign = 'center';
     ctx.fillText(String(s.piece.code || ''), s.x, h - Math.max(5, h * 0.035));
 
@@ -699,7 +699,7 @@ export function drawSlabField(ctx, o) {
   }
 
   /* ---- the readings the bench is showing right now ---- */
-  ctx.font = `${Math.max(8, Math.round(Math.min(w, h) * 0.07))}px "Share Tech Mono", monospace`;
+  ctx.font = `${Math.max(8, Math.round(Math.min(w, h) * 0.07))}px "Quantico", "JetBrains Mono", monospace`;
   ctx.textAlign = 'left';
   ctx.fillStyle = o.temp != null ? AMBER : 'rgba(184, 175, 160, 0.45)';
   ctx.fillText(o.temp != null ? `${o.temp} C` : '-- C', g.x, h - Math.max(4, h * 0.028));

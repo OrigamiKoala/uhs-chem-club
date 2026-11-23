@@ -202,6 +202,7 @@ const mirrowen = [
   {
     // Grey dawn over a frozen canal town. The lander settles on the quay; the ice holds its reflection like dull glass.
     dur: 5.0,
+    say: 'The Avalon settles onto the quay beside the locked supply boats.',
     paint(ctx, t, clock) {
       setLight({ x: 380, y: 210, color: '222, 222, 226', power: 0.55 });
       sky(ctx, DAWN);
@@ -235,6 +236,7 @@ const mirrowen = [
   {
     // An icebreaker tug charges the ice at full steam. Its bow rides up and the ice does not crack. Picks bounce off it.
     dur: 5.6,
+    say: 'Even the icebreaker tug rides up onto the barrier without leaving a crack.',
     paint(ctx, t, clock) {
       const hit = win(t, 2.3, 2.4);
       const [sx, sy] = shake(clock, held(t, 2.3, 2.8, 0.1));

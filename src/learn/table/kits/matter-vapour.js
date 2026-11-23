@@ -87,7 +87,7 @@ function runFlask(state, fid) {
 export function flaskFixture(id, at, { temps = null, tempStart = 1, outsides = null, outsideStart = 1, T0 = 25, plot = false, rates = false, title = 'Flask', w = plot ? 104 : rates ? 98 : 78 } = {}) {
   const dials = {};
   if (temps) dials.heat = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => `${t} °C`) };
-  if (outsides) dials.outside = { min: 1, max: outsides.length, step: 1, value: outsideStart, label: 'Outside', labels: outsides.map(q => (q == null ? 'sealed' : `${Math.round(q)} kPa`)) };
+  if (outsides) dials.outside = { min: 1, max: outsides.length, step: 1, value: outsideStart, label: 'Outside pressure', labels: outsides.map(q => (q == null ? 'sealed' : `${Math.round(q)} kPa`)) };
   const top = TOP(Object.keys(dials).length);
   const h = round(top + 31.5, 1);
   const slotId = `${id}.well`;
@@ -95,9 +95,9 @@ export function flaskFixture(id, at, { temps = null, tempStart = 1, outsides = n
   return {
     fixture: {
       id, kind: 'vapour', label: title, at: { ...at }, size: { w, h }, dials, runLabel: 'Settle',
-      props: { backdrop: true, slot: slotId, T0, plot, rates, ...(temps ? { temps } : {}), ...(outsides ? { outsides } : {}) }
+      props: { backdrop: true, slot: slotId, T0, plot, rates, tickLabels: true, ...(temps ? { temps } : {}), ...(outsides ? { outsides } : {}) }
     },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 9.5 }, size: { w: 24, h: 17 } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 11.5 }, size: { w: 22, h: 16 } },
     slotId,
     size: { w, h }
   };
@@ -220,12 +220,17 @@ function paintFlask(ctx, f, state, b) {
     }
     if (f.props.rates) {
       const rx = px + pw + 3;
-      const rate = r.valid ? Math.max(12, Math.round(r.value * 4)) : null;
-      const rateText = r.valid ? `${rate} /s` : r.item ? '—' : '';
-      say(ctx, 'LEAVING', F.x(rx), F.y(top + 4.5), F.size(1.7, 5.8), { color: DIM });
-      say(ctx, rateText, F.x(rx), F.y(top + 9.0), F.size(2.6, 7), { color: r.valid ? AMBER : DUST, weight: 700 });
-      say(ctx, 'RETURNING', F.x(rx), F.y(top + 15.5), F.size(1.7, 5.8), { color: DIM });
-      say(ctx, rateText, F.x(rx), F.y(top + 20.0), F.size(2.6, 7), { color: r.valid ? AMBER : DUST, weight: 700 });
+      const bw = Math.max(8, w - rx - 3);
+      const prog = r.valid ? glide(`${b.scope || ''}rates:${f.id}:${r.item?.id ?? ''}`, 1, b.clock || 0, { dur: 2.8 }) : 0;
+      const leaveFrac = r.valid ? 0.92 : 0;
+      const returnFrac = r.valid ? 0.92 * prog : 0;
+      say(ctx, 'LEAVING', F.x(rx), F.y(top + 4.2), F.size(1.7, 5.8), { color: AMBER });
+      ctx.fillStyle = '#1b1814'; ctx.fillRect(F.x(rx), F.y(top + 5.6), F.len(bw), F.len(3.4));
+      if (r.valid) { ctx.fillStyle = AMBER; ctx.fillRect(F.x(rx), F.y(top + 5.6), F.len(bw * leaveFrac), F.len(3.4)); }
+      say(ctx, 'RETURNING', F.x(rx), F.y(top + 13.6), F.size(1.7, 5.8), { color: COLD });
+      ctx.fillStyle = '#1b1814'; ctx.fillRect(F.x(rx), F.y(top + 15.0), F.len(bw), F.len(3.4));
+      if (r.valid) { ctx.fillStyle = COLD; ctx.fillRect(F.x(rx), F.y(top + 15.0), F.len(bw * returnFrac), F.len(3.4)); }
+      say(ctx, r.valid ? (prog > 0.92 ? 'matched' : 'rising...') : r.item ? '—' : '', F.x(rx), F.y(top + 21.4), F.size(1.9, 6), { color: DUST });
     }
   }
 }

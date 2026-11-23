@@ -276,7 +276,7 @@ export class LearnFrame {
 
         <div class="lq-dock-bar hidden" id="lq-dock-bar">
           <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn stage-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">Stage Panel</button>
-          <button type="button" class="btn-secondary quest-btn-sm lq-dock-calc" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
+          <button type="button" class="btn-secondary quest-btn-sm lq-dock-calc" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
           <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Submit answer">Submit</button>
         </div>
 
@@ -311,7 +311,7 @@ export class LearnFrame {
               <div class="lq-banner" role="status" aria-live="polite"></div>
               <div class="lq-actions">
                 <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-                <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
+                <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
                 <button type="button" class="btn-primary lq-commit" data-act="submit">Submit</button>
               </div>
             </div>
@@ -407,6 +407,7 @@ export class LearnFrame {
       else if (act === 'open-panel') this.setPanelClosed(false);
       else if (act === 'stand') this.tableCbs?.onStand?.();
       else if (act === 'lean') this.tableCbs?.onLean?.();
+      else if (act === 'reset-view') activeBenchViewer()?.resetView?.();
       else if (act === 'slice-explainer') import('../../ui/slice-explainer.js').then(m => m.showSliceExplainerModal());
 
       // Any stage already cleared can be walked back into. This is a study road
@@ -820,7 +821,7 @@ export class LearnFrame {
     this.el.actions.innerHTML = `
       ${entryHtml}
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
+      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
@@ -942,6 +943,7 @@ export class LearnFrame {
       <button type="button" class="btn-secondary quest-btn-sm" data-act="reward" title="View discovered concepts and findings">Findings</button>
       ${this.stage && needsFor(this.currentQuestId(), this.stage.index + 1).length ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="primer" title="A short hands-on refresher for this stage">Primer</button>' : ''}
       ${glossaryFor(this.currentQuestId()) ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="glossary" title="Words used on this bench">Glossary</button>' : ''}
+      ${this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reset-view" title="Re-center the camera over the bench">Reset View</button>' : ''}
       ${this.canHidePanel && !this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel" aria-label="Fold stage panel">Fold Panel</button>' : ''}
     `;
   }
@@ -1023,6 +1025,7 @@ export class LearnFrame {
     setTimeout(() => {
       if (this.disposed || seq !== this.bannerSeq) return;
       this.el.banner.innerHTML = html;
+      this.el.banner.parentElement?.scrollTo?.(0, 0);
     }, 60);
   }
 
@@ -1093,10 +1096,53 @@ export class LearnFrame {
     (dockShown ? dockCommit : this.el.commit)?.focus();
   }
 
+  /** Restore a solved stage back to active when the player presses Restart. */
+  unsolve() {
+    if (!this.solved || !this.stage) return;
+    this.solved = false;
+    this.dropModel();
+    this.el.widget.innerHTML = '';
+    this.el.banner.innerHTML = '';
+    const commitLabel = this.stage.commitLabel || 'Submit';
+    const e = this.stage.entry;
+    const entryHtml = e
+      ? `<label class="lq-entry"><span class="lq-entry-label">${esc(e.label)}</span><input class="form-input lq-entry-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="12" data-entry="${esc(e.id)}" data-unit="${esc(e.unit || '')}" aria-label="${esc(e.label)}"><span class="lq-entry-unit">${escSuper(e.unit || '')}</span></label>`
+      : '';
+    this.el.actions.innerHTML = `
+      ${entryHtml}
+      <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
+      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
+      <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
+    `;
+    this.el.commit = this.el.actions.querySelector('.lq-commit');
+    this.el.hintKey = this.el.actions.querySelector('.lq-hint-key');
+    this.el.entry = this.el.actions.querySelector('.lq-entry-input');
+    if (this.el.entry) {
+      this.el.entry.addEventListener('keydown', ev => {
+        ev.stopPropagation();
+        if (ev.key === 'Enter') { ev.preventDefault(); this.opts.onSubmit(); }
+      });
+      this.el.entry.addEventListener('input', () => this.opts.onEntry?.(this.el.entry.dataset.entry, this.el.entry.value));
+    }
+    const dockCommit = this.el.dockCommit;
+    if (dockCommit) {
+      dockCommit.dataset.act = 'submit';
+      dockCommit.textContent = commitLabel;
+      dockCommit.disabled = false;
+    }
+    this.updateStageActions();
+  }
+
   /* ---------------- hints ---------------- */
+
+  /** Is the current stage a prediction (ungraded hypothesis)? */
+  isPredictStage() {
+    return Boolean(this.stage?.predict || this.stage?.table?.predict);
+  }
 
   /** Which rung the player has earned: looking and missing both open the ladder. */
   availableRung() {
+    if (this.isPredictStage()) return 1;
     if (this.misses >= 2) return 3;
     if (this.misses >= 1 || Date.now() - this.openedAt > RUNG2_AFTER_MS) return 2;
     return 1;
@@ -1141,11 +1187,12 @@ export class LearnFrame {
    * only after two wrong answers.
    */
   waitLine(total) {
+    if (this.isPredictStage()) return 'That is the only hint for a prediction.';
     const next = this.rung + 1;
     if (next > total) return 'That is every hint for this stage.';
     if (next <= 2) {
       const secs = Math.max(1, Math.ceil((RUNG2_AFTER_MS - (Date.now() - this.openedAt)) / 1000));
-      return `The next hint opens after a wrong answer, or in ${secs} second${secs === 1 ? '' : 's'}.`;
+      return `Next hint in ${secs} s (or after a wrong answer).`;
     }
     const left = Math.max(1, 2 - this.misses);
     return left === 1
@@ -1354,16 +1401,21 @@ export class LearnFrame {
       return tt.screenRectOf({ x0: c.at.x - r, y0: c.at.y - r, x1: c.at.x + r, y1: c.at.y + r });
     }
     if (st.pc && t.pieces?.[st.pc] && tt.screenRectOf) {
-      const p = t.pieces[st.pc];
-      const r = 4.5;
-      const box = { x0: p.at.x - r, y0: p.at.y - r, x1: p.at.x + r, y1: p.at.y + r };
-      if (p.kind === 'atom') {
-        const other = Object.values(t.pieces || {}).find(q => q.id !== p.id && !q.hidden && q.kind === 'atom');
+      const live = tt.state?.pieces?.[st.pc] || t.pieces[st.pc];
+      const at = tt.posOf?.(st.pc) || live.at;
+      const kit = getKit(t.kit);
+      const sz = kit?.kinds?.[live.kind]?.size;
+      const hw = sz?.w ? sz.w / 2 + 1 : 4.5;
+      const hh = sz?.h ? sz.h / 2 + 1 : 4.5;
+      const box = { x0: at.x - hw, y0: at.y - hh, x1: at.x + hw, y1: at.y + hh };
+      if (live.kind === 'atom') {
+        const other = Object.values((tt.state || t).pieces || {}).find(q => q.id !== live.id && !q.hidden && q.kind === 'atom');
         if (other) {
-          box.x0 = Math.min(box.x0, other.at.x - r);
-          box.y0 = Math.min(box.y0, other.at.y - r);
-          box.x1 = Math.max(box.x1, other.at.x + r);
-          box.y1 = Math.max(box.y1, other.at.y + r);
+          const oa = tt.posOf?.(other.id) || other.at;
+          box.x0 = Math.min(box.x0, oa.x - hw);
+          box.y0 = Math.min(box.y0, oa.y - hh);
+          box.x1 = Math.max(box.x1, oa.x + hw);
+          box.y1 = Math.max(box.y1, oa.y + hh);
         }
       }
       return tt.screenRectOf(box);

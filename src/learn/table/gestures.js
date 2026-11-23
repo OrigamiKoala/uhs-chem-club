@@ -28,6 +28,7 @@ import {
   SIZES, GRAB_REACH, rectOf, zoneAt, railIndexAt, resolveDrop, targetString
 } from './snap.js';
 import { snapDial } from './model.js';
+import { setGlide, clearGlide } from './glide.js';
 import { fixtureLayout, sitePlate, joystickGeometry } from './layout.js';
 
 /** Pixels a press must move before it is a drag and not a tap. */
@@ -97,6 +98,19 @@ export class TableGestures {
   get state() { return this.view.state; }
   get kit() { return getKit(this.state.kit); }
 
+  /**
+   * A new table came in. A hand dragging a dial (its track, a zone that is dragged, the view's stick) keeps hold: every step it passes
+   * is a new table, and dropping the drag there would leave the dial at the first step it reached. Anything else is let go.
+   * `fresh`: a new stage or a rebuilt board, where nothing the hand held is still there.
+   */
+  tableChanged(fresh = false) {
+    const g = this.gesture;
+    const dragging = g && (g.kind === 'dial' || g.kind === 'joystick' || (g.kind === 'tap' && g.z?.drag));
+    if (dragging && !fresh && this.state?.fixtures?.[g.fixture]) return;
+    this.gesture = null;
+    clearGlide();
+  }
+
   /** Let go of whatever the hand was doing (a cancelled press). */
   cancel() {
     this.gesture = null;
@@ -116,7 +130,7 @@ export class TableGestures {
     let best = null;
     let top = null;
     for (const p of Object.values(s.pieces)) {
-      if (p.hidden || p.fixed) continue;
+      if (p.hidden || (p.fixed && !p.props?.markable)) continue;
       const c = this.view.posOf(p.id) || p.at;
       // A piece in the hand is taken again only on the piece itself: a target beside it (the next rung of a ladder, a slot a
       // hair's breadth away) must be tappable, and the generous reach that makes a piece easy to grab would swallow it.
@@ -292,7 +306,7 @@ export class TableGestures {
     if (this.cloudHit(u)) return true;
     if (this.linkAt(u)) return true;
     const id = this.pieceAt(u);
-    if (id && !this.state.pieces[id].fixed) return true;
+    if (id && (!this.state.pieces[id].fixed || this.state.pieces[id].props?.markable)) return true;
     if (this.onSheet(u)) return true;
     if (this.siteAt(u)) return true;
     return this.containerAt(u) !== null && !this.state.carry.held;
@@ -314,7 +328,12 @@ export class TableGestures {
       return;
     }
     if (fh?.kind === 'joystick') { this.gesture = { kind: 'joystick', ...fh }; this.joystickTo(fh, u); return; }
-    if (fh?.kind === 'dial') { this.gesture = { kind: 'dial', ...fh }; this.dialTo(fh, u); return; }
+    if (fh?.kind === 'dial') {
+      const d = this.state.fixtures[fh.fixture]?.dials?.[fh.dial];
+      this.gesture = { kind: 'dial', ...fh, start: u, startValue: d?.value, moved: false };
+      this.dialTo(fh, u);
+      return;
+    }
     if (fh?.kind === 'run') { this.gesture = { kind: 'run', fixture: fh.fixture }; return; }
     if (fh?.kind === 'pick') { this.gesture = { ...fh }; return; }
     if (fh?.kind === 'tap') { this.gesture = { ...fh }; if (fh.z.drag) this.tapDrag(fh, u); return; }
@@ -339,7 +358,7 @@ export class TableGestures {
     const bond = this.linkAt(u);
     if (bond) { this.gesture = { kind: 'bond', ...bond }; return; }
     const id = this.pieceAt(u);
-    if (id && !this.state.pieces[id].fixed) {
+    if (id && (!this.state.pieces[id].fixed || this.state.pieces[id].props?.markable)) {
       const c = this.view.posOf(id) || this.state.pieces[id].at;
       this.gesture = { kind: 'piece', id, start: u, off: { x: c.x - u.x, y: c.y - u.y }, moved: false };
       return;
@@ -356,7 +375,11 @@ export class TableGestures {
     const g = this.gesture;
     if (!g || !this.state) return;
     if (g.kind === 'joystick') { this.joystickTo(g, u); return; }
-    if (g.kind === 'dial') { this.dialTo(g, u); return; }
+    if (g.kind === 'dial') {
+      if (g.start && Math.hypot(u.x - g.start.x, u.y - g.start.y) >= this.view.pxToUnits(SLOP_PX)) g.moved = true;
+      this.dialTo(g, u);
+      return;
+    }
     if (g.kind === 'tap') { if (g.z.drag) this.tapDrag(g, u); return; }
     if (g.kind === 'cloudRotate') {
       const dx = u.x - g.start.x;
@@ -389,6 +412,7 @@ export class TableGestures {
       return;
     }
     if (g.kind !== 'piece') return;
+    if (this.state.pieces[g.id]?.fixed) return;
     if (!g.moved) {
       if (Math.hypot(u.x - g.start.x, u.y - g.start.y) < this.view.pxToUnits(SLOP_PX)) return;
       g.moved = true;
@@ -405,7 +429,10 @@ export class TableGestures {
   pointerUp(u) {
     const g = this.gesture;
     this.gesture = null;
+    // A let-go knob settles on the step its dial took.
+    if (clearGlide()) this.glided();
     if (!g || !this.state) return;
+    if (g.kind === 'dial') return;
     if (g.kind === 'cloudRotate') {
       if (!g.moved) {
         const vf = this.state.fixtures[g.view];
@@ -465,6 +492,14 @@ export class TableGestures {
     this.pourFrom = null;
     // A piece that is only MARKED, never carried (`props.markable`: a particle the player tags), is flipped by a tap: one touch, no carrying.
     if (!held && this.state.pieces[id]?.props?.markable) { this.view.dispatch({ flip: id }); return; }
+    // On a VSEPR hub, clicking an attached arm or lone pair selects it to measure the bond angle (dragging still detaches it).
+    if (!held && this.state.kit === 'domain') {
+      const tp = this.state.pieces[id];
+      if (tp && (tp.kind === 'arm' || tp.kind === 'balloon') && tp.joinedTo?.some(j => this.state.pieces[j]?.kind === 'hub')) {
+        this.view.dispatch({ flip: id });
+        return;
+      }
+    }
     if (!held) { this.view.dispatch({ pick: id }); return; }
     if (held === id) { this.view.dispatch({ pick: null }); return; }
     // A piece on the rail is a place along it: the held piece goes before it when the tap lands on its left
@@ -553,24 +588,33 @@ export class TableGestures {
       const xa = g.box.x0 + dr.x0; const xb = g.box.x0 + dr.x1;
       const fx = Math.max(0, Math.min(1, (u.x - xa) / (xb - xa)));
       const vx = snapDial(d, d.min + fx * (d.max - d.min));
+      setGlide(id, z.dial, fx, d.min + fx * (d.max - d.min));
       if (vx !== d.value) this.view.dispatch({ setDial: { fixture: id, dial: z.dial, value: vx } });
+      this.glided();
       return;
     }
     const y0 = g.box.y0 + dr.y0; const y1 = g.box.y0 + dr.y1;
     const frac0 = Math.max(0, Math.min(1, (y1 - u.y) / (y1 - y0)));
     // `invert`: the pointer's depth sets the dial (a piston pushed down compresses: low is the largest setting).
     const frac = dr.invert ? 1 - frac0 : frac0;
-    const value = snapDial(d, Math.max(d.min, Math.min(d.max, dr.scale * frac)));
+    const raw = Math.max(d.min, Math.min(d.max, dr.scale * frac));
+    const value = snapDial(d, raw);
+    setGlide(id, z.dial, d.max === d.min ? 0 : (raw - d.min) / (d.max - d.min), raw);
     if (value !== d.value) this.view.dispatch({ setDial: { fixture: id, dial: z.dial, value } });
+    this.glided();
   }
 
   dialTo(h, u) {
     const f = this.state.fixtures[h.fixture];
-    const d = f.dials[h.dial];
+    const d = f?.dials?.[h.dial];
+    if (!d) return;
     const t = h.track || fixtureLayout(f).dials.find(x => x.name === h.dial);
     const frac = Math.max(0, Math.min(1, (u.x - t.x0) / (t.x1 - t.x0)));
     const value = snapDial(d, d.min + frac * (d.max - d.min));
+    // The knob rides with the hand; the dial takes the nearest step (`glide.js`).
+    setGlide(h.fixture, h.dial, frac, d.min + frac * (d.max - d.min));
     if (value !== d.value) this.view.dispatch({ setDial: { fixture: h.fixture, dial: h.dial, value } });
+    this.glided();
   }
 
   joystickTo(h, u) {
@@ -596,8 +640,12 @@ export class TableGestures {
     }
   }
 
+  /** A knob moved with no change to the table: the built table moves only its knobs (`glided`). */
+  glided() { if (this.view.glided) this.view.glided(); else this.view.changed?.(); }
+
   cancel() {
     this.gesture = null;
+    if (clearGlide()) this.glided();
     this.view.setDrag?.(null, null);
     if (this.pourFrom) {
       this.pourFrom = null;

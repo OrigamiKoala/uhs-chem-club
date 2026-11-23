@@ -179,7 +179,7 @@ export const SPECIES = {
 
   'the compressor': {
     name: 'The Compressor',
-    counter: 'Trial missed: the cylinder compression cycle does not match the target.',
+    counter: 'Trial missed: the compressor reading does not match the target.',
     knockback: 'Knocked back. The compressor cycles again, but every reading you took is still on the bench.',
     hit: 'The compressor vents its last charge and its pistons stand still.',
     lines: {

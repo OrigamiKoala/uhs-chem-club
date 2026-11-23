@@ -535,6 +535,7 @@ export function createRunner(container, ctx, cfg) {
     history.push(holdBase || state.table);
     holdBase = null;
     lastDial = null;
+    frame.unsolve?.();
     return showTable(initStageTable(stage));
   }
 
@@ -610,7 +611,7 @@ export function createRunner(container, ctx, cfg) {
     }
     tabletop.setState(state.table, { stageIndex: index, newStage: true, undo: history.length });
     // A built bench takes a while to stand up; say so until its first frames are drawn, so a black pane is not read as a broken one.
-    if (benchesAre3D() && typeof document !== 'undefined' && !(tabletop.elapsed > 1.5) && !document.querySelector('.lq-building')) {
+    if (benchesAre3D() && typeof document !== 'undefined' && !(tabletop.elapsed > 0.1) && !document.querySelector('.lq-building')) {
       const note = document.createElement('p');
       note.className = 'lq-building';
       note.setAttribute('role', 'status');
@@ -619,8 +620,8 @@ export function createRunner(container, ctx, cfg) {
       const t0 = Date.now();
       const poll = setInterval(() => {
         // `elapsed` only counts once the world has loaded and the table is being drawn.
-        if (disposed || !tabletop || tabletop.elapsed > 1.5 || Date.now() - t0 > 60000) { clearInterval(poll); note.remove(); }
-      }, 500);
+        if (disposed || !tabletop || tabletop.elapsed > 0.1 || Date.now() - t0 > 60000) { clearInterval(poll); note.remove(); }
+      }, 100);
     }
     // The Tour explains each instrument and kind of piece on this stage's table.
     // A briefing teaches before the stage that needs it (at most two sentences, with an optional worked case as `worked` lines); it is the Tour's first step on any stage that has one.
@@ -663,5 +664,7 @@ export function createRunner(container, ctx, cfg) {
    * runner would fault on the first stage of every quest.
    */
   runner.start = () => { if (!disposed) loadStage(index); };
+  // Development only: open any stage of the bench in front of you (`__lqStage(n)`, 1-based) to look at its table.
+  if (import.meta.env?.DEV && typeof window !== 'undefined') window.__lqStage = n => { if (!disposed) loadStage(n - 1); };
   return runner;
 }

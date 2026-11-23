@@ -45,7 +45,7 @@ export function readingsSignature(snap) {
 function fit(ctx, text, maxW, size, weight = 500) {
   let s = size;
   for (let i = 0; i < 6; i++) {
-    ctx.font = `${weight} ${s}px "Share Tech Mono", monospace`;
+    ctx.font = `${weight} ${s}px "Quantico", "JetBrains Mono", monospace`;
     if (ctx.measureText(text).width <= maxW) break;
     s *= 0.86;
   }
@@ -56,7 +56,7 @@ function paintLog(ctx, x0, y0, w, h, snap) {
   const cols = snap.columns || [];
   const rows = snap.rows || [];
   ctx.fillStyle = INK;
-  ctx.font = '600 30px "Share Tech Mono", monospace';
+  ctx.font = '600 30px "Quantico", "JetBrains Mono", monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(`BENCH LOG (${rows.length})`, x0, y0 + 28);
@@ -69,7 +69,7 @@ function paintLog(ctx, x0, y0, w, h, snap) {
   cols.forEach((c, i) => {
     const s = fit(ctx, String(c.label).toUpperCase(), cw - 12, 24, 600);
     ctx.fillStyle = DIM;
-    ctx.font = `600 ${s}px "Share Tech Mono", monospace`;
+    ctx.font = `600 ${s}px "Quantico", "JetBrains Mono", monospace`;
     ctx.fillText(String(c.label).toUpperCase(), x0 + i * cw, headY);
   });
 
@@ -84,7 +84,7 @@ function paintLog(ctx, x0, y0, w, h, snap) {
       const text = String(r[c.key] ?? '');
       const s = fit(ctx, text, cw - 12, 32);
       ctx.fillStyle = last ? AMBER : INK;
-      ctx.font = `500 ${s}px "Share Tech Mono", monospace`;
+      ctx.font = `500 ${s}px "Quantico", "JetBrains Mono", monospace`;
       ctx.fillText(text, x0 + i * cw, y);
     });
     ctx.strokeStyle = RULE;
@@ -93,7 +93,7 @@ function paintLog(ctx, x0, y0, w, h, snap) {
   });
   if (rows.length > shown.length) {
     ctx.fillStyle = DIM;
-    ctx.font = '500 22px "Share Tech Mono", monospace';
+    ctx.font = '500 22px "Quantico", "JetBrains Mono", monospace';
     ctx.fillText(`${rows.length - shown.length} earlier on the card`, x0, y0 + h - 4);
   }
 }

@@ -39,6 +39,7 @@ import { electronsToward, loopCurrent } from '../../engine/celldata-galvanic.js'
 import { concCellRead, concLabel } from '../../engine/celldata-q5.js';
 
 import { attachScenes } from '../../table/kits/cell-attach.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -440,3 +441,5 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = { P1_METALS, P1_CARDS, P1_WANT, P2, P2_ANODE, P3, P3_WANT, P4, P5, TOL_V, TOL_G, loopCurrent, FARADAY };
+
+markFights(STAGES);

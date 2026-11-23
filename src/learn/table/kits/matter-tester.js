@@ -56,8 +56,8 @@ export function cardRows(p) {
   if (pr.melt) rows.push([meltText(pr.melt), 'v']);
   if (pr.strike) rows.push([STRIKE_WORD[pr.strike], 'v']);
   if (pr.cur) {
-    rows.push([`lamp cold: ${yn(pr.cur.cold)}`, 'v']);
-    rows.push([`lamp molten: ${yn(pr.cur.molten)}`, 'v']);
+    rows.push([`current cold: ${yn(pr.cur.cold)}`, 'v']);
+    rows.push([`current molten: ${yn(pr.cur.molten)}`, 'v']);
   }
   return rows;
 }
@@ -101,8 +101,8 @@ registerPiece('solid', {
 export function solidTestFixture(id, at, { tests = TESTS, T0 = 0, maxT = 2000, view = 'tests', title = 'Tester', w = view === 'both' ? 96 : 68 } = {}) {
   const window = view === 'window';
   const list = window ? [] : [...tests];
-  const dials = list.length > 1 ? { test: { min: 1, max: list.length, step: 1, value: 1, label: 'Test', labels: list.map(t => TEST_WORD[t]) } } : {};
-  const top = list.length > 1 ? 13.2 : 10;
+  const dials = list.length > 1 ? { test: { min: 1, max: list.length, step: 1, value: 1, label: 'Mode', labels: list.map(t => TEST_WORD[t]) } } : {};
+  const top = list.length > 1 ? 14.5 : 10;
   const h = Math.round((top + 31) * 10) / 10;
   const slotId = `${id}.slot`;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
@@ -110,9 +110,9 @@ export function solidTestFixture(id, at, { tests = TESTS, T0 = 0, maxT = 2000, v
   return {
     fixture: {
       id, kind: 'solidtest', label: title, at: { ...at }, size: { w, h }, dials, ...(window ? { noRun: true } : { runLabel }),
-      props: { backdrop: true, slot: slotId, tests: list, T0, maxT, view, top }
+      props: { backdrop: true, slot: slotId, tests: list, T0, maxT, view, top, tickLabels: true }
     },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 9.5 }, size: { w: 24, h: 17 } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 12.2 }, size: { w: 22, h: 16 } },
     slotId,
     size: { w, h }
   };

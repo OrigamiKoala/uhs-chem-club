@@ -33,6 +33,7 @@ import {
   ACIDS, BASES, INDICATORS, scaleSolution, bufferState, ratioForPH, pOf, fmt, sci, titrationML, equivalenceML, indicatorWindowML,
   indicatorEndsAtEquivalence
 } from '../../engine/phdata.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -417,3 +418,5 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = { P1_FLASKS, P1_PICK, P2_FLASKS, P2_WANT, P3_SALTS, P4_SPEC, DYES, P4_RIGHT, P5_TARGET, P5_REF, P5_TOL, strengthText };
+
+markFights(STAGES);

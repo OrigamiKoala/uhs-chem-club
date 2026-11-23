@@ -37,7 +37,11 @@ export function predictStage({ key, title, prompt, cards, hints, reward, briefin
     prompt,
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
-      pieces: cards.map(([id, wording, lines], i) => guessCard(id, wording, lines, { x: xs[i], y: 20 })),
+      pieces: cards.map(([id, wording, lines, model3d], i) => {
+        const card = guessCard(id, wording, lines, { x: xs[i], y: 20 });
+        if (model3d) card.props = { ...card.props, model3d };
+        return card;
+      }),
       zones: { slots: [SLOT] }
     }),
     hints,

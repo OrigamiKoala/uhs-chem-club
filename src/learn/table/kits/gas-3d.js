@@ -16,6 +16,7 @@ import { ParticleField, speedQuantiles } from '../../engine/gas-particles.js';
 import { buildBarrel, buildLid } from '../../engine/gas-props.js';
 import { rigGeometry, boxGeometry, SHAPES } from './gas-draw.js';
 import { rigRead, boxRead, pinholeRead, commonRead } from './gas-read.js';
+import { fixtureLayout } from '../layout.js';
 
 const BONE = 0xd6cfb8;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -42,7 +43,8 @@ function dressRig(f, state, c) {
   const { THREE, scale: s, toPlate, box } = c;
   const group = new THREE.Group();
   group.name = 'gas-rig';
-  const g = rigGeometry(f, { box, dials: Object.keys(f.dials).filter(n => !f.props.hidden?.includes(n)).map((n, i) => ({ y: box.y0 + 8 + i * 5 })) });
+  const lay = fixtureLayout(f);
+  const g = rigGeometry(f, lay);
   const vmax = f.props.vmax || 40;
   const items = g.cyls.map((cj, j) => {
     const b = cj.barrel;
@@ -71,7 +73,7 @@ function dressRig(f, state, c) {
       weight.position.y = r;
       cyl.add(weight);
     }
-    if (cj.c.hold === 'V') { plate.visible = true; rod.visible = false; }
+    if (cj.c.hold === 'V') { plate.visible = false; rod.visible = false; }
     const gauge = gaugeHead(c, r * 0.45);
     gauge.position.set(-len / 2 + 0.015, dia + 0.012, 0);
     cyl.add(gauge);
@@ -132,7 +134,8 @@ function dressBox(f, state, c) {
   const { THREE, scale: s, toPlate, box } = c;
   const group = new THREE.Group();
   group.name = 'gas-box';
-  const g = boxGeometry(f, { box, dials: Object.keys(f.dials).filter(n => !f.props.hidden?.includes(n)).map((n, i) => ({ y: box.y0 + 8 + i * 5 })) });
+  const lay = fixtureLayout(f);
+  const g = boxGeometry(f, lay);
   const v = g.vessel;
   const w = (v.x1 - v.x0) * s;
   const d = (v.y1 - v.y0) * s;
@@ -210,7 +213,8 @@ function dressPinhole(f, state, c) {
   const group = new THREE.Group();
   group.name = 'gas-pinhole';
   const n = (f.props.chambers || []).length;
-  const lastDial = Object.keys(f.dials).length ? box.y0 + 8 + (Object.keys(f.dials).length - 1) * 5 : box.y0 + 8;
+  const lay = fixtureLayout(f);
+  const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : box.y0 + 8;
   const cw = (f.size.w - 4) / n;
   const hu = f.props.chamberH ?? 12;
   const lidH = 0.05;
@@ -291,7 +295,8 @@ export function gasDress(f, state, c) {
   if (f.kind === 'common') return dressCommon(f, state, c);
   if (f.kind === 'tube') {
     const group = new THREE.Group();
-    const lastDial = Object.keys(f.dials).length ? box.y0 + 8 + (Object.keys(f.dials).length - 1) * 5 : box.y0 + 8;
+    const lay = fixtureLayout(f);
+  const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : box.y0 + 8;
     const lid = buildLid((f.size.w - 8) * s, 5.6 * s, 0.026, { mats: c.mats });
     const p = toPlate({ x: box.x0 + f.size.w / 2, y: lastDial + 5 + 2.7 });
     lid.position.set(p.x, c.ground + 0.002, p.z);

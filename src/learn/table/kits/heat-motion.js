@@ -30,6 +30,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { blockRead, cupRead, shelvesRead, plotRead, stackRead, shakesOf, seededRng } from './heat-read.js';
 import { inkOfElement } from './heat-parts.js';
+import { gliding } from '../glide.js';
 
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
@@ -92,6 +93,15 @@ export function glide(key, clock, from, target, dur = GLIDE_S) {
   }
   return lerp(m.from, m.target, ease((clock - m.t0) / dur));
 }
+/**
+ * `glide`, but while the hand drags the dial (`live`, from `glide.js`) the picture stands where the hand is, with no lag; let go, and it
+ * glides on from there to the setting the dial took.
+ */
+export function glideHand(key, clock, from, target, live, dur = GLIDE_S) {
+  if (!live) return glide(key, clock, from, target, dur);
+  memory.set(key, { from: target, target, t0: -1e9, restart: false });
+  return target;
+}
 /** Seconds since this key's change began (large when it has settled). */
 export function sinceChange(key, clock) { const m = memory.get(key); return m ? clock - m.t0 : 1e9; }
 
@@ -129,10 +139,11 @@ const ring = (ctx, x, y, r, color, alpha = 1) => {
    THE CUP: water molecules (dots), and the sample or the heater (rings)
    ------------------------------------------------------------------ */
 
-/** The temperature the bath shows at `clock`: it glides from its starting reading to the one the planner reads. */
+/** The temperature the bath shows at `clock`: printed readings are immediately settled (`T = r.Tf`) while particle motion eases (`animT`). */
 export function bathShown(f, state, b) {
   const r = cupRead(state, f.id);
-  return { r, T: glide(`${b?.scope || ''}cup:${f.id}`, b?.clock, r.T0, r.Tf, CUP_GLIDE_S) };
+  const key = `${b?.scope || ''}${state?.title || ''}|cup:${f.id}`;
+  return { r, T: r.Tf, animT: glide(key, b?.clock, r.T0, r.Tf, 0.9) };
 }
 
 /**
@@ -154,11 +165,11 @@ export function cupParts(f, r) {
 
 function paintCupMotion(ctx, f, state, b) {
   const F = frameOf(b);
-  const { r, T } = bathShown(f, state, b);
+  const { r, animT: T } = bathShown(f, state, b);
   const g = cupParts(f, r);
   const clock = b.clock || 0;
-  const key = `${b.scope || ''}cup:${f.id}`;
-  const p = progressOf(key, clock, CUP_GLIDE_S);
+  const key = `${b.scope || ''}${state?.title || ''}|cup:${f.id}`;
+  const p = progressOf(key, clock, 0.9);
   // The change starts where the bath touches what heats or cools it: the sample at the top, the heater's element on the floor.
   const fromTop = g.sample;
   const far = d => (fromTop ? d : 1 - d);
@@ -276,11 +287,11 @@ function paintLattice(ctx, f, state, b) {
   const clock = b.clock || 0;
   for (const q of latticeLayout(f, state)) {
     const r = blockRead(state, q.id);
-    const key = `${b.scope || ''}blk:${q.id}`;
+    const key = `${b.scope || ''}${state?.title || ''}|blk:${q.id}`;
     const T = glide(key, clock, r.T0, r.T, BLOCK_GLIDE_S);
     const sx = q.w / q.cols; const sy = q.h / q.rows;
     const cell = Math.min(sx, sy);
-    const rad = Math.min(1.05, cell * 0.24);
+    const rad = Math.min(1.5, cell * 0.34);
     for (let a = 0; a < q.count; a++) {
       const gx = a % q.cols; const gy = Math.floor(a / q.cols);
       const u = (gx + 0.5) / q.cols;
@@ -448,11 +459,11 @@ export function curveAt(path, u) {
   const mix = (q.kind === 'melt' || q.kind === 'boil') ? kk : 0;
   return { T, phase, kind: q.kind, mix };
 }
-export function curveU(f) { const d = f.dials.heat; return (d.value - d.min) / (d.max - d.min || 1); }
+export function curveU(f, shown = false) { const d = f.dials.heat; return (((shown ? gliding(f, 'heat') : null) ?? d.value) - d.min) / (d.max - d.min || 1); }
 /** The room under the graph: its axis caption, and a line of readings when the stage asks for a `readout`. */
 export const curveFoot = f => (f.props.readout ? 9 : 5);
 /** Where the burner is shown at `clock`, 0 to 1 of the heat: it glides to the dial's setting. */
-export const curveShown = (f, b) => glide(`${b?.scope || ''}curve:${f.id}`, b?.clock, f.props._u0 ?? 0, curveU(f));
+export const curveShown = (f, b) => glideHand(`${b?.scope || ''}curve:${f.id}`, b?.clock, f.props._u0 ?? 0, curveU(f, true), gliding(f, 'heat') != null);
 
 function paintCurve(ctx, f, state, b) {
   const F = frameOf(b);
@@ -484,20 +495,37 @@ function paintCurve(ctx, f, state, b) {
     else pos = at.phase === 'solid' ? solid : at.phase === 'liquid' ? liquid : gas;
     dot(ctx, F.x(pos.x), F.y(pos.y), F.len(0.95), ink, 0.95);
   }
-  // The trace of temperature against heat added, drawn as dots so it is the same picture on the built table: it climbs, flattens, climbs.
+  // The trace of temperature against heat added: a faint guide for the full path and a solid line up to the burner's position.
   const gx = 29; const gw = f.size.w - gx - 4; const gy = top + 1; const gh = bh;
   const lo = Math.min(...path.list.map(q => Math.min(q.a, q.b))); const hi = Math.max(...path.list.map(q => Math.max(q.a, q.b)));
   const px = uu => F.x(gx + uu * gw);
-  const py = T => F.y(gy + gh - ((T - lo) / Math.max(1, hi - lo)) * (gh - 1));
-  ctx.strokeStyle = DIM;
+  const py = T => F.y(gy + gh - ((T - lo) / Math.max(1, hi - lo)) * (gh - 2) - 1);
+  ctx.strokeStyle = DUST; ctx.lineWidth = 1.2;
   ctx.beginPath(); ctx.moveTo(F.x(gx), F.y(gy)); ctx.lineTo(F.x(gx), F.y(gy + gh)); ctx.lineTo(F.x(gx + gw), F.y(gy + gh)); ctx.stroke();
-  const steps = 36;
-  for (let s = 0; s <= steps; s++) {
-    const uu = (s / steps) * u;
-    const a = curveAt(path, uu);
-    dot(ctx, px(uu), py(a.T), F.len(0.42), PHOS, 0.9);
+  // Faint full heating curve guide.
+  ctx.strokeStyle = DIM; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  path.list.forEach((q, idx) => {
+    if (idx === 0) ctx.moveTo(px(q.u0), py(q.a));
+    ctx.lineTo(px(q.u1), py(q.b));
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Solid traced curve up to current heat added `u`.
+  ctx.strokeStyle = PHOS; ctx.lineWidth = Math.max(1.8, F.len(0.55));
+  ctx.beginPath();
+  let started = false;
+  for (const q of path.list) {
+    if (q.u0 > u) break;
+    const endU = Math.min(u, q.u1);
+    const k = q.u1 > q.u0 ? (endU - q.u0) / (q.u1 - q.u0) : 0;
+    const endT = lerp(q.a, q.b, clamp(k, 0, 1));
+    if (!started) { ctx.moveTo(px(q.u0), py(q.a)); started = true; }
+    ctx.lineTo(px(endU), py(endT));
   }
-  dot(ctx, px(u), py(at.T), F.len(0.95), AMBER, 1);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  dot(ctx, px(u), py(at.T), F.len(1.15), AMBER, 1);
 }
 
 /* ------------------------------------------------------------------
@@ -521,12 +549,34 @@ function paintLead(ctx, f, state, b) {
   const box = (x, y, bw, bh) => { ctx.strokeStyle = DIM; ctx.lineWidth = 1; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(bw)), Math.round(F.len(bh))); };
   if (scene === 'react') { paintRxn(ctx, { ...f, id: `${f.id}-r`, dials: {}, size: { w, h: h + 4 } }, state, b); return; }
   if (scene === 'meet') {
-    // A hot block and a cold block come together. The atoms at the wall they share change first, and the change works its way in.
+    // A hot block and a cold block come together. If `asymmetric`, a tiny hot speck meets a large cold block.
     const period = 10; const t = clock % period;
-    const k = ease((t - 2) / 1.2);                       // the two come together
-    const p = clamp((t - 3.2) / 4.2, 0, 1);              // their readings meet
-    const cw = LEAD_MEET.cw(w); const gap = LEAD_MEET.gap * (1 - k);
+    const k = ease((t - 2) / 1.2);
+    const p = clamp((t - 3.2) / 4.2, 0, 1);
     const bh = h - top - LEAD_MEET.foot;
+    if (f.props.asymmetric) {
+      const sw = 10; const bw = w - 24; const gap = 6 * (1 - k);
+      const xL = (w - sw - bw - gap) / 2;
+      const xR = xL + sw + gap;
+      const sh = bh * 0.45;
+      box(xL, top + (bh - sh) / 2, sw, sh);
+      box(xR, top, bw, bh);
+      // Tiny hot spark: 2 bright fast dots.
+      for (let i = 0; i < 2; i++) {
+        const T = lerp(120, 12, ease(p));
+        const swing = 0.2 + 0.9 * vigour(T);
+        dot(ctx, F.x(xL + sw * (0.35 + i * 0.3) + Math.sin(clock * 11 + i * 2) * swing), F.y(top + bh / 2 + Math.cos(clock * 12 + i) * swing), F.len(1.1), tempInk(T), 1);
+      }
+      // Large cold valve: 16 cold dots barely warming.
+      for (let i = 0; i < 16; i++) {
+        const gx = i % 4; const gy = Math.floor(i / 4);
+        const T = lerp(2, 12, ease(clamp(p * 1.4 - (gx / 4) * 0.6, 0, 1)));
+        const swing = 0.1 + 0.4 * vigour(T);
+        dot(ctx, F.x(xR + bw * ((gx + 0.5) / 4) + Math.sin(clock * 7 + i) * swing), F.y(top + bh * ((gy + 0.5) / 4) + Math.cos(clock * 8 + i) * swing), F.len(1.0), tempInk(T), 1);
+      }
+      return;
+    }
+    const cw = LEAD_MEET.cw(w); const gap = LEAD_MEET.gap * (1 - k);
     for (const side of [0, 1]) {
       const x0 = side === 0 ? w / 2 - gap / 2 - cw : w / 2 + gap / 2;
       box(x0, top, cw, bh);
@@ -536,58 +586,92 @@ function paintLead(ctx, f, state, b) {
         const d = side === 0 ? 1 - u : u;
         const T = lerp(side === 0 ? 90 : 5, 47.5, ease(clamp(p * (1 + SPREAD) - d * SPREAD, 0, 1)));
         const swing = 0.15 + 0.85 * vigour(T);
-        dot(ctx, F.x(x0 + cw * u + Math.sin(clock * 8 + i * 1.7 + side) * swing), F.y(top + bh * ((gy + 0.5) / 3) + Math.cos(clock * 9.1 + i + side * 2) * swing), F.len(1.0), tempInk(T), 1);
+        dot(ctx, F.x(x0 + cw * u + Math.sin(clock * 8 + i * 1.7 + side) * swing), F.y(top + bh * ((gy + 0.5) / 3) + Math.cos(clock * 9.1 + i + side * 2) * swing), F.len(1.05), tempInk(T), 1);
       }
     }
     return;
   }
   if (scene === 'heater') {
-    // A heater under a bath: the molecules that touch the element are knocked faster first, and they knock the ones above them.
+    // Water and Iron side by side over the same heater so the student sees both substances to compare.
     const period = 9; const t = clock % period;
     const p = clamp(t / 7, 0, 1);
-    const y0 = top; const y1 = h - 6;
-    box(3, y0, w - 6, y1 - y0);
-    for (let i = 0; i < 16; i++) {
+    const y0 = top; const y1 = h - 7;
+    const halfW = (w - 10) / 2;
+    box(3, y0, halfW, y1 - y0);
+    box(7 + halfW, y0, halfW, y1 - y0);
+    // Water (left): wandering molecules, mild warming.
+    for (let i = 0; i < 10; i++) {
       const u = tri(hash('ly', i) * 2 + clock * 0.05 * (0.7 + hash('w', i)));
-      const T = lerp(15, 85, ease(clamp(p * (1 + SPREAD) - (1 - u) * SPREAD, 0, 1)));
-      const swing = 0.2 + 1.0 * vigour(T);
-      const x = clamp(5 + (w - 10) * tri(hash('lx', i) * 2 + clock * 0.06 * (0.7 + hash('v', i))) + Math.sin(clock * 9 + i * 2.1) * swing, 4, w - 4);
-      const y = clamp(y0 + 1.5 + (y1 - y0 - 3) * u + Math.cos(clock * 10.3 + i * 1.3) * swing, y0 + 1, y1 - 1);
-      dot(ctx, F.x(x), F.y(y), F.len(0.9), tempInk(T), 1);
+      const T = lerp(20, 42, ease(clamp(p * 1.2, 0, 1)));
+      const swing = 0.2 + 0.8 * vigour(T);
+      const x = clamp(5 + (halfW - 4) * tri(hash('lx', i) * 2 + clock * 0.06 * (0.7 + hash('v', i))) + Math.sin(clock * 8 + i * 2.1) * swing, 4, 3 + halfW - 1);
+      const y = clamp(y0 + 1.5 + (y1 - y0 - 3) * u + Math.cos(clock * 9.3 + i * 1.3) * swing, y0 + 1, y1 - 1);
+      dot(ctx, F.x(x), F.y(y), F.len(0.95), tempInk(T), 1);
     }
-    for (let i = 0; i < 8; i++) ring(ctx, F.x(w / 2 - 8.4 + i * 2.4 + Math.sin(clock * 8 + i * 1.9) * 0.4), F.y(h - 3.9 + Math.cos(clock * 9.3 + i * 2.7) * 0.3), F.len(0.7), WARM, 1);
+    // Iron (right): lattice atoms over an identical heater.
+    for (let i = 0; i < 9; i++) {
+      const gx = i % 3; const gy = Math.floor(i / 3);
+      const T = lerp(20, 62, ease(clamp(p * 1.2, 0, 1)));
+      const swing = 0.2 + 0.8 * vigour(T);
+      const x = 7 + halfW + halfW * ((gx + 0.5) / 3) + Math.sin(clock * 9 + i * 1.7) * swing;
+      const y = y0 + (y1 - y0) * ((gy + 0.5) / 3) + Math.cos(clock * 10 + i * 2.3) * swing;
+      dot(ctx, F.x(x), F.y(y), F.len(1.0), tempInk(T), 1);
+    }
+    for (let i = 0; i < 4; i++) ring(ctx, F.x(5 + i * ((halfW - 4) / 3)), F.y(y1 + 2.2), F.len(0.65), WARM, 1);
+    for (let i = 0; i < 4; i++) ring(ctx, F.x(9 + halfW + i * ((halfW - 4) / 3)), F.y(y1 + 2.2), F.len(0.65), WARM, 1);
     return;
   }
   if (scene === 'air') {
-    box(3, top, w - 6, h - top - 3);
-    for (let i = 0; i < 10; i++) {
-      const x = 5 + (w - 10) * tri(hash('ax', i) * 2 + clock * 0.2 * (0.7 + hash('v', i)));
-      const y = top + 2 + (h - top - 7) * tri(hash('ay', i) * 2 + clock * 0.16 * (0.7 + hash('w', i)));
-      const c = i % 2 ? INK('O') : INK('N');
-      dot(ctx, F.x(x - 0.8), F.y(y), F.len(0.9), c, 1); dot(ctx, F.x(x + 0.8), F.y(y), F.len(0.9), c, 1);
+    box(3, top, w - 6, h - top - 4.5);
+    for (let i = 0; i < 8; i++) {
+      const x = 6 + (w - 12) * tri(hash('ax', i) * 2 + clock * 0.16 * (0.7 + hash('v', i)));
+      const y = top + 2.5 + (h - top - 9) * tri(hash('ay', i) * 2 + clock * 0.14 * (0.7 + hash('w', i)));
+      const isO = i % 2 === 1;
+      const c = isO ? INK('O') : INK('N');
+      ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, F.len(0.35));
+      ctx.beginPath(); ctx.moveTo(F.x(x - 1.4), F.y(y)); ctx.lineTo(F.x(x + 1.4), F.y(y)); ctx.stroke();
+      ctx.lineWidth = 1;
+      dot(ctx, F.x(x - 1.4), F.y(y), F.len(1.05), c, 1); dot(ctx, F.x(x + 1.4), F.y(y), F.len(1.05), c, 1);
     }
+    return;
+  }
+  if (scene === 'routes') {
+    // Two paths side by side: direct 1-step (left) and 2-step via CO (right).
+    const yTop = top + 3; const yMid = top + (h - top - 5) * 0.5; const yBot = h - 6;
+    const xL = w * 0.26; const xR = w * 0.74;
+    ctx.strokeStyle = AMBER; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(F.x(xL), F.y(yTop)); ctx.lineTo(F.x(xL), F.y(yBot)); ctx.stroke();
+    ctx.strokeStyle = PHOS;
+    ctx.beginPath(); ctx.moveTo(F.x(xR), F.y(yTop)); ctx.lineTo(F.x(xR), F.y(yMid)); ctx.lineTo(F.x(xR), F.y(yBot)); ctx.stroke();
+    ctx.lineWidth = 1;
+    const t = (clock % 4) / 4;
+    dot(ctx, F.x(xL), F.y(lerp(yTop, yBot, ease(t))), F.len(1.1), AMBER, 1);
+    const ry = t < 0.5 ? lerp(yTop, yMid, ease(t * 2)) : lerp(yMid, yBot, ease((t - 0.5) * 2));
+    dot(ctx, F.x(xR), F.y(ry), F.len(1.1), PHOS, 1);
     return;
   }
   if (scene === 'shut') {
-    box(3, top, w - 6, h - top - 3);
-    ctx.strokeStyle = AMBER; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(F.x(w / 2), F.y(top)); ctx.lineTo(F.x(w / 2), F.y(h - 3)); ctx.stroke(); ctx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) dot(ctx, F.x(5 + (w / 2 - 8) * tri(hash('sx', i) * 2 + clock * 0.4 * (0.7 + hash('v', i)))), F.y(top + 2 + (h - top - 7) * tri(hash('sy', i) * 2 + clock * 0.33 * (0.7 + hash('w', i)))), F.len(1.1), PHOS, 1);
+    box(3, top, w - 6, h - top - 4.5);
+    ctx.strokeStyle = AMBER; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(F.x(w / 2), F.y(top)); ctx.lineTo(F.x(w / 2), F.y(h - 4.5)); ctx.stroke(); ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) dot(ctx, F.x(5.5 + (w / 2 - 9) * tri(hash('sx', i) * 2 + clock * 0.35 * (0.7 + hash('v', i)))), F.y(top + 2.5 + (h - top - 9.5) * tri(hash('sy', i) * 2 + clock * 0.3 * (0.7 + hash('w', i)))), F.len(1.25), PHOS, 1);
     return;
   }
   if (scene === 'salt') {
-    box(3, top, w - 6, h - top - 3);
+    box(3, top, w - 6, h - top - 4.5);
     for (let i = 0; i < 12; i++) {
       const gx = i % 4; const gy = Math.floor(i / 4);
-      dot(ctx, F.x(w / 2 - 6 + gx * 4 + Math.sin(clock * 3 + i) * 0.2), F.y(h - 9 + gy * 0 - (gy - 1) * 3.4 + Math.cos(clock * 3 + i) * 0.2), F.len(1.0), (gx + gy) % 2 ? '#9fa4c0' : '#c9b66a', 1);
+      dot(ctx, F.x(w / 2 - 6 + gx * 4 + Math.sin(clock * 3 + i) * 0.18), F.y(h - 9.5 - gy * 3.1 + Math.cos(clock * 3 + i) * 0.18), F.len(1.1), (gx + gy) % 2 ? '#9fa4c0' : '#c9b66a', 1);
     }
-    for (let i = 0; i < 14; i++) dot(ctx, F.x(5 + (w - 10) * tri(hash('wx', i) * 2 + clock * 0.14 * (0.7 + hash('v', i)))), F.y(top + 2 + (h - top - 20) * tri(hash('wy', i) * 2 + clock * 0.12 * (0.7 + hash('w', i)))), F.len(0.7), COLD, 0.9);
+    for (let i = 0; i < 14; i++) dot(ctx, F.x(5 + (w - 10) * tri(hash('wx', i) * 2 + clock * 0.14 * (0.7 + hash('v', i)))), F.y(top + 2 + (h - top - 16) * tri(hash('wy', i) * 2 + clock * 0.12 * (0.7 + hash('w', i)))), F.len(0.85), COLD, 0.9);
     return;
   }
   if (scene === 'bond') {
-    const y = top + (h - top) / 2;
-    const sh = Math.sin(clock * 9) * 0.6;
-    ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, F.len(0.5)); ctx.beginPath(); ctx.moveTo(F.x(w / 2 - 5 - sh), F.y(y)); ctx.lineTo(F.x(w / 2 + 5 + sh), F.y(y)); ctx.stroke(); ctx.lineWidth = 1;
-    dot(ctx, F.x(w / 2 - 5 - sh), F.y(y), F.len(2.4), INK('H'), 1); dot(ctx, F.x(w / 2 + 5 + sh), F.y(y), F.len(2.4), INK('H'), 1);
+    const y = top + (h - top - 4) / 2;
+    const stretch = ease(tri(clock * 0.35)) * 7;
+    const half = 4.5 + stretch;
+    ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1.2, F.len(0.65 * (1 - stretch / 10)));
+    ctx.beginPath(); ctx.moveTo(F.x(w / 2 - half), F.y(y)); ctx.lineTo(F.x(w / 2 + half), F.y(y)); ctx.stroke(); ctx.lineWidth = 1;
+    dot(ctx, F.x(w / 2 - half), F.y(y), F.len(2.4), INK('H'), 1); dot(ctx, F.x(w / 2 + half), F.y(y), F.len(2.4), INK('H'), 1);
   }
 }
 
@@ -597,14 +681,14 @@ function paintLead(ctx, f, state, b) {
 
 function paintShelvesMotion(ctx, f, state, b) {
   const F = frameOf(b);
-  const r = shelvesRead(state, f.id);
+  const r = shelvesRead(state, f.id, true);
   const p = f.props;
   const clock = b.clock || 0;
   const top = contentTopOf(f);
   const x0 = 2; const w = f.size.w - 4;
   const y0 = top + 1; const h = f.size.h - top - 10;
-  const scale = p.scale || Math.max(Math.abs(r.dH), 1);
-  const shownDH = glide(`${b.scope || ''}shelf:${f.id}`, clock, 0, r.dH);
+  const scale = p.scale || Math.max(Math.abs(shelvesRead(state, f.id).dH), 1);
+  const shownDH = glideHand(`${b.scope || ''}shelf:${f.id}`, clock, 0, r.dH, gliding(f, 'after') != null);
   const mid = y0 + h * 0.5;
   const dy = clamp(shownDH / (scale * 2.2), -0.42, 0.42) * h;
   let ya = mid + dy * 0.5; let yb = mid - dy * 0.5; let yp = null;
@@ -630,17 +714,18 @@ function paintShelvesMotion(ctx, f, state, b) {
 function paintPlotMotion(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
-  const r = plotRead(state, f.id);
+  const r = plotRead(state, f.id, true);
   const clock = b.clock || 0;
   const top = contentTopOf(f);
-  const px = 6; const pw = f.size.w - 10; const py = top + 1; const ph = f.size.h - top - 12;
+  const totalW = f.size.w - 10;
+  const px = 6; const pw = p.bars ? totalW * 0.56 : totalW; const py = top + 1; const ph = f.size.h - top - 12;
   const Tmin = p.Ts[0]; const Tmax = p.Ts[p.Ts.length - 1];
   const dGat = T => p.dH - (T * p.dS) / 1000;
   const lo = Math.min(dGat(Tmin), dGat(Tmax), 0); const hi = Math.max(dGat(Tmin), dGat(Tmax), 0);
   const span = Math.max(1e-6, hi - lo) * 1.1;
   const X = T => px + ((T - Tmin) / (Tmax - Tmin)) * pw;
   const Yv = v => py + ph - ((v - lo + (hi - lo) * 0.05) / span) * ph;
-  const T = glide(`${b.scope || ''}plot:${f.id}`, clock, Tmin, r.T);
+  const T = glideHand(`${b.scope || ''}plot:${f.id}`, clock, Tmin, r.T, gliding(f, 'temp') != null);
   const ball = { x: X(T), y: Yv(dGat(T)) };
   // The ball sits on the line; it rocks a little, and its colour says the side of zero it is on.
   const side = dGat(T) < 0 ? PHOS : WARM;

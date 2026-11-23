@@ -67,13 +67,13 @@ function crossingCurve(ctx, w, h, t) {
   const crowd = crowdOfTwelve(here);
   const dots = [...Array(crowd.gas).fill('gas'), ...Array(crowd.liquid).fill('liquid'), ...Array(crowd.solid).fill('solid')];
   const ink = { solid: '#6f8fb0', liquid: KIT.green, gas: KIT.amber };
-  dots.forEach((s, i) => disc(ctx, 180 + i * 34, 462, 12, ink[s], KIT.steel));
-  text(ctx, 'twelve molecules', 180 - 14, 500, { size: 22, color: KIT.dust, align: 'left' });
-  text(ctx, `${here.T < 0 ? '−' : ''}${Math.abs(here.T).toFixed(1)} °C`, 660, 462, { size: 34, color: KIT.text, weight: 700 });
+  dots.forEach((s, i) => disc(ctx, 160 + i * 32, 464, 11, ink[s], KIT.steel));
+  text(ctx, 'twelve molecules (blue solid · green liquid · amber gas)', 148, 502, { size: 18, color: KIT.dust, align: 'left' });
+  text(ctx, `${here.T < 0 ? '−' : ''}${Math.abs(here.T).toFixed(1)} °C`, 610, 464, { size: 28, color: KIT.text, weight: 700, align: 'left' });
   const heat = qNow / 1000;
   const shown = back > 0 && back >= 1 ? 0 : heat;
-  text(ctx, `${shown.toFixed(1)} kJ added`, 820, 462, { size: 28, color: KIT.amber, weight: 700 });
-  if (back > 0.98) text(ctx, `way down: ${(-(TOTAL / 1000)).toFixed(1).replace('-', '−')} kJ`, 660, 500, { size: 26, color: KIT.amber, weight: 700 });
+  text(ctx, `${shown.toFixed(1)} kJ added`, 910, 464, { size: 24, color: KIT.amber, weight: 700, align: 'right' });
+  if (back > 0.98) text(ctx, `released: ${(TOTAL / 1000).toFixed(1)} kJ`, 910, 502, { size: 22, color: KIT.amber, weight: 700, align: 'right' });
 }
 
 export const Q5_SCENES = { 'crossing-curve': crossingCurve };

@@ -45,7 +45,7 @@ const GUESS_LABEL = { hydrogen: 'hydrogen', methane: 'methane', methanol: 'metha
 
 // Stage 1: 0.05 mol of a powder gives 8 kJ to a 200 g bath: 160 kJ for every mole.
 const POWDER = { moles: 0.05, dH: -160 };
-const AFTER = [-320, -160, 0, 160, 320];
+const AFTER = [-320, -240, -160, -80, 0, 80, 160, 240, 320];
 // Stage 2: the same powder at three amounts on the dial, and 0.30 mol beyond it (48 kJ).
 const SCALE_MOLES = [0.05, 0.1, 0.2];
 const ASKED_MOLES = 0.3;
@@ -62,17 +62,18 @@ const FINAL_BATH = 400;
 const FINAL_T0 = 20;
 const FINAL_ASKED = 0.25;
 const T_FINAL = FINAL_T0 + (FINAL_ASKED * -POWDER.dH * 1000) / (FINAL_BATH * SPECIFIC_HEAT_WATER);
-// Stage 6: ten grams of each fuel into a 5000 g tank.
+// Stage 6: ten grams of each fuel into a 10 kg tank (keeps the bath well below boiling).
 const GRAMS = 10;
-const TANK = 5000;
+const TANK = 10000;
 const FUEL_IDS = ['hydrogen', 'methane', 'methanol', 'carbon'];
 const molesOf = id => GRAMS / FUELS[id].molarMass;
 const riseOf = id => (molesOf(id) * -FUELS[id].dHc * 1000) / (TANK * SPECIFIC_HEAT_WATER);
 /** The fuels from the least heat per gram to the most. */
 const BY_GRAM = [...FUEL_IDS].sort((a, b) => riseOf(a) - riseOf(b));
 
-/** A fuel's card in the prediction: its heat per mole (the number that looks like the answer) and what a mole weighs. */
-const perMole = id => `${FUELS[id].name[0].toUpperCase()}${FUELS[id].name.slice(1)}: ${Math.round(-FUELS[id].dHc)} kJ from one mole; one mole is ${Math.round(FUELS[id].molarMass)} g`;
+/** A fuel's card in the prediction: name and formula only, so the bench settles the ranking. */
+const FUEL_FORMULA = { hydrogen: 'H₂', methane: 'CH₄', methanol: 'CH₃OH', carbon: 'C' };
+const perMole = id => `${FUELS[id].name[0].toUpperCase()}${FUELS[id].name.slice(1)} (${FUEL_FORMULA[id]})`;
 
 /* ------------------------------------------------------------------
    THE SIX STAGES (limiting reactant and activation energy left this bench on 2026-11-11: `archive/2026-11-11/ember/`)
@@ -83,42 +84,48 @@ export const STAGES = [
     const c = cupFixture('cup', { x: 28, y: 31 }, { title: 'Bath · 200 g', water: 200, T0: 20, showHeat: true });
     return {
       id: 's1-chart',
-      title: 'Heat for Each Mole',
-      briefing: { speaker: SPEAKER, body: 'A mole (mol) is a fixed number of particles, about 6.02 × 10²³ of them. The enthalpy change of a reaction, ΔH, is the heat it gives out or takes in for each mole that reacts, and it is negative when heat is given out.' },
-      prompt: 'What is the enthalpy change, ΔH, when one mole of the powder dissolves?',
+      title: 'Heat per Mole',
+      briefing: {
+        speaker: SPEAKER,
+        body: [
+          'A mole (mol) is a fixed count of 6.02 × 10²³ particles.',
+          'The enthalpy change of a reaction (ΔH) is the heat released or absorbed per mole.',
+          'ΔH is negative when a reaction releases heat to the bath, and positive when it absorbs heat.'
+        ]
+      },
+      prompt: 'What is the enthalpy change (ΔH) for one mole of this hot-pack powder?',
       widget,
       table: heatTable({
         pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, POWDER)],
         fixtures: [
           c.fixture,
           shelvesFixture('chart', { x: 120, y: 30 }, {
-            reactants: 'Powder before', products: 'Powder after', dH: 0, scale: 320, hideValue: true, hideVerdict: true, title: 'Energy diagram',
-            build: { afterList: AFTER, labels: ['−320 kJ/mol', '−160 kJ/mol', 'Level', '+160 kJ/mol', '+320 kJ/mol'], label: 'ΔH' }
+            reactants: 'Powder before', products: 'Powder after', dH: 0, scale: 320, hideValue: true, hideVerdict: true, title: 'Energy diagram', afterStart: 5,
+            build: { afterList: AFTER, labels: AFTER.map(v => (v === 0 ? 'Level' : `${v > 0 ? '+' : '−'}${Math.abs(v)} kJ/mol`)), label: 'ΔH' }
           })
         ],
         zones: { slots: [c.slot] }
       }),
       hints: [
-        'Drop the powder in the cup, then read the HEAT the bath took in and the moles printed on the powder.',
-        'That heat came from only 0.05 mol, so compare it with what one whole mole would give.',
-        'ΔH is the heat for one whole mole in kilojoules (1 kJ = 1,000 J), with a minus sign when the bath warmed.'
+        'Drop the powder into the cup, then read the bath\'s HEAT and the moles on the powder label.',
+        'That heat came from 0.05 mol, so compare it with what 1 full mole would release.',
+        'Convert the heat per mole to kilojoules (1 kJ = 1,000 J), and use a negative sign because the bath warmed.'
       ],
       check(state) {
         const t = state.table;
         const r = shelvesRead(t, 'chart');
-        if (r.dH === 0) return { ok: false, notYet: true, msg: 'The two levels of the diagram are equal: turn the "ΔH" dial.' };
+        if (r.dH === 0) return { ok: false, notYet: true, msg: 'Both levels are equal: turn the "ΔH" dial.' };
         if (r.dH === POWDER.dH) return { ok: true };
         const rise = t.pieces.powder.props.rise;
-        if (rise == null) return { ok: false, msg: 'The powder has not been in the cup yet.' };
-        const bath = `the bath ${rise > 0 ? 'warmed' : 'cooled'} ${fixed(Math.abs(rise), 1)} °C`;
-        // A chart on the wrong side says only that; a chart on the right side with the wrong size says what it shows.
-        if (Math.sign(r.dH) !== Math.sign(POWDER.dH)) return { ok: false, msg: `The diagram ${r.dH > 0 ? 'climbs' : 'drops'}, and ${bath}.` };
-        return { ok: false, msg: `The diagram drops ${Math.abs(r.dH)} kJ per mole, and ${bath} from ${POWDER.moles} mol.` };
+        if (rise == null) return { ok: false, msg: 'Test the powder in the cup first.' };
+        const bath = `the bath ${rise > 0 ? 'warmed' : 'cooled'} by ${fixed(Math.abs(rise), 1)} °C`;
+        if (Math.sign(r.dH) !== Math.sign(POWDER.dH)) return { ok: false, msg: `A ${r.dH > 0 ? 'higher' : 'lower'} product level means the powder ${r.dH > 0 ? 'absorbed heat' : 'released heat'}, but ${bath}.` };
+        return { ok: false, msg: `The diagram shows a drop of ${Math.abs(r.dH)} kJ/mol, while ${bath} from ${POWDER.moles} mol.` };
       },
       reward: {
-        log: 'The level dropped 160 kJ per mole.',
+        log: 'The energy level dropped 160 kJ per mole.',
         title: 'Enthalpy Change',
-        body: 'The bath took in 8,000 J from 0.05 mol of powder, which is 160 kJ for each mole. Heat was given out, so ΔH = −160 kJ/mol and the level after dissolving is the lower one on the energy diagram.'
+        body: 'The bath absorbed 8,000 J from 0.05 mol of powder, which equals 160 kJ per mole. Because heat flowed out to the bath, ΔH = −160 kJ/mol.'
       }
     };
   })(),
@@ -129,34 +136,35 @@ export const STAGES = [
     return {
       id: 's2-scale',
       title: 'More Powder, More Heat',
-      prompt: 'How much heat does 0.30 mol of the powder give out?',
-      entry: { id: 'kj', label: 'Heat given out', unit: 'kJ' },
+      briefing: { speaker: SPEAKER, body: 'The total heat a reaction releases scales directly with the moles that react: q = n × ΔH.' },
+      prompt: 'How much heat does 0.30 mol of the powder release?',
+      entry: { id: 'kj', label: 'Heat released', unit: 'kJ' },
       widget,
       table: heatTable({
-        pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, POWDER)],
+        pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, { ...POWDER, shown: 'ΔH = −160 kJ/mol' })],
         fixtures: [
           c.fixture,
         ],
         zones: { slots: [c.slot] }
       }),
       hints: [
-        'Drop the powder in the cup, then turn the "Moles reacted" dial and read the HEAT.',
-        'Compare the heat the bath takes in at 0.05 mol, 0.1 mol and 0.2 mol.',
-        'The heat grows in step with the moles, so carry the pattern on to 0.30 mol, which is past the end of the dial.'
+        'Drop the powder into the cup, turn the "Moles reacted" dial, and watch the HEAT reading.',
+        'Compare the heat released at 0.05 mol, 0.10 mol, and 0.20 mol.',
+        'Because heat scales directly with moles, extend that pattern to 0.30 mol, just beyond the dial.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'kj');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the heat in kilojoules.' };
         if (Math.abs(v - Q_ASKED) <= 1) return { ok: true };
         const r = cupRead(t, 'cup');
-        if (!r.item) return { ok: false, msg: 'The powder has not been in the cup yet.' };
-        return { ok: false, msg: `The bath took in ${fixed(r.q / 1000, 1)} kJ from ${fixed(r.moles, 2)} mol, and ${v} kJ does not carry that pattern on to 0.30 mol.` };
+        if (!r.item) return { ok: false, msg: 'Test the powder in the cup first.' };
+        return { ok: false, msg: `At ${fixed(r.moles, 2)} mol, the bath absorbed ${fixed(r.q / 1000, 1)} kJ, so check how much 0.30 mol would release.` };
       },
       reward: {
-        log: '0.30 mol of the powder gave out 48 kJ.',
+        log: '0.30 mol of the powder released 48 kJ.',
         title: 'Heat Scales With Moles',
-        body: 'Twice the moles gave twice the heat, so 0.30 mol gives 0.30 × 160 = 48 kJ. The heat given out is the moles that react times ΔH, and ΔH stays at −160 kJ/mol.'
+        body: 'Doubling the moles doubles the heat, so 0.30 mol × 160 kJ/mol = 48 kJ. Total heat scales with moles while ΔH stays −160 kJ/mol.'
       }
     };
   })(),
@@ -167,31 +175,41 @@ export const STAGES = [
     return {
       id: 's6-final',
       title: 'Predicting a Temperature',
-      prompt: 'What temperature does the 400 g bath reach with 0.25 mol of the powder?',
+      briefing: { speaker: SPEAKER, body: 'Combine q = n × ΔH with q = m × c × ΔT to predict the final temperature of a larger bath.' },
+      prompt: 'Starting at 20.0 °C, what final temperature does the 400 g bath reach with 0.25 mol?',
       entry: { id: 't', label: 'Final temperature', unit: '°C' },
       widget,
       table: heatTable({
-        pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, POWDER)],
-        fixtures: [c.fixture],
+        pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, { ...POWDER, shown: 'ΔH = −160 kJ/mol' })],
+        fixtures: [
+          c.fixture,
+          plaqueFixture('ref', 'Reference', { x: 118, y: 24 }, [
+            'Bath starts at 20.0 °C',
+            'ΔH = −160 kJ/mol',
+            'q = n × ΔH',
+            'q = m × c × ΔT',
+            'c of water = 4.184 J/(g·°C)'
+          ], { w: 54 })
+        ],
         zones: { slots: [c.slot] }
       }),
       hints: [
-        'Drop the powder in the cup, then turn the "Moles reacted" dial and read the RISE at each setting.',
-        'Compare the rise at 0.05 mol with the rise at 0.1 mol.',
-        'The rise grows in step with the moles, and the bath starts at 20 °C.'
+        'Drop the powder into the 400 g cup, turn the "Moles reacted" dial, and read the RISE at each setting.',
+        'Compare the temperature rise at 0.05 mol with the rise at 0.10 mol.',
+        'Scale that rise to 0.25 mol and add it to the starting temperature of 20.0 °C.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 't');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in °C.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the temperature in °C.' };
         if (Math.abs(v - T_FINAL) <= 0.6) return { ok: true };
         const rises = FINAL_MOLES.map(n => fixed((n * -POWDER.dH * 1000) / (FINAL_BATH * SPECIFIC_HEAT_WATER), 1));
-        return { ok: false, msg: `The bath rises ${rises[0]} °C with ${FINAL_MOLES[0]} mol and ${rises[1]} °C with ${FINAL_MOLES[1]} mol, and ${fixed(v, 1)} °C is a rise of ${fixed(v - FINAL_T0, 1)} °C.` };
+        return { ok: false, msg: `From 20.0 °C, the 400 g bath rises ${rises[0]} °C with ${FINAL_MOLES[0]} mol and ${rises[1]} °C with ${FINAL_MOLES[1]} mol; ${fixed(v, 1)} °C is a rise of ${fixed(v - FINAL_T0, 1)} °C.` };
       },
       reward: {
-        log: '0.25 mol of the powder took the 400 g bath to about 44 °C.',
+        log: '0.25 mol of powder warmed the 400 g bath to 43.9 °C.',
         title: 'Heat Into a Rise',
-        body: 'Five times the moles gives five times the heat and five times the rise, so the bath climbs 23.9 °C to about 43.9 °C.'
+        body: 'Five times the moles produces five times the heat and five times the temperature rise, warming the bath by 23.9 °C from 20.0 °C to 43.9 °C.'
       }
     };
   })(),
@@ -200,39 +218,44 @@ export const STAGES = [
   {
     id: 's5-equation',
     title: 'ΔH and Its Equation',
-    briefing: { speaker: SPEAKER, body: 'When ΔH is written beside an equation, it is the heat for the numbers of moles shown in that equation, where (g) marks a gas and (l) a liquid. If twice as many moles react, twice the heat is given out.' },
-    prompt: 'How much heat is given out when 6.0 g of hydrogen burns?',
-    entry: { id: 'kj', label: 'Heat given out', unit: 'kJ' },
+    briefing: {
+      speaker: SPEAKER,
+      body: [
+        'In a chemical equation, (g) marks a gas and (l) a liquid. Coefficients tell how many moles react.',
+        'The ΔH beside an equation matches those exact coefficients: twice the moles releases twice the heat.'
+      ]
+    },
+    prompt: 'How much heat is released when 6.0 g of hydrogen burns?',
+    entry: { id: 'kj', label: 'Heat released', unit: 'kJ' },
     widget,
     table: heatTable({
-      pieces: [
-        charge('h2-sample', 'Hydrogen sample', { x: 30, y: 50 }, { moles: 3, dH: EQN_DH / 2, shown: '6.0 g H₂' })
-      ],
+      pieces: [],
       fixtures: [
-        plaqueFixture('eq', 'Burning hydrogen', { x: 52, y: 24 }, [
+        plaqueFixture('eq', 'Burning hydrogen', { x: 48, y: 28 }, [
           '2 H₂(g) + O₂(g) → 2 H₂O(l)',
           `ΔH = ${EQN_DH} kJ`,
-          '1 mol of H₂ has a mass of 2.0 g'
-        ], { w: 76 }),
-        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[2, 'H₂'], [1, 'O₂']], rhs: [[2, 'H₂O']], dH: EQN_DH, w: 54, h: 34 })
+          'Sample to burn: 6.0 g of H₂',
+          'Molar mass of H₂ = 2.0 g/mol'
+        ], { w: 78 }),
+        rxnFixture('atoms', { x: 120, y: 28 }, { lhs: [[2, 'H₂'], [1, 'O₂']], rhs: [[2, 'H₂O']], dH: EQN_DH, w: 54, h: 34 })
       ]
     }),
     hints: [
-      'Read the plate: the equation, its ΔH, and the mass of one mole of hydrogen.',
-      'Compare the moles of hydrogen in 6.0 g with the 2 mol of hydrogen in the equation.',
-      'The 572 kJ is given out when 2 mol of hydrogen burns, so scale it to the moles you have.'
+      'Check the equation, its ΔH, and the molar mass of H₂ on the reference plate.',
+      'Find how many moles are in 6.0 g of H₂ and compare that with the 2 mol in the equation.',
+      'Since 572 kJ is released per 2 mol of H₂, scale that heat to your number of moles.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'kj');
-      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the heat in kilojoules.' };
       if (Math.abs(v - Q_EQN) <= 10) return { ok: true };
       const mol = (v / -EQN_DH) * 2;
-      return { ok: false, msg: `By this equation ${v} kJ is the heat from ${fixed(mol, 1)} mol of hydrogen, which is ${fixed(mol * 2, 1)} g.` };
+      return { ok: false, msg: `By this equation, ${v} kJ corresponds to burning ${fixed(mol, 1)} mol (${fixed(mol * 2, 1)} g) of H₂.` };
     },
     reward: {
-      log: '6.0 g of hydrogen released about 860 kJ.',
-      title: 'ΔH Goes With the Equation',
-      body: '6.0 g of hydrogen is 3.0 mol, one and a half times the 2 mol in the equation, so it gives out 1.5 × 572 = 858 kJ.'
+      log: '6.0 g of hydrogen released 858 kJ.',
+      title: 'ΔH Matches the Equation',
+      body: '6.0 g of H₂ is 3.0 mol, which is 1.5 times the 2 mol in the equation, so it releases 1.5 × 572 = 858 kJ.'
     }
   },
 
@@ -242,26 +265,26 @@ export const STAGES = [
     title: 'Which Fuel?',
     // A PREDICT STAGE: the tank is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Which fuel gives out the most heat for each gram burned?',
+    prompt: 'Which fuel releases the most heat per gram burned?',
     widget,
     table: heatTable({
       pieces: [
-        note('hydrogen', perMole('hydrogen'), { x: 30, y: 14 }),
-        note('methane', perMole('methane'), { x: 78, y: 14 }),
-        note('methanol', perMole('methanol'), { x: 30, y: 34 }),
-        note('carbon', perMole('carbon'), { x: 78, y: 34 })
+        note('hydrogen', perMole('hydrogen'), { x: 24, y: 14 }),
+        note('methane', perMole('methane'), { x: 70, y: 14 }),
+        note('methanol', perMole('methanol'), { x: 24, y: 34 }),
+        note('carbon', perMole('carbon'), { x: 70, y: 34 })
       ],
       fixtures: [leadFixture('lead', { x: 122, y: 48 }, { scene: 'react', lhs: [[1, 'C₂H₅OH'], [3, 'O₂']], rhs: [[2, 'CO₂'], [3, 'H₂O']], dH: -1367, w: 40, h: 26 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 22 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 122, y: 20 }, size: { w: 46, h: 18 } }] }
     }),
     hints: [
-      'Read both figures on each card: the heat from one mole, and the mass of one mole.',
-      'A gram of a fuel whose mole is light holds more moles than a gram of a fuel whose mole is heavy.',
-      'Think about how many moles one gram of each fuel is, and how much heat that many moles gives out.'
+      'Consider which fuel packs the most heat into each gram of mass.',
+      'A lighter molecule fits more moles into every gram of fuel.',
+      'Think about how many moles fit into 1 g of each fuel and how much heat each mole releases.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -271,14 +294,14 @@ export const STAGES = [
     reward: {
       log: 'Prediction recorded.',
       title: 'Hypothesis Recorded',
-      body: 'Your prediction for the four fuels is recorded. Test it on the bench.'
+      body: 'Your prediction for the four fuels is saved. Test it on the bench.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
     const c = cupFixture('cup', { x: 28, y: 31 }, {
-      title: 'Water tank · 5000 g',
+      title: 'Water tank · 10,000 g',
       water: TANK,
       T0: 20,
       hideUntilCommit: true,
@@ -289,7 +312,7 @@ export const STAGES = [
     return {
       id: 's4-rank',
       title: 'Ten Grams Each',
-      prompt: 'What is the order of the four fuels, from least heat to most, when ten grams of each burns?',
+      prompt: 'Rank the four fuels from least heat to most heat when 10 g of each burns.',
       widget,
       table: heatTable({
         // A tin bumped out of the cup's mouth comes to rest on the strip below the rail.
@@ -301,24 +324,24 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Drop each fuel in the cup and read how far the bath rose.',
-        'Compare the moles printed on each ten-gram sample with the heat from one mole that its card gave.',
-        'The heat given out is the moles burned times the heat from one mole, and ten grams of a light fuel is many moles.'
+        'Drop each fuel into the tank and read how much the water warms on the thermometer.',
+        'Compare the moles in 10 g of each fuel with how much each warmed the tank.',
+        'Total heat equals moles burned times ΔH, and 10 g of a light molecule contains many moles.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four samples on the rail.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Place all four samples on the rail.' };
         if (order.join() === BY_GRAM.join()) return { ok: true };
         const tins = order.map(id => t.pieces[id]);
-        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Not every sample has been in the cup yet.' };
+        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Test every fuel in the tank first.' };
         const k = tins.findIndex((p, i) => i > 0 && tins[i - 1].props.rise > p.props.rise);
-        return { ok: false, msg: `${tins[k - 1].label} sits left of ${tins[k].label}, and the tank rose ${fixed(tins[k - 1].props.rise, 1)} °C for the one and ${fixed(tins[k].props.rise, 1)} °C for the other.` };
+        return { ok: false, msg: `${tins[k - 1].label} is left of ${tins[k].label}, even though ${tins[k - 1].label} warmed the tank by ${fixed(tins[k - 1].props.rise, 1)} °C and ${tins[k].label} by ${fixed(tins[k].props.rise, 1)} °C.` };
       },
       reward: {
-        log: 'Hydrogen warmed the tank most per gram.',
+        log: 'Hydrogen released the most heat per gram.',
         title: 'Energy per Gram',
-        body: 'Ten grams of hydrogen is about 5 mol, so it gave out the most heat, although hydrogen gives the least heat for each mole. A light mole means more moles in every gram.'
+        body: '10 g of hydrogen is 5 mol, so it released the most heat even though one mole of H₂ releases less than methane. Each mole of H₂ weighs only 2 g.'
       }
     };
   })()
@@ -329,9 +352,9 @@ const NOTES = {
   1: ['Drag the powder onto the cup, then turn the "ΔH" dial.'],
   2: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
   3: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
-  4: ['Type your answer in the field at the bottom.'],
-  5: ['Drag the card you choose into the slot.'],
-  6: ['Drag a fuel onto the cup, then back to the rail.']
+  4: ['Type your answer in the box below.'],
+  5: ['Drag your prediction into the slot.'],
+  6: ['Test each fuel in the tank, then rank them on the rail.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -343,7 +366,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The enthalpy change, ΔH, is the heat a reaction gives out or takes in for each mole, and it is negative when heat is given out. The heat grows in step with the moles that react, so a fuel with a light mole, such as hydrogen, gives out the most heat for each gram.'
+      body: 'Enthalpy change (ΔH) is the heat a reaction releases or absorbs per mole, and it is negative when heat is released. Total heat scales with moles reacted, so lightweight fuels like hydrogen pack the most energy per gram.'
     }
   ]
 };
@@ -359,17 +382,17 @@ const tryAll = () => FUEL_IDS.map(id => put(id, MOUTH));
 const rail = order => order.map((id, i) => put(id, `rail:${i}`));
 
 export const SOLUTIONS = [
-  [put('powder', MOUTH), dial('chart', 'after', 2)],
+  [put('powder', MOUTH), dial('chart', 'after', 3)],
   [put('powder', MOUTH), dial('cup', 'moles', 3), { type: { entry: 'kj', value: '48' } }],
   [put('powder', MOUTH), { type: { entry: 't', value: '43.9' } }],
-  [{ type: { entry: 'kj', value: '860' } }],
+  [{ type: { entry: 'kj', value: '858' } }],
   [put('hydrogen', 'slot:guess')],
   [...tryAll(), ...rail(BY_GRAM)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [put('powder', MOUTH), dial('chart', 'after', 4)],
+  [put('powder', MOUTH), dial('chart', 'after', 7)],
   [put('powder', MOUTH), dial('cup', 'moles', 3), { type: { entry: 'kj', value: '32' } }],
   [put('powder', MOUTH), { type: { entry: 't', value: '40' } }],
   [{ type: { entry: 'kj', value: '570' } }],
@@ -391,7 +414,12 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+    onLoad(r) {
+      if (r.index === 5) {
+        const g = recall(QUEST_KEY);
+        if (g && GUESS_LABEL[g]) r.frame.note(`You predicted: ${GUESS_LABEL[g]}. Test all four fuels on the bench.`);
+      }
+    }
   });
   runner.start();
   return { dispose: () => runner.dispose() };

@@ -37,7 +37,7 @@ export const STAGE_STORY = {
   'q1-joins': { 1: 'Test what kind of bonds hold the tunnel rubble together.' },
   'q2-lattice': { 1: 'Find a mineral liner that resists heat without conducting electricity.' },
   'q3-distance': { 1: 'Measure how much energy it takes to break strong bonds apart.' },
-  'q4-dots': { 1: 'Map the bonds of the unknown gases leaking in the tunnel.' },
+  'q4-dots': { 1: 'Work out how the carbon dioxide from the crack holds together.' },
   'q5-resonance': { 1: 'Map the tunnel gases that share electrons across multiple bonds.' },
   'q6-shape': { 1: 'Predict the 3D shape of each tunnel gas molecule.' },
   'q7-polarity': { 1: 'Find out why some tunnel gases stick to the rescue gear.' },

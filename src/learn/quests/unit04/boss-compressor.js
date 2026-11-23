@@ -28,6 +28,7 @@ import {
 } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, answerCards, typed } from './_shared.js';
 import { session } from '../../../session.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -90,35 +91,35 @@ const STAGE_REWARDS = [
     reward: {
       log: 'Intake pressure set.',
       title: 'Combined Gas Law',
-      body: 'Pressure rises as volume shrinks and as kelvin temperature rises, and the two factors multiply: a quarter of the volume gives 4 times the pressure, and 450 K against 300 K gives another 1.5, so 6 times.'
+      body: 'Volume and kelvin factors multiply: a quarter of the volume gives 4× pressure, and 450 K over 300 K gives 1.5×, totaling 6×.'
     }
   },
   {
     reward: {
       log: 'Blend pressures set.',
       title: 'Partial Pressures',
-      body: 'Each gas adds pressure in proportion to its moles. Nitrogen\'s 3.0 mol of the 5.0 mol in the tank is a mole fraction of 0.6, giving 75 kPa of the 125 kPa total pressure.'
+      body: 'Each gas adds pressure according to its moles. Nitrogen\'s 3.0 mol out of 5.0 mol gives a mole fraction of 0.60, or 75 kPa of the 125 kPa total.'
     }
   },
   {
     reward: {
       log: 'Tank weighed.',
       title: 'Mass From the Gas Law',
-      body: 'n = PV ÷ RT = (2.0 × 10) ÷ (0.0821 × 300) = 0.81 mol, and 0.81 mol × 4.0 g/mol is about 3.2 g. The temperature goes in as 300 K, not 27.'
+      body: 'Using 300 K (not 27 °C), n = (2.0 × 10) ÷ (0.0821 × 300) = 0.81 mol. Multiplying by 4.0 g/mol gives about 3.2 g.'
     }
   },
   {
     reward: {
       log: 'Cylinder read on the law.',
-      title: 'Real Gas Crossing',
-      body: 'Cold ammonia reads below the gas law because attractions between particles lower pressure; very hot, particle volume raises it. Near 1200 K the two effects cancel.'
+      title: 'Real Gas Behavior',
+      body: 'Cold ammonia reads below the ideal gas law because attractions lower pressure, while hot ammonia reads above it from particle volume. Stronger attractions shift the crossover to ~1200 K.'
     }
   },
   {
     reward: {
       log: 'Seal leak identified.',
       title: 'Effusion Match',
-      body: 'Gases with equal effusion rates share identical molar masses. The leak rate matches xenon, identifying the escaping gas.',
+      body: 'Gases that effuse at the same rate have the same molar mass. The 8.07 s leak rate matches xenon.',
       last: true
     }
   }
@@ -140,9 +141,9 @@ export const STAGES = [
       title: 'Phase 1 · The Intake',
       briefing: {
         speaker: SPEAKER,
-        body: 'Apply the gas relationships from each bench to stabilize the compressor and clear the fault.'
+        body: 'Use the gas laws to balance the Compressor\'s five stages. Here the pressure meter is hidden, so use the volume and kelvin factors to set the dials.'
       },
-      prompt: 'Set the piston and heater so the pressure will be six times the figure on the plaque.',
+      prompt: `Which Piston and Heater settings make the pressure six times the starting ${began} kPa?`,
       widget,
       table: gasTable({ fixtures: [r, plaqueFixture('began', 'The pressure began at', { x: 106, y: 36 }, [`${began} kPa`], { w: 44 })] }),
       foes: COMPRESSOR_FOE,
@@ -152,9 +153,9 @@ export const STAGES = [
         intent: 'The compressor cycles at a steady stroke over its intake.'
       },
       hints: [
-        'Turn the Piston and Heater dials.',
-        'Work out how much the piston setting multiplies the pressure, and how much the heater setting multiplies it.',
-        'Pressure rises with kelvin temperature and falls as volume grows, so the two factors multiply to the target.'
+        'The cylinder starts at 20 L and 27 °C (300 K).',
+        'Find how much shrinking the volume multiplies pressure, and how much raising kelvin temperature multiplies it.',
+        'When volume shrinks and kelvin temperature rises, their two pressure factors multiply to 6.'
       ],
       check(state) {
         const t = state.table;
@@ -162,7 +163,7 @@ export const STAGES = [
         const k = cylRead(t, RIG, 0).P / start;
         if (Math.abs(k - 1) < 1e-6) return { ok: false, notYet: true, msg: 'The dials are where they started.' };
         if (Math.abs(k / INTAKE_FACTOR - 1) < 0.01) return { ok: true };
-        return { ok: false, msg: k < INTAKE_FACTOR ? 'With these settings the pressure will be less than six times the figure.' : 'With these settings the pressure will be more than six times the figure.' };
+        return { ok: false, msg: k < INTAKE_FACTOR ? `With these settings the pressure is ${k.toFixed(1)} times the starting ${began} kPa, less than six times.` : `With these settings the pressure is ${k.toFixed(1)} times the starting ${began} kPa, more than six times.` };
       },
       ...STAGE_REWARDS[0]
     };
@@ -170,8 +171,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const ct = commonTank(CT, { x: 36, y: 31 }, { V: BLEND_V, T: T0, of: VALVES, show: { partials: true, share: true }, words: 3 });
-    const at = [[86, 31], [110, 31], [86, 52], [110, 52]];
+    const ct = commonTank(CT, { x: 37, y: 31 }, { V: BLEND_V, T: T0, of: VALVES, show: { partials: true, share: true }, words: 3, w: 68 });
+    const at = [[88, 32], [118, 32], [88, 52], [118, 52]];
     return {
       id: 'phase2',
       title: 'Phase 2 · The Blend',
@@ -189,9 +190,9 @@ export const STAGES = [
         intent: 'The compressor keeps its blending tanks shut.'
       },
       hints: [
-        'Drag tanks into or out of the tray under the common tank.',
-        'Compare nitrogen\'s partial pressure and the total pressure with the targets after each tank.',
-        'Every tank adds its moles to the total, and only a nitrogen tank adds to nitrogen\'s partial pressure.'
+        'Drag tanks into the drop tray below the common tank to add them, or drag them back out.',
+        'Watch both nitrogen\'s partial pressure and the total pressure after each tank.',
+        'Every tank raises the total pressure, while only nitrogen tanks raise nitrogen\'s partial pressure.'
       ],
       check(state) {
         const t = state.table;
@@ -211,16 +212,16 @@ export const STAGES = [
   (() => {
     const w = WEIGH;
     const nW = (w.P * 101.325 * w.V) / (8.314462618 * (w.TC + 273.15));
-    const tankRig = rig('tank', { x: 36, y: 29 }, {
+    const tankRig = rig('tank', { x: 52, y: 31 }, {
       cyls: [{ id: 'a', label: 'Sealed tank', gas: w.gas, n: nW, hold: 'V', V: w.V, T: w.TC + 273.15, sealed: true }],
-      volumes: [5, 10, 20], volumeStart: 2, vmax: 20, w: 62, units: 'atm',
+      vmax: 20, w: 68, units: 'atm',
       title: `Sealed tank · helium (${GASES[w.gas].M.toFixed(1)} g/mol)`,
       show: { amount: false, temperature: true, gauge: true, volume: true }
     });
     return {
       id: 'phase3',
       title: 'Phase 3 · The Tanks',
-      prompt: 'Type the mass of gas in the sealed tank.',
+      prompt: 'What is the mass of helium gas in the sealed tank?',
       entry: { id: 'ans', label: 'Mass of gas', unit: 'g' },
       widget,
       table: gasTable({
@@ -233,15 +234,19 @@ export const STAGES = [
         intent: 'The compressor seals the tank and locks its dial.'
       },
       hints: [
-        'Read the pressure, volume and temperature on the tank, then type the result.',
-        'Find the moles first with the temperature in kelvin, then the mass those moles weigh.',
-        'Use R = 0.0821 L·atm per mol·K, then multiply the moles by the molar mass.'
+        'Read the pressure (2.00 atm), volume (10 L), and temperature (27 °C = 300 K) on the tank.',
+        'Use n = PV ÷ (RT) with R = 0.0821 L·atm/(mol·K) to find the moles of helium.',
+        'Multiply the moles by helium\'s molar mass (4.0 g/mol) to get grams.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in g.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the value in g.' };
         const want = weighGrams();
         if (Math.abs(v - want) / want < 0.04) return { ok: true };
+        const moles = (WEIGH.P * WEIGH.V) / (R_ATM * (WEIGH.TC + 273.15));
+        if (Math.abs(v - moles) / moles < 0.1) {
+          return { ok: false, msg: `${v} is the value in mol, not g.` };
+        }
         return { ok: false, msg: v > want ? 'The tank holds less gas than that.' : 'The tank holds more gas than that.' };
       },
       ...STAGE_REWARDS[2]
@@ -251,13 +256,13 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   (() => {
     const r = rig(RIG, { x: 36, y: 32 }, {
-      cyls: [cyl('a', 'CYLINDER', 'NH3', { V: COLD_V, hold: 'V', vdw: true })], temps: COLD_TEMPS, tempList: 'K', tempStart: 1, vmax: 24.6, w: 62, trueSize: true,
+      cyls: [cyl('a', 'CYLINDER', 'NH3', { V: COLD_V, hold: 'V', vdw: true })], temps: COLD_TEMPS, tempList: 'K', tempStart: 1, vmax: 24.6, w: 62, trueSize: true, attractions: true,
       title: `Cylinder  ${GASES.NH3.sym}, ${COLD_V} L`, show: { temperature: false, amount: false, volume: false, ideal: true }
     });
     return {
       id: 'phase4',
       title: 'Phase 4 · The Cold Box',
-      prompt: 'Why does cold NH₃ at 300 K read lower than the gas law predicts?',
+      prompt: 'Why does cold NH₃ at 300 K read lower pressure than the ideal gas law predicts?',
       widget,
       table: gasTable({
         pieces: answerCards(COLD_CARDS, { x: 84, y: 44 }),
@@ -271,9 +276,9 @@ export const STAGES = [
         intent: 'The compressor compresses a cold cylinder of ammonia.'
       },
       hints: [
-        'Check the cold setting at 300 K, then turn the Heater dial to compare with hotter settings.',
-        'Compare the measured pressure with the gas law figure at 300 K and at 2000 K.',
-        'At 300 K particles move slowly, so pulls between them matter most.'
+        'Compare the measured pressure and ideal gas law at 300 K, then warm the gas with the Heater dial.',
+        'Watch how measured pressure shifts from below the ideal gas law at 300 K to above it at 2000 K.',
+        'Think about how attractions between slow particles affect their collisions with the walls.'
       ],
       check(state) {
         const t = state.table;
@@ -282,7 +287,7 @@ export const STAGES = [
         const card = cardIn(t, 'answer');
         if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (card.id === 'attractions') return { ok: true };
-        return { ok: false, msg: 'Particle volume raises pressure; cold pulls between particles lower it.' };
+        return { ok: false, msg: 'Particle volume raises pressure; cold attractions between particles lower it.' };
       },
       ...STAGE_REWARDS[3]
     };
@@ -290,14 +295,14 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const p = pinhole(PIN, { x: 40, y: 30 }, {
+    const p = pinhole(PIN, { x: 56, y: 31 }, {
       chambers: [{ id: 'a', label: 'REFERENCE', pick: 'ref' }, { id: 'b', gas: SEAL, label: 'SEAL B', sealed: true }],
-      picks: { ref: { gases: SEAL_GASES, label: 'Gas', start: 1 } }, times: [0, 1, 2, 3, 4, 5, 6, 7, 8], timeStart: 1, showHalf: true, record: false
+      picks: { ref: { gases: SEAL_GASES, label: 'Gas', start: 1 } }, times: [0, 1, 2, 3, 4, 5, 6, 7, 8], timeStart: 1, showHalf: true, record: false, w: 80
     });
     return {
       id: 'phase5',
       title: 'Phase 5 · The Seals',
-      prompt: 'Set the reference gas so its effusion rate matches the unmarked seal.',
+      prompt: 'Which reference gas matches SEAL B\'s leak rate (8.07 s)?',
       widget,
       table: gasTable({ fixtures: [p] }),
       foes: COMPRESSOR_FOE,
@@ -307,9 +312,9 @@ export const STAGES = [
         intent: 'A pinhole hisses in the compressor\'s flank, and nothing says what is leaving it.'
       },
       hints: [
-        'Adjust the Gas and Stopwatch dials.',
-        'Compare the time required for each chamber to reach half its initial amount.',
-        'Select the reference gas whose half-empty time matches the seal.'
+        'Turn the Gas dial and compare REFERENCE\'s half-empty time with SEAL B (8.07 s).',
+        'Heavier gases effuse more slowly and take longer to half-empty.',
+        'Two gases with the same half-empty time have the same molar mass.'
       ],
       check(state) {
         const t = state.table;
@@ -318,7 +323,7 @@ export const STAGES = [
         const seal = r.chambers[1];
         if (Math.round(t.fixtures[PIN].dials.ref.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Gas dial to test different gases.' };
         if (ref.gas === seal.gas) return { ok: true };
-        return { ok: false, msg: ref.half < seal.half ? 'The reference chamber empties faster than the seal.' : 'The reference chamber empties more slowly than the seal.' };
+        return { ok: false, msg: ref.half < seal.half ? `The reference (${ref.half.toFixed(2)} s) empties faster than SEAL B (${seal.half.toFixed(2)} s).` : `The reference (${ref.half.toFixed(2)} s) empties slower than SEAL B (${seal.half.toFixed(2)} s).` };
       },
       ...STAGE_REWARDS[4]
     };
@@ -328,10 +333,10 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Turn the Piston and Heater dials.'],
-  2: ['Drag tanks into or out of the tray.'],
+  2: ['Drag tanks into the drop tray below the common tank.'],
   3: ['R = 0.0821 L·atm per mol·K.', 'Type your answer in the field at the bottom.'],
   4: ['Turn the Heater dial,', 'then place a card in the slot.'],
-  5: ['Adjust the Gas and Stopwatch dials.']
+  5: ['Turn the Gas dial to match SEAL B.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -344,11 +349,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The compressor stands cold in its housing. In its vault is a sealed cylinder logged at constant pressure for twelve days while surroundings froze fifty degrees, violating Gay-Lussac\'s law for an unheated gas.'
+      body: 'The compressor sits cold in its housing. Inside its vault is a sealed cylinder whose pressure stayed steady for twelve days while the outside air dropped fifty degrees, breaking Gay-Lussac\'s law for an unheated gas.'
     },
     {
       heading: 'Next',
-      body: 'The cylinder goes into the Case File. Something inside it maintained heat for twelve days, which cannot be explained by standard gas behavior.'
+      body: 'You log the cylinder in the Case File. Something inside it produced heat for twelve days straight.'
     }
   ]
 };
@@ -406,3 +411,5 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
 export { pressureIdeal, tankRead, tankMoles, pinholeRead };
+
+markFights(STAGES);

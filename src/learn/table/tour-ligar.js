@@ -39,7 +39,10 @@ const FIXTURE = {
   },
   'atoms:slate': {
     title: 'Structure board',
-    text: () => 'Drag a Pair onto a gap to bond, or onto an atom.',
+    text: f => (f.props?.loose
+      ? 'Drag one atom onto another: they share an electron pair, drawn as a line (a bond). The number on each atom counts the electrons in its outer shell, and its ring lights when that shell is full.'
+      : 'Drag an Electron pair onto a gap to form a bond, or onto an atom as a lone pair.'),
+    key: f => (f.props?.loose ? 'fx_slateloose' : null),
     dials: false
   },
   'atoms:tally': {
@@ -48,8 +51,8 @@ const FIXTURE = {
     dials: false
   },
   'domain:turner': {
-    title: 'Turn dial',
-    text: () => 'Drag the dial to turn your view of the molecule.',
+    title: '3D Joystick',
+    text: () => 'Drag the joystick smoothly in any direction to rotate the 3D molecule.',
     dials: false
   },
   'domain:marker': {
@@ -79,7 +82,7 @@ const FIXTURE = {
   },
   'mo:overlap': {
     title: 'Orbital overlap',
-    text: f => `Drag "Distance" to move the atoms${f.dials?.sign ? '; flip "Signs" to invert' : ''}.`,
+    text: f => `Drag "Distance" to move the atoms${f.dials?.sign ? ', or flip "Signs" to reverse one orbital\'s sign' : ''}.`,
     dials: false
   },
   'mo:marker': {
@@ -96,30 +99,38 @@ const FIXTURE = {
 
 /** A kind of piece, by `kit:kind`: `[title, text, optional (table) => extra sentence]`. */
 const PIECE = {
-  'bonds:slab': ['Blocks', 'Drag a block onto the hotplate or test it with leads.'],
+  'bonds:slab': null,
   'bonds:hammer': ['Hammer', 'Drag the hammer onto a block to strike it.'],
   'bonds:guess': null,
-  'bonds:leads': ['Leads', 'Drag the leads onto a block to test if it conducts.'],
+  'bonds:leads': ['Conductivity tester', 'Sends a small electric current through a sample and lights up if charge can flow. Drag it onto a block, cold or molten, to test whether electricity passes through.'],
   'bonds:salt': ['Salt cards', 'Drag a salt card onto the hotplate to melt it.'],
   'bonds:pairtag': null,
   'bonds:ion': ['Ions', 'Each ion shows its element and charge.'],
-  'atoms:pairs': ['Pair', 'Drag onto a gap to share, or onto an atom as a lone pair.'],
-  'atoms:single': ['Single', 'Drag onto an atom to place one electron on it.'],
-  'atoms:lift': ['Lift Out', 'Drag onto a gap or atom to remove a pair.'],
+  'atoms:pairs': ['Electron pair', 'Drag onto a gap to share, or onto an atom as a lone pair.'],
+  'atoms:single': ['Single electron', 'Drag onto an atom to place one electron on it.'],
+  'atoms:lift': ['Remove', 'Drag onto a gap or atom to take back what you placed there.'],
   'atoms:fcstamp': ['Charge reader', 'Drag onto an atom to read its formal charge.'],
   'atoms:mark': ['Mark', 'Drag onto an atom to mark it as your answer.'],
   'atoms:gauge': ['Length meter', 'Drag onto a bond to measure its length.'],
-  'domain:hub': ['Central atom', 'Drop bonds and lone pairs here; they repel and spread out.'],
+  'domain:hub': ['Central atom', 'Drop bonds and lone pairs here; they repel and spread out. Click two attached atoms to measure the angle between them.'],
   'domain:arm': ['Bonds', 'Drag onto the central atom to add a bond; drag off to remove.'],
   'domain:balloon': ['Lone pair', 'Drag onto the central atom as a lone pair.'],
   'domain:protractor': ['Protractor', 'Drag onto two bonds to measure the angle between them.'],
   'domain:dmol': ['Molecule cards', 'Drag into the gap between plates, then press "Switch Field".'],
-  'domain:tmol': ['Molecule card', 'Drag between plates, press "Switch Field", or "Flip" to turn it.'],
+  'domain:tmol': ['Molecule card', 'Drag between plates, then use "Rotate Molecule" and "Switch Field".'],
   'domain:mol': null,
   'domain:arrows': ['Dipole arrows', 'Drag onto a molecule card to draw its bond dipoles.'],
   'domain:orb': ['Orbitals', 'Drag into the mixer, or onto another atom\'s orbital to bond.'],
   'mo:mocard': ['Gas cards', 'Drag into the slot and press "Test Sample".']
 };
+
+/** On a loose slate (atoms bonded by dragging them together) the electron pieces say what they do there. */
+const LOOSE_PIECE = {
+  'atoms:pairs': ['Electron pair', 'Drag onto an atom to give it a lone pair: two electrons that stay on that atom. Drag onto a bond to share one more pair.', 'pc_pairsloose'],
+  'atoms:lift': ['Remove', 'Drag onto an atom or a bond to take back one electron pair.', 'pc_liftloose'],
+  'atoms:single': ['Single electron', 'Drag onto an atom to place one electron on it, alone.', 'pc_singleloose']
+};
+const looseSlate = t => Object.values(t?.fixtures || {}).some(f => f.kind === 'slate' && f.props?.loose);
 
 /** A piece the instrument's own step already explains (a slate's fixed atoms and joints), so the Tour leaves it out. */
 export function ligarSkip(table, p) {
@@ -130,10 +141,13 @@ export const ligarFixture = (f, kitId, table) => {
   const e = FIXTURE[`${kitId}:${f.kind}`];
   // Only the group-charge needle of Ligar's first bench is Ligar's; Tallow's needle reads one atom's particles.
   if (f.kind === 'needle' && !f.props?.cluster) return null;
-  return e ? { title: e.title || f.label, text: e.text(f, table), ownDials: e.dials === false } : null;
+  return e ? { title: e.title || f.label, text: e.text(f, table), ownDials: e.dials === false, key: e.key?.(f) || null } : null;
 };
 
+/** `[title, text, key?]`: `key` names the step when it differs from the plain `pc_<kind>` (its own demo). */
 export const ligarPiece = (kind, kitId, table) => {
+  const loose = looseSlate(table) && LOOSE_PIECE[`${kitId}:${kind}`];
+  if (loose) return loose.slice();
   const e = PIECE[`${kitId}:${kind}`];
   return e ? [e[0], e[1] + (e[2] ? e[2](table) : '')] : null;
 };

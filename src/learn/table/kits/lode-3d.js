@@ -9,6 +9,7 @@
  */
 
 import { fixtureLayout } from '../layout.js';
+import { paintStripped } from '../solids.js';
 
 const PX = 9; // canvas pixels per table unit
 
@@ -42,7 +43,11 @@ export function liveDress(handler) {
       ctx.fillStyle = '#14120e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const b = { X: u => (u - lay.box.x0) * PX, Y: u => (u - yTop) * PX, sc: PX, lay: fixtureLayout(fx), clock, bodies: false, scope: '3d-live' };
-      try { handler.paint(ctx, fx, latest, b); } catch (err) { /* a painter that fails leaves the plate's own picture */ }
+      try {
+        // Atoms the table stands up as solids (`table/solids.js`, `c.solids`) are left off the screen.
+        if (c.solids) paintStripped(ctx, cx => handler.paint(cx, fx, latest, b), PX, c.solids);
+        else handler.paint(ctx, fx, latest, b);
+      } catch (err) { /* a painter that fails leaves the plate's own picture */ }
       tex.needsUpdate = true;
     };
     paint();

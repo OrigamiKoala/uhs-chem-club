@@ -33,6 +33,7 @@ import { HEATER_STEPS, OUTSIDE_STEPS } from '../../engine/matterdata-vapour.js';
 import { stateAt } from '../../engine/matterdata-window.js';
 import { SUBSTANCES, boilingPoint, vaporPressure, PHASE_WATER, dilute, stockVolume } from '../../engine/matterdata.js';
 import { session } from '../../../session.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -107,11 +108,11 @@ export const STAGES = [
     const press = pressFixture('press', { x: 47, y: 22 });
     const spots = [{ x: 106, y: 12 }, { x: 106, y: 34 }, { x: 128, y: 34 }];
     const jars = P1_JARS.map((j, i) => jarCard(j.id, j.label, spots[i], { sample: j.sample, T: j.T }));
-    const trays = ['solid', 'liquid', 'gas'].map((id, i) => ({ id, label: STATE_LABEL[id], at: { x: 27 + i * 48, y: 60 }, size: { w: 46, h: 24 }, cell: 23, cellH: 22, view: { solid: 'lump', liquid: 'pool', gas: 'spread' }[id] }));
+    const trays = ['solid', 'liquid', 'gas'].map((id, i) => ({ id, label: STATE_LABEL[id], at: { x: 27 + i * 48, y: 60 }, size: { w: 46, h: 24 }, cell: 23, cellH: 22, single: true, view: { solid: 'lump', liquid: 'pool', gas: 'spread' }[id] }));
     return {
       id: 'p1-hold',
       title: 'Phase 1 · The Hold',
-      prompt: 'Which jar holds a solid, which a liquid and which a gas?',
+      prompt: 'Three new sealed substances (not water): use the piston and tank to sort which is solid, liquid, and gas.',
       widget,
       table: matterTable({ bounds: { w: 150, h: 72 }, recorder: { at: { x: 147.4, y: 45 }, size: { w: 5, h: 3.4 } }, pieces: jars, fixtures: [press.fixture], zones: { slots: [press.slot], trays } }),
       foes: UNDERTOW_FOE,
@@ -129,6 +130,8 @@ export const STAGES = [
         const t = state.table;
         const jars = P1_JARS.map(j => t.pieces[j.id]);
         if (jars.some(j => !t.zones.trays[whereIs(t, j.id)])) return { ok: false, notYet: true, msg: 'Put every jar in a tray.' };
+        const untested = jars.find(j => !j.props.did?.pour && j.props.did?.sq == null);
+        if (untested) return { ok: false, msg: `Try Jar ${untested.label} in the piston or tank first.` };
         const bad = P1_JARS.find(j => whereIs(t, j.id) !== j.tray);
         if (!bad) return { ok: true };
         const s = said(t.pieces[bad.id]);
@@ -159,7 +162,7 @@ export const STAGES = [
       table: matterTable({
         pieces: cards,
         fixtures: [probe.fixture],
-        zones: { slots: [probe.slot], rail: { at: { x: 107, y: 34 }, size: { w: 84, h: 16 }, first: 'Needs least heat', last: 'Needs most heat', items: cards.map(c => c.id), start: ['h2o', 'ether', 'ethanol', 'acetone'] } }
+        zones: { slots: [probe.slot], rail: { at: { x: 107, y: 34 }, size: { w: 84, h: 16 }, labelLift: 3.2, first: 'Needs least heat', last: 'Needs most heat', items: cards.map(c => c.id), start: ['h2o', 'ether', 'ethanol', 'acetone'] } }
       }),
       foes: UNDERTOW_FOE,
       encounter: {
@@ -392,3 +395,5 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = { P1_JARS, P2_BY_GRIP, P3_BP, P4_KJ, P5_ML, MOUNTAIN_KPA };
+
+markFights(STAGES);

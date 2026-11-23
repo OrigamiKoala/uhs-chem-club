@@ -37,7 +37,7 @@ Status values: not started, planned (plan rows written), in progress, done, play
 ### Ligar (`unit03`), exemplar
 
 - Status: done (not yet played by the owner, 2026-11-12)
-- Benches done: all ten (`q1-joins` 6, `q2-lattice` 8, `q3-distance` 5, `q4-dots` 8, `q5-resonance` 8, `q6-shape` 10, `q7-polarity` 5, `q8-hybrid` 9, `q9-orbitals` 7, `boss-warden` 5; 71 stages total). Cold-read review run across `q1-joins` through `boss-warden` and findings applied; `src/learn/glossary/ligar.js` and `tour-ligar.js` updated; Record completed in `worlds/unit03-ligar.md`.
+- Benches done: all ten (`q1-joins` 6, `q2-lattice` 8, `q3-distance` 5, `q4-dots` 10 (rebuilt 2026-11-21), `q5-resonance` 8, `q6-shape` 10, `q7-polarity` 5, `q8-hybrid` 9, `q9-orbitals` 7, `boss-warden` 5; 73 stages total). Cold-read review run across `q1-joins` through `boss-warden` and findings applied; `src/learn/glossary/ligar.js` and `tour-ligar.js` updated; Record completed in `worlds/unit03-ligar.md`.
 
 ### Mirrowen (`unit06`)
 

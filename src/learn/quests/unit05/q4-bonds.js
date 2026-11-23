@@ -21,7 +21,7 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
@@ -65,9 +65,9 @@ const FORM_OPTIONS = [' ', `Takes in ${HH} kJ/mol`, `Takes in ${HH / 2} kJ/mol`,
 const FORM_RIGHT = FORM_OPTIONS.length;
 
 /** The two trays and the ledger over them that the methane stage uses. */
-const trays = (x = 66) => [
-  { id: 'broken', label: 'Broken', at: { x, y: 20 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 },
-  { id: 'formed', label: 'Formed', at: { x, y: 50 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 }
+const trays = (x = 68) => [
+  { id: 'broken', label: 'Broken', at: { x, y: 19 }, size: { w: 62, h: 25 }, cell: 29, cellH: 12 },
+  { id: 'formed', label: 'Formed', at: { x, y: 49 }, size: { w: 62, h: 25 }, cell: 29, cellH: 12 }
 ];
 
 const CH4_CHIPS = [
@@ -85,25 +85,25 @@ export const STAGES = [
     title: 'Pulling Atoms Apart',
     // A PREDICT STAGE: the crank is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Two hydrogen atoms are held together by a bond: does pulling them apart take energy in or give energy out?',
+    prompt: 'When two bonded hydrogen atoms are pulled apart, does that absorb energy or release energy?',
     widget,
     table: heatTable({
       pieces: [
-        note('in', 'Takes energy in', { x: 24, y: 16 }),
-        note('out', 'Gives energy out', { x: 70, y: 16 }),
+        note('in', 'Absorbs energy', { x: 24, y: 16 }),
+        note('out', 'Releases energy', { x: 70, y: 16 }),
         note('none', 'Needs no energy', { x: 116, y: 16 })
       ],
       fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'bond', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
     }),
     hints: [
-      'Watch the clip: two hydrogen atoms held together by a bond.',
-      'Picture two magnets stuck together, and what it takes to separate them.',
-      'Think about whether energy has to be put in to separate the atoms, or whether they would fly apart by themselves.'
+      'Watch the clip showing two hydrogen atoms held together by a bond.',
+      'Notice how the bond stretches as the two hydrogen atoms are pulled apart.',
+      'Think about whether separating attracted atoms requires putting energy in, or whether they fly apart on their own.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -113,7 +113,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction recorded.',
       title: 'Hypothesis Recorded',
-      body: 'Your prediction for breaking the bond is recorded. Test it on the bench.'
+      body: 'Your prediction for breaking the bond is saved. Test it on the bench.'
     }
   },
 
@@ -121,8 +121,8 @@ export const STAGES = [
   {
     id: 's2-crank',
     title: 'Apart and Back Together',
-    briefing: { speaker: SPEAKER, body: 'The energy needed to pull apart one mole of bonds of one kind is the bond enthalpy of that bond. The meter under the graph shows the energy taken in or given out as the two atoms move.' },
-    prompt: 'When the two free hydrogen atoms bond again, what is the energy change?',
+    briefing: { speaker: SPEAKER, body: 'Bond enthalpy is the energy needed to break one mole of a specific bond. The meter below the graph shows the energy absorbed or released as the atoms move.' },
+    prompt: 'The meter shows pulling the bond apart: what is the energy change when the two free H atoms bond again?',
     widget,
     table: heatTable({
       fixtures: [
@@ -131,23 +131,23 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Drag one atom away from the other and watch the meter under the graph.',
-      'Notice which way the energy went as the bond came apart, and how much it was once the atoms were free.',
-      'Letting the atoms bond again is the same change run backwards.'
+      'Slide the Pull knob (or drag the atoms apart) and watch the energy meter under the graph.',
+      'Note the direction and amount of energy once the two atoms are completely separated.',
+      'Letting the atoms bond again is the exact reverse of pulling them apart.'
     ],
     check(state) {
       const t = state.table;
       const r = wellRead(t, 'crank');
       const k = dialAt(t, 'after', 'value');
-      if (!r.free) return { ok: false, notYet: true, msg: 'Drag the atoms all the way apart first.' };
-      if (k === 1) return { ok: false, notYet: true, msg: 'Set the dial to what happens when the atoms bond again.' };
+      if (!r.free) return { ok: false, notYet: true, msg: 'Pull the atoms all the way apart first.' };
+      if (k === 1) return { ok: false, notYet: true, msg: 'Choose what happens when the atoms bond again.' };
       if (k === FORM_RIGHT) return { ok: true };
-      return { ok: false, msg: `The meter read ENERGY IN, ${Math.round(r.E)} kJ/mol, while the atoms were pulled apart, and the dial says "${FORM_OPTIONS[k - 1]}" for the way back.` };
+      return { ok: false, msg: `The meter read ENERGY IN, ${Math.round(r.E)} kJ/mol, while pulling the atoms apart, and you selected "${FORM_OPTIONS[k - 1]}" for bonding.` };
     },
     reward: {
-      log: 'Pulling the atoms apart took energy in; bonding gives it back.',
+      log: 'Breaking the bond absorbed energy; forming it released the same amount.',
       title: 'Bond Enthalpy',
-      body: 'Pulling the H–H bond apart took in 436 kJ/mol, which is its bond enthalpy. Forming the bond gives out the same 436 kJ/mol.'
+      body: 'Breaking the H–H bond absorbed 436 kJ/mol, its bond enthalpy. Forming the bond releases the exact same 436 kJ/mol.'
     }
   },
 
@@ -155,37 +155,37 @@ export const STAGES = [
   {
     id: 's3-methane',
     title: 'Burning Methane, Bond by Bond',
-    briefing: { speaker: SPEAKER, body: 'In a reaction the bonds of the starting molecules break, which takes energy in, and the bonds of the new molecules form, which gives energy out. The bond table adds up each side as you fill it.' },
+    briefing: { speaker: SPEAKER, body: 'During a reaction, reactant bonds break (absorbing energy) and product bonds form (releasing energy). The bond table totals each side as you sort.' },
     prompt: 'Which bonds break and which form when methane burns, and how many of each?',
     widget,
     table: heatTable({
       pieces: CH4_CHIPS.map(([id, bond, count, noteText], i) => bondChip(id, bond, { x: 17, y: 14 + i * 13 }, { note: noteText })),
-      fixtures: [ledgerFixture('ledger', { x: 121, y: 34 }, { broken: 'broken', formed: 'formed', hideNet: false, w: 50, title: 'CH₄ + 2O₂ → CO₂ + 2H₂O' })],
-      zones: { trays: trays(66) }
+      fixtures: [ledgerFixture('ledger', { x: 123, y: 34 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 48, title: 'CH₄ + 2O₂ → CO₂ + 2H₂O' })],
+      zones: { trays: trays(68) }
     }),
     hints: [
-      'Read the equation printed on the bond table, and the molecule named on each bond card.',
-      'Count how many of each molecule the equation has, and how many of that bond one molecule holds.',
-      'Molecules left of the arrow are used up, so their bonds break, and molecules right of it are made, so their bonds form.'
+      'Check the equation on the bond table and the molecule name on each bond card.',
+      'Count how many of each molecule appear in the equation, and how many of that bond are inside one molecule.',
+      'Bonds in molecules on the left of the arrow break, and bonds in molecules on the right form.'
     ],
     check(state) {
       const t = state.table;
       const want = { ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' };
-      if (Object.keys(want).some(k => !['broken', 'formed'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Every bond needs a tray.' };
+      if (Object.keys(want).some(k => !['broken', 'formed'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Sort all four bond cards into the trays.' };
       const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
       if (!wrong) {
         const off = CH4_CHIPS.find(([id, , n]) => (t.pieces[id].props.scale || 1) !== n);
         if (!off) return { ok: true };
         const k = t.pieces[off[0]].props.scale || 1;
-        return { ok: false, msg: `The bond table counts ${k} ${off[1]} bond${k === 1 ? '' : 's'} from the ${off[3]} bond card.` };
+        return { ok: false, msg: `The bond table currently counts ${k} ${off[1]} bond${k === 1 ? '' : 's'} for ${off[3]}; check the equation count (tap the card and press Larger).` };
       }
       const tray = t.zones.trays[whereIs(t, wrong[0])];
-      return { ok: false, msg: `The "${tray.label}" tray holds a bond from a molecule on the ${wrong[1] === 'broken' ? 'left' : 'right'} of the arrow.` };
+      return { ok: false, msg: `The "${tray.label}" tray has a bond from a molecule on the ${wrong[1] === 'broken' ? 'left' : 'right'} side of the arrow.` };
     },
     reward: {
-      log: 'Burning methane paid back more than it cost.',
+      log: 'Burning methane released more energy than breaking its bonds cost.',
       title: 'Broken and Formed',
-      body: 'Breaking the bonds took in 2,648 kJ and forming the new ones gave out 3,450 kJ. More came out than went in, so burning methane gives out about 802 kJ: ΔH ≈ −802 kJ.'
+      body: 'Breaking the reactant bonds absorbed 2,648 kJ, while forming the product bonds released 3,450 kJ. More energy came out than went in, giving ΔH ≈ −802 kJ.'
     }
   },
 
@@ -195,25 +195,25 @@ export const STAGES = [
     title: 'Air Joins Up',
     // A PREDICT STAGE on a new case of the same idea: the ledger is not on the table yet.
     predict: true,
-    prompt: 'Nitrogen and oxygen in air can join to make nitric oxide: will that reaction warm the bath or cool it?',
+    prompt: 'Nitrogen (N≡N) and oxygen (O=O) have very strong bonds, so will forming nitric oxide (NO) warm or cool the bath?',
     widget,
     table: heatTable({
       pieces: [
         note('warm', 'Warms the bath', { x: 24, y: 16 }),
         note('cool', 'Cools the bath', { x: 70, y: 16 }),
-        note('same', 'Leaves the bath as it is', { x: 116, y: 16 })
+        note('same', 'No temperature change', { x: 116, y: 16 })
       ],
       fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'air', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
     }),
     hints: [
-      'Watch the clip: nitrogen molecules and oxygen molecules in air, each held together by its own bond.',
-      'To make nitric oxide, the bonds in N₂ and O₂ must break and new bonds between N and O must form.',
-      'Think about whether the new bonds give out more energy than breaking the old ones takes in.'
+      'Watch the clip showing nitrogen and oxygen molecules held together by strong bonds.',
+      'To form nitric oxide, the strong bonds in N₂ and O₂ must break before new N–O bonds form.',
+      'Consider whether forming the new bonds will release more or less energy than breaking the old ones absorbs.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -223,7 +223,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction recorded.',
       title: 'Hypothesis Recorded',
-      body: 'Your prediction for nitrogen and oxygen is recorded. Test it on the bench.'
+      body: 'Your prediction for nitrogen and oxygen is saved. Test it on the bench.'
     }
   },
 
@@ -231,101 +231,98 @@ export const STAGES = [
   {
     id: 's5-air',
     title: 'The Bond Table for Air',
-    briefing: { speaker: SPEAKER, body: 'A double line (=) marks a double bond, and a triple line (≡) marks a triple bond. Compare the bonds broken and formed, commit your answer in the slot, and the ledger totals will unlock.' },
-    prompt: 'Will making nitric oxide from nitrogen and oxygen warm the bath or cool it?',
+    briefing: { speaker: SPEAKER, body: 'A double line (=) shows a double bond, and a triple line (≡) shows a triple bond. Compare the bonds broken and formed, then place your answer in the slot to unlock the totals.' },
+    prompt: 'In N₂ + O₂ → 2 NO, does breaking the old bonds cost more energy than forming the new ones releases?',
     widget,
     table: heatTable({
       pieces: [
         { ...bondChip('nn', 'N≡N', { x: 17, y: 16 }, { note: 'nitrogen' }), zone: 'tray:broken' },
         { ...bondChip('oo', 'O=O', { x: 17, y: 30 }, { note: 'oxygen' }), zone: 'tray:broken' },
         { ...bondChip('no', 'N=O', { x: 17, y: 44 }, { count: 2, dH: 631, note: 'nitric oxide' }), zone: 'tray:formed' },
-        tag('warm', 'Warms the bath', { x: 84, y: 57.4 }),
-        tag('cool', 'Cools the bath', { x: 110, y: 57.4 }),
-        tag('same', 'Leaves it as it is', { x: 136, y: 57.4 })
+        tag('warm', 'Warms the bath', { x: 82, y: 56 }),
+        tag('cool', 'Cools the bath', { x: 108, y: 56 }),
+        tag('same', 'No temperature change', { x: 134, y: 56 })
       ],
-      fixtures: [ledgerFixture('ledger', { x: 108, y: 18 }, { broken: 'broken', formed: 'formed', hideNet: true, hideTotalsUntilCommit: true, gate: { slot: 'answer' }, w: 52, title: 'N₂ + O₂ → 2 NO' })],
+      fixtures: [ledgerFixture('ledger', { x: 110, y: 17 }, { broken: 'broken', formed: 'formed', hideNet: true, hideTotalsUntilCommit: true, gate: { slot: 'answer' }, w: 52, title: 'N₂ + O₂ → 2 NO' })],
       zones: {
         trays: [
-          { id: 'broken', label: 'Broken', at: { x: 40, y: 20 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 },
-          { id: 'formed', label: 'Formed', at: { x: 40, y: 50 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 }
+          { id: 'broken', label: 'Broken', at: { x: 36, y: 19 }, size: { w: 56, h: 25 }, cell: 27, cellH: 12 },
+          { id: 'formed', label: 'Formed', at: { x: 36, y: 49 }, size: { w: 56, h: 25 }, cell: 27, cellH: 12 }
         ],
-        slots: [{ id: 'answer', label: 'My answer', at: { x: 96, y: 39 }, size: { w: 36, h: 14 } }]
+        slots: [{ id: 'answer', label: 'My answer', at: { x: 108, y: 38 }, size: { w: 34, h: 14 } }]
       }
     }),
     hints: [
-      'Look at the two totals on the bond table: the energy taken in by the bonds broken and the energy given out by the bonds formed.',
-      'Compare the two totals.',
-      'Energy that the new bonds do not give back has to come from somewhere, and the reaction sits in the bath.'
+      'Compare the two totals on the bond table: energy absorbed by broken bonds versus energy released by formed bonds.',
+      'Check which total is larger: bonds broken or bonds formed.',
+      'Any extra energy not paid back by the new bonds must be absorbed from the surrounding water bath.'
     ],
     check(state) {
       const t = state.table;
       const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       if (card.id === 'cool') return { ok: true };
       const r = ledgerRead(t, 'ledger');
-      return { ok: false, msg: `The bond table reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
+      return { ok: false, msg: `The bond table shows ${r.broken} kJ absorbed by broken bonds and ${r.formed} kJ released by formed bonds.` };
     },
     reward: {
-      log: 'The bonds formed paid back less than the bonds broken cost.',
+      log: 'Formed bonds released less energy than broken bonds cost.',
       title: 'An Endothermic Reaction',
-      body: 'Breaking the bonds took in 1,443 kJ and forming the new ones gave out only 1,262 kJ. The other 181 kJ came from the bath, so the bath cools: the reaction is endothermic, ΔH ≈ +181 kJ.'
+      body: 'Breaking the bonds absorbed 1,443 kJ, while forming the new ones released only 1,262 kJ. The remaining 181 kJ came from the bath, cooling it: ΔH ≈ +181 kJ.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     id: 's6-estimate',
-    title: 'Estimating a ΔH',
-    briefing: { speaker: SPEAKER, body: 'ΔH is about the energy taken in by the bonds broken minus the energy given out by the bonds formed. The result is an estimate, because for most bonds the listed bond enthalpy is an average over many different molecules.' },
-    prompt: 'What is the estimated ΔH for H₂ + Cl₂ → 2 HCl?',
+    title: 'Estimating ΔH',
+    briefing: { speaker: SPEAKER, body: 'Sort the bonds into Broken and Formed, set the right count for each bond, and calculate ΔH from the two totals.' },
+    prompt: 'Using the bond energies on the bench, what is ΔH for H₂ + Cl₂ → 2 HCl?',
+    entry: { id: 'dH', label: 'Estimated ΔH', unit: 'kJ' },
     widget,
     table: heatTable({
       pieces: [
         bondChip('hh', 'H-H', { x: 17, y: 16 }, { note: 'hydrogen' }),
         bondChip('cc', 'Cl-Cl', { x: 17, y: 30 }, { note: 'chlorine' }),
-        bondChip('hc', 'H-Cl', { x: 17, y: 44 }, { count: 2, note: 'hydrogen chloride' })
+        bondChip('hc', 'H-Cl', { x: 17, y: 44 }, { note: 'hydrogen chloride' })
       ],
       fixtures: [
-        ledgerFixture('ledger', { x: 121, y: 20 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 50, title: 'H₂ + Cl₂ → 2 HCl' }),
-        markerFixture('dH', 'Estimated ΔH', { x: 121, y: 48 }, { min: -400, max: 400, step: 2, start: -400, unit: 'kJ', w: 52 })
+        ledgerFixture('ledger', { x: 123, y: 34 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 48, title: 'H₂ + Cl₂ → 2 HCl' })
       ],
       zones: {
-        trays: [
-          { id: 'broken', label: 'Broken', at: { x: 66, y: 20 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 },
-          { id: 'formed', label: 'Formed', at: { x: 66, y: 50 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 }
-        ]
+        trays: trays(68)
       }
     }),
     hints: [
-      'Sort the three bond cards into the trays, then read the two totals on the bond table.',
-      'Compare the energy taken in by the bonds broken with the energy given out by the bonds formed.',
-      'When more energy is given out than taken in, the reaction gives out heat and ΔH is negative.'
+      'Sort the three bond cards into Broken and Formed, set the H–Cl count to 2 with Larger, and read both totals.',
+      'Compare the energy absorbed by broken bonds with the energy released by formed bonds.',
+      'Calculate bonds broken minus bonds formed; when more energy is released than absorbed, ΔH is negative.'
     ],
     check(state) {
       const t = state.table;
-      const v = markerRead(t, 'dH');
-      if (v === -400) return { ok: false, notYet: true, msg: 'Set the estimate you worked out.' };
+      const v = entryNumber(t, 'dH');
+      if (v == null || Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Enter your calculated ΔH, including its sign.' };
       const r = ledgerRead(t, 'ledger');
-      if (r.nBroken + r.nFormed < 4) return { ok: false, notYet: true, msg: 'Put every bond card in a tray first.' };
+      if (r.nBroken + r.nFormed < 4) return { ok: false, notYet: true, msg: 'Sort all bond cards into trays and set the H–Cl count to 2 first.' };
       if (Math.abs(v - HCL_SUMS.net) <= 2 && r.net === HCL_SUMS.net) return { ok: true };
-      return { ok: false, msg: `The bond table reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
+      return { ok: false, msg: `The bond table shows ${r.broken} kJ absorbed (broken) and ${r.formed} kJ released (formed); check the difference and sign.` };
     },
     reward: {
-      log: 'Bond enthalpies gave ΔH = −184 kJ for two moles of HCl.',
+      log: 'Bond enthalpies gave ΔH = −184 kJ for 2 mol of HCl.',
       title: 'Estimating ΔH',
-      body: 'Breaking the bonds took in 678 kJ and forming the new ones gave out 862 kJ, so ΔH ≈ 678 − 862 = −184 kJ.'
+      body: 'Breaking the bonds absorbed 678 kJ and forming two H–Cl bonds released 862 kJ, giving ΔH ≈ −184 kJ. This is an estimate because tabulated bond enthalpies are averages.'
     }
   }
 ];
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the card you choose into the slot.'],
-  2: ['Drag one atom away from the other, then set the answer dial.'],
-  3: ['Drag each bond card into a tray.'],
-  4: ['Drag the card you choose into the slot.'],
+  1: ['Drag your prediction into the slot.'],
+  2: ['Slide the Pull knob, then select your answer from the list.'],
+  3: ['Drag each bond card into a tray; tap one to press Larger.'],
+  4: ['Drag your prediction into the slot.'],
   5: ['Drag a card into the slot.'],
-  6: ['Drag each bond card into a tray, then set the dial.']
+  6: ['Sort the bond cards (tap H–Cl and press Larger), then enter ΔH.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -337,7 +334,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Breaking a bond takes energy in, and forming it gives the same energy out. A reaction gives out heat when its new bonds give out more energy than breaking the old ones took in, and takes heat in when they give out less.'
+      body: 'Breaking a bond always absorbs energy, and forming it releases the exact same amount. A reaction is exothermic when new bonds release more energy than breaking old bonds absorbed, and endothermic when they release less.'
     }
   ]
 };
@@ -356,7 +353,7 @@ export const SOLUTIONS = [
   [...sort({ ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' }), ...CH4_CHIPS.map(([id, , n]) => ({ scale: { piece: id, factor: n } }))],
   [put('cool', 'slot:guess')],
   [put('cool', 'slot:answer')],
-  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), dial('dH', 'value', -184)]
+  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), { scale: { piece: 'hc', factor: 2 } }, { type: { entry: 'dH', value: '-184' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -366,7 +363,7 @@ export const MISSES = [
   [...sort({ ch: 'broken', oo: 'formed', co: 'formed', oh: 'formed' })],
   [],
   [put('warm', 'slot:answer')],
-  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), dial('dH', 'value', 184)]
+  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), { scale: { piece: 'hc', factor: 2 } }, { type: { entry: 'dH', value: '184' } }]
 ];
 
 function blankState() { return {}; }
@@ -383,7 +380,15 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+    onLoad(r) {
+      if (r.index === 1) {
+        const g = recall(KEY_1);
+        if (g && GUESS_1[g]) r.frame.note(`You predicted: ${GUESS_1[g]}. Test it with the Pull knob.`);
+      } else if (r.index === 4) {
+        const g = recall(KEY_2);
+        if (g && GUESS_2[g]) r.frame.note(`You predicted: ${GUESS_2[g]}. Test it on the bond table.`);
+      }
+    }
   });
   runner.start();
   return { dispose: () => runner.dispose() };

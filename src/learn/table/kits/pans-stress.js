@@ -18,6 +18,7 @@ import { registerFixture } from './pans-registry.js';
 import { say, frameOf } from './matter-draw.js';
 import { LEAN_RXNS, leanStress, leanAt, leanSettle, leanSettleTick, leanK, leanYield, fmtK, rng } from '../../engine/eqdata.js';
 import { addTourText } from '../tour.js';
+import { gliding } from '../glide.js';
 
 const DUST = PLATE_COLORS.dust;
 const DIM = PLATE_COLORS.dim;
@@ -128,7 +129,8 @@ export function spheres(r) {
 function paintWindow(ctx, F, r, x, y, w, h, clock = 0) {
   const p = r.f.props;
   frame(ctx, F, x, y, w, h);
-  const frac = Math.min(1, r.res.post.V / p.Vmax);
+  // While the hand drags the piston it stands where the hand is (`glide.js`); the gas is still the snapped volume's.
+  const frac = Math.min(1, (gliding(r.f, 'vol') ?? r.res.post.V) / p.Vmax);
   const gy = y + h * (1 - frac); const gh = y + h - gy;
   const { kinds, total } = spheres(r);
   if (gy > y + 0.2) {
@@ -327,7 +329,7 @@ function paintTouch(ctx, F, f, r, state) {
   });
   if (f.dials.vol && p.window !== false) {
     // The piston's grip, at the top of the window, so there is something to take hold of.
-    const frac = Math.min(1, r.res.post.V / p.Vmax);
+    const frac = Math.min(1, (gliding(f, 'vol') ?? r.res.post.V) / p.Vmax);
     const gy = WIN.y + WIN.h * (1 - frac);
     ctx.fillStyle = DUST; ctx.fillRect(F.x(WIN.x + WIN.w / 2 - 3), F.y(gy - 1.2), F.len(6), F.len(1.2));
     say(ctx, `${amt(f.dials.vol.value)} L`, F.x(WIN.x + WIN.w - 0.8), F.y(WIN.y + WIN.h - 1.6), F.size(2, 5.4), { align: 'right', color: DUST });

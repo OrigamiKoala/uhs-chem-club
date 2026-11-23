@@ -65,7 +65,7 @@ export const isMoving = f => (MOVING_KINDS.has(f.kind) && !f.props?.still) || he
 
 /** Fixture rows are laid out from the top by their dials; the recording context has no layout, so give it the rows the real one has. */
 const withRows = (f, b) => ({ ...b, lay: { ...b.lay, dials: Object.keys(f.dials || {}).map((_, i) => ({ y: b.lay.box.y0 + 8 + i * 5 })) } });
-const crowdMatter = dressRecorded({ paint: (ctx, f, state, b) => paintFixture(ctx, f, state, withRows(f, b)) });
+const crowdMatter = dressRecorded({ paint: (ctx, f, state, b) => paintFixture(ctx, f, state, withRows(f, b)) }, { flat: true });
 const crowdHeat = dressRecorded({ paint: heatMotion });
 const crowdOf = (f, state, c) => (MOVING_KINDS.has(f.kind) ? crowdMatter : crowdHeat)(f, state, c);
 
@@ -106,6 +106,7 @@ const settle = state => {
 export const MATTER_KIT = {
   ...HEAT_KIT,
   id: MATTER_KIT_ID,
+  returnFree: true,
   kinds: { ...HEAT_KIT.kinds, mol: { r: 7.5, rect: RECTS.mol, nojoin: true }, ...pieceKinds() },
   run,
   paintPiece,

@@ -36,6 +36,7 @@ import {
 } from '../../table/kits/domain.js';
 import { moTable, magnet, moCard } from '../../table/kits/mo.js';
 import { session } from '../../../session.js';
+import { markFights } from '../../table/near.js';
 
 export const meta = { stageCount: 5 };
 
@@ -121,9 +122,9 @@ export const STAGES = [
       intent: 'A basalt warden stands over three blocks of its own plating.'
     },
     hints: [
-      'Each card prints its ions\' charges and the distance between their centres; the hotplate can melt any of them.',
+      'Each card prints its ion charges and center-to-center distance; you can also test them on the hotplate.',
       'Compare the charges on the three cards first, then the distances.',
-      'The more strongly the ions attract each other, the more heat it takes to pull them from their places.'
+      'The more strongly ions attract each other, the higher the temperature needed to melt the solid.'
     ],
     check(state) {
       const t = state.table;
@@ -131,7 +132,7 @@ export const STAGES = [
       if (!held) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
       const hot = byLatticeEnergy(PLATING.map(p => p[2]))[0];
       if (held.props.lattice === hot) return { ok: true };
-      return { ok: false, msg: 'Another of the three is still solid on the hotplate at the temperature where this one is molten.' };
+      return { ok: false, msg: 'Another of the three salts stays solid at the temperature where this one melts.' };
     },
     reward: {
       title: 'Lattice Energy',
@@ -144,7 +145,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · The Vent',
-    prompt: 'Where do the ten valence electrons of hydrogen cyanide, HCN, go?',
+    prompt: 'How are the 10 valence electrons of hydrogen cyanide (HCN) arranged?',
     widget: { type: 'table', label: 'The bench' },
     table: ventTable(),
     foes: WARDEN_FOE,
@@ -154,16 +155,16 @@ export const STAGES = [
       intent: 'The warden vents a thin stream and its seams stand shut.'
     },
     hints: [
-      'Drag the Pair piece onto a gap between two atoms to share a pair, or onto an atom to leave a lone pair.',
-      'With one pair in each gap, compare the electrons round carbon and round nitrogen with an octet.',
-      'A shared pair counts toward both atoms, so sharing more pairs is how atoms reach octets when electrons are short.'
+      'Drag the Pair piece onto a gap between two atoms to share a pair, or onto an atom to add a lone pair.',
+      'With one bond in each gap, compare carbon\'s and nitrogen\'s electron counts with 8.',
+      'A shared pair counts toward both atoms, so sharing extra pairs helps atoms reach octets when electrons are limited.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
       if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       if (allLit(sl.read)) return { ok: true };
       if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
-      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
+      return { ok: false, msg: 'Every electron is placed, but an atom\'s light is still off: recount the electrons around that atom.' };
     },
     reward: {
       title: 'Triple Bond',
@@ -186,9 +187,9 @@ export const STAGES = [
       intent: 'The warden stands with its columns held square.'
     },
     hints: [
-      'Build the molecule on the nitrogen atom from the tray, then lay the protractor across two hydrogen atoms.',
+      'Build ammonia on the nitrogen atom from the tray, then place the protractor across two hydrogen atoms.',
       'Compare the pieces in the tray with the electron domains nitrogen has in ammonia.',
-      'A lone pair is a domain too, and it repels the bonds more strongly than they repel each other.'
+      'A lone pair counts as a domain too, and it repels bonds more strongly than bonds repel each other.'
     ],
     check(state) {
       const t = state.table;
@@ -196,14 +197,14 @@ export const STAGES = [
       const v = markerValue(t, 'mark');
       if (!v) return { ok: false, notYet: true, msg: 'Set the dial to an angle.' };
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
-      if (r.lone < 1 || hs.length < 3) return { ok: false, msg: 'This model does not have all of the electron domains that nitrogen has in ammonia.' };
+      if (r.lone < 1 || hs.length < 3) return { ok: false, msg: 'This model does not have all of the electron domains nitrogen has in ammonia.' };
       const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
       if (Math.abs(v - real) <= 1.2) return { ok: true };
-      return { ok: false, msg: `The model's angle is not ${v}°: lay the protractor across two hydrogen atoms and read it again.` };
+      return { ok: false, msg: `The model's angle is not ${v}°: place the protractor across two hydrogen atoms and read it again.` };
     },
     reward: {
       title: 'Ammonia\'s Angle',
-      body: '107°. Nitrogen has four electron domains, and the lone pair repels the three bonds a little closer together than 109.5°.',
+      body: '107°: nitrogen has four electron domains, and the lone pair repels the three bonds more strongly, narrowing the angle below 109.5°.',
       log: 'NH3 built as a pyramid.'
     }
   },
@@ -233,7 +234,7 @@ export const STAGES = [
     hints: [
       'Drag a molecule between the plates and press "Switch Field"; the dipole arrows show each bond\'s dipole.',
       'Compare the directions of the bond dipole arrows in each molecule\'s shape.',
-      'A molecule is polar only if its bond dipoles do not balance, which depends on its shape.'
+      'A molecule is polar only if its bond dipoles do not cancel, which depends on its shape.'
     ],
     check(state) {
       const t = state.table;
@@ -241,13 +242,13 @@ export const STAGES = [
       const got = ids.filter(id => t.pieces[id].zone === 'tray:turns');
       if (!got.length) return { ok: false, notYet: true, msg: 'Put the polar molecules into the tray.' };
       const want = ids.filter(id => molRead(t.pieces[id]).polar);
-      if (got.some(id => !want.includes(id))) return { ok: false, msg: 'The tray holds a molecule that does not turn between the plates when the field is on.' };
-      if (want.some(id => !got.includes(id))) return { ok: false, msg: 'A molecule that turns between the plates when the field is on is not in the tray.' };
+      if (got.some(id => !want.includes(id))) return { ok: false, msg: 'The tray holds a molecule that does not turn when the field is on.' };
+      if (want.some(id => !got.includes(id))) return { ok: false, msg: 'A molecule that turns when the field is on is missing from the tray.' };
       return { ok: true };
     },
     reward: {
       title: 'Polar and Nonpolar',
-      body: 'Only ammonia. Its three bond dipoles point to one side of the pyramid, while those of linear CO₂ and flat, triangular BF₃ balance.',
+      body: 'Only ammonia. Its three bond dipoles point toward one side of the pyramid, while the symmetric dipoles of linear CO₂ and flat, triangular BF₃ cancel out.',
       log: 'One polar molecule and two nonpolar ones found.'
     }
   },
@@ -276,8 +277,8 @@ export const STAGES = [
     },
     hints: [
       'Drag a gas card into the "Gas to test" slot and press "Test Sample".',
-      'Compare what the magnet does to each of the three gases.',
-      'A paramagnetic substance has unpaired electrons, and a magnet attracts it.'
+      'Compare how the magnet reacts to each of the three gases.',
+      'A paramagnetic substance has unpaired electrons and is attracted to a magnet.'
     ],
     check(state) {
       const t = state.table;
@@ -288,7 +289,7 @@ export const STAGES = [
     },
     reward: {
       title: 'Paramagnetic Oxygen',
-      body: 'Oxygen. Its last two electrons stand unpaired, one in each of two antibonding orbitals of equal energy, so a magnet attracts it.',
+      body: 'Oxygen. Its last two electrons sit unpaired in two equal-energy antibonding orbitals, so a magnet attracts it.',
       log: 'The magnetic gas found.'
     }
   }
@@ -344,15 +345,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'Summary',
-      body: 'The warden is cleared. Analysis confirms distinct ionic and covalent mineral phases, reflecting bonding principles across different chemical structures.'
+      body: 'The Basalt Warden is down. Testing its crystals, molecules, and gases confirmed how ionic, covalent, and molecular orbital bonding hold different materials together.'
     },
     {
       heading: 'Bonding Review',
-      body: 'Solving each phase required evaluating lattice energy, Lewis structure octets, VSEPR molecular geometry, dipole symmetry, and molecular orbital configurations.'
+      body: 'Each phase tested a core bonding idea: lattice energy, Lewis structures, VSEPR shape, molecular polarity, and molecular orbitals.'
     },
     {
       heading: 'Next',
-      body: 'The mineral sample from the site is recorded in the Case File for the investigation.'
+      body: 'The glass-smooth rock sample is logged in your Case File.'
     }
   ]
 };
@@ -382,3 +383,5 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
 export { planDomains, planDipole, bondAngles, LATTICES };
+
+markFights(STAGES);
