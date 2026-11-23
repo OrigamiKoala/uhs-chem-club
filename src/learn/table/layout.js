@@ -163,7 +163,17 @@ export function fixtureLayout(f) {
   // A gauge, or a dial that only sets, has no Run key (`fixture.noRun`).
   const wide = f.runLabel ? Math.max(9, f.runLabel.length * 1.9 + 3) : 9;
   const run = f.noRun ? null : { x0: r.x1 - 2 - wide, x1: r.x1 - 2, y0: Math.max(bottom + 2, r.y1 - 6), y1: Math.max(bottom + 2, r.y1 - 6) + 4.5 };
-  return { box: r, dials, run };
+  // Extra keys beside Run (`props.keys`: {label, action}), laid leftward from it, each a key that sends its own action.
+  const keys = [];
+  if (run && f.props?.keys?.length) {
+    let right = run.x0 - 1.5;
+    for (const k of [...f.props.keys].reverse()) {
+      const kw = Math.max(9, k.label.length * 1.9 + 3);
+      keys.unshift({ x0: right - kw, x1: right, y0: run.y0, y1: run.y1, label: k.label, action: k.action });
+      right -= kw + 1.5;
+    }
+  }
+  return { box: r, dials, run, keys };
 }
 
 /**

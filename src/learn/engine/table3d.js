@@ -567,19 +567,21 @@ export class Table3D extends BenchViewer3D {
         knobs[d.name] = { knob, a, b, top: DECK_TOP + 0.002 };
       }
       if (!lay.run) { this.fixtures.set(f.id, { knobs, dress }); continue; }
-      const rp = this.map.toPlate({ x: (lay.run.x0 + lay.run.x1) / 2, y: (lay.run.y0 + lay.run.y1) / 2 });
-      const kw = (lay.run.x1 - lay.run.x0) * s;
-      const kd = (lay.run.y1 - lay.run.y0) * s;
-      const cap = buildKey(kw, kd, { capMat: this.kitMats.enamelDark });
-      cap.position.set(rp.x, DECK_TOP, rp.z);
-      this.fixtureRoot.add(cap);
-      const label = new THREE.Mesh(
-        new THREE.PlaneGeometry(kw * 0.86, kd * 0.72),
-        this.mine(new THREE.MeshStandardMaterial({ map: this.plaque(f.runLabel || 'Run', Math.max(128, Math.round((lay.run.x1 - lay.run.x0) * 14)), 64, {}), roughness: 0.85, metalness: 0.2 }))
-      );
-      label.rotation.x = -Math.PI / 2;
-      label.position.set(rp.x, DECK_TOP + 0.0165, rp.z);
-      this.fixtureRoot.add(label);
+      for (const key of [{ ...lay.run, label: f.runLabel || 'Run' }, ...(lay.keys || [])]) {
+        const rp = this.map.toPlate({ x: (key.x0 + key.x1) / 2, y: (key.y0 + key.y1) / 2 });
+        const kw = (key.x1 - key.x0) * s;
+        const kd = (key.y1 - key.y0) * s;
+        const cap = buildKey(kw, kd, { capMat: this.kitMats.enamelDark });
+        cap.position.set(rp.x, DECK_TOP, rp.z);
+        this.fixtureRoot.add(cap);
+        const label = new THREE.Mesh(
+          new THREE.PlaneGeometry(kw * 0.86, kd * 0.72),
+          this.mine(new THREE.MeshStandardMaterial({ map: this.plaque(key.label, Math.max(128, Math.round((key.x1 - key.x0) * 14)), 64, {}), roughness: 0.85, metalness: 0.2 }))
+        );
+        label.rotation.x = -Math.PI / 2;
+        label.position.set(rp.x, DECK_TOP + 0.0165, rp.z);
+        this.fixtureRoot.add(label);
+      }
       this.fixtures.set(f.id, { knobs, dress });
     }
 

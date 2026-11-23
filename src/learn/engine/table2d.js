@@ -350,6 +350,10 @@ export function drawTable(ctx, w, h, state, view = {}) {
     ctx.strokeStyle = PLATE_COLORS.steel;
     ctx.strokeRect(Math.round(X(lay.run.x0)) + 0.5, Math.round(Y(lay.run.y0)) + 0.5, Math.round((lay.run.x1 - lay.run.x0) * sc), Math.round((lay.run.y1 - lay.run.y0) * sc));
     text(f.runLabel || 'Run', (lay.run.x0 + lay.run.x1) / 2, (lay.run.y0 + lay.run.y1) / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.text });
+    for (const k of lay.keys || []) {
+      ctx.strokeRect(Math.round(X(k.x0)) + 0.5, Math.round(Y(k.y0)) + 0.5, Math.round((k.x1 - k.x0) * sc), Math.round((k.y1 - k.y0) * sc));
+      text(k.label, (k.x0 + k.x1) / 2, (k.y0 + k.y1) / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.text });
+    }
   }
 
   /* the recorder's strip */

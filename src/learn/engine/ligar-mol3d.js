@@ -44,7 +44,8 @@ export function buildMolModel(c, { hub, vectors, yaw = 0, arrows = null, net = n
   const k = reach / 1.0;
   const mat = color => c.own(new THREE.MeshStandardMaterial({ color, roughness: 0.46, metalness: 0.08 }));
   const radiusOf = sym => (RADIUS[sym] || 0.3) * k * 0.62;
-  const centre = [0, baseY + reach * 0.62, 0];
+  // A molecule with one net arrow stands a little back from the middle so the arrow lies in front of it, clear of every ball and rod.
+  const centre = [0, baseY + reach * 0.62, net ? -c.hh * 0.2 : 0];
   const pos = (v, f) => { const w = yawed(v, yaw); return [centre[0] + w[0] * f * k, centre[1] + w[1] * f * k, centre[2] + w[2] * f * k]; };
 
   const hubBall = new THREE.Mesh(new THREE.SphereGeometry(radiusOf(hub), 22, 16), mat(MODEL_COLOR[hub] || MODEL_COLOR.H));
@@ -81,6 +82,29 @@ export function buildMolModel(c, { hub, vectors, yaw = 0, arrows = null, net = n
   // The arrows tool: a short amber arrow along each bond toward the atom that pulls the pair harder, and the sum of them all.
   if (arrows) {
     const amber = mat(AMBER);
+    if (net) {
+      // One arrow for the whole molecule: lying on the card in front of it, tail at the δ+ end, head at the δ− end.
+      const w = yawed(net, yaw);
+      const dir = w[0] >= 0 ? 1 : -1;
+      const half = k * 0.5;
+      const z = c.hh * 0.62;
+      const y = baseY + k * 0.04;
+      const p0 = [-dir * half, y, z];
+      const p1 = [dir * half, y, z];
+      g.add(rodBetween(p0, p1, k * 0.04, amber));
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(k * 0.1, k * 0.2, 12), amber);
+      cone.position.set(...p1);
+      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dir, 0, 0));
+      g.add(cone);
+      if (c.label) {
+        for (const [sign, text] of [[-dir, 'δ+'], [dir, 'δ−']]) {
+          const tag = c.label(text, k * 0.34, k * 0.2, { bg: '#2a2620' });
+          tag.position.set(sign * (half + k * 0.3), y + k * 0.01, z);
+          g.add(tag);
+        }
+      }
+      return g;
+    }
     arrows.forEach((a, i) => {
       const v = atomVectors[i];
       if (!v || Math.abs(a.d) < 0.01) return;
@@ -96,16 +120,6 @@ export function buildMolModel(c, { hub, vectors, yaw = 0, arrows = null, net = n
       cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]).normalize());
       g.add(cone);
     });
-    if (net) {
-      const w = yawed(net, yaw);
-      const p0 = [centre[0] - w[0] * k * 0.5, baseY + k * 0.04, centre[2] - w[2] * k * 0.5];
-      const p1 = [centre[0] + w[0] * k * 0.5, baseY + k * 0.04, centre[2] + w[2] * k * 0.5];
-      g.add(rodBetween(p0, p1, k * 0.04, amber));
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(k * 0.1, k * 0.2, 12), amber);
-      cone.position.set(...p1);
-      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]).normalize());
-      g.add(cone);
-    }
   }
   return g;
 }

@@ -219,6 +219,8 @@ export class TableGestures {
           return { kind: 'joystick', fixture: f.id, cx: j.cx, cy: j.cy, r: j.r, start: u, initialTurn: vf.dials?.turn?.value ?? 0, initialTilt: vf.dials?.tilt?.value ?? 0 };
         }
       }
+      const hitKey = (lay.keys || []).find(k => u.x >= k.x0 - pad / 2 && u.x <= k.x1 + pad / 2 && u.y >= k.y0 - pad / 2 && u.y <= k.y1 + pad / 2);
+      if (hitKey) return { kind: 'key', fixture: f.id, key: hitKey };
       const r = lay.run;
       if (r && u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
     }
@@ -335,6 +337,7 @@ export class TableGestures {
       return;
     }
     if (fh?.kind === 'run') { this.gesture = { kind: 'run', fixture: fh.fixture }; return; }
+    if (fh?.kind === 'key') { this.gesture = { kind: 'key', fixture: fh.fixture, key: fh.key }; return; }
     if (fh?.kind === 'pick') { this.gesture = { ...fh }; return; }
     if (fh?.kind === 'tap') { this.gesture = { ...fh }; if (fh.z.drag) this.tapDrag(fh, u); return; }
     const ch = this.cloudHit(u);
@@ -452,6 +455,11 @@ export class TableGestures {
     if (g.kind === 'pick') {
       const hit = this.fixtureHit(u);
       if (hit?.kind === 'pick' && hit.fixture === g.fixture && hit.value === g.value) this.view.dispatch({ setDial: { fixture: g.target, dial: g.dial, value: g.value } });
+      return;
+    }
+    if (g.kind === 'key') {
+      const hit = this.fixtureHit(u);
+      if (hit?.kind === 'key' && hit.fixture === g.fixture && hit.key.label === g.key.label) { this.view.dispatch(g.key.action); this.view.changed?.(); }
       return;
     }
     if (g.kind === 'run') {

@@ -276,7 +276,7 @@ export class LearnFrame {
 
         <div class="lq-dock-bar hidden" id="lq-dock-bar">
           <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn stage-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">Stage Panel</button>
-          <button type="button" class="btn-secondary quest-btn-sm lq-dock-calc" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
+          <button type="button" class="btn-secondary quest-btn-sm lq-dock-calc" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
           <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Submit answer">Submit</button>
         </div>
 
@@ -311,7 +311,7 @@ export class LearnFrame {
               <div class="lq-banner" role="status" aria-live="polite"></div>
               <div class="lq-actions">
                 <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-                <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
+                <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
                 <button type="button" class="btn-primary lq-commit" data-act="submit">Submit</button>
               </div>
             </div>
@@ -401,7 +401,7 @@ export class LearnFrame {
       else if (act === 'objective' || act === 'guide') this.showBriefing(true);
       else if (act === 'exit') this.opts.onExit?.();
       else if (act === 'reward') this.showFindings();
-      else if (act === 'glossary') this.showGlossary(e.target.closest('[data-act]')?.dataset.term);
+      else if (act === 'glossary') this.showFindings(e.target.closest('[data-act]')?.dataset.term);
       else if (act === 'primer') this.showPrimers();
       else if (act === 'close-panel') this.setPanelClosed(true);
       else if (act === 'open-panel') this.setPanelClosed(false);
@@ -821,7 +821,7 @@ export class LearnFrame {
     this.el.actions.innerHTML = `
       ${entryHtml}
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
+      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
@@ -942,8 +942,6 @@ export class LearnFrame {
       <button type="button" class="btn-secondary quest-btn-sm" data-act="objective" title="Replay the instrument tour">Tour</button>
       <button type="button" class="btn-secondary quest-btn-sm" data-act="reward" title="View discovered concepts and findings">Findings</button>
       ${this.stage && needsFor(this.currentQuestId(), this.stage.index + 1).length ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="primer" title="A short hands-on refresher for this stage">Primer</button>' : ''}
-      ${glossaryFor(this.currentQuestId()) ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="glossary" title="Words used on this bench">Glossary</button>' : ''}
-      ${this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reset-view" title="Re-center the camera over the bench">Reset View</button>' : ''}
       ${this.canHidePanel && !this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel" aria-label="Fold stage panel">Fold Panel</button>' : ''}
     `;
   }
@@ -1111,7 +1109,7 @@ export class LearnFrame {
     this.el.actions.innerHTML = `
       ${entryHtml}
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON} Calc</button>
+      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
@@ -1588,21 +1586,18 @@ export class LearnFrame {
    * bench so far, in the order they earned them, so the words each stage
    * named can be read together rather than one at a time.
    */
-  /** The Glossary key: every term of this world met so far, with its one-clause gloss. */
-  showGlossary(focusId = null) {
+  /** The glossary block inside Findings: every term of this world met so far, the focused one first. */
+  glossaryHtml(focusId = null) {
     const g0 = glossaryFor(this.currentQuestId());
-    if (!g0) return;
+    if (!g0) return '';
     const sorted = [...g0.terms].sort((a, b) => a.term.localeCompare(b.term));
     const terms = focusId
       ? [...sorted.filter(t => t.id === focusId), ...sorted.filter(t => t.id !== focusId)]
       : sorted;
-    showModal(`
-      <div class="quest-modal-head lq-modal-head lq-glossary-head">
-        <div class="lq-glossary-title-wrap">
-          <h2 id="lq-glossary-title" class="section-title">Glossary</h2>
-          <span class="lq-glossary-count">${terms.length} terms</span>
-        </div>
-        <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
+    return `
+      <div class="lq-glossary-title-wrap" style="margin-top: 1rem;">
+        <h3 class="section-title">Glossary</h3>
+        <span class="lq-glossary-count">${terms.length} terms</span>
       </div>
       <div class="lq-glossary-search-wrap">
         <input type="search" id="lq-glossary-filter" class="form-input lq-glossary-search" placeholder="Filter terms..." aria-label="Filter glossary terms" autocomplete="off">
@@ -1613,8 +1608,10 @@ export class LearnFrame {
             <dt class="lq-glossary-term">${esc(t.term)}</dt>
             <dd class="lq-glossary-def">${esc(t.gloss)}</dd>
           </div>`).join('')}
-      </dl>
-    `, { labelledBy: 'lq-glossary-title' });
+      </dl>`;
+  }
+
+  wireGlossary() {
     const filter = document.getElementById('lq-glossary-filter');
     if (filter) {
       filter.addEventListener('input', () => {
@@ -1624,7 +1621,7 @@ export class LearnFrame {
         });
       });
     }
-    document.querySelectorAll('[data-lq-close]').forEach(btn => btn.addEventListener('click', () => closeModal()));
+    document.querySelector('#lq-glossary-list .is-focus')?.scrollIntoView?.({ block: 'nearest' });
   }
 
   /** The Primer key: the hands-on refreshers this stage assumes (maths, earlier ideas). */
@@ -1643,52 +1640,32 @@ export class LearnFrame {
     document.querySelectorAll('[data-lq-close]').forEach(btn => btn.addEventListener('click', () => closeModal()));
   }
 
-  showFindings() {
+  showFindings(focusId = null) {
     const list = this.clearedFindings();
-    if (!list.length) {
-      showModal(`
-        <div class="quest-modal-head lq-modal-head" style="display: flex; justify-content: space-between; align-items: center;">
-          <h2 id="lq-findings-title" class="section-title">What you found</h2>
-          <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
-        </div>
-        <div class="prose-block" style="padding: 1rem 0;">
-          <p>No findings recorded yet.</p>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">As you test samples and clear stages on this bench, the chemistry principles and discoveries you unlock will be recorded here for quick review!</p>
-        </div>
-        <div class="debrief-controls-left lq-modal-keys" style="margin-top: 1rem;">
-          <button type="button" class="btn-primary" data-lq-close>Return to Lab</button>
-        </div>
-      `, {
-        labelledBy: 'lq-findings-title'
-      });
-      document.querySelectorAll('[data-lq-close]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          closeModal();
-          soundscape.playNavRelayClick?.();
-        });
-      });
-      return;
-    }
-
-    showModal(`
-      <div class="quest-modal-head lq-modal-head" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="lq-findings-title" class="section-title">What you found</h2>
-        <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
-      </div>
-      <ol class="lq-findings">
+    const gloss = this.glossaryHtml(focusId);
+    const found = list.length
+      ? `<ol class="lq-findings">
         ${list.map(({ index, reward }) => `
           <li class="lq-finding">
             <h3 class="lq-finding-head">Stage ${index + 1}. ${esc(reward.title)}</h3>
             <p class="lq-finding-body">${esc(reward.body)}</p>
           </li>
         `).join('')}
-      </ol>
+      </ol>`
+      : '<p class="lq-finding-body">No findings recorded yet.</p>';
+    showModal(`
+      <div class="quest-modal-head lq-modal-head" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="lq-findings-title" class="section-title">What you found</h2>
+        <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
+      </div>
+      ${focusId ? gloss + found : found + gloss}
       <div class="debrief-controls-left lq-modal-keys">
         <button type="button" class="btn-primary" data-lq-close>Close</button>
       </div>
     `, {
       labelledBy: 'lq-findings-title'
     });
+    this.wireGlossary();
     document.querySelectorAll('[data-lq-close]').forEach(btn => {
       btn.addEventListener('click', () => {
         closeModal();

@@ -225,8 +225,9 @@ function paintCard(ctx, p, state, o) {
   const read = molRead(p);
   const isD = isFieldMol(p);
   const pose = isD ? dmolPose(p, state) : { vectors: restVectors(p, read), view: viewFor(read), turned: false };
-  const S = h * (read.plan.n === 1 ? 0.38 : 0.27);
-  const cy = y0 + h * 0.38;
+  const withArrow = arrowsOn(state, p) && read.polar;
+  const S = h * (read.plan.n === 1 ? 0.38 : 0.27) * (withArrow ? 0.82 : 1);
+  const cy = y0 + h * (withArrow ? 0.33 : 0.38);
   // At `3D On` the tile carries the molecule itself as a solid (`engine/ligar-mol3d.js`), so the face keeps its words and leaves the picture to it.
   const solid = Boolean(o.flat);
   const star = solid ? null : paintStar(ctx, o.x, cy, S, read.hub, pose.vectors, pose.view);
@@ -263,26 +264,29 @@ function paintCard(ctx, p, state, o) {
     fitted(ctx, 'TRANSFERRED', bx1, by - small * 0.9, w * 0.45, { size: small, align: 'right', color: PLATE_COLORS.dim });
   }
   if (shows.includes('angles') && read.angles.length) note(`ATOMS ${read.angles.join(' ')}°`);
-  if (arrowsOn(state, p)) {
-    // An arrow across each bond toward the atom that pulls the pair harder, and the sum of them all.
-    if (!solid) read.dip.arrows.forEach((a, k) => {
-      const pv = pose.vectors.filter(v => v.kind === 'atom')[k];
-      if (!pv) return;
-      const sign = a.d >= 0 ? 1 : -1;
-      const p0 = project(pv.v.map(c => c * (sign > 0 ? 0.28 : 0.86)), pose.view.yaw, pose.view.pitch);
-      const p1 = project(pv.v.map(c => c * (sign > 0 ? 0.86 : 0.28)), pose.view.yaw, pose.view.pitch);
-      if (Math.abs(a.d) > 0.01) arrow(ctx, o.x + p0.x * S, cy + p0.y * S, o.x + p1.x * S, cy + p1.y * S, 1.4, PLATE_COLORS.text, Math.max(3, h * 0.07));
-    });
-    if (read.polar && !solid) {
+  if (arrowsOn(state, p) && !solid) {
+    if (read.polar) {
+      // One arrow for the whole molecule, drawn clear of it: from the δ+ end to the δ− end, sideways along the way the net pull points.
       const net = read.dip.net.map(c => c / read.dip.mag);
       const rot = pose.turned ? [-1, 0, 0] : (p.props.flipped ? turnY(net) : net);
-      const pr = project(pose.turned ? rot : rot, pose.view.yaw, pose.view.pitch);
-      const len = Math.hypot(pr.x, pr.y) || 1;
-      const ux = pr.x / len;
-      const uy = pr.y / len;
-      const by = y0 + h * 0.68;
-      arrow(ctx, o.x - ux * w * 0.14, by - uy * h * 0.04, o.x + ux * w * 0.14, by + uy * h * 0.04, 2.2, AMBER, Math.max(4, h * 0.09));
-      void by;
+      const pr = project(rot, pose.view.yaw, pose.view.pitch);
+      const dir = pr.x >= 0 ? 1 : -1;
+      const ay = y0 + h * 0.72;
+      const half = w * 0.12;
+      const small = Math.max(6, Math.round(h * 0.11));
+      arrow(ctx, o.x - dir * half, ay, o.x + dir * half, ay, 2.2, AMBER, Math.max(4, h * 0.09));
+      fitted(ctx, 'δ+', o.x - dir * (half + 2), ay, w * 0.2, { size: small, weight: 700, align: dir > 0 ? 'right' : 'left', base: 'middle', color: AMBER });
+      fitted(ctx, 'δ−', o.x + dir * (half + 2), ay, w * 0.2, { size: small, weight: 700, align: dir > 0 ? 'left' : 'right', base: 'middle', color: AMBER });
+    } else {
+      // No net pull: the bond arrows that cancel are the evidence.
+      read.dip.arrows.forEach((a, k) => {
+        const pv = pose.vectors.filter(v => v.kind === 'atom')[k];
+        if (!pv || Math.abs(a.d) <= 0.01) return;
+        const sign = a.d >= 0 ? 1 : -1;
+        const p0 = project(pv.v.map(c => c * (sign > 0 ? 0.28 : 0.86)), pose.view.yaw, pose.view.pitch);
+        const p1 = project(pv.v.map(c => c * (sign > 0 ? 0.86 : 0.28)), pose.view.yaw, pose.view.pitch);
+        arrow(ctx, o.x + p0.x * S, cy + p0.y * S, o.x + p1.x * S, cy + p1.y * S, 1.4, PLATE_COLORS.text, Math.max(3, h * 0.07));
+      });
     }
   }
   void star;
@@ -403,27 +407,11 @@ export function paintFieldFixture(ctx, f, state, b) {
   ctx.strokeRect(b.X(g.x0) + 0.5, b.Y(g.y0) + 0.5, (g.x1 - g.x0) * b.sc - 1, (g.y1 - g.y0) * b.sc - 1);
   ctx.setLineDash?.([]);
   plateText(ctx, on ? 'FIELD ON' : 'FIELD OFF', b.x1 - 1.5 * b.sc, b.y0 + 3.6 * b.sc, { size: Math.max(7, Math.round(2.2 * b.sc)), weight: 700, align: 'right', base: 'middle', color: on ? PLATE_COLORS.phosphor : PLATE_COLORS.dim });
-  if (f.props?.flipPiece) {
-    const bx0 = b.x0 + 3 * b.sc;
-    const by0 = b.y1 - 6.2 * b.sc;
-    const bw = 28 * b.sc;
-    const bh = 4.6 * b.sc;
-    ctx.fillStyle = '#242019';
-    ctx.fillRect(bx0, by0, bw, bh);
-    ctx.strokeStyle = AMBER;
-    ctx.lineWidth = 1.4;
-    ctx.strokeRect(bx0 + 0.5, by0 + 0.5, bw - 1, bh - 1);
-    plateText(ctx, 'Rotate Molecule', bx0 + bw / 2, by0 + bh / 2, { size: Math.max(7, Math.round(2.0 * b.sc)), weight: 700, align: 'center', base: 'middle', color: AMBER });
-  }
   return true;
 }
 
-/** Tap zones for field fixtures (e.g. the "Rotate Molecule" button on Plates). */
-export function fieldTapZones(f) {
-  if (f.kind === 'plates' && f.props?.flipPiece) {
-    const r = rectOf(f, SIZES.fixture);
-    return [{ x0: 3, x1: 31, y0: r.h - 6.2, y1: r.h - 1.6, action: { flip: f.props.flipPiece } }];
-  }
+/** Field fixtures have no tap zones: "Rotate Molecule" is a key of the fixture (`props.keys`). */
+export function fieldTapZones() {
   return [];
 }
 
@@ -436,7 +424,7 @@ export function plates(id, at, { size = { w: 100, h: 46 }, runLabel = 'Switch Fi
   return {
     id, kind: 'plates', label: 'Plates', at, size, runLabel,
     dials: { field: { min: 0, max: 1, step: 1, value: 0, label: 'Field' } },
-    props: { hidden: ['field'], inset: 6, bar: 5, top: 9, bottom: 8, ...(flipPiece ? { flipPiece } : {}) }
+    props: { hidden: ['field'], inset: 6, bar: 5, top: 9, bottom: 8, ...(flipPiece ? { flipPiece, keys: [{ label: 'Rotate Molecule', action: { flip: flipPiece } }] } : {}) }
   };
 }
 
