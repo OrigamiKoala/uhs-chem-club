@@ -58,7 +58,7 @@ const GUESS = {
   steady: 'A steady current',
   brief: 'A brief current that dies',
   none: 'No current at all',
-  thick: 'Current only if the wire is thick'
+  thick: 'A steady current that grows'
 };
 
 /* ---------------------------------------------------------------- what each stage puts on the table (inputs; every figure shown is the planner's) */
@@ -88,24 +88,24 @@ export const STAGES = [
     title: 'A Wire Between Beakers',
     // A PREDICT STAGE: no cell is on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'With a wire joining a zinc electrode in zinc sulfate to a copper electrode in copper sulfate, what does the ammeter show?',
+    prompt: 'With zinc and copper strips in their solutions joined by a wire, what happens to the current?',
     widget,
     table: cellTable({
       pieces: [
-        tag('st1', 'Zn in ZnSO₄', { x: 24, y: 9 }),
-        tag('st2', 'joined by a wire', { x: 74, y: 9 }),
-        tag('st3', 'Cu in CuSO₄', { x: 124, y: 9 }),
-        note('steady', GUESS.steady, { x: 30, y: 30 }),
-        note('brief', GUESS.brief, { x: 80, y: 30 }),
-        note('none', GUESS.none, { x: 30, y: 50 }),
-        note('thick', GUESS.thick, { x: 80, y: 50 })
+        tag('st1', 'Zn in ZnSO₄', { x: 26, y: 14 }),
+        tag('st2', 'joined by a wire', { x: 78, y: 14 }),
+        tag('st3', 'Cu in CuSO₄', { x: 130, y: 14 }),
+        note('steady', GUESS.steady, { x: 30, y: 34 }),
+        note('brief', GUESS.brief, { x: 80, y: 34 }),
+        note('none', GUESS.none, { x: 30, y: 54 }),
+        note('thick', GUESS.thick, { x: 80, y: 54 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 128, y: 40 }, size: { w: 36, h: 14 } }] }
-    }, { w: 150, h: 62 }),
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 132, y: 44 }, size: { w: 46, h: 16 } }] }
+    }, { w: 160, h: 66 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Think about what the two beakers hold and what the wire links.',
-      'Follow one electron from one strip through the wire, and ask what each beaker looks like afterwards.'
+      'Drag one prediction card into My prediction, then press Submit.',
+      'Think about what happens to the charge in each beaker as electrons move through the wire.',
+      'If electrons only leave one beaker and enter the other, can the charge stay balanced?'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -139,9 +139,9 @@ export const STAGES = [
       }, { w: 176, h: 116 });
     })(),
     hints: [
-      'Drag a piece into a seat, press "Run", and read the plot; the key under it says what each run held.',
-      'Compare the lines of runs with different pieces in place, and look at the last second of each.',
-      'Run the cell with one piece at a time, so you can tell which piece changes the line.'
+      'Drag a piece into the seat between the beakers, press "Run", and read the plot.',
+      'Compare the current plot for each piece and check which one stays above zero.',
+      'Test one piece at a time; only a path that carries ions between beakers keeps the circuit going.'
     ],
     check(state) {
       const r = galvRead(state.table, 'rig');
@@ -154,11 +154,11 @@ export const STAGES = [
     },
     get reward() {
       const g = recall(QUEST_KEY);
-      const verdict = g === 'brief' ? 'The current did die away without it, as you predicted. ' : g ? 'The current died away without it, not what you predicted. ' : '';
+      const verdict = g === 'brief' ? 'Without a bridge, the current died away as you predicted. ' : g ? 'Without a bridge, the current died away—unlike a steady wire-only current. ' : '';
       return {
         log: 'Only the tube of salt solution kept the current going.',
         title: 'Salt Bridge',
-        body: `${verdict}Only the salt tube did. Its ions move into the beakers and complete the circuit; it is called a salt bridge.`
+        body: `${verdict}Only the salt tube kept current flowing: its ions move into the beakers to complete the circuit. It is called a salt bridge.`
       };
     }
   },
@@ -176,7 +176,7 @@ export const STAGES = [
     hints: [
       'Press "Run" on each cell, then set the "Electrons move toward" dial on it.',
       'Look at which way each ammeter pointer swings and which metal stands in each beaker.',
-      'Read the ammeter\'s own dial for what a pointer on the left or on the right means, then match each cell.'
+      'Check the ammeter label to see which way the needle points when electrons flow left or right.'
     ],
     check(state) {
       const t = state.table;
@@ -205,8 +205,8 @@ export const STAGES = [
   {
     id: 's4-roles',
     title: 'Atoms Leave, Atoms Join',
-    briefing: { speaker: SPEAKER, body: 'The electrode where oxidation happens is the anode. The electrode where reduction happens is the cathode.' },
-    prompt: 'Which strip is the anode and which the cathode?',
+    briefing: { speaker: SPEAKER, body: 'Each metal strip in a cell is an electrode. The electrode where oxidation happens (atoms leave as ions) is the anode; the electrode where reduction happens (ions join as atoms) is the cathode.' },
+    prompt: 'Press Run, then tap each strip on the Model to mark whether atoms leave (anode) or join (cathode).',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 52 }, { ...S4, link: 'fixed', ammeter: false, windows: 'metal' });
@@ -216,7 +216,7 @@ export const STAGES = [
       }, { w: 120, h: 104 });
     })(),
     hints: [
-      'Press "Run", then tap each strip until it says whether atoms leave or join it.',
+      'Press "Run", then tap each strip on the Model to label it anode or cathode.',
       'Compare each beaker\'s counts after the run with the counts it began with.',
       'At the anode, atoms lose electrons and enter the solution as ions; at the cathode, ions gain electrons and join the strip.'
     ],
@@ -249,7 +249,7 @@ export const STAGES = [
   {
     id: 's5-ions',
     title: 'What the Bridge Carries',
-    prompt: 'Toward which beaker do the negative ions in the salt bridge move?',
+    prompt: 'Press Run, then tap the beaker on the Model that negative ions in the salt bridge move toward.',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 54 }, { ...S5, link: 'fixed', ammeter: false, windows: 'full', bridgeWindow: true });
@@ -263,8 +263,8 @@ export const STAGES = [
     })(),
     hints: [
       'Press "Run", look at the beakers and the glass tube, then tap the beaker the negative ions move toward.',
-      'Compare each beaker\'s ion counts after the run, and the short lines behind the ions in the tube.',
-      'Ask which beaker gained positive charge from its strip, and which kind of ion in the tube would balance it.'
+      'Watch the ion counts in each beaker and which way the bridge ions drift during the run.',
+      'Check which beaker gains positive ions from its strip—negative ions move there to keep charge balanced.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -275,7 +275,7 @@ export const STAGES = [
       const c = windowCounts(S5.left, S5.right, { ran: true });
       const d = cellDirection(S5.left, S5.right);
       const side = sideName(S5.left, S5.right, d.anode);
-      return { ok: false, msg: `The ${ion(d.anode)} count rose from ${START_IONS} to ${c[side].metal} in the ${side} beaker.` };
+      return { ok: false, msg: `The ${ion(d.anode)} count rose from ${START_IONS} to ${c[side].metal} in the ${side} beaker (the anode).` };
     },
     get reward() {
       const d = cellDirection(S5.left, S5.right);
@@ -293,7 +293,7 @@ export const STAGES = [
   {
     id: 's6-weigh',
     title: 'Weighing the Strips',
-    prompt: 'Which strip gains mass as the cell runs?',
+    prompt: 'Weigh each strip before and after running the cell, then tap the strip on the Model that gained mass.',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 46 }, { left: S6.left, right: S6.right, link: 'fixed', ammeter: false, strips: true, minutes: true });
@@ -313,7 +313,7 @@ export const STAGES = [
     hints: [
       'Weigh each strip on the balance, drag both into their beakers, press "Run", then weigh them again.',
       'Compare each strip\'s two readings on the list under the balance.',
-      'Atoms leave the anode as ions and join the cathode, so ask which strip is gaining atoms.'
+      'Atoms leave the anode and plate onto the cathode, so check which strip got heavier.'
     ],
     check(state) {
       const t = state.table;
@@ -350,14 +350,14 @@ export const STAGES = [
       const at = [[24, 33], [50, 33], [76, 33], [102, 33], [37, 45], [63, 45], [89, 45]];
       return cellTable({
         pieces: order.map((k, i) => chip(`k${k}`, chips[k], { x: at[i][0], y: at[i][1] })),
-        fixtures: [plaqueFixture('plate', 'The two half-cells', { x: 70, y: 14 }, ['cathode: copper ions with copper strip', 'anode: zinc strip in zinc ions', 'one bar | between a solid and its ions; two bars || for the bridge'], { w: 130 })],
-        zones: { rail: { at: { x: 68, y: 88 }, size: { w: 128, h: 12 }, first: 'Left end', last: 'Right end', items: [], start: [] } }
-      }, { w: 140, h: 96 });
+        fixtures: [plaqueFixture('plate', 'The zinc–copper cell', { x: 78, y: 14 }, ['Zinc strip in Zn²⁺ solution, copper strip in Cu²⁺ solution.', 'Use one bar | between a solid and its ions; two bars || for the salt bridge.'], { w: 144 })],
+        zones: { rail: { at: { x: 78, y: 88 }, size: { w: 146, h: 12 }, first: 'Left end', last: 'Right end', items: [], start: [], slots: 7 } }
+      }, { w: 156, h: 98 });
     })(),
     hints: [
-      'Drag the seven symbols onto the strip and put them in order.',
+      'Drag the seven symbols onto the rail and put them in order.',
       'Identify which half-cell is the anode and which is the cathode, then order from anode to cathode.',
-      'Each solid is written next to its own ions, and the two halves are joined by the bridge.'
+      'Put the anode solid | ions on the left, || in the middle, and the cathode ions | solid on the right.'
     ],
     check(state) {
       const t = state.table;
@@ -395,11 +395,11 @@ export const STAGES = [
           note('ansB', 'Strip B is the anode', { x: 158, y: 56 })
         ],
         fixtures: [g.fixture, bal.fixture],
-        zones: { slots: [...g.slots, bal.slot, { id: 'ans', label: 'My answer', at: { x: 158, y: 82 }, size: { w: 46, h: 16 } }] }
+        zones: { slots: [...g.slots, bal.slot, { id: 'ans', label: 'My answer', at: { x: 158, y: 82 }, size: { w: 46, h: 16 }, single: true }] }
       }, { w: 184, h: 122 });
     })(),
     hints: [
-      'Drag each strip into the beaker with its letter, press "Run", weigh the strips, and lay a card in the slot.',
+      'Seat each strip in its beaker, press "Run", weigh the strips, and lay a card in the slot.',
       'Compare which way the ammeter pointer swings with how each strip\'s mass changed.',
       'The ammeter shows which beaker receives the electrons, and the balance shows which strip lost atoms.'
     ],
@@ -422,7 +422,7 @@ export const STAGES = [
       return {
         log: 'The electrons left through the anode.',
         title: 'Sealed Cell',
-        body: `The electrons moved toward the ${to} beaker, so they left through the other one, and Strip ${anodeLetter} lost mass: it is the anode. Strip A was ${METALS[S8.left].name} and Strip B was ${METALS[S8.right].name}.`
+        body: `The electrons moved toward the ${to} beaker, so they left through Strip ${anodeLetter}: it is the anode. Strip A was ${METALS[S8.left].name} and Strip B was ${METALS[S8.right].name}.`
       };
     }
   }
@@ -434,8 +434,14 @@ attachScenes(STAGES, {
   own: {
     3: { sitesKey: 'marks2', dials: { m0: { min: 0, max: 2, step: 1, value: 0, label: 'Left strip' }, m1: { min: 0, max: 2, step: 1, value: 0, label: 'Right strip' } } },
     // the bridge question: the beaker the negative ions move toward, named by its role
-    4: { sitesKey: 'sides', extra: { pickMap: [sides(S5.left, S5.right).left === 'anode' ? 1 : 2, sides(S5.left, S5.right).left === 'anode' ? 2 : 1] } },
-    5: { sitesKey: 'sides', extra: { pickMap: [1, 2] } }
+    4: {
+      sitesKey: 'sides',
+      extra: {
+        pickMap: [sides(S5.left, S5.right).left === 'anode' ? 1 : 2, sides(S5.left, S5.right).left === 'anode' ? 2 : 1],
+        siteLabels: [sides(S5.left, S5.right).left === 'anode' ? 'Anode' : 'Cathode', sides(S5.left, S5.right).right === 'anode' ? 'Anode' : 'Cathode']
+      }
+    },
+    5: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteLabels: [`${METALS[S6.left].symbol} strip`, `${METALS[S6.right].symbol} strip`] } }
   }
 });
 

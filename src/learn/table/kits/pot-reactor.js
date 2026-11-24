@@ -234,8 +234,9 @@ registerFixture('weigh', { paint: paintWeigh });
 
 const REACTOR_TEXT = f => {
   const p = f.props;
-  return p.ins?.length ? 'Place jars in the seats and press "Run" to react them.'
-    : 'Set the dial and press "Run" to run the reaction.';
+  const btn = f.runLabel || 'Run';
+  return p.ins?.length ? `Put the jars in the vessel and press "${btn}" to react them.`
+    : `Set the dial and press "${btn}" to run the reaction.`;
 };
 
 addTourText({

@@ -92,14 +92,16 @@ function paintRig(ctx, f, state, b) {
   put(ctx, r.now ? `${voltText(r.now.V)} V` : '—', F.x(m.x + m.w / 2), F.y(m.y + m.h / 2), F.size(3.8, 9), { color: r.now ? AMBER : DIM, weight: 700, maxW: F.len(m.w - 2) });
   // The lamp.
   const lamp = { x: m.x + m.w + 4, y: m.y + m.h / 2 };
-  ctx.fillStyle = r.now && r.now.lit ? AMBER : '#26231d';
-  ctx.beginPath(); ctx.arc(F.x(lamp.x), F.y(lamp.y), Math.max(3, F.len(1.9)), 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = STEEL; ctx.stroke();
-  put(ctx, 'Lamp', F.x(lamp.x), F.y(lamp.y + 4), F.size(1.9, 5.6), { color: DUST });
+  const lit = Boolean(r.now && r.now.lit);
+  ctx.fillStyle = lit ? '#ffd166' : '#26231d';
+  ctx.beginPath(); ctx.arc(F.x(lamp.x), F.y(lamp.y), Math.max(4, F.len(2.4)), 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = lit ? AMBER : '#a8a095'; ctx.lineWidth = lit ? 2 : 1.2; ctx.stroke(); ctx.lineWidth = 1;
+  put(ctx, lit ? 'LIT' : (r.now ? 'OFF' : 'Lamp'), F.x(lamp.x), F.y(lamp.y + 4.4), F.size(2.2, 6.4), { color: lit ? AMBER : '#d4ccc0', weight: 700 });
+  if (r.now) put(ctx, 'RAN', F.x(m.x + m.w / 2), F.y(m.y + m.h + 2.6), F.size(2.0, 6.0), { color: '#8bd478', weight: 700 });
   if (p.markable) {
     const on = Math.round(f.dials.mark?.value ?? 0) === 1;
-    ctx.strokeStyle = on ? PLATE_COLORS.amber : STEEL; ctx.lineWidth = Math.max(1.4, F.len(on ? 0.6 : 0.3)); ctx.setLineDash?.(on ? [] : [2, 2]);
-    ctx.beginPath(); ctx.arc(F.x(lamp.x), F.y(lamp.y), Math.max(5, F.len(3.4)), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash?.([]); ctx.lineWidth = 1;
+    ctx.strokeStyle = on ? PLATE_COLORS.amber : '#b8b0a4'; ctx.lineWidth = Math.max(1.8, F.len(on ? 0.7 : 0.4)); ctx.setLineDash?.(on ? [] : [3, 2]);
+    ctx.beginPath(); ctx.arc(F.x(lamp.x), F.y(lamp.y), Math.max(6, F.len(3.8)), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash?.([]); ctx.lineWidth = 1;
   }
   // The names under the beakers.
   put(ctx, L.symbol, F.x(lx + cup.w / 2), F.y(cy + cup.h + 2.6), F.size(2.8, 7), { color: TEXT, weight: 700 });

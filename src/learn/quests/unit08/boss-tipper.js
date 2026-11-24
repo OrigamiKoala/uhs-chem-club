@@ -118,7 +118,7 @@ export const STAGES = [
     table: pansTable({
       fixtures: [
         ...P1_PANS.map((p, i) => pickable(panFixture(p.id, { x: 24 + i * 50, y: 46 }, { kf: p.kf, kr: p.kr, b0: 0, seed: p.seed, start: P1_RUN, title: p.title, aName: 'Butane', bName: 'Isobutane', window: false, w: 44, h: 40 }), i + 1)),
-        choiceFixture('pick', 'Reached equilibrium', { x: 40, y: 11 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', ' '], start: 4, w: 56 })
+        choiceFixture('pick', 'Reached equilibrium', { x: 40, y: 11 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', ' '], start: 4, w: 56, placeholder: 'tap a vessel' })
       ]
     }, { h: 74 }),
     foes: TIPPER_FOE,
@@ -236,7 +236,7 @@ export const STAGES = [
     table: pansTable({
       fixtures: [
         stressVessel('v', { x: 52, y: 30 }, { ...P4, touch: true, answer: { target: 'ans', watch: 'NO2', higher: 1, same: 3, lower: 2 }, dials: { vol: { ...P4_VOL, value: P4_VOL.max } } }),
-        choiceFixture('ans', 'NO₂ amount', { x: 127, y: 40 }, { options: P4_OPTIONS, start: 4, w: 40 })
+        choiceFixture('ans', 'NO₂ amount', { x: 127, y: 40 }, { options: P4_OPTIONS, start: 4, w: 44, plates: [1, 2, 3] })
       ]
     }),
     foes: TIPPER_FOE,
@@ -253,10 +253,10 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const v = Math.round(dialValue(t, 'ans'));
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap the graph where the NO₂ amount will settle.' };
-      if (v === P4_ANSWER) return { ok: true };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Tap the graph or answer box where the NO₂ amount will settle.' };
       const r = vesselRead(t, 'v');
-      if (!r.changed) return { ok: false, msg: 'The piston has not moved: the vessel is still 1 L.' };
+      if (!r.changed) return { ok: false, msg: 'The piston has not moved: drag the amber piston down to compress the vessel first.' };
+      if (v === P4_ANSWER) return { ok: true };
       if (r.t === 0) return { ok: false, msg: 'No time has passed since the piston moved.' };
       return { ok: false, msg: `With the piston at ${r.res.post.V} L, the NO₂ line reads ${r.now.n.NO2.toFixed(4)} mol now and stood at ${r.base.n.NO2.toFixed(4)} mol before.` };
     },

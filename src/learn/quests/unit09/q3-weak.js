@@ -55,7 +55,7 @@ const GUESS = {
   same: 'The two readings are the same',
   lower: 'Acetic acid reads lower',
   higher: 'Acetic acid reads higher',
-  seven: 'Acetic acid reads 7'
+  seven: 'Acetic acid reads lower by 1'
 };
 
 /* ---------------------------------------------------------------- what each stage's flasks hold (inputs; every figure shown is the planner's) */
@@ -71,9 +71,9 @@ const NH3_C = DILUTIONS.map(c => ({ id: 'nh3', c }));
 const HARD = { id: 'acetic', c: 0.15 };
 /** Stage 8: three acids with their conjugate bases; the constants are the tables'. */
 const PAIRS = [
-  { title: 'Acetic acid pair', Ka: ACIDS.acetic.Ka, Kb: BASES.acetate.Kb },
-  { title: 'Ammonia pair', Ka: ACIDS.nh4.Ka, Kb: BASES.nh3.Kb },
-  { title: 'Hydrofluoric pair', Ka: ACIDS.hf.Ka, Kb: BASES.fluoride.Kb }
+  { title: 'Acetic acid / acetate', Ka: ACIDS.acetic.Ka, Kb: BASES.acetate.Kb },
+  { title: 'Ammonium / ammonia', Ka: ACIDS.nh4.Ka, Kb: BASES.nh3.Kb },
+  { title: 'HF / fluoride', Ka: ACIDS.hf.Ka, Kb: BASES.fluoride.Kb }
 ];
 
 const TOL_PH = 0.03;
@@ -97,8 +97,8 @@ const S2_SOLUTES = [HCL, ACETIC, HF];
 const S2_IDS = ['f1', 'f2', 'f3'];
 const FLASK_W = 44;
 const TRAYS = [
-  { id: 'all', label: 'Nearly all ionized', at: { x: 36, y: 67 }, size: { w: 68, h: 26 }, cell: 27, cellH: 12 },
-  { id: 'some', label: 'Only a little ionized', at: { x: 108, y: 67 }, size: { w: 68, h: 26 }, cell: 27, cellH: 12 }
+  { id: 'all', label: 'Nearly all gave protons', at: { x: 38, y: 70 }, size: { w: 72, h: 28 }, cell: 28, cellH: 13 },
+  { id: 'some', label: 'Only a few gave protons', at: { x: 114, y: 70 }, size: { w: 72, h: 28 }, cell: 28, cellH: 13 }
 ];
 const S6_CARDS = {
   larger: 'A larger share is ionized',
@@ -108,7 +108,7 @@ const S6_CARDS = {
 
 /** Three flasks in a row, each with a seat for the meter. */
 function threeFlasks(solutes) {
-  const fl = solutes.map((s, i) => flaskAt(S2_IDS[i], S2_X[i], 1, { solute: s, label: NAMES[s.id], w: FLASK_W, window: 16 }));
+  const fl = solutes.map((s, i) => flaskAt(S2_IDS[i], S2_X[i], 1, { solute: s, label: NAMES[s.id], w: FLASK_W, window: 16, showCount: true }));
   return { fixtures: fl.map(f => f.fixture), slots: fl.map(f => f.slot) };
 }
 
@@ -119,7 +119,7 @@ function rigTable(solutes, tiles, { top = 2, bottom = 2 } = {}) {
     cols: solutes.map((s, i) => ({ flask: S2_IDS[i], title: concText(s.c) })), top, bottom
   });
   const x0 = RIG_AT_X - rig.size.w / 2 + rig.lw;
-  const fl = solutes.map((s, i) => flaskAt(S2_IDS[i], x0 + 35 * (i + 0.5), 1, { solute: s, label: NAMES[s.id], w: 35, window: 14, meter: false }));
+  const fl = solutes.map((s, i) => flaskAt(S2_IDS[i], x0 + 35 * (i + 0.5), 1, { solute: s, label: NAMES[s.id], w: 35, window: 14, meter: false, showPct: true }));
   return phTable({
     pieces: tiles.map(([key, label], i) => tile(`t-${key}`, key, label, { x: 162, y: 10 + i * 18 })),
     fixtures: [...fl.map(f => f.fixture), rig.fixture],
@@ -143,25 +143,23 @@ export const STAGES = [
     title: 'Same Reading?',
     // A PREDICT STAGE: no flask is on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'Which best describes the pH readings of 0.10 M hydrochloric acid and 0.10 M acetic acid, read side by side?',
+    prompt: 'Between 0.10 M hydrochloric acid and 0.10 M acetic acid, which has the higher pH?',
     widget,
     table: phTable({
       pieces: [
-        tag('st1', '0.10 M hydrochloric acid', { x: 30, y: 9 }),
-        tag('st2', '0.10 M acetic acid', { x: 80, y: 9 }),
-        note('same', GUESS.same, { x: 30, y: 28 }),
-        note('lower', GUESS.lower, { x: 80, y: 28 }),
-        note('higher', GUESS.higher, { x: 30, y: 49 }),
-        note('seven', GUESS.seven, { x: 80, y: 49 })
+        note('same', GUESS.same, { x: 26, y: 12 }),
+        note('lower', GUESS.lower, { x: 76, y: 12 }),
+        note('higher', GUESS.higher, { x: 26, y: 34 }),
+        note('seven', GUESS.seven, { x: 76, y: 34 })
       ],
-      fixtures: [pourFixture('clip', { x: 92, y: 88 }, { scene: 'acid', solute: HCL, label: 'Hydrochloric acid', w: 100, window: 14, loop: true })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 38 }, size: { w: 36, h: 14 } }] }
-    }, { h: 112 }),
+      fixtures: [pourFixture('clip', { x: 86, y: 82 }, { scene: 'acid', solute: HCL, label: 'Hydrochloric acid (0.10 M)', w: 100, window: 14, loop: true })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 138, y: 24 }, size: { w: 46, h: 18 } }] }
+    }, { w: 170, h: 106 }),
     leadIn: true,
     hints: [
       'Place one of the four prediction cards in the slot.',
       'Picture what each flask holds, and what the pH reading counts.',
-      'Ask whether two acids at the same concentration must donate the same share of their protons to water.'
+      'Consider whether two acids at the same concentration must donate the same fraction of their protons.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -175,7 +173,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, three acids at the same concentration are read.'
+      body: 'Next, hydrochloric, acetic and hydrofluoric acids at 0.10 M are read side by side.'
     }
   },
 
@@ -184,20 +182,20 @@ export const STAGES = [
     id: 's2-sort',
     title: 'Sorting the Flasks',
     briefing: 'When an acid donates a proton to water, it forms ions — it is ionized.',
-    get prompt() { return guessLine('Which acids are nearly all ionized and which only a little?', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Which acids donated a proton from nearly every acid molecule (ionized), and which from only a few?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const t = threeFlasks(S2_SOLUTES);
       return phTable({
         pieces: [
-          meterPiece('meter', { x: 160, y: 9 }),
-          tag('c-hcl', NAMES.hcl, { x: 160, y: 30 }),
-          tag('c-acetic', NAMES.acetic, { x: 160, y: 47 }),
-          tag('c-hf', NAMES.hf, { x: 160, y: 64 })
+          meterPiece('meter', { x: 168, y: 10 }),
+          tag('c-hcl', NAMES.hcl, { x: 168, y: 31 }),
+          tag('c-acetic', NAMES.acetic, { x: 168, y: 49 }),
+          tag('c-hf', NAMES.hf, { x: 168, y: 67 })
         ],
         fixtures: t.fixtures,
         zones: { trays: TRAYS, slots: t.slots }
-      }, { w: 184, h: 82 });
+      }, { w: 192, h: 88 });
     })(),
     hints: [
       'Use the pH meter on each flask, then drag the three cards into the two trays.',
@@ -224,7 +222,7 @@ export const STAGES = [
       return {
         log: 'Hydrochloric acid ionized nearly fully; acetic and hydrofluoric acids only in part.',
         title: 'Weak and Strong Acids',
-        body: `${verdict}At the same concentration every HCl ionized and only a few acetic acid molecules did. An acid that ionizes only in part is a weak acid; one that ionizes fully is a strong acid.`
+        body: `${verdict}HCl is a strong acid (all ionized); acetic and hydrofluoric are each a weak acid (only a few ionized).`
       };
     }
   },
@@ -235,7 +233,7 @@ export const STAGES = [
     title: 'How Much Ionized',
     briefing: {
       speaker: 'Vess',
-      body: 'Percent ionization is the share of an acid’s molecules that have donated a proton, as a percent.'
+      body: 'Percent ionization is the share of an acid’s molecules that donated a proton, as a percent (e.g. 3 of 200 is 1.5%).'
     },
     prompt: 'What percent of the acetic acid in this flask is ionized?',
     widget,
@@ -246,12 +244,12 @@ export const STAGES = [
         pieces: [meterPiece('meter', { x: 104, y: 12 })],
         fixtures: [f.fixture],
         zones: { slots: [f.slot] }
-      }, { w: 128, h: 62 });
+      }, { w: 128, h: 66 });
     })(),
     hints: [
-      'Lay the pH meter on the flask, then type the percent in the field.',
+      'Put the pH meter on the flask, then type the percent in the field.',
       'Compare the concentration on the flask with the H₃O⁺ concentration that the pH stands for.',
-      'The meter tells how much H₃O⁺ formed, and the label tells how much acid went in.'
+      'The meter tells how much H₃O⁺ formed, and the label tells how much acid dissolved.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'pct');
@@ -259,8 +257,8 @@ export const STAGES = [
       const s = flaskSol({ solute: ACETIC });
       if (pctOK(v, s.percent)) return { ok: true };
       const near = (x, tol = 0.04) => Math.abs(v - x) <= tol * Math.abs(x);
-      if (near(s.pH)) return { ok: false, msg: `${fmt(s.pH, 2)} is the pH this flask reads; the question asks for a percent of the acid put in.` };
-      if (near(s.h)) return { ok: false, msg: `That figure is the hydronium in mol/L; the question asks for a percent of the acid put in.` };
+      if (near(s.pH)) return { ok: false, msg: `${fmt(s.pH, 2)} is the pH this flask reads; the question asks for a percent of the acid dissolved.` };
+      if (near(s.h)) return { ok: false, msg: `That figure is the hydronium in mol/L; the question asks for a percent of the acid dissolved.` };
       if (near(s.ionized)) return { ok: false, msg: 'That figure is the share as a fraction of 1; the question asks for a percent.' };
       return { ok: false, msg: `The flask holds ${concText(ACETIC.c)} of acid and its pH reads ${fmt(s.pH, 2)}; that is not the percent that has ionized.` };
     },
@@ -269,7 +267,7 @@ export const STAGES = [
       return {
         log: 'About 1.3 percent of the acetic acid had ionized.',
         title: 'Percent Ionization',
-        body: `A pH of ${fmt(s.pH, 2)} means ${sci(s.h, 2)} mol/L of H₃O⁺ from ${concText(ACETIC.c)} of acid put in, so ${fmt(s.percent, 1)} percent is ionized. That share is the percent ionization.`
+        body: `A pH of ${fmt(s.pH, 2)} means ${sci(s.h, 2)} mol/L of H₃O⁺ from ${concText(ACETIC.c)} dissolved, so ${fmt(s.percent, 1)} percent is ionized.`
       };
     }
   },
@@ -292,7 +290,7 @@ export const STAGES = [
       return {
         log: 'H₃O⁺ times CH₃COO⁻ over CH₃COOH held at one number.',
         title: 'The Acid Constant',
-        body: `H₃O⁺ times CH₃COO⁻ over CH₃COOH read ${sci(Ka, 2)} in all three flasks, although the share that ionized changed. That steady number is the acid's constant, Ka.`
+        body: `[H₃O⁺][CH₃COO⁻] / [CH₃COOH] stayed at ${sci(Ka, 2)} in all three flasks, even though the percent ionized changed. That constant is the acid dissociation constant, Ka.`
       };
     }
   },
@@ -303,26 +301,21 @@ export const STAGES = [
     title: 'A Concentration Between the Flasks',
     briefing: {
       speaker: 'Vess',
-      body: 'Ka lets you find the pH at any concentration. Let x = [H₃O⁺] = [CH₃COO⁻]. Here is 0.10 M acetic acid worked out:',
-      worked: [
-        'x² ÷ 0.10 = 1.8 × 10⁻⁵  (x is small beside 0.10)',
-        'x = √(1.8 × 10⁻⁶) = 1.3 × 10⁻³ mol/L',
-        'pH = −log(1.3 × 10⁻³) = 2.88'
-      ]
+      body: 'Because the two ions are equal, multiply Ka by the concentration and take the square root to get [H₃O⁺], then pH = −log[H₃O⁺].'
     },
     prompt: 'What is the pH of 0.15 M acetic acid, to two decimal places?',
     widget,
     entry: { id: 'ph', label: 'pH', unit: '' },
     table: (() => {
-      const f = flaskAt('f1', 40, 1, { solute: HARD, label: NAMES.acetic, w: 64, window: 24, meter: false });
+      const f = flaskAt('f1', 40, 1, { solute: HARD, label: NAMES.acetic, w: 64, window: 24, meter: false, showCount: true });
       return phTable({
         fixtures: [f.fixture, plaqueFixture('plate', 'Acetic acid', { x: 108, y: 16 }, ['Ka', sci(ACIDS.acetic.Ka, 2)], { w: 44 })]
-      }, { w: 140, h: 50 });
+      }, { w: 140, h: 52 });
     })(),
     hints: [
       'Use Ka from the plate and Calc to find the pH.',
-      'Compare this 0.15 M flask with the 0.10 M worked example in the briefing.',
-      'Use the same Ka setup as in the worked example, with this flask’s concentration.'
+      'Multiply Ka by 0.15 and take the square root to get [H₃O⁺].',
+      'Take −log of [H₃O⁺] in Calc.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ph');
@@ -343,7 +336,7 @@ export const STAGES = [
       return {
         log: 'The constant gave the pH of a concentration no flask showed.',
         title: 'A New Concentration',
-        body: `The constant held at a concentration no flask showed: with the two ions equal, Ka gives ${sci(s.h, 2)} mol/L of H₃O⁺ and a pH of ${fmt(s.pH, 2)} for 0.15 M acetic acid.`
+        body: `With the two ions equal, Ka gives ${sci(s.h, 2)} mol/L of H₃O⁺ and a pH of about ${fmt(s.pH, 2)} (±0.02 accepted) for 0.15 M acetic acid.`
       };
     }
   },
@@ -352,29 +345,29 @@ export const STAGES = [
   {
     id: 's6-dilute',
     title: 'Diluting the Acid',
-    prompt: 'What happens to the share of acetic acid that is ionized as it is diluted?',
+    prompt: 'What happens to the percent of acetic acid ionized as you dilute it?',
     widget,
     table: (() => {
-      const f = flaskAt('f1', 30, 1, { solute: ACETIC_C[0], label: NAMES.acetic, w: 54, window: 20, dilute: 2 });
+      const f = flaskAt('f1', 30, 1, { solute: ACETIC_C[0], label: NAMES.acetic, w: 54, window: 20, dilute: 2, showPct: true });
       return phTable({
         pieces: [
           meterPiece('meter', { x: 74, y: 48 }),
           note('larger', S6_CARDS.larger, { x: 118, y: 12 }),
-          note('smaller', S6_CARDS.smaller, { x: 162, y: 12 }),
+          note('smaller', S6_CARDS.smaller, { x: 168, y: 12 }),
           note('same', S6_CARDS.same, { x: 118, y: 32 })
         ],
         fixtures: [f.fixture],
-        zones: { slots: [f.slot, { id: 'ans', label: 'My answer', at: { x: 140, y: 56 }, size: { w: 40, h: 14 } }] }
-      }, { w: 192, h: 76 });
+        zones: { slots: [f.slot, { id: 'ans', label: 'My answer', at: { x: 143, y: 58 }, size: { w: 46, h: 18 } }] }
+      }, { w: 198, h: 78 });
     })(),
     hints: [
-      'Press "Dilute" twice, watch the window, then place a card in the slot.',
-      'Count the ionized molecules in the window before and after diluting.',
+      'Press "Dilute" twice, watch the percent ionized, then place a card in the slot.',
+      'Compare the percent ionized on the flask before and after diluting.',
       'The window always holds 200 molecules, so a rising count means a larger share ionized.'
     ],
     check(state) {
       const n = Math.round(dialValue(state.table, 'f1', 'steps'));
-      if (n < 2) return { ok: false, notYet: true, msg: 'Dilute the acid at least twice first.' };
+      if (n < 2) return { ok: false, notYet: true, msg: 'Dilute twice and compare the flask windows.' };
       const card = pieceIn(state.table, 'ans');
       if (!card) return { ok: false, notYet: true, msg: 'Lay an answer card in the slot.' };
       if (card.id === 'larger') return { ok: true };
@@ -386,7 +379,7 @@ export const STAGES = [
       return {
         log: 'A larger share of the acid had ionized in the more dilute flasks.',
         title: 'Dilution',
-        body: `The more dilute the acetic acid, the larger the share that has ionized: ${p[0]} percent at 0.10 M, ${p[1]} percent at 0.010 M and ${p[2]} percent at 0.0010 M, even though the pH rises.`
+        body: `Diluting raises the share ionized: ${p[0]} percent, ${p[1]} percent and ${p[2]} percent. Even though the pH rises, a larger fraction donates a proton.`
       };
     }
   },
@@ -438,7 +431,7 @@ export const STAGES = [
     reward: {
       log: 'Ka times Kb came to one number for every pair.',
       title: 'Ka Times Kb',
-      body: `Ka times Kb read ${sci(KW25, 2)} for acetic acid, for ammonia and for hydrofluoric acid with their bases. For any acid and its conjugate base, Ka × Kb = Kw.`
+      body: `Ka × Kb read ${sci(KW25, 2)} — the same Kw you met for water. For any acid and its conjugate base, Ka × Kb = Kw.`
     }
   }
 ];

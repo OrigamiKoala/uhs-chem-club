@@ -6,6 +6,6 @@ import { addTourText } from '../tour.js';
 addTourText({
   'ph:phneut': {
     title: 'Mixing flask', dials: false,
-    text: 'Pour adds base from the jug. Green units are used up.'
+    text: 'Press Pour to add reagent. Drag the meter onto the flask to read its pH.'
   }
 }, {});

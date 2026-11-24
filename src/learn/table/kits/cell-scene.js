@@ -61,18 +61,21 @@ function paintScene(ctx, f, state, b) {
     if (bl.label && rr > F.len(1.6)) put(ctx, bl.label, X(bl.x), Y(bl.y), Math.max(6, rr * 0.95), { color: '#0d0c0a', weight: 700 });
     if (rp && bl.prob) { ctx.strokeStyle = '#d99423'; ctx.lineWidth = Math.max(1.5, F.len(0.5)); ctx.beginPath(); ctx.arc(X(bl.x), Y(bl.y), rr + F.len(1.3 + Math.sin(replayClock() * 8)), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
   }
-  if (rp && REPLAY.msg) put(ctx, REPLAY.msg, X(0.5), Y(0.5), F.size(2.1, 6.5), { color: '#d99423', weight: 700, maxW: F.len(w * 0.96) });
-  for (const t of m.texts) put(ctx, t.label, X(t.x), Y(t.y), F.size(2.2, 7), { color: t.note ? '#d99423' : TEXT, weight: 700, maxW: F.len(w * 0.95) });
-  // Resting particles the student answers on: a ring while empty, a solid sphere once set.
+  for (const t of m.texts) put(ctx, t.label, X(t.x), Y(t.y), F.size(2.5, 8), { color: t.note ? '#f2b138' : '#e6dfd4', weight: 700, maxW: F.len(w * 0.95) });
+  // Resting particles the student answers on: a clear outlined ring while empty, a solid amber sphere once set.
   for (const st of sitesFor(state, f)) {
-    const rr = Math.max(F.len(1.5), F.len(st.r * sw));
+    const rr = Math.max(F.len(2.4), F.len(st.r * sw * 1.25));
     ctx.beginPath(); ctx.arc(X(st.x), Y(st.y), rr, 0, Math.PI * 2);
-    if (st.on) { ctx.fillStyle = st.color || '#e59b24'; ctx.fill(); } else { ctx.strokeStyle = st.color || '#e59b24'; ctx.setLineDash?.([3, 3]); ctx.stroke(); ctx.setLineDash?.([]); }
-    if (st.label) put(ctx, st.label, X(st.x), Y(st.y), Math.max(6, rr * 0.95), { color: st.on ? '#0d0c0a' : (st.color || '#e59b24'), weight: 700, maxW: rr * 2.2 });
-    if (st.read) put(ctx, st.read, X(st.x), Y(st.y) + rr + F.len(2.4), F.size(2, 6), { color: TEXT, weight: 700, maxW: F.len(sw * 0.3) });
-    if (st.ring) { ctx.strokeStyle = '#d99423'; ctx.lineWidth = Math.max(1.5, F.len(0.5)); ctx.beginPath(); ctx.arc(X(st.x), Y(st.y), rr + F.len(1.4), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
+    if (st.on) { ctx.fillStyle = st.color || '#e59b24'; ctx.fill(); }
+    else {
+      ctx.fillStyle = 'rgba(229, 155, 36, 0.22)'; ctx.fill();
+      ctx.strokeStyle = st.color || '#f2b138'; ctx.lineWidth = Math.max(1.8, F.len(0.6)); ctx.stroke(); ctx.lineWidth = 1;
+    }
+    if (st.label) put(ctx, st.label, X(st.x), Y(st.y), Math.max(7.5, rr * 0.95), { color: st.on ? '#0d0c0a' : '#f5ede0', weight: 700, maxW: rr * 2.2 });
+    if (st.read) put(ctx, st.read, X(st.x), Y(st.y) + rr + F.len(2.6), F.size(2.3, 7.5), { color: '#f5ede0', weight: 700, maxW: F.len(sw * 0.34) });
+    if (st.ring) { ctx.strokeStyle = '#f2b138'; ctx.lineWidth = Math.max(2, F.len(0.65)); ctx.beginPath(); ctx.arc(X(st.x), Y(st.y), rr + F.len(1.5), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
   }
-  for (const t of sitesFor(state, f).filter(q => q.text)) put(ctx, t.text, X(t.x), Y(t.y), F.size(2, 6), { color: STEEL, weight: 700, maxW: F.len(sw * 0.3) });
+  for (const t of sitesFor(state, f).filter(q => q.text)) put(ctx, t.text, X(t.x), Y(t.y), F.size(2.3, 7.5), { color: '#d4ccc0', weight: 700, maxW: F.len(sw * 0.34) });
 }
 
 /* ------------------------------------------------------------------ 3D */
@@ -108,16 +111,81 @@ function dressScene(f, state, c) {
   const balls = Array.from({ length: CAP.balls }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), mat('#888888', 1)); m.visible = false; root.add(m); return m; });
   const segs = Array.from({ length: CAP.segs }, () => { const m = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 6), mat('#6b625a', 1)); m.visible = false; root.add(m); return m; });
   const st = { spec: specFor(state, f), clock: 0 };
-  const siteMeshes = Array.from({ length: 24 }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), mat('#e59b24', 1)); m.visible = false; root.add(m); return m; });
+  const siteMeshes = Array.from({ length: 24 }, () => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), mat('#e59b24', 1));
+    m.visible = false;
+    root.add(m);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.38, 0.14, 10, 28), mat('#f2b138', 1));
+    ring.visible = false;
+    root.add(ring);
+    let sprite = null;
+    if (typeof document !== 'undefined') {
+      const cvs = document.createElement('canvas');
+      cvs.width = 256; cvs.height = 96;
+      const tex = new THREE.CanvasTexture(cvs);
+      const sm = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+      sprite = new THREE.Sprite(sm);
+      sprite.visible = false;
+      sprite.renderOrder = 20;
+      sprite.userData._cvs = cvs;
+      sprite.userData._tex = tex;
+      sprite.userData._key = '';
+      root.add(sprite);
+    }
+    return { m, ring, sprite };
+  });
+  const paintTag = (sprite, top, sub, active) => {
+    if (!sprite) return;
+    const key = `${top}|${sub}|${active ? 1 : 0}`;
+    if (sprite.userData._key === key) return;
+    sprite.userData._key = key;
+    const cvs = sprite.userData._cvs;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    if (!top && !sub) return;
+    ctx.fillStyle = active ? 'rgba(229, 155, 36, 0.92)' : 'rgba(18, 16, 14, 0.88)';
+    ctx.strokeStyle = active ? '#fff1d0' : '#e59b24';
+    ctx.lineWidth = 4;
+    ctx.fillRect(8, 8, cvs.width - 16, cvs.height - 16);
+    ctx.strokeRect(8, 8, cvs.width - 16, cvs.height - 16);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = active ? '#0d0c0a' : '#f5ede0';
+    if (top && sub) {
+      ctx.font = '700 32px "JetBrains Mono", monospace';
+      ctx.fillText(top, cvs.width / 2, 34, cvs.width - 28);
+      ctx.font = '700 22px "JetBrains Mono", monospace';
+      ctx.fillText(sub, cvs.width / 2, 68, cvs.width - 28);
+    } else {
+      ctx.font = '700 32px "JetBrains Mono", monospace';
+      ctx.fillText(top || sub, cvs.width / 2, 48, cvs.width - 28);
+    }
+    sprite.userData._tex.needsUpdate = true;
+  };
   const showSites = (fx, stt) => {
     const list = sitesFor(stt, fx).filter(q => q.act);
-    siteMeshes.forEach((m, i) => {
-      const q = list[i]; m.visible = Boolean(q);
-      if (!q) { m.userData.hotUnits = null; return; }
-      m.material = mat(q.color || '#e59b24', q.on ? 1 : 0.28);
+    siteMeshes.forEach(({ m, ring, sprite }, i) => {
+      const q = list[i];
+      m.visible = Boolean(q);
+      ring.visible = Boolean(q);
+      if (sprite) sprite.visible = Boolean(q && (q.label || q.read));
+      if (!q) { m.userData.hotUnits = null; ring.userData.hotUnits = null; return; }
+      const sc = Math.max(q.r * U * 1.45, 0.028);
+      const col = q.color || '#e59b24';
+      m.material = mat(col, q.on ? 1 : 0.72);
       m.position.set(q.x * U, q.y * U, 0.13 * U);
-      m.scale.setScalar(Math.max(q.r * U, 0.012));
-      m.userData.hotUnits = toUnits(fx, q.x, q.y);
+      m.scale.setScalar(sc);
+      const hu = toUnits(fx, q.x, q.y);
+      m.userData.hotUnits = hu;
+      ring.material = mat(q.ring || q.on ? '#ffd166' : col, q.ring || q.on ? 1 : 0.9);
+      ring.position.set(q.x * U, q.y * U, 0.13 * U);
+      ring.scale.setScalar(sc);
+      ring.userData.hotUnits = hu;
+      if (sprite && (q.label || q.read)) {
+        paintTag(sprite, q.label || '', q.read || '', Boolean(q.on));
+        sprite.position.set(q.x * U, q.y * U - sc * 1.9, 0.16 * U);
+        sprite.scale.set(Math.max(0.11, sc * 4.2), Math.max(0.042, sc * 1.6), 1);
+      }
     });
   };
   showSites(f, state);

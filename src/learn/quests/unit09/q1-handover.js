@@ -83,7 +83,7 @@ const NH3 = { id: 'nh3', c: 0.00010 };
 
 const S1_CARDS = ['HCl', 'Cl⁻', 'H₂O', 'H₃O⁺', 'OH⁻'];
 const S4_ACIDS = ['HNO₃', 'H₂O', 'NH₄⁺', 'HCN'];
-const S4_LEFT = ['NH₃', 'H₃O⁺', 'CN⁻', 'OH⁻', 'NO₃⁻', 'NH₂⁻'];
+const S4_LEFT = ['NH₃', 'Cl⁻', 'CN⁻', 'OH⁻', 'NO₃⁻', 'NH₂⁻'];
 const S5_CARDS = ['HNO₃', 'NH₃', 'H₂O', 'NO₃⁻', 'NH₄⁺'];
 /** The three waters of stage 6: pure, with a little strong acid, with a little strong base (mol/L added). */
 const WATERS = [
@@ -106,11 +106,11 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'A hydrogen atom without its electron is a single proton, written H⁺. Watch the white hydrogen when the HCl is poured.'
     },
-    prompt: 'Which particle holds the proton after HCl is poured into water?',
+    prompt: 'When HCl is poured into water, which particle holds the proton (H⁺) afterwards?',
     widget,
     // The graded answer is where the proton is carried on the bench, not a card: the window shows the pour, the bench is the answer.
     table: (() => {
-      const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'acid', solute: HCL, label: 'Particle window', mark: 'solute' });
+      const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'acid', solute: HCL, label: 'Particle window', mark: 'solute', hideProducts: true, runLabel: 'Pour HCl into water' });
       const b = bench(BENCH_HCL);
       return phTable({
         pieces: b.pieces,
@@ -119,23 +119,23 @@ export const STAGES = [
       }, { w: 184, h: 76 });
     })(),
     hints: [
-      'Press "Pour" and watch the white hydrogen, then carry a proton on the proton bench.',
+      'Press "Pour HCl into water" and watch the white hydrogen, then drag a proton on the proton bench.',
       'Look at which particle holds the white hydrogen after the pour.',
       'Ask which particle in the window gained the white hydrogen.'
     ],
     check(state) {
       const m = benchMove(state);
-      if (m.none) return { ok: false, notYet: true, msg: 'Carry a proton to a seat.' };
+      if (m.none) return { ok: false, notYet: true, msg: 'Drag a proton onto a molecule.' };
       if (m.many) return { ok: false, msg: 'One proton moves in this pour; put the other back.' };
       if (m.right) return { ok: true };
       const n = pourRead(state.table, 'win').moved;
-      if (m.from === m.to) return { ok: false, msg: 'A particle cannot take its own proton.' };
-      return { ok: false, msg: `In the window the white hydrogens leave the chlorine in ${n} of 8 cells; the proton you moved is on the wrong particle and comes straight back.` };
+      if (m.from === m.to) return { ok: false, msg: 'The proton came from HCl. Which other particle could be holding it now?' };
+      return { ok: false, msg: `In the window, the white hydrogens leave chlorine in ${n} of 8 cells. Move a proton onto the particle that gained it.` };
     },
     reward: {
       log: 'Each HCl donated a proton to a water molecule.',
       title: 'Handing Over a Proton',
-      body: 'Each HCl donated (passed) a proton to a water molecule, making hydronium, H₃O⁺, and leaving Cl⁻. A substance that donates a proton is a Brønsted–Lowry acid.'
+      body: 'Each HCl passed a proton to water, making hydronium (H₃O⁺) and leaving Cl⁻. A proton donor is a Brønsted–Lowry acid.'
     }
   },
 
@@ -144,25 +144,25 @@ export const STAGES = [
     id: 's2-predict',
     title: 'Ammonia in Water',
     predict: true,
-    prompt: 'Which best describes what ammonia, NH₃, will do when it is poured into water?',
+    prompt: 'When ammonia (NH₃, which has no OH⁻) is poured into water, what will it do?',
     widget,
     table: phTable({
       pieces: [
-        note('nothing', GUESS.nothing, { x: 30, y: 9 }),
-        note('release', GUESS.release, { x: 80, y: 9 }),
-        note('take', GUESS.take, { x: 30, y: 28 }),
-        note('give', GUESS.give, { x: 80, y: 28 }),
-        note('stay', GUESS.stay, { x: 30, y: 47 })
+        note('nothing', GUESS.nothing, { x: 26, y: 10 }),
+        note('release', GUESS.release, { x: 76, y: 10 }),
+        note('take', GUESS.take, { x: 26, y: 30 }),
+        note('give', GUESS.give, { x: 76, y: 30 }),
+        note('stay', GUESS.stay, { x: 26, y: 50 })
       ],
-      // The lead-in: hydrochloric acid handing a proton to water, on a loop, with no control. It is the case of stage 1, not the one asked about.
-      fixtures: [pourFixture('clip', { x: 92, y: 88 }, { scene: 'acid', solute: HCL, label: 'Hydrochloric acid in water', w: 100, window: 14, loop: true })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 28 }, size: { w: 36, h: 14 } }] }
-    }, { h: 112 }),
+      // Pure water before ammonia is poured, on a loop with no control.
+      fixtures: [pourFixture('clip', { x: 90, y: 90 }, { scene: 'base', solute: NH3, label: 'Water before ammonia is added', w: 100, window: 14, loop: false, pour: false, hideConc: true, hideProducts: true })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 138, y: 30 }, size: { w: 46, h: 18 } }] }
+    }, { w: 170, h: 114 }),
     leadIn: true,
     hints: [
       'Place one of the five prediction cards in the slot.',
-      'Ask whether ammonia can only donate a proton, or whether water could donate one to it.',
-      'Ask what particles could be left in the water if ammonia changed it.'
+      'Consider whether ammonia can donate a proton, or whether water could donate one to ammonia.',
+      'Think about which particles would form if ammonia took a proton from water.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -180,10 +180,10 @@ export const STAGES = [
   {
     id: 's3-nh3',
     title: 'Ammonia Acts',
-    get prompt() { return guessLine('Which particle accepts a proton when ammonia is poured into water?', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Move a proton from one particle to another to show what happens when ammonia meets water.', recall(QUEST_KEY)); },
     widget,
     table: (() => {
-      const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'base', solute: NH3, label: 'Particle window', mark: 'water' });
+      const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'base', solute: NH3, label: 'Particle window', mark: 'water', hideProducts: true, hideConc: true, runLabel: 'Pour NH₃' });
       const b = bench(BENCH_NH3);
       return phTable({
         pieces: b.pieces,
@@ -192,18 +192,18 @@ export const STAGES = [
       }, { w: 184, h: 76 });
     })(),
     hints: [
-      'Press "Pour" and watch the white hydrogens, then carry a proton on the proton bench.',
+      'Press "Pour NH₃" and watch which way the white water hydrogens move, then drag that proton to the other particle.',
       'Follow the white hydrogens of the water and see which particle holds them afterwards.',
       'Count the hydrogens on ammonia before and after the pour to see which way the proton moved.'
     ],
     check(state) {
       const m = benchMove(state);
-      if (m.none) return { ok: false, notYet: true, msg: 'Carry a proton to a seat.' };
+      if (m.none) return { ok: false, notYet: true, msg: 'Drag a proton onto the molecule that holds it.' };
       if (m.many) return { ok: false, msg: 'One proton moves in this pour; put the other back.' };
       if (m.right) return { ok: true };
       const n = pourRead(state.table, 'win').moved;
-      if (m.from === m.to) return { ok: false, msg: 'A particle cannot take its own proton.' };
-      return { ok: false, msg: `In the window, ${n} of 8 ammonia particles changed, and each went from three hydrogens to four; the proton you moved comes straight back.` };
+      if (m.from === m.to) return { ok: false, msg: 'That proton already belongs to that particle. Move a proton from one particle to the other.' };
+      return { ok: false, msg: `In the window, ${n} of 8 ammonia molecules gained a proton from water; move the proton the right way.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
@@ -224,17 +224,17 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'What is left of an acid after it donates a proton is its conjugate base. The two differ by one proton.'
     },
-    prompt: 'What is the conjugate base of each acid?',
+    prompt: 'Match each acid to its conjugate base (what remains after it donates one proton).',
     widget,
     table: (() => {
-      const slots = S4_ACIDS.map((a, i) => ({ id: `p${i}`, label: ' ', at: { x: 68, y: 12 + i * 18 }, size: { w: 22, h: 11 } }));
+      const slots = S4_ACIDS.map((a, i) => ({ id: `p${i}`, label: 'Leftover base', at: { x: 68, y: 12 + i * 20 }, size: { w: 22, h: 12 } }));
       return phTable({
         pieces: [
-          ...S4_ACIDS.map((a, i) => formulaChip(`a-${i}`, a, { x: 28, y: 12 + i * 18 }, { fixed: true })),
-          ...S4_LEFT.map((f, i) => formulaChip(`l-${slugOf(f)}`, f, { x: 112 + (i % 2) * 26, y: 12 + Math.floor(i / 2) * 20 }))
+          ...S4_ACIDS.map((a, i) => formulaChip(`a-${i}`, a, { x: 26, y: 12 + i * 20 }, { fixed: true })),
+          ...S4_LEFT.map((f, i) => formulaChip(`l-${slugOf(f)}`, f, { x: 118 + (i % 2) * 28, y: 14 + Math.floor(i / 2) * 22 }))
         ],
         zones: { slots }
-      }, { w: 152, h: 78 });
+      }, { w: 164, h: 88 });
     })(),
     hints: [
       'Drag a formula card from the right into the slot beside each acid.',
@@ -247,7 +247,7 @@ export const STAGES = [
       S4_ACIDS.forEach((a, i) => {
         const c = pieceIn(state.table, `p${i}`);
         if (!c) { empty++; return; }
-        if (!isConjugate(a, c.label)) bad.push(`${describe(c.label)}, beside ${describe(a)}.`);
+        if (!isConjugate(a, c.label)) bad.push(`${describe(c.label)}, while ${describe(a)}. A conjugate base has exactly one hydrogen fewer.`);
       });
       if (empty === S4_ACIDS.length) return { ok: false, notYet: true, msg: 'Lay a formula card beside an acid.' };
       if (bad.length) return { ok: false, msg: bad[0] };
@@ -268,13 +268,13 @@ export const STAGES = [
     prompt: 'Which substance acts as an acid in one window and as a base in the other?',
     widget,
     table: (() => {
-      const a = pourFixture('winA', { x: 46, y: 32 }, { scene: 'acid', solute: HNO3, label: 'Nitric acid', w: 88, window: 28, mark: 'water' });
-      const b = pourFixture('winB', { x: 138, y: 32 }, { scene: 'base', solute: NH3, label: 'Ammonia', w: 88, window: 28, mark: 'water' });
+      const a = pourFixture('winA', { x: 46, y: 32 }, { scene: 'acid', solute: HNO3, label: 'Nitric acid', w: 88, window: 28, mark: 'water', hideProducts: true });
+      const b = pourFixture('winB', { x: 138, y: 32 }, { scene: 'base', solute: NH3, label: 'Ammonia', w: 88, window: 28, mark: 'water', hideProducts: true });
       return phTable({
-        pieces: S5_CARDS.map((f, i) => formulaChip(`c-${slugOf(f)}`, f, { x: 20 + i * 26, y: 74 })),
+        pieces: S5_CARDS.map((f, i) => formulaChip(`c-${slugOf(f)}`, f, { x: 16 + i * 24, y: 74 })),
         fixtures: [a, b],
-        zones: { slots: [{ id: 'both', label: 'Acts both ways', at: { x: 160, y: 74 }, size: { w: 30, h: 12 } }] }
-      }, { w: 184, h: 86 });
+        zones: { slots: [{ id: 'both', label: 'Acts both ways (amphoteric)', at: { x: 160, y: 74 }, size: { w: 28, h: 12 } }] }
+      }, { w: 186, h: 88 });
     })(),
     hints: [
       'Press "Pour" on both windows, then drag a formula card into the slot.',
@@ -306,9 +306,9 @@ export const STAGES = [
     title: 'Ions in Pure Water',
     briefing: {
       speaker: 'Vess',
-      body: 'Pure water holds a little H₃O⁺ and OH⁻ from autoionization, when one water molecule donates a proton to another. The board compares pure water with acid and base added, showing their concentrations (moles per litre).'
+      body: 'Pure water holds small amounts of H₃O⁺ and OH⁻ from autoionization, when one water molecule donates a proton to another. The board compares pure water with acidic and basic solutions.'
     },
-    prompt: 'Which combination of the two concentrations is the same for all three waters?',
+    prompt: 'Arrange the two cards on the board to get the same number for all three solutions.',
     widget,
     table: (() => {
       const rig = rigParts('rig', { x: 86, y: 32 }, {
@@ -337,7 +337,7 @@ export const STAGES = [
       return {
         log: 'H₃O⁺ times OH⁻ came to one number in every water.',
         title: 'Autoionization and Kw',
-        body: `[H₃O⁺] × [OH⁻] is ${sci(KW25, 2)} in every water at 25 °C. That constant is Kw, and in pure water each ion is ${sci(v.h, 2)} mol/L.`
+        body: `[H₃O⁺] × [OH⁻] equals ${sci(KW25, 2)} in every solution at 25 °C. That constant is Kw, and in pure water each ion is ${sci(v.h, 2)} mol/L.`
       };
     }
   },
@@ -345,12 +345,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     id: 's7-lewis',
-    title: 'Without a Proton',
+    title: 'Without a Proton (Extra)',
     briefing: {
       speaker: 'Vess',
       body: 'Not every acid–base reaction moves a proton. The Mark dial lets you follow either the hydrogens or the lone pairs (unshared electron pairs).'
     },
-    prompt: 'What moves when boron trifluoride, BF₃, meets ammonia?',
+    prompt: 'When BF₃ gas is mixed with ammonia (NH₃), what moves between the two particles?',
     widget,
     table: (() => {
       const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'lewis', label: 'Particle window' });
@@ -361,7 +361,7 @@ export const STAGES = [
     hints: [
       'Set the "Mark" dial, press "Pour", then set the "What moved" dial.',
       'Mark the hydrogens of NH₃, then the lone pairs, and compare the windows before and after.',
-      'Follow each mark and see which one ends up between the two molecules.'
+      'Watch which marked feature ends up shared between the two molecules.'
     ],
     check(state) {
       const v = dialValue(state.table, 'verdict');
@@ -373,7 +373,7 @@ export const STAGES = [
     reward: {
       log: 'BF₃ accepted a lone pair from NH₃; no proton moved.',
       title: 'Lewis Acid and Base',
-      body: 'Nitrogen shared its lone pair with boron, and no proton moved. A substance that accepts an electron pair is a Lewis acid; one that donates it is a Lewis base.'
+      body: 'Nitrogen shared its lone pair with boron. A substance that accepts an electron pair is a Lewis acid; one that donates it is a Lewis base.'
     }
   }
 ];
@@ -403,7 +403,7 @@ export const MISSES = [
   [put('bench.h.h2o', sl('bench.take.hcl'))],
   [],
   [put('bench.h.nh3', sl('bench.take.h2o'))],
-  [put('l-' + slugOf('H₃O⁺'), sl('p1'))],
+  [put('l-' + slugOf('Cl⁻'), sl('p1'))],
   [put(chip('NH₃'), sl('both'))],
   [put('t-H', slotT(1))],
   [dial('verdict', 'value', 1)]

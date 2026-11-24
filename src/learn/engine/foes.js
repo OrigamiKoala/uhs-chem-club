@@ -210,7 +210,7 @@ export const SPECIES = {
 
   'the tipper': {
     name: 'The Tipper',
-    counter: 'Trial missed: the reading does not match what that pan of the salt works shows.',
+    counter: 'The Tipper strikes back — check the vessel readings and try again.',
     knockback: 'Knocked back. The Tipper swings level again, but every reading on your pans remains.',
     hit: 'The Tipper stops rocking and settles level on its pivot, its two pans balanced.',
     lines: {

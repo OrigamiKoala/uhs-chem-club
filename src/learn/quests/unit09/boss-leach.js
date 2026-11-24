@@ -183,8 +183,8 @@ export const STAGES = [
     },
     hints: [
       'Use the pH meter on the one flask with a seat, then drag the three cards onto the rail.',
-      'Compare the concentration printed on each flask with the number of its units that have handed over a proton.',
-      'Compare both the concentration on each flask and the share ionized in its window against the one flask the meter reads.'
+      'Compare the concentration on each flask with how many of its units have ionized.',
+      'Use the concentration and percent ionized in each window to compare the flasks against the metered one.'
     ],
     check(state) {
       const order = state.table.zones.rail.order.map(id => id.slice(2));
@@ -337,7 +337,7 @@ export const STAGES = [
       return {
         log: 'The ratio came from the distance above the pKa.',
         title: 'A Buffer to Order',
-        body: `A pH of ${fmt(P5_TARGET, 2)} lies ${fmt(P5_TARGET - P5_PKA, 2)} above the pKa, so the ratio of acetate to acetic acid is 10 to the power ${fmt(P5_TARGET - P5_PKA, 2)}, which is ${fmt(r, 2)}. A flask made to that ratio holds the pH the Leach asked for.`
+        body: `pH ${fmt(P5_TARGET, 2)} is ${fmt(P5_TARGET - P5_PKA, 2)} above the pKa, so the acetate-to-acetic-acid ratio is 10^${fmt(P5_TARGET - P5_PKA, 2)} = ${fmt(r, 2)}.`
       };
     }
   }
@@ -357,7 +357,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase asked a flask a question the Fifth never asked: is it neutral, how strong, acidic or basic, which dye, what ratio. Each one has an answer that can be read off a meter.'
+      body: 'Every phase tested what the Fifth ignored: whether a sample is neutral, how strong the acid is, which salt shifts pH, which indicator fits, and what buffer ratio holds.'
     },
     {
       heading: 'Next',

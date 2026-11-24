@@ -652,7 +652,7 @@
         {
           "id": "q3-change#b2",
           "quest": "q3-change",
-          "question": "A sealed vessel holds 10.0 g of wood chips and 12.0 g of oxygen. The wood burns completely. What is the mass of the sealed vessel afterwards?",
+          "question": "A sealed vessel holds 10.0 g of wood shavings and 12.0 g of oxygen. The wood burns completely. What is the mass of the sealed vessel afterwards?",
           "options": [
             {
               "id": "a",
@@ -672,7 +672,7 @@
             }
           ],
           "answer": "c",
-          "explanation": "Nothing enters or leaves a sealed vessel, so its mass is conserved: the carbon dioxide and water vapour made have a total mass of 10.0 + 12.0 = 22.0 g."
+          "explanation": "Nothing enters or leaves a sealed vessel, so its mass is conserved: the carbon dioxide and water vapor made have a total mass of 10.0 + 12.0 = 22.0 g."
         }
       ],
       "worked": {
@@ -1119,7 +1119,7 @@
             "explain": "Chromium's number falls from +6 to +3, so electrons are gained and the ion is reduced."
           }
         ],
-        "finish": "Add the oxygens, take the total from the charge, share it out, then compare the numbers before and after."
+        "finish": "Find the total from the oxygens, subtract it from the ion's charge, divide among the chromium atoms, then compare the oxidation numbers before and after."
       }
     },
     "q9-hsab": {

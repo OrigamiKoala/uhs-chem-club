@@ -140,7 +140,9 @@ export class TableGestures {
         ? radiusOf(kit, p) * 0.7
         : Math.max(radiusOf(kit, p) * generous, this.view.pxToUnits(GRAB_MIN_PX));
       const d = Math.hypot(c.x - u.x, c.y - u.y);
-      if (d <= reach && (!best || d < best.d)) best = { id: p.id, d };
+      const rect = kit.kinds?.[p.kind]?.rect;
+      const inRectHit = rect && Math.abs(u.x - c.x) <= rect.hw * 1.15 && Math.abs(u.y - c.y) <= rect.hh * 1.25;
+      if ((d <= reach || inRectHit) && (!best || d < best.d)) best = { id: p.id, d };
       // A tool that lies ON another piece (a lens over its dish: `kinds.x.onTop`) is the top thing there: a press on its own
       // body takes it, never the piece underneath, so it can always be picked up again.
       if (kit.kinds?.[p.kind]?.onTop && p.joinedTo.length && d <= radiusOf(kit, p) && (!top || d < top.d)) top = { id: p.id, d };
@@ -196,11 +198,16 @@ export class TableGestures {
     for (const f of Object.values(this.state.fixtures)) {
       const lay = fixtureLayout(f);
       const pad = this.view.pxToUnits(10);
+      let bestDial = null;
       for (const d of lay.dials) {
-        if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && Math.abs(u.y - d.y) <= Math.max(this.view.pxToUnits(14), d.grab || 0)) {
-          return { kind: 'dial', fixture: f.id, dial: d.name, track: d };
+        const up = Math.max(this.view.pxToUnits(14), d.grab || 0);
+        const dn = Math.max(this.view.pxToUnits(14), d.grab || 0);
+        if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && u.y >= d.y - up && u.y <= d.y + dn) {
+          const dist = Math.abs(u.y - d.y);
+          if (!bestDial || dist < bestDial.dist) bestDial = { dist, hit: { kind: 'dial', fixture: f.id, dial: d.name, track: d } };
         }
       }
+      if (bestDial) return bestDial.hit;
       if (f.kind === 'view' || f.props?.joystick) {
         if (f.dials?.slice) {
           const rx = 33;
@@ -422,7 +429,7 @@ export class TableGestures {
     }
     const at = { x: u.x + g.off.x, y: u.y + g.off.y };
     const rail = this.state.zones.rail;
-    const gap = rail && rail.order.includes(g.id) && zoneAt(this.state, at)?.kind === 'rail'
+    const gap = rail && zoneAt(this.state, at)?.kind === 'rail'
       ? railIndexAt(this.state, at.x, g.id)
       : null;
     this.view.setDrag?.({ id: g.id, at }, gap);
@@ -435,7 +442,19 @@ export class TableGestures {
     // A let-go knob settles on the step its dial took.
     if (clearGlide()) this.glided();
     if (!g || !this.state) return;
-    if (g.kind === 'dial') return;
+    if (g.kind === 'dial') {
+      // A tap on the label above a two-position switch dial flips it even when clicked over its current end.
+      if (!g.moved && g.start && g.start.y < g.track.y - 0.8) {
+        const d = this.state.fixtures[g.fixture]?.dials?.[g.dial];
+        const step = d?.step || 1;
+        if (d && Math.abs((d.max - d.min) - step) < 1e-6 && d.value === g.startValue) {
+          const next = d.value === d.min ? d.max : d.min;
+          this.view.dispatch({ setDial: { fixture: g.fixture, dial: g.dial, value: next } });
+          this.view.changed?.();
+        }
+      }
+      return;
+    }
     if (g.kind === 'cloudRotate') {
       if (!g.moved) {
         const vf = this.state.fixtures[g.view];

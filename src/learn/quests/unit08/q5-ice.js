@@ -154,7 +154,7 @@ export const STAGES = [
       widget,
       table: pansTable({
         pieces: b.chips,
-        fixtures: [b.fixture, barsFixture('bars', BARS_AT, { species: S1_COLS, K: HI.K, max: 2, title: 'Vessel' }), plaque([HI.eq, `K = ${HI.K} at ${HI.T} K`, startLine(HI_1)])],
+        fixtures: [b.fixture, barsFixture('bars', BARS_AT, { species: S1_COLS, K: HI.K, max: 2, title: 'Vessel' }), plaque([`${HI.eq} · K=[HI]²÷([H₂][I₂])`, `K = ${HI.K} at ${HI.T} K`, startLine(HI_1)])],
         zones: { slots: b.slots }
       }, TALL),
       hints: [
@@ -177,8 +177,8 @@ export const STAGES = [
       },
       reward: {
         log: 'Taking the square root of both sides solved for x.',
-        title: 'A Perfect Square',
-        body: 'Taking the square root of both sides gives x = 0.786 M, so HI = 1.57 M at equilibrium.'
+        title: 'Square-Root Case',
+        body: 'Because both reactants started equal, both sides are squares: taking the square root gives x = 0.786 M, so HI = 1.57 M at equilibrium.'
       }
     };
   })(),
@@ -193,7 +193,7 @@ export const STAGES = [
     table: pansTable({
       pieces: [note('half', GUESS.half, { x: 30, y: 14 }), note('few', GUESS.few, { x: 78, y: 14 }), note('most', GUESS.most, { x: 30, y: 36 }), note('none', GUESS.none, { x: 78, y: 36 })],
       fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'react', { title: 'A reaction starting', kf: 0.02, kr: 0.2, seed: 7, span: 36, h: 32 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
       'Drag one of the four prediction cards into the slot.',
@@ -234,7 +234,7 @@ export const STAGES = [
       widget,
       table: pansTable({
         pieces: b.chips,
-        fixtures: [b.fixture, barsFixture('bars', BARS_AT, { species: cols, K: N2.K, max: 1, title: 'Vessel' }), plaque([N2.eq, `K = ${N2.K.toFixed(4)} at ${N2.T} K`, startLine(N2_START)])],
+        fixtures: [b.fixture, barsFixture('bars', BARS_AT, { species: cols, K: N2.K, max: 1, title: 'Vessel' }), plaque([`${N2.eq} · K=[NO₂]²÷[N₂O₄]`, `K = ${N2.K.toFixed(4)} at ${N2.T} K`, startLine(N2_START)])],
         zones: { slots: b.slots }
       }, TALL),
       hints: [
@@ -265,7 +265,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-fair',
-    title: 'Is the Shortcut Fair?',
+    title: 'When Small-x Is Fair',
     prompt: 'In which vessel is the small-x approximation fair?',
     widget,
     table: pansTable({
@@ -286,12 +286,12 @@ export const STAGES = [
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === FAIR) return { ok: true };
-      return { ok: false, msg: `On Vessel ${v} the solid Reactant bar settles below the 5% mark.` };
+      return { ok: false, msg: `Vessel ${v}'s Reactant bar falls past the 5% line, so the small-x approximation is not fair.` };
     },
     reward: {
       log: 'The approximation held where under 5% reacted.',
-      title: 'When the Shortcut Is Fair',
-      body: 'Only where the reactant bar stays within 5% of its start. Where more reacts, the full equation is needed.'
+      title: 'When Small-x Is Fair',
+      body: 'The small-x approximation is fair only where the reactant stays within 5% of its start. Where more reacts, the full equation is needed.'
     }
   },
 

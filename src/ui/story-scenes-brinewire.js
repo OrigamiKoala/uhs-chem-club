@@ -23,7 +23,7 @@ function axis(ctx, y) {
     line(ctx, xOf(v), y - 6, xOf(v), y + 6, C.steel, 2);
     text(ctx, `${v < 0 ? '−' : ''}${Math.abs(v)}`, xOf(v), y + 26, { size: 18, color: C.dust });
   }
-  text(ctx, 'volts against the hydrogen reference', (AX.x0 + AX.x1) / 2, y + 56, { size: 17, color: C.dim });
+  text(ctx, 'volts against the hydrogen reference', (AX.x0 + AX.x1) / 2, y + 88, { size: 17, color: C.dim });
   line(ctx, xOf(0), y - 70, xOf(0), y + 6, C.amber, 2, [4, 5]);
   text(ctx, 'reference', xOf(0), y - 84, { size: 17, color: C.amber });
 }
@@ -41,19 +41,19 @@ function marker(ctx, id, y, p, label = true, dy = 0) {
 function cellGap(ctx, w, h, t) {
   ground(ctx, w, h);
   const y = 330;
-  if (t <= 0.26) {
+  if (t <= 0.22) {
     text(ctx, 'Four metals against the same reference', w / 2, 36, { size: 24, color: C.dust });
     axis(ctx, y);
     ['mg', 'zn', 'cu', 'ag'].forEach((id, i) => {
-      const p = ease(win(t, 0.02 + i * 0.05, 0.08 + i * 0.05));
+      const p = ease(win(t, 0.02 + i * 0.04, 0.07 + i * 0.04));
       if (p <= 0) return;
       const x = marker(ctx, id, y, p);
-      if (p > 0.9) text(ctx, `${fmt(vOf(x), 2)} V`, x, y - 8 + 54, { size: 19, color: C.amber, weight: 700 });
+      if (p > 0.9) text(ctx, `${fmt(vOf(x), 2)} V`, x, y + 54, { size: 19, color: C.amber, weight: 700 });
     });
     return;
   }
-  if (t <= 0.52) {
-    const p = ease(win(t, 0.3, 0.46));
+  if (t <= 0.44) {
+    const p = ease(win(t, 0.24, 0.40));
     text(ctx, 'A cell takes its voltage from the gap between two readings', w / 2, 36, { size: 24, color: C.dust });
     axis(ctx, y);
     const xa = marker(ctx, 'mg', y, 1); const xb = marker(ctx, 'ag', y, 1);
@@ -67,8 +67,8 @@ function cellGap(ctx, w, h, t) {
     }
     return;
   }
-  if (t <= 0.76) {
-    const p = ease(win(t, 0.55, 0.68));
+  if (t <= 0.66) {
+    const p = ease(win(t, 0.46, 0.62));
     text(ctx, 'The zinc and copper cell, written once and twice over', w / 2, 36, { size: 24, color: C.dust });
     const V = cellE0('cu', 'zn');
     [[1, 'Once', 230], [2, 'Twice over', 700]].forEach(([k, title, cx]) => {
@@ -89,19 +89,20 @@ function cellGap(ctx, w, h, t) {
     });
     return;
   }
-  const p = ease(win(t, 0.78, 0.9));
-  text(ctx, 'The zinc and silver cell', w / 2, 36, { size: 24, color: C.dust });
+  const showK = t > 0.82;
+  const p = ease(win(t, showK ? 0.83 : 0.68, showK ? 0.93 : 0.79));
+  text(ctx, showK ? 'Voltage and equilibrium (K)' : 'Voltage and energy released (ΔG°)', w / 2, 36, { size: 24, color: C.dust });
   const x0 = xOf(METALS.zn.E0); const x1 = xOf(METALS.ag.E0);
-  axis(ctx, 250);
-  marker(ctx, 'zn', 250, 1); marker(ctx, 'ag', 250, 1);
-  line(ctx, x0, 238, x0 + (x1 - x0) * p, 238, C.amber, 5);
+  axis(ctx, 240);
+  marker(ctx, 'zn', 240, 1); marker(ctx, 'ag', 240, 1);
+  line(ctx, x0, 228, x0 + (x1 - x0) * p, 228, C.amber, 5);
   const E0 = vOf(x0 + (x1 - x0) * p) - vOf(x0);
   const n = 2;
-  for (let i = 0; i < n; i++) disc(ctx, 330 + i * 60, 400, 15, C.pale);
-  text(ctx, `${n} electrons moved`, 360, 440, { size: 20, color: C.dust });
+  for (let i = 0; i < n; i++) disc(ctx, 290 + i * 60, 405, 15, C.pale);
+  text(ctx, `${n} electrons moved`, 320, 445, { size: 20, color: C.dust });
   if (p > 0.9) {
-    text(ctx, `ΔG° = −nFE° = ${fmt(deltaG0(E0, n), 0)} kJ`, 650, 392, { size: 26, color: C.green, weight: 700 });
-    text(ctx, `log K = nE° ÷ 0.0592 = ${fmt(logK(E0, n), 1)}`, 650, 440, { size: 26, color: C.amber, weight: 700 });
+    if (!showK) text(ctx, `ΔG° = −nFE° = ${fmt(deltaG0(E0, n), 0)} kJ`, 640, 415, { size: 28, color: C.green, weight: 700 });
+    else text(ctx, `log K = nE° ÷ 0.0592 = ${fmt(logK(E0, n), 1)}`, 640, 415, { size: 28, color: C.amber, weight: 700 });
   }
 }
 

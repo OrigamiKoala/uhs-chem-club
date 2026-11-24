@@ -39,7 +39,7 @@ const TALL = { h: 74 };
 
 /* ------------------------------------------------------------------ the numbers */
 
-const T1 = { right: '6.70', a: '−0.150', b: '0.850', c: '0.0225' };
+const T1 = { right: '6.70', a: '0.300', b: '0.850', c: '0.0225' };
 const T3 = { right: fmtK(kScale(Q4.so3.K, 2)), a: fmtK(2 * Q4.so3.K), b: fmtK(Q4.so3.K), c: fmtK(Q4.so3.K / 2) };
 const K4 = kAdd(Q4.wg1.K, Q4.wg2.K);
 const T4 = { right: fmtK(K4), a: fmtK(Q4.wg1.K + Q4.wg2.K), b: fmtK(Q4.wg1.K / Q4.wg2.K), c: fmtK(Q4.wg1.K - Q4.wg2.K) };
@@ -126,7 +126,7 @@ export const STAGES = [
     table: pansTable({
       pieces: [note('doubles', GUESS.doubles, { x: 30, y: 14 }), note('same', GUESS.same, { x: 78, y: 14 }), note('squares', GUESS.squares, { x: 30, y: 36 }), note('halves', GUESS.halves, { x: 78, y: 36 })],
       fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'react', { title: 'A settled vessel', from: 110, kf: 0.1, kr: 0.05, seed: 6, span: 36, h: 32 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
       'Drag one of the four prediction cards into the slot.',
@@ -152,6 +152,10 @@ export const STAGES = [
   {
     id: 's3-double',
     title: 'Every Coefficient Doubled',
+    briefing: {
+      speaker: 'Vess',
+      body: 'Use the K reader on H₂ + I₂ ⇌ 2 HI with "Larger" to see what doubling coefficients does to K, then apply that rule to 2 SO₂ + O₂ ⇌ 2 SO₃.'
+    },
     get prompt() {
       const g = guessLine();
       const q = 'What is K for 4 SO₂ + 2 O₂ ⇌ 4 SO₃ when K is 280 for 2 SO₂ + O₂ ⇌ 2 SO₃?';
@@ -194,6 +198,10 @@ export const STAGES = [
   {
     id: 's5-add',
     title: 'Two Reactions in a Row',
+    briefing: {
+      speaker: 'Vess',
+      body: 'Test how two reactions combine on the K reader using the nitrogen pair, then apply the same rule to the two carbon reactions that add up to C(s) + 2 H₂O ⇌ CO₂ + 2 H₂.'
+    },
     prompt: 'What is K for C(s) + 2 H₂O ⇌ CO₂ + 2 H₂?',
     widget,
     table: pansTable({
@@ -205,7 +213,7 @@ export const STAGES = [
         ...tiles([T4.a, T4.c, T4.right, T4.b])
       ],
       fixtures: [checkAt(Q4.mixNO, ['N₂', 'O₂', 'NO', 'NO₂'], 52, 32)],
-      zones: { trays: [{ ...CHK_TRAY, at: { x: 82, y: 19 }, size: { w: 58, h: 24 } }], slots: [answerSlot('K of net reaction')] }
+      zones: { trays: [{ ...CHK_TRAY, at: { x: 82, y: 19 }, size: { w: 58, h: 24 } }], slots: [answerSlot('K of combined reaction')] }
     }, TALL),
     hints: [
       'Lay both N₂ + O₂ ⇌ 2 NO and 2 NO + O₂ ⇌ 2 NO₂ on the K reader and press "Read K".',
@@ -221,7 +229,7 @@ export const STAGES = [
     reward: {
       log: 'Two added reactions multiplied their K values.',
       title: 'Adding Reactions',
-      body: 'The CO made by the first step is used by the second, so it cancels from the reaction and from the ratio: K is K₁ × K₂.'
+      body: 'Add two reactions and multiply their K values: K = K₁ × K₂. Here CO made by the first step is used by the second, so it cancels out.'
     }
   }
 ];

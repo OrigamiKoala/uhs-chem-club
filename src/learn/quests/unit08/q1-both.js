@@ -82,9 +82,9 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Press "Run" on the vessel until the lines stop moving, then set the answer dial.',
-      'Watch the orange butane line and blue isobutane line until both flatten.',
-      'Check the counts under the graph once the lines are flat.'
+      'Watch the orange butane and blue isobutane lines as you press "Run" until both flatten.',
+      'See whether the orange butane line drops to zero or levels off above zero.',
+      'Check the counts under the graph once both lines are flat.'
     ],
     check(state) {
       const t = state.table;
@@ -114,7 +114,7 @@ export const STAGES = [
     table: pansTable({
       pieces: [predictCard('stopped', { x: 30, y: 14 }), predictCard('allB', { x: 78, y: 14 }), predictCard('both', { x: 30, y: 36 }), predictCard('oneway', { x: 78, y: 36 })],
       fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'react', { title: 'A reaction starting', kf: 0.08, kr: 0.04, seed: 5, span: 36, h: 32 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
       'Drag one of the four cards into the slot.',
@@ -162,7 +162,7 @@ export const STAGES = [
       if (v === 3) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
       if (v === 2) return { ok: true };
       const r = panRead(state.table, 'pan');
-      return { ok: false, msg: `The ringed particles changed colour ${ringedChanges(r)} times in the strip, and the count of each change is above zero.` };
+      return { ok: false, msg: `The ringed particles switched colour ${ringedChanges(r)} times—both orange to blue and blue to orange kept happening.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
@@ -170,7 +170,7 @@ export const STAGES = [
       return {
         log: 'Particles kept changing in a settled vessel.',
         title: 'Dynamic Equilibrium',
-        body: `${verdict}Butane keeps turning into isobutane and isobutane keeps turning back, at the same rate (changes per second), so the amounts hold steady. This is dynamic equilibrium.`
+        body: `${verdict}Butane keeps turning into isobutane and isobutane keeps turning back, at about the same rate (changes per second), so the amounts hold steady. This is dynamic equilibrium.`
       };
     }
   },
@@ -179,7 +179,7 @@ export const STAGES = [
   {
     id: 's4-from-b',
     title: 'Isobutane Alone',
-    prompt: 'Starting from isobutane alone, does the vessel settle with more, less or the same butane as before?',
+    prompt: 'Starting from isobutane alone, does the vessel settle with more, less or the same butane as the dashed Stage 1 line?',
     widget,
     table: pansTable({
       fixtures: [
@@ -201,7 +201,7 @@ export const STAGES = [
       const same = Math.abs(r.settledA - LEVEL_A) <= TOL;
       const truth = same ? 2 : r.settledA > LEVEL_A ? 3 : 1;
       if (v === truth) return { ok: true };
-      return { ok: false, msg: `The solid orange line flattens near ${Math.round(r.settledA)} particles of butane; the dashed one flattened near ${LEVEL_A}.` };
+      return { ok: false, msg: `Both the solid orange line and the dashed Stage 1 line wobble around the same level (near ${LEVEL_A} butane particles).` };
     },
     reward: {
       log: 'Isobutane alone settled at the same amounts.',
@@ -218,7 +218,7 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'The substance a reaction starts with is the reactant, and what it makes is the product.'
     },
-    prompt: 'Which statement do these two settled vessels show to be false?',
+    prompt: 'Which statement is NOT true of these two settled vessels?',
     widget,
     table: pansTable({
       pieces: [
@@ -230,24 +230,24 @@ export const STAGES = [
         panFixture('p1', { x: 28, y: 25 }, { ...P_LEVEL, b0: 0, seed: 41, start: 100, title: 'Vessel 1', ...BUTANE_NAMES, ...compact }),
         panFixture('p2', { x: 78, y: 25 }, { kf: 0.1, kr: 0.1, b0: 0, seed: 42, start: 100, title: 'Vessel 2', aName: 'R', bName: 'P', ...compact })
       ],
-      zones: { slots: [{ id: 'false', label: 'False', at: { x: 126, y: 26 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'false', label: 'Not true', at: { x: 126, y: 26 }, size: { w: 46, h: 16 } }] }
     }, { h: 70 }),
     hints: [
-      'Drag the false statement card into the slot.',
-      'Check where the orange and blue lines end on each vessel, and compare the count of each change.',
-      'Test each statement against both vessels and find the one that disagrees.'
+      'Compare where the orange and blue lines level off in Vessel 1 and Vessel 2.',
+      'Check whether the two lines end at the same height on Vessel 1, and check the change counts below.',
+      'Find the one statement that Vessel 1 proves wrong.'
     ],
     check(state) {
       const c = pieceIn(state.table, 'false');
       if (!c) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
       if (c.id === 'c-equal') return { ok: true };
-      if (c.id === 'c-both') return { ok: false, msg: 'On both vessels, the count of each change under the graph is above zero.' };
+      if (c.id === 'c-both') return { ok: false, msg: 'Both vessels still show changes running in both directions under the graph.' };
       return { ok: false, msg: 'On both vessels, the forward and reverse change counts are close to each other.' };
     },
     reward: {
       log: 'The amounts were not equal; the rates were about the same.',
       title: 'Not Equal Amounts',
-      body: 'At equilibrium the two rates are equal, but the amounts are not: Vessel 1 holds about twice as much isobutane as butane.'
+      body: 'At equilibrium the two rates match, not necessarily the amounts: Vessel 1 holds about twice as much isobutane as butane, while Vessel 2 settles near equal.'
     }
   },
 
@@ -269,15 +269,15 @@ export const STAGES = [
       ],
       zones: {
         slots: [
-          { id: 'l1', label: 'Vessel 1 is written', at: { x: 28, y: 54 }, size: { w: 28, h: 8 } },
-          { id: 'l2', label: 'Vessel 2 is written', at: { x: 78, y: 54 }, size: { w: 28, h: 8 } }
+          { id: 'l1', label: 'Vessel 1 is written', at: { x: 28, y: 54 }, size: { w: 32, h: 10 } },
+          { id: 'l2', label: 'Vessel 2 is written', at: { x: 78, y: 54 }, size: { w: 32, h: 10 } }
         ]
       }
-    }),
+    }, { h: 68 }),
     hints: [
-      'Press "Run" on each vessel, then lay an arrow card under each one.',
-      'Compare the reverse change count on the two vessels and see where each blue line ends.',
-      'A reaction where product never turns back takes →; one that runs both ways takes ⇌.'
+      'Compare the P→R count under each graph: it shows whether product turns back into reactant.',
+      'See which vessel runs out of reactant completely and which keeps both.',
+      'A one-way reaction takes →; a reversible reaction that runs both ways takes ⇌.'
     ],
     check(state) {
       const t = state.table;
@@ -285,13 +285,13 @@ export const STAGES = [
       if (!a || !b) return { ok: false, notYet: true, msg: 'Lay a card on each vessel.' };
       if (a.id === 'one' && b.id === 'two') return { ok: true };
       return a.id !== 'one'
-        ? { ok: false, msg: 'Vessel 1\'s reverse change count is 0 and its blue line ends at the top of the graph.' }
-        : { ok: false, msg: 'Vessel 2\'s reverse change count is above zero and its blue line stops below the top of the graph.' };
+        ? { ok: false, msg: 'In Vessel 1 nothing turns back into reactant (P→R is 0), and all the reactant is used up.' }
+        : { ok: false, msg: 'In Vessel 2 product keeps turning back into reactant (P→R is above 0).' };
     },
     reward: {
       log: 'The vessel with changes both ways takes the double arrow.',
       title: 'Reversible Reaction',
-      body: 'In Vessel 2 the product turns back, so it is written with a double arrow, ⇌. In Vessel 1 nothing turns back: that reaction finishes, and is not at equilibrium.'
+      body: 'In Vessel 2 product turns back, so it is written with a double arrow, ⇌. In Vessel 1 nothing turns back, so all the reactant is used up.'
     }
   }
 ];

@@ -84,8 +84,8 @@ export const STAGES = [
   {
     id: 's1-number',
     title: 'Before and After',
-    briefing: { speaker: SPEAKER, body: 'An oxidation number is the charge an atom has, or would have if its shared electrons went to the atom that pulls them harder. An uncombined element is 0; a lone ion is its charge.' },
-    prompt: 'Which particles change oxidation number when zinc meets copper(II) sulfate?',
+    briefing: { speaker: SPEAKER, body: 'An oxidation number tracks electrons lost (+) or gained (−). A neutral metal atom is 0; an ion\'s number equals its charge (Cu²⁺ is +2).' },
+    prompt: 'Tap each particle (Zn, Cu²⁺, S, O) on the Model to check its oxidation number, then tap again to mark which ones change.',
     widget,
     // The answer is given to the particles: each of the four kinds in the beaker is tapped to read its oxidation number before and after
     // (a grey sphere), and tapped again to mark a change (amber). The marks are hidden dials of the model (`own`, below).
@@ -93,28 +93,34 @@ export const STAGES = [
       fixtures: [beakerFixture('beaker', { x: 57, y: 31 }, 'zncu', { title: 'Zinc in copper(II) sulfate' })]
     }, { w: 114, h: 60 }),
     hints: [
-      'Tap a particle once to read its oxidation number before and after.',
-      'Compare the two numbers of each particle you read.',
-      'Tap a particle a second time to mark it when its two numbers are not equal.'
+      'Tap each particle on the Model to show its before and after numbers.',
+      'Compare each particle\'s before and after numbers on the Model to see which ones change.',
+      'Mark a particle CHANGED (amber ring) only when its before and after numbers are different.'
     ],
     check(state) {
       const f = state.table.fixtures.scene;
       const vals = S1_CARDS.map((c, i) => Math.round(f.dials[`m${i}`].value));
-      if (vals.some(v => !v)) return { ok: false, notYet: true, msg: 'Tap every particle to read it.' };
+      if (vals.some(v => !v)) return { ok: false, notYet: true, msg: 'Tap every particle on the Model to read it first.' };
       for (let i = 0; i < S1_CARDS.length; i++) {
         const c = S1_CARDS[i];
-        if (vals[i] === (cardChanged(c) ? 2 : 1)) continue;
+        const changed = cardChanged(c);
+        if (vals[i] === (changed ? 2 : 1)) continue;
         const r = cardReading(c);
-        return { ok: false, msg: `${CARDS[c].short} reads ${oxText(r.before)} before and ${oxText(r.after)} after.` };
+        return {
+          ok: false,
+          msg: changed
+            ? `${CARDS[c].short} reads ${oxText(r.before)} before and ${oxText(r.after)} after, so it changed—tap it again to mark CHANGED.`
+            : `${CARDS[c].short} reads ${oxText(r.before)} before and ${oxText(r.after)} after, so it did not change—tap it to leave it as same.`
+        };
       }
       return { ok: true };
     },
     get reward() {
       const z = cardReading('zinc'); const c = cardReading('copper'); const s = cardReading('sulfur'); const o = cardReading('oxygen');
       return {
-        log: 'Zinc and copper changed their numbers; the sulfate did not.',
+        log: 'Zinc and copper changed their numbers; sulfate (S and O) did not.',
         title: 'Oxidation Number',
-        body: `Zinc went from ${oxText(z.before)} to ${oxText(z.after)} and copper from ${oxText(c.before)} to ${oxText(c.after)}; sulfur stayed ${oxText(s.before)} and oxygen ${oxText(o.before)}. An oxidation number counts electrons lost (plus) or gained (minus).`
+        body: `Zinc went from ${oxText(z.before)} to ${oxText(z.after)} and copper from ${oxText(c.before)} to ${oxText(c.after)}; in sulfate (SO₄²⁻), sulfur stayed ${oxText(s.before)} and oxygen ${oxText(o.before)}. An oxidation number counts electrons lost (+) or gained (−).`
       };
     }
   },
@@ -134,12 +140,12 @@ export const STAGES = [
         note('same', GUESS.same, { x: 30, y: 32 }),
         note('fewer', GUESS.fewer, { x: 80, y: 32 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 128, y: 22 }, size: { w: 36, h: 14 } }] }
-    }, { w: 150, h: 48 }),
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 132, y: 22 }, size: { w: 46, h: 16 } }] }
+    }, { w: 160, h: 48 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Picture the zinc strip in the "Before" and "After" windows and ask what in the After window could hold electrons the strip lost.',
-      'Ask whether the electrons can end up anywhere that is not a particle.'
+      'Drag one prediction card into the My prediction slot, then press Submit.',
+      'Think about what else is in the beaker when zinc loses its electrons.',
+      'Can free electrons float loose in water, or must another particle take them?'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -151,9 +157,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Prediction',
-      body: 'Next, the zinc half and the copper half are written out on two cards that count charge.'
+      log: 'Prediction saved.',
+      title: 'Prediction Saved',
+      body: 'Prediction saved. Next, track the electrons on the zinc and copper cards.'
     }
   },
 
@@ -161,8 +167,8 @@ export const STAGES = [
   {
     id: 's3-halves',
     title: 'Writing the Halves',
-    briefing: { speaker: SPEAKER, body: 'Losing electrons is oxidation, gaining electrons is reduction, and together they make a redox reaction. Each is written as a half-reaction that shows the electrons.' },
-    get prompt() { return guessLine('How many electrons does each half-reaction need, and on which side?', recall(QUEST_KEY)); },
+    briefing: { speaker: SPEAKER, body: 'Losing electrons is oxidation; gaining electrons is reduction. Each one is written on its own card as a half-reaction showing the electrons.' },
+    prompt: 'Tap the electron dots on the Model so the charge on the left equals the charge on the right in each card.',
     widget,
     table: cellTable({
       fixtures: [
@@ -177,14 +183,14 @@ export const STAGES = [
       ]
     }, { w: 172, h: 50 }),
     hints: [
-      'Tap the rings beside each strip to put electrons on it, and watch the charge row.',
+      'Tap the amber electron dots labeled "in" or "out" on the Model and watch the charge row on each card.',
       'Compare the charge on the left and on the right of the arrow for the zinc card and for the copper card.',
-      'An electron carries one unit of negative charge, so place electrons on the side that has too much positive charge to cancel it.'
+      'An electron carries −1 charge, so place electrons on the side that has too much positive charge to cancel it.'
     ],
     check(state) {
       const t = state.table;
       const hz = halfOf(t.fixtures.hz); const hc = halfOf(t.fixtures.hc);
-      if (!hz.eLeft && !hz.eRight && !hc.eLeft && !hc.eRight) return { ok: false, notYet: true, msg: 'Set the electron dials.' };
+      if (!hz.eLeft && !hz.eRight && !hc.eLeft && !hc.eRight) return { ok: false, notYet: true, msg: 'Tap the electron dots on the Model to add electrons.' };
       const cards = [['Zinc', hz, 'right', 'left'], ['Copper', hc, 'left', 'right']];
       for (const [name, h, good, bad] of cards) {
         const row = firstOff(h, ['charge']);
@@ -201,7 +207,7 @@ export const STAGES = [
       return {
         log: 'The zinc half lost two electrons and the copper half gained two.',
         title: 'Half-Reactions',
-        body: `${verdict} electrons landed on the copper ions: ${equationText(zn.left, zn.right, zn.eLeft, zn.eRight)} is oxidation and ${equationText(cu.left, cu.right, cu.eLeft, cu.eRight)} is reduction, together a redox reaction.`
+        body: `${verdict} electrons landed on the copper ions: ${equationText(zn.left, zn.right, zn.eLeft, zn.eRight)} (oxidation) and ${equationText(cu.left, cu.right, cu.eLeft, cu.eRight)} (reduction). Together they form a redox reaction.`
       };
     }
   },
@@ -210,7 +216,7 @@ export const STAGES = [
   {
     id: 's4-scale',
     title: 'Matching the Electrons',
-    prompt: 'How many aluminium atoms react with how many copper(II) ions?',
+    prompt: 'Tap the atoms on the Model to scale each half-reaction until electrons given equal electrons taken.',
     widget,
     table: cellTable({
       fixtures: [
@@ -220,9 +226,9 @@ export const STAGES = [
       ]
     }, { w: 162, h: 72 }),
     hints: [
-      'Tap the atoms or ions over each strip to change how many are written, and watch the tally.',
-      'Compare the electrons lost with the electrons gained for each pair of settings.',
-      'Scale each half-reaction until both halves handle the same number of electrons.'
+      'Tap the grey circles over each strip on the Model to scale each half-reaction and watch the Electron tally.',
+      'Compare the electrons given (3 per Al) with the electrons taken (2 per Cu²⁺).',
+      'Scale both halves until the Electron tally shows the same number given and taken.'
     ],
     check(state) {
       const t = state.table;
@@ -246,8 +252,8 @@ export const STAGES = [
   {
     id: 's5-agents',
     title: 'Who Loses',
-    briefing: { speaker: SPEAKER, body: 'The particle that loses electrons makes the other one gain them, so it is called the reducing agent. The particle that gains them is the oxidizing agent.' },
-    prompt: 'Which particle is the reducing agent in each beaker?',
+    briefing: { speaker: SPEAKER, body: 'The reducing agent is the particle that gives electrons away; it causes the other particle to be reduced. The oxidizing agent is the particle that takes those electrons.' },
+    prompt: 'Tap the particle on the Model that is the reducing agent in each beaker.',
     widget,
     // The answer is given to the particles: in each beaker, the metal or its ion is tapped (hidden dials `g1`, `g2` of the model: 1 metal, 2 ion).
     table: cellTable({
@@ -257,14 +263,14 @@ export const STAGES = [
       ]
     }, { w: 114, h: 122 }),
     hints: [
-      'Tap the metal or the ion in each beaker.',
-      'Compare the "Before" and "After" counts of each beaker\'s windows with what the model shows.',
+      'Tap the metal or the ion in each beaker on the Model.',
+      'Compare each particle\'s Before and After oxidation numbers on the Model.',
       'The reducing agent is the particle that loses electrons to the other particle.'
     ],
     check(state) {
       const d = state.table.fixtures.scene.dials;
       const g = [Math.round(d.g1.value), Math.round(d.g2.value)];
-      if (g.some(v => !v)) return { ok: false, notYet: true, msg: 'Tap a particle in each beaker.' };
+      if (g.some(v => !v)) return { ok: false, notYet: true, msg: 'Tap a particle in each beaker on the Model.' };
       for (let n = 0; n < 2; n++) {
         if (g[n] === 1) continue;
         const id = n === 0 ? 'ag' : 'fe';
@@ -288,8 +294,8 @@ export const STAGES = [
   {
     id: 's6-permanganate',
     title: 'Permanganate in Acid',
-    briefing: { speaker: SPEAKER, body: 'In acid solution there is plenty of H⁺ and H₂O, and a half-reaction may use them to balance its oxygen, hydrogen, and charge.' },
-    prompt: 'What balances the permanganate half-reaction in acid?',
+    briefing: { speaker: SPEAKER, body: 'In acid solution there is plenty of H⁺ and H₂O. Use the six dials (H⁺, H₂O, and electrons on the left or right) to balance the permanganate (MnO₄⁻) half-reaction.' },
+    prompt: 'Set the dials to balance Mn, O, H, and charge for the permanganate half-reaction in acid.',
     widget,
     table: cellTable({
       fixtures: [
@@ -310,7 +316,7 @@ export const STAGES = [
     hints: [
       'Turn the dials for hydrogen ions, water and electrons on the left and the right of the arrow.',
       'Compare the left count with the right count in each row of the card, one row at a time.',
-      'Settle the oxygen row with water, then the hydrogen row with hydrogen ions, then the charge row with electrons.'
+      'Balance oxygen with H₂O first, then hydrogen with H⁺, then charge with electrons.'
     ],
     check(state) {
       const h = halfOf(state.table.fixtures.hm);
@@ -333,7 +339,7 @@ export const STAGES = [
   {
     id: 's7-join',
     title: 'Joining Two Halves',
-    prompt: 'How many iron(II) ions react with one permanganate ion?',
+    prompt: 'Tap the ions on the Model to scale the iron(II) half until electrons lost equal electrons gained.',
     widget,
     table: cellTable({
       fixtures: [
@@ -343,9 +349,9 @@ export const STAGES = [
       ]
     }, { w: 186, h: 72 }),
     hints: [
-      'Tap the atoms or ions over each strip to change how many are written, and watch the tally.',
-      'Compare how many electrons one copy of each half-reaction handles with the tally at each setting.',
-      'Scale the halves until the electrons lost equal the electrons gained.'
+      'Tap the ions on the Model to scale the iron(II) half and watch the Electron tally.',
+      'Compare the electrons needed by one permanganate ion with the electrons given by iron(II).',
+      'Scale the iron(II) half until electrons lost equal electrons gained.'
     ],
     check(state) {
       const t = state.table;
@@ -360,7 +366,7 @@ export const STAGES = [
       return {
         log: 'Five iron(II) ions matched one permanganate ion.',
         title: 'The Overall Equation',
-        body: `With the electrons matched, the overall equation has none in it: ${equationText(o.left, o.right)}. The charge is ${o.charge.left} on each side.`
+        body: `With electrons balanced, they cancel out of the overall equation: ${equationText(o.left, o.right)}. The charge is ${o.charge.left} on each side.`
       };
     }
   },
@@ -369,14 +375,14 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'Four Sealed Reactions',
-    prompt: 'Which of the four reactions are redox?',
+    prompt: 'Tap the letters (A–D) on the Model for the reactions that are redox.',
     widget,
     // Four sealed beakers side by side in the model; tapping one marks its reaction as redox (hidden dials `r0` to `r3`).
     table: cellTable({ fixtures: [] }, { w: 150, h: 6 }),
     hints: [
-      'Tap each beaker whose reaction is redox.',
-      'Watch what the particles do in each beaker.',
-      'In these reactions, look for an atom that goes from a lone element to an ion, or back.'
+      'Tap the letter (A–D) of each reaction that is redox.',
+      'Check each element\'s Before and After oxidation numbers in each reaction.',
+      'A reaction is redox only if at least one element\'s oxidation number changes.'
     ],
     check(state) {
       const d = state.table.fixtures.scene.dials;

@@ -30,7 +30,7 @@ const fmtM = v => (v === 0 ? '0' : Number((v + 1e-12).toPrecision(3)).toString()
 
 const RECT_CHIP = { hw: 7.5, hh: 4.4 };
 
-const chipInk = p => (p.props.nu < 0 ? '#c0652b' : '#6f8fb0');
+const chipInk = p => (p.props.nu < 0 ? '#c0652b' : '#4c9be8');
 function paintChip(ctx, p, state, o) {
   paintPuck(ctx, o, RECT_CHIP, String(p.label), chipInk(p), 1);
 }
@@ -58,7 +58,7 @@ function paintBoard(ctx, f, state, b) {
   const rows = [['Initial', 18.2], ['Change', 29.2], ['Equilibrium', 42.4]];
   ctx.strokeStyle = STEEL;
   for (const y of [14, 24.2, 34.4, 47]) { ctx.beginPath(); ctx.moveTo(F.x(1), F.y(y)); ctx.lineTo(F.x(f.size.w - 1), F.y(y)); ctx.stroke(); }
-  for (const [name, y] of rows) say(ctx, name, F.x(1.6), F.y(y), F.size(2.1, 5.8), { color: DIM, maxW: F.len(LABEL_W - 1.8) });
+  for (const [name, y] of rows) say(ctx, name, F.x(1.6), F.y(y), F.size(2.2, 6.0), { color: DUST, weight: 700, maxW: F.len(LABEL_W - 1.8) });
   p.species.forEach((s, i) => {
     say(ctx, s.name, F.x(xs(i)), F.y(11.2), F.size(2.9, 6.8), { align: 'center', weight: 700 });
     say(ctx, fmtM(s.init), F.x(xs(i)), F.y(18.2), F.size(2.9, 6.8), { align: 'center', color: DUST, weight: 700 });

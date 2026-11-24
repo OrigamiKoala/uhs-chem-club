@@ -81,14 +81,14 @@ export const STAGE_STORY = {
   'q9-hsab': { 1: 'Separate the mixed metals in the foundry\'s waste vat.' },
 
   /* ---- Unit 08 — Teeter (Equilibrium): "abandoned" salt ponds still pumping out chemicals ---- */
-  'q1-both': { 1: 'Check if the Fifth\'s abandoned salt pond is actually still reacting.' },
-  'q2-k': { 1: 'Test three ponds with different starts to see where they settle.' },
-  'q3-q': { 1: 'Predict which way this fresh tank mixture will run.' },
-  'q4-properties': { 1: 'See how K changes when you flip or combine equations.' },
-  'q5-ice': { 1: 'Calculate how much product the Fifth\'s pond makes once settled.' },
-  'q6-lean': { 1: 'See how the Fifth\'s drain pump forces the pond to make more product.' },
-  'q7-dissolve': { 1: 'Find how much salt dissolves before it clogs the pond pipes.' },
-  'q8-free': { 1: 'Link free energy to K to see how far a reaction goes.' },
+  'q1-both': { 1: 'Check if a sealed sample from the Fifth Guild\'s salt pond is still reacting.' },
+  'q2-k': { 1: 'Three vessels start with different amounts; find what they share once settled.' },
+  'q3-q': { 1: 'Predict which way a fresh tank mixture will react.' },
+  'q4-properties': { 1: 'How does K change when you flip, double, or combine equations?' },
+  'q5-ice': { 1: 'Calculate how much product a settled vessel holds.' },
+  'q6-lean': { 1: 'See how a pump feeding or draining a settled vessel keeps it making product.' },
+  'q7-dissolve': { 1: 'Find how much scale dissolves before we can force it out of the pipes.' },
+  'q8-free': { 1: 'Why do some reactions stop with mostly reactants while others make mostly product?' },
 
   /* ---- Unit 09 — Verdigris (Acids and Bases): ore-washing acid runoff eating through the radio fort ---- */
   'q1-handover': { 1: 'Test what the marsh runoff is actually doing to the water.' },

@@ -44,7 +44,7 @@ export function toolNoteFor() { return null; }
 
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit09/q6-titrate';
-const GUESS = { seven: 'Exactly 7', above: 'Above 7', below: 'Below 7', thirteen: 'About 13' };
+const GUESS = { seven: 'Exactly 7', above: 'Above 7', below: 'Below 7', thirteen: 'About 4' };
 
 /* ---------------------------------------------------------------- what each stage's flasks hold (inputs; every figure shown is the planner's) */
 
@@ -106,7 +106,7 @@ export const STAGES = [
       return {
         log: 'The pH rose steeply at 25.0 mL.',
         title: 'The Titration Curve',
-        body: `A graph of pH against the volume of base poured is a titration curve. Its steep rise, here at ${mL1(eq(HCL))} mL where the pH read ${fmt(titrationML(HCL, eq(HCL)), 2)}, is the equivalence point: the acid has just been used up.`
+        body: `A pH-against-volume graph is a titration curve. Its steep rise at ${mL1(eq(HCL))} mL (pH ${fmt(titrationML(HCL, eq(HCL)), 2)}) is the equivalence point, where the acid is used up.`
       };
     }
   },
@@ -120,13 +120,13 @@ export const STAGES = [
     widget,
     table: phTable({
       pieces: [
-        note('seven', GUESS.seven, { x: 30, y: 12 }),
-        note('above', GUESS.above, { x: 80, y: 12 }),
-        note('below', GUESS.below, { x: 30, y: 33 }),
-        note('thirteen', GUESS.thirteen, { x: 80, y: 33 })
+        note('seven', GUESS.seven, { x: 26, y: 12 }),
+        note('above', GUESS.above, { x: 76, y: 12 }),
+        note('below', GUESS.below, { x: 26, y: 34 }),
+        note('thirteen', GUESS.thirteen, { x: 76, y: 34 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 22 }, size: { w: 36, h: 14 } }] }
-    }, { w: 156, h: 48 }),
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 138, y: 24 }, size: { w: 46, h: 18 } }] }
+    }, { w: 170, h: 52 }),
     hints: [
       'Use the four cards and the slot.',
       'Think about what is left in the flask once all the acid has been used up.',
@@ -147,15 +147,15 @@ export const STAGES = [
   {
     id: 's3-compare',
     title: 'Two Acids, One Burette',
-    get prompt() { return guessLine('Is the pH at acetic acid\'s equivalence point below, at or above 7?', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Is acetic acid’s equivalence-point pH below, at, or above 7?', recall(QUEST_KEY)); },
     widget,
     table: phTable({
       fixtures: [
         buretteAt({ samples: [sample('Hydrochloric acid', HCL), sample('Acetic acid', ACETIC)], cap: 50 }, 40),
-        curveFixture('curve', { x: 128, y: 36 }, { burette: 'bur', series: [{ sample: 0, name: 'Hydrochloric' }, { sample: 1, name: 'Acetic' }], xMax: 50, w: 100, h: 62 }),
+        curveFixture('curve', { x: 128, y: 32 }, { burette: 'bur', series: [{ sample: 0, name: 'Hydrochloric' }, { sample: 1, name: 'Acetic' }], xMax: 50, w: 100, h: 58 }),
         selectorFixture('pick', 'Acetic acid at its equivalence point', { x: 128, y: 80 }, { options: ['Below 7', 'Exactly 7', 'Above 7', ' '], start: 4, w: 64 })
       ]
-    }, { w: 184, h: 96 }),
+    }, { w: 184, h: 100 }),
     hints: [
       'Use "Pour" for both flasks together, read the displays and set the answer dial.',
       'Compare the two curves, and the two displays, at the volume where the steep rise of each one is.',
@@ -187,38 +187,38 @@ export const STAGES = [
     id: 's4-half',
     title: 'Half Way',
     briefing: 'The negative log of Ka is written pKa (pKa = −log Ka).',
-    prompt: 'Half way to the equivalence point, what does the pH equal?',
+    prompt: 'Halfway to the equivalence point, what does the pH equal?',
     widget,
     table: phTable({
       fixtures: [
         buretteAt({
           samples: [
-            sample('Acetic acid', ACETIC, { sub: [sub(ACETIC), `Ka ${sci(ACIDS.acetic.Ka, 2)}`] }),
-            sample('Formic acid', FORMIC, { sub: [sub(FORMIC), `Ka ${sci(ACIDS.formic.Ka, 2)}`] })
+            sample('Acetic acid', ACETIC, { sub: [sub(ACETIC), `pKa = −log Ka = ${fmt(pOf(ACIDS.acetic.Ka), 2)}`] }),
+            sample('Formic acid', FORMIC, { sub: [sub(FORMIC), `pKa = −log Ka = ${fmt(pOf(ACIDS.formic.Ka), 2)}`] })
           ], cap: 40
         }, 40),
-        curveFixture('curve', { x: 142, y: 40 }, { burette: 'bur', series: [{ sample: 0, name: 'Acetic', short: 'Ac' }, { sample: 1, name: 'Formic', short: 'Fo' }], xMax: 40, log: true, w: 124, h: 70 }),
-        selectorFixture('pick', 'The reading half way equals', { x: 142, y: 84 }, { options: ['The pKa of the acid', 'The Ka of the acid', 'The pH at equivalence', 'Exactly 7', ' '], start: 5, w: 72 })
+        curveFixture('curve', { x: 142, y: 36 }, { burette: 'bur', series: [{ sample: 0, name: 'Acetic', short: 'Ac' }, { sample: 1, name: 'Formic', short: 'Fo' }], xMax: 40, log: true, w: 124, h: 64 }),
+        selectorFixture('pick', 'The reading half way equals', { x: 142, y: 86 }, { options: ['The pKa of the acid', 'The Ka of the acid', 'The pH at equivalence', 'Exactly 7', ' '], start: 5, w: 74 })
       ]
-    }, { w: 206, h: 100 }),
+    }, { w: 206, h: 108 }),
     hints: [
-      'Use "Pour size" to land on the volume you want, read the displays and the list, and set the answer dial.',
-      'Compare each reading with the Ka printed under its flask.',
-      'Find each flask\'s equivalence volume from its amount of acid, halve it, then compare the two readings with the two acids\' Ka.'
+      'Use "Pour size" to land on 12.5 mL and 10.0 mL, read the pH displays, and set the answer dial.',
+      'Compare each half-way reading with the pKa printed under its flask.',
+      'Find each flask\'s equivalence volume, halve it, then compare the two readings with the two acids\' pKa.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 5) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 1) return { ok: true };
       const h1 = eq(ACETIC) / 2; const h2 = eq(FORMIC) / 2;
-      return { ok: false, msg: `Half way, the acetic acid display reads ${fmt(titrationML(ACETIC, h1), 2)} at ${mL1(h1)} mL and the formic acid display ${fmt(titrationML(FORMIC, h2), 2)} at ${mL1(h2)} mL; at the equivalence volumes they read ${fmt(titrationML(ACETIC, eq(ACETIC)), 2)} and ${fmt(titrationML(FORMIC, eq(FORMIC)), 2)}.` };
+      return { ok: false, msg: `Half way, acetic acid reads ${fmt(titrationML(ACETIC, h1), 2)} at ${mL1(h1)} mL and formic acid ${fmt(titrationML(FORMIC, h2), 2)} at ${mL1(h2)} mL; at equivalence they read ${fmt(titrationML(ACETIC, eq(ACETIC)), 2)} and ${fmt(titrationML(FORMIC, eq(FORMIC)), 2)}.` };
     },
     get reward() {
       const h1 = eq(ACETIC) / 2; const h2 = eq(FORMIC) / 2;
       return {
         log: 'Half way to equivalence the pH matched the pKa.',
         title: 'The Half-Equivalence Point',
-        body: `Half way, acetic acid read ${fmt(titrationML(ACETIC, h1), 2)} and formic acid ${fmt(titrationML(FORMIC, h2), 2)}, within 0.01 of their pKa values, ${fmt(pOf(ACIDS.acetic.Ka), 2)} and ${fmt(pOf(ACIDS.formic.Ka), 2)}. At the half-equivalence point half the acid has become its base, so the pH equals the pKa.`
+        body: `Half way, acetic acid read ${fmt(titrationML(ACETIC, h1), 2)} and formic acid ${fmt(titrationML(FORMIC, h2), 2)}, matching their pKa (−log Ka): ${fmt(pOf(ACIDS.acetic.Ka), 2)} and ${fmt(pOf(ACIDS.formic.Ka), 2)}. At the half-equivalence point, pH equals pKa.`
       };
     }
   },
@@ -227,16 +227,16 @@ export const STAGES = [
   {
     id: 's5-dye',
     title: 'The Right Indicator',
-    briefing: 'An indicator is a substance whose colour depends on the pH.',
-    prompt: 'Which indicator changes colour at the equivalence point of this titration?',
+    briefing: 'An indicator is a dye whose colour depends on the pH.',
+    prompt: 'Which indicator changes colour at acetic acid’s equivalence point?',
     widget,
     table: phTable({
       pieces: DYES.map((id, i) => tag(`c-${id}`, INDICATORS[id].name[0].toUpperCase() + INDICATORS[id].name.slice(1), { x: 112, y: 12 + i * 17 })),
       fixtures: [
-        buretteFixture('bur', { x: 48, y: 46 }, { samples: [{ title: 'Acetic acid', sub: sub(ACETIC_DYES), ...ACETIC_DYES, meter: false }], cap: 40, rack: DYES })
+        buretteFixture('bur', { x: 48, y: 48 }, { samples: [{ title: 'Acetic acid', sub: sub(ACETIC_DYES), ...ACETIC_DYES, meter: false }], cap: 40, rack: DYES })
       ],
-      zones: { slots: [{ id: 'dye', label: 'My indicator', at: { x: 158, y: 38 }, size: { w: 36, h: 14 } }] }
-    }, { w: 180, h: 96 }),
+      zones: { slots: [{ id: 'dye', label: 'My indicator', at: { x: 158, y: 38 }, size: { w: 30, h: 14 } }] }
+    }, { w: 180, h: 100 }),
     hints: [
       'Use "Pour size" and "Pour" and watch the four tubes, then lay a card in the slot.',
       'Compare the volume at which each tube changes colour with the volume the flask needs.',
@@ -248,7 +248,7 @@ export const STAGES = [
       const id = card.id.slice(2);
       if (RIGHT_DYE.includes(id)) return { ok: true };
       const w = indicatorWindowML(ACETIC_DYES, INDICATORS[id]);
-      return { ok: false, msg: `The ${INDICATORS[id].name} tube changed colour between ${mL1(w.from)} mL and ${mL1(w.to)} mL.` };
+      return { ok: false, msg: `Pour to watch the tubes: ${INDICATORS[id].name} changes colour between ${mL1(w.from)} mL and ${mL1(w.to)} mL.` };
     },
     get reward() {
       const w = Object.fromEntries(DYES.map(id => [id, indicatorWindowML(ACETIC_DYES, INDICATORS[id])]));
@@ -256,7 +256,7 @@ export const STAGES = [
       return {
         log: 'Only phenolphthalein turned over at the steep rise.',
         title: 'Indicators',
-        body: `Phenolphthalein changed between ${fmt(pp.from, 2)} and ${fmt(pp.to, 2)} mL, inside the steep rise; bromothymol blue took ${mL1(bt.from)} to ${mL1(bt.to)} mL. An indicator must change colour near the equivalence pH.`
+        body: `An indicator is a pH-sensitive dye. Phenolphthalein turned between ${fmt(pp.from, 2)} and ${fmt(pp.to, 2)} mL (steep rise); bromothymol blue took ${mL1(bt.from)} to ${mL1(bt.to)} mL.`
       };
     }
   },
@@ -269,13 +269,13 @@ export const STAGES = [
     widget,
     table: phTable({
       fixtures: [
-        buretteAt({ samples: [{ title: 'Sulfurous acid', sub: sub(SULFUROUS), ...SULFUROUS, meter: true }], cap: 30 }, 24),
-        curveFixture('curve', { x: 112, y: 40 }, { burette: 'bur', series: [{ sample: 0, name: 'Sulfurous acid', short: 'pH' }], xMax: 30, xTick: 5, log: true, w: 124, h: 70 }),
+        buretteAt({ samples: [{ title: 'Sulfurous acid', sub: sub(SULFUROUS), ...SULFUROUS, meter: true }], cap: 30, steps: [20, 10, 5], stepLabels: ['2 mL', '1 mL', '0.5 mL'] }, 24),
+        curveFixture('curve', { x: 112, y: 38 }, { burette: 'bur', series: [{ sample: 0, name: 'Sulfurous acid', short: 'pH' }], xMax: 30, xTick: 5, log: true, w: 124, h: 66 }),
         selectorFixture('pick', 'Protons per molecule', { x: 112, y: 84 }, { options: ['One', 'Two', 'Three', ' '], start: 4, w: 56 })
       ]
     }, { w: 178, h: 100 }),
     hints: [
-      'Use "Pour" until the curve has run to the end of the plot, then set the answer dial.',
+      'Use "Pour" until the curve has run past 22 mL, then set the answer dial.',
       'Look at where along the volume axis the curve rises steeply, and how far apart those places are.',
       'Compare the base needed to reach the last steep rise with the base needed to reach the first.'
     ],
@@ -283,8 +283,7 @@ export const STAGES = [
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 2) return { ok: true };
-      const e = eq(SULFUROUS);
-      return { ok: false, msg: `The display reads ${fmt(titrationML(SULFUROUS, e), 2)} at ${mL1(e)} mL, ${fmt(titrationML(SULFUROUS, 2 * e), 2)} at ${mL1(2 * e)} mL and ${fmt(titrationML(SULFUROUS, 3 * e), 2)} at ${mL1(3 * e)} mL.` };
+      return { ok: false, msg: 'Pour past 22 mL and look for how many times the curve jumps steeply.' };
     },
     get reward() {
       const e = eq(SULFUROUS);
@@ -305,11 +304,11 @@ export const STAGES = [
     entry: { id: 'c', label: 'Concentration', unit: 'M' },
     table: phTable({
       fixtures: [
-        buretteFixture('bur', { x: 22, y: 46 }, { samples: [{ title: 'Hydrochloric acid', sub: ['25.00 mL', 'concentration unknown'], ...UNKNOWN_STRONG, meter: false, tint: 'bromothymol' }], cap: 40 })
+        buretteFixture('bur', { x: 26, y: 48 }, { samples: [{ title: 'Hydrochloric acid', sub: ['25.00 mL', 'concentration unknown'], ...UNKNOWN_STRONG, meter: false, tint: 'bromothymol' }], cap: 40, dyeNote: 'Dye changes colour when acid is used up' })
       ]
-    }, { w: 44, h: 96 }),
+    }, { w: 52, h: 100 }),
     hints: [
-      'Use "Pour size" and "Pour", and type the concentration in the field.',
+      'Use "Pour size" and "Pour" until the flask colour changes, then type the concentration.',
       'Watch the colour of the liquid in the flask as the volume nears the change.',
       'Turn the volume poured into an amount of base, and use it to find the amount and then the concentration of the acid.'
     ],
@@ -330,7 +329,7 @@ export const STAGES = [
       return {
         log: 'The colour changed at 31.4 mL.',
         title: 'From Volume to Concentration',
-        body: `The colour changed at ${mL1(e)} mL of 0.100 M base, which is ${fmt(e * CT, 2)} mmol. The 25.00 mL of acid held that amount, so its concentration was ${fmt(TITRATION_UNKNOWN_C, 3)} M.`
+        body: `The colour changed at ${mL1(e)} mL of 0.100 M base (${fmt(e * CT, 2)} mmol, or 0.00314 mol). In 25.00 mL of acid, that gives ${fmt(TITRATION_UNKNOWN_C, 3)} M.`
       };
     }
   },
@@ -344,14 +343,14 @@ export const STAGES = [
     entry: { id: 'ka', label: 'Ka (write 0.0005 as 5e-4)', unit: '' },
     table: phTable({
       fixtures: [
-        buretteAt({ samples: [{ title: 'Unknown acid', sub: ['25.0 mL', 'concentration unknown'], ...UNKNOWN_WEAK, meter: true }], cap: 40 }, 24),
+        buretteAt({ samples: [{ title: 'Unknown acid', sub: ['25.0 mL', 'concentration unknown'], ...UNKNOWN_WEAK, meter: true }], cap: 40, steps: [20, 10, 5], stepLabels: ['2 mL', '1 mL', '0.5 mL'] }, 24),
         curveFixture('curve', { x: 112, y: 40 }, { burette: 'bur', series: [{ sample: 0, name: 'Unknown acid', short: 'pH' }], xMax: 40, log: true, w: 124, h: 70 })
       ]
-    }, { w: 178, h: 96 }),
+    }, { w: 178, h: 100 }),
     hints: [
       'Use "Pour size" and "Pour", read the display and the list, and type Ka in the field.',
       'Compare the curve with the volumes poured, and look for the volume where the steep rise is.',
-      'One point on this curve was shown, two stages back, to equal the pKa.'
+      'Remember that halfway to the equivalence point, pH equals pKa.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ka');
@@ -369,7 +368,7 @@ export const STAGES = [
       return {
         log: 'The pH half way gave the pKa.',
         title: 'Reading Ka',
-        body: `The steep rise was at ${mL1(eq(UNKNOWN_WEAK))} mL, so half way is ${mL1(half)} mL, where the pH read ${fmt(r, 2)}. That is the pKa, so Ka is about ${sci(10 ** -r, 2)}, for an acid whose concentration was never given.`
+        body: `The steep rise was at ${mL1(eq(UNKNOWN_WEAK))} mL; half way (${mL1(half)} mL) the pH read ${fmt(r, 2)}, so Ka = 10^(−${fmt(r, 2)}) = ${sci(10 ** -r, 2)}.`
       };
     }
   }
@@ -394,9 +393,9 @@ export const SOLUTIONS = [
   [size(1), ...runs(5), dial('pick', 'value', 3)],
   [size(1), ...runs(2), size(2), ...runs(2), size(3), ...runs(5), dial('pick', 'value', 1)],
   [place('c-phenolphthalein', 'slot:dye')],
-  [size(1), ...runs(6), dial('pick', 'value', 2)],
+  [size(1), ...runs(12), dial('pick', 'value', 2)],
   [size(1), ...runs(6), size(2), ...runs(1), size(3), ...runs(4), { type: { entry: 'c', value: '0.126' } }],
-  [size(1), ...runs(2), { type: { entry: 'ka', value: '7.0e-6' } }]
+  [size(1), ...runs(5), { type: { entry: 'ka', value: '7.0e-6' } }]
 ];
 
 export const MISSES = [

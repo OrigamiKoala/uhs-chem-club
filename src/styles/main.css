@@ -573,7 +573,7 @@ body::after {
    =================================================================== */
 .toast-container {
   position: fixed;
-  bottom: 5.25rem;
+  bottom: 8.5rem;
   right: 1.25rem;
   z-index: 100;
   display: flex;

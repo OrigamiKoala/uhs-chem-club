@@ -93,7 +93,12 @@ export class BossHud {
     const pct = Math.max(0, Math.min(100, (hp / this.maxHp) * 100));
     this.el.fill.style.width = `${pct}%`;
     this.el.bar.setAttribute('aria-valuenow', String(Math.round(hp)));
-    this.el.hp.textContent = hp > 0 ? `${Math.round(hp)} / ${this.maxHp}` : 'Dispersed';
+    if (hp > 0) {
+      const lit = Math.max(1, Math.ceil((hp / this.maxHp) * this.total));
+      this.el.hp.innerHTML = `<span class="boss-hud-lamps" aria-label="${lit} of ${this.total} trials left">${Array.from({ length: this.total }, (_, i) => `<i class="${i < lit ? 'on' : ''}"></i>`).join('')}</span>`;
+    } else {
+      this.el.hp.textContent = 'Dispersed';
+    }
     if (snap) {
       this.el.ghost.style.transition = 'none';
       this.el.ghost.style.width = `${pct}%`;

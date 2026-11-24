@@ -42,7 +42,7 @@ export const UNIT_07 = {
     {
       id: 'q4-balance',
       title: 'Balancing Equations',
-      line: "Count the atoms on both sides of the furnace recipe.",
+      line: "Count the atoms on both sides of the furnace equation.",
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -78,7 +78,7 @@ export const UNIT_07 = {
     {
       id: 'q8-kinds',
       title: 'Kinds of Reaction',
-      line: "Say what each reaction on the furnace log is doing.",
+      line: "Identify what each reaction on the furnace log is doing.",
       arena: 'bench',
       stageCount: 8,
       status: 'live',

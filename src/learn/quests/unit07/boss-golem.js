@@ -123,12 +123,12 @@ export const STAGES = [
       const t = state.table;
       const n = tallyOf(t, 'tally');
       const want = limitOf({ Na: t.zones.containers['heap-na'].capacity, Cl: t.zones.containers['heap-cl'].capacity }, UNIT_NEED).made;
-      if (n === 0) return { ok: false, notYet: true, msg: 'The tally is on zero. Set it to a count of units.' };
+      if (n === 0) return { ok: false, notYet: true, msg: 'Set the tally dial to the number of units built.' };
       if (n !== want) return { ok: false, msg: 'Count the atoms in each supply: the unit stops building as soon as one of them is used up.' };
       return { ok: true };
     },
     hints: [
-      'Build one unit by joining a sodium atom to a chlorine atom, put it in the unit pattern, and press "Make Unit" to copy it from the supplies.',
+      'Join one sodium atom and one chlorine atom in the unit pattern, then press "Make Unit" to copy it from the supplies.',
       'Count the atoms in each supply, or watch them shrink as the maker draws on them.',
       'Every unit takes one atom from each supply, so ask which supply runs out first.'
     ],
@@ -165,12 +165,12 @@ export const STAGES = [
       ],
       check(state) {
         const w = labelWords(state.table, 'lab');
-        if (w.some(x => !x)) return { ok: false, notYet: true, msg: 'Lay a card in each slot of the label.' };
+        if (w.some(x => !x)) return { ok: false, notYet: true, msg: 'Place a card in each label slot.' };
         const text = `${w[0]}${w[1]} ${w[2]}`;
         if (text === nameIonic(GOLEM_DRUM.cat, GOLEM_DRUM.an)) return { ok: true };
         const water = saltInWater(GOLEM_DRUM.cat, GOLEM_DRUM.an);
         const metal = water.pieces[0]; const anion = water.pieces[1];
-        return { ok: false, msg: `The label reads "${text}"; the particle view drew ${metal.count} Cu with no charge printed and ${anion.count} joined groups printing ${IONS[anion.ion].q < 0 ? '' : '+'}${String(IONS[anion.ion].q).replace('-', '−')}.` };
+        return { ok: false, msg: `Your label says "${text}", but the particle view shows ${metal.count} Cu and ${anion.count} groups with charge ${IONS[anion.ion].q < 0 ? '' : '+'}${String(IONS[anion.ion].q).replace('-', '−')}.` };
       },
       reward: {
         title: "The Golem's Label",
@@ -193,7 +193,7 @@ export const STAGES = [
       encounter: { species: 'recipe golem', act: 'Set Dials', intent: 'The golem resets the equation dials on its furnace.' },
       hints: [
         'Turn the four dials on the board and read the atom ledger.',
-        'Compare the two columns of the ledger one atom at a time, and see which rows move when each dial turns.',
+        'Compare the two sides of the ledger one atom at a time as you turn each dial.',
         'Balance the atoms that appear in only one substance on each side first, leaving oxygen for last.'
       ],
       check(state) {
@@ -205,7 +205,7 @@ export const STAGES = [
       },
       reward: {
         title: 'Balanced Equation',
-        body: '2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O. Carbon and hydrogen are each in one product, so oxygen is set last.',
+        body: '2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O. Balancing carbon and hydrogen first lets you set oxygen last.',
         log: '2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O.'
       }
     };
@@ -238,7 +238,7 @@ export const STAGES = [
       hints: [
         'Use the furnace, the two jars, the catch jar and the balance.',
         'Compare the iron on the balance with the iron the equation allows from the reactant that runs out first.',
-        'Find which jar runs out first, work out the iron it allows, then compare the iron on the balance as a percent of that.'
+        'Find which reactant runs out first, calculate the theoretical yield of iron, then divide the actual iron mass by it.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'pct');
@@ -246,12 +246,12 @@ export const STAGES = [
         if (Math.abs(v - GOLEM_PCT) <= 1) return { ok: true };
         const w = weighRead(state.table, 'bal');
         const note = w.item && w.grams > 0 ? ` The balance read ${fixed(w.grams, 1)} g of iron.` : ' Run the furnace and weigh the catch jar.';
-        return { ok: false, msg: `${fixed(v, 1)} % does not follow from the table.${note}` };
+        return { ok: false, msg: `${fixed(v, 1)}% does not match the furnace reading.${note}` };
       },
       reward: {
         title: 'Yield From the Limit',
-        body: 'The aluminium gave out first, so the iron it allows is 22.3 g. The 17.9 g on the balance is 80 % of that.',
-        log: 'The furnace kept 80 % of the iron its limit allowed.'
+        body: 'Aluminum ran out first, allowing at most 22.3 g of iron. The 17.9 g on the balance is an 80% yield.',
+        log: 'The furnace kept 80% of the iron its limit allowed.'
       }
     };
   })(),
@@ -282,7 +282,7 @@ export const STAGES = [
       hints: [
         'Use the furnace, the ore jar, the catch jar and the balance.',
         'Compare the grams of ore fed with the grams of iron on the balance, and the ledger with what a furnace can make.',
-        'Weigh what the furnace makes from the ore jar, then scale that ratio of iron to ore up to the tons of ore in the ledger.'
+        'Find how much iron the furnace makes from the ore jar, then scale that iron-to-ore ratio up to 39.9 tons.'
       ],
       check(state) {
         const v = entryNumber(state.table, 't');
@@ -290,11 +290,11 @@ export const STAGES = [
         if (Math.abs(v - LEDGER.possibleTons) <= 0.3) return { ok: true };
         const w = weighRead(state.table, 'bal');
         const note = w.item && w.grams > 0 ? ` The furnace made ${fixed(w.grams, 1)} g of iron from ${ORE_G.toFixed(1)} g of ore.` : ' Run the furnace and weigh the catch jar.';
-        return { ok: false, msg: `${fixed(v, 1)} t does not follow from the furnace.${note}` };
+        return { ok: false, msg: `${fixed(v, 1)} t does not match the furnace ratio.${note}` };
       },
       reward: {
         title: 'The Ledger Cannot Be True',
-        body: 'The ore in the ledger can give at most 27.9 tons of iron. The ledger claims 50.0 tons: more metal than the equation allows from that ore.',
+        body: '39.9 tons of ore can produce at most 27.9 tons of iron. The ledger claims 50.0 tons, which is impossible from that much ore.',
         log: 'The ledger claims 50.0 t of metal from ore that can give 27.9 t.'
       }
     };
@@ -338,15 +338,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The golem vents its boiler and freezes. In its log vault we found a ledger: fifty tons of metal logged out against forty tons of ore logged in. No furnace can do that.'
+      body: 'The golem vents its boiler and freezes. Inside its vault is a ledger claiming 50 tons of iron from 40 tons of ore. No furnace can produce more metal than the ore contains.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase asked what an equation allows: which ingredient runs out, what compound sits in the drum, how the atoms balance, and how much metal can be made. That was enough to freeze the golem.'
+      body: 'Every phase came down to what a chemical equation allows: which reactant runs out, what compound is in the drum, how the atoms balance, and how much metal ore can yield.'
     },
     {
       heading: 'Next',
-      body: 'The ledger goes into the Case File. Something in the foundry is writing metal that the ore cannot give.'
+      body: 'The ledger goes into the Case File. Someone in the foundry is logging metal that never came from the ore.'
     }
   ]
 };

@@ -62,21 +62,22 @@ function paintLedger(ctx, f, state, b) {
   const w = f.size.w;
   const nd = Object.keys(f.dials).filter(n => !p.hidden?.includes(n)).length;
   const top = contentTop(nd);
-  put(ctx, 'Left', F.x(3), F.y(top + 2), F.size(2.3, 6.4), { align: 'left', color: DUST, weight: 700 });
-  put(ctx, r.leftText, F.x(12), F.y(top + 2), F.size(2.5, 6.8), { align: 'left', color: TEXT, maxW: F.len(w - 15) });
-  put(ctx, 'Right', F.x(3), F.y(top + 5.8), F.size(2.3, 6.4), { align: 'left', color: DUST, weight: 700 });
-  put(ctx, r.rightText, F.x(12), F.y(top + 5.8), F.size(2.5, 6.8), { align: 'left', color: TEXT, maxW: F.len(w - 15) });
+  put(ctx, 'Left', F.x(3), F.y(top + 2), F.size(2.6, 7.2), { align: 'left', color: '#d8d0c4', weight: 700 });
+  put(ctx, r.leftText, F.x(13), F.y(top + 2), F.size(2.9, 8.0), { align: 'left', color: '#f5ede0', weight: 700, maxW: F.len(w - 16) });
+  put(ctx, 'Right', F.x(3), F.y(top + 6.0), F.size(2.6, 7.2), { align: 'left', color: '#d8d0c4', weight: 700 });
+  put(ctx, r.rightText, F.x(13), F.y(top + 6.0), F.size(2.9, 8.0), { align: 'left', color: '#f5ede0', weight: 700, maxW: F.len(w - 16) });
   if (!r.rows.length) return;
   const y0 = top + 10;
   ctx.strokeStyle = STEEL; ctx.beginPath(); ctx.moveTo(F.x(3), F.y(y0 - 1.8)); ctx.lineTo(F.x(w - 3), F.y(y0 - 1.8)); ctx.stroke();
-  put(ctx, 'Count', F.x(3), F.y(y0), F.size(2.2, 6.2), { align: 'left', color: DIM });
-  put(ctx, 'Left', F.x(w * 0.58), F.y(y0), F.size(2.2, 6.2), { align: 'right', color: DIM });
-  put(ctx, 'Right', F.x(w - 3), F.y(y0), F.size(2.2, 6.2), { align: 'right', color: DIM });
+  put(ctx, 'Count', F.x(3), F.y(y0), F.size(2.4, 6.8), { align: 'left', color: DUST, weight: 700 });
+  put(ctx, 'Left', F.x(w * 0.58), F.y(y0), F.size(2.4, 6.8), { align: 'right', color: DUST, weight: 700 });
+  put(ctx, 'Right', F.x(w - 3), F.y(y0), F.size(2.4, 6.8), { align: 'right', color: DUST, weight: 700 });
   r.rows.forEach((row, i) => {
     const y = y0 + 3.8 + i * 3.6;
-    put(ctx, row.label, F.x(3), F.y(y), F.size(2.7, 7.2), { align: 'left', color: DUST, weight: 700 });
-    put(ctx, String(row.left), F.x(w * 0.58), F.y(y), F.size(2.8, 7.4), { align: 'right', color: TEXT, weight: 700 });
-    put(ctx, String(row.right), F.x(w - 3), F.y(y), F.size(2.8, 7.4), { align: 'right', color: TEXT, weight: 700 });
+    const eq = row.left === row.right;
+    put(ctx, row.label, F.x(3), F.y(y), F.size(2.9, 8.0), { align: 'left', color: '#e6dfd4', weight: 700 });
+    put(ctx, String(row.left), F.x(w * 0.58), F.y(y), F.size(3.2, 8.6), { align: 'right', color: eq ? '#f5ede0' : PLATE_COLORS.amber, weight: 700 });
+    put(ctx, String(row.right), F.x(w - 3), F.y(y), F.size(3.2, 8.6), { align: 'right', color: eq ? '#f5ede0' : PLATE_COLORS.amber, weight: 700 });
   });
 }
 
@@ -84,10 +85,11 @@ function paintTally(ctx, f, state, b) {
   const F = frameOf(b);
   const r = tallyRead(state, f.id);
   const w = f.size.w;
-  put(ctx, 'Electrons given', F.x(3), F.y(5.4), F.size(2.6, 7), { align: 'left', color: DUST });
-  put(ctx, String(r.given), F.x(w - 3), F.y(5.4), F.size(3.2, 8), { align: 'right', color: TEXT, weight: 700 });
-  put(ctx, 'Electrons taken', F.x(3), F.y(10.6), F.size(2.6, 7), { align: 'left', color: DUST });
-  put(ctx, String(r.taken), F.x(w - 3), F.y(10.6), F.size(3.2, 8), { align: 'right', color: TEXT, weight: 700 });
+  const match = r.given === r.taken && r.given > 0;
+  put(ctx, 'Electrons given', F.x(3), F.y(5.4), F.size(2.9, 8.0), { align: 'left', color: '#e6dfd4', weight: 700 });
+  put(ctx, String(r.given), F.x(w - 3), F.y(5.4), F.size(4.2, 11), { align: 'right', color: match ? '#8bd478' : PLATE_COLORS.amber, weight: 700 });
+  put(ctx, 'Electrons taken', F.x(3), F.y(10.8), F.size(2.9, 8.0), { align: 'left', color: '#e6dfd4', weight: 700 });
+  put(ctx, String(r.taken), F.x(w - 3), F.y(10.8), F.size(4.2, 11), { align: 'right', color: match ? '#8bd478' : PLATE_COLORS.amber, weight: 700 });
 }
 
 registerFixture('cellledger', { paint: paintLedger });

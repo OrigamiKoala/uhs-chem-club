@@ -59,10 +59,14 @@ function paintMix(ctx, f, state, b) {
   const p = f.props;
   const r = mixRead(state, f.id);
   const w = f.size.w;
-  put(ctx, `${Math.round(p.V * 1000)} mL`, F.x(2), F.y(7.6), F.size(2.4, 6.4), { align: 'left', color: TEXTC, weight: 700 });
-  put(ctx, 'one sphere is 0.1 mmol', F.x(w - 2), F.y(7.6), F.size(1.8, 5.6), { align: 'right', color: DIM });
+  put(ctx, `${Math.round(p.V * 1000)} mL`, F.x(2), F.y(7.6), F.size(2.4, 6.6), { align: 'left', color: TEXTC, weight: 700 });
+  if (p.showCounts && !p.sealed) {
+    put(ctx, `${r.Au} ${ionText(p.names.A)}, ${r.HAu} ${ionText(p.names.HA)}`, F.x(w - 2), F.y(7.6), F.size(2.1, 6.4), { align: 'right', color: AMBER, weight: 700, maxW: F.len(w - 14) });
+  } else {
+    put(ctx, 'one sphere is 0.1 mmol', F.x(w - 2), F.y(7.6), F.size(1.9, 5.8), { align: 'right', color: DIM });
+  }
   const x = 2; const y = p.winTop; const ww = w - 4; const wh = p.wh;
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(ww), F.len(wh));
+  ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(x), F.y(y), F.len(ww), F.len(wh));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));
   const cells = cellGrid(p.cols * p.rows, p.cols, x + 0.6, y + 0.6, ww - 1.2, wh - 1.2);
   const g = mulberry32(p.seed);
@@ -145,7 +149,7 @@ function dressMix(f, state, c) {
 registerFixture('phmix', {
   // The pours in the order they were made: all the acid, then the base.
   replay: { count: f => Math.round(f.dials.na.value + f.dials.nb.value), at: (f, i) => withDial(withDial(f, 'na', Math.min(i, Math.round(f.dials.na.value))), 'nb', Math.max(0, i - Math.round(f.dials.na.value))) },
-  demo: (f, t) => ({ dials: { na: Math.floor(t / 0.9) % (Math.min(f.dials.na.max, 5) + 1) } }),
+  demo: () => null,
   bodies3d: true, paint: paintMix, run, dress3d: dressMix, live: () => true });
 void THREE;
 
@@ -158,7 +162,7 @@ export function mixFixture(id, at, o = {}) {
   const {
     ha = 0, a = 0, Ka = ACIDS.acetic.Ka, names = { HA: 'CH₃COOH', A: 'CH₃COO⁻' }, reagent = 'acid', acidSph = 10, baseSph = 10,
     pourVol = 0.010, maxPour = 12, build = false, levels = [0, 25, 50, 100], meter = true, sealed = false, rows = 10, cols = 20,
-    w = 44, title = 'Flask', runLabel = 'Pour', V = 0.1, empty = 'water only', pour = true
+    w = 44, title = 'Flask', runLabel = 'Pour', V = 0.1, empty = 'water only', pour = true, showCounts = false
   } = o;
   const dials = { na: { min: 0, max: maxPour, step: 1, value: 0, label: 'Acid poured' }, nb: { min: 0, max: maxPour, step: 1, value: 0, label: 'Base poured' } };
   if (reagent === 'dial') dials.rg = { min: 1, max: 2, step: 1, value: 1, label: 'Pour in', labels: ['Acid', 'Base'] };
@@ -167,15 +171,16 @@ export function mixFixture(id, at, o = {}) {
     dials.a = { min: 1, max: levels.length, step: 1, value: 1, label: 'Acetate', labels: levels.map(String) };
   }
   const nd = (reagent === 'dial' ? 1 : 0) + (build ? 2 : 0);
-  const winTop = nd ? Math.round((DIAL_TOP + (nd - 1) * 5 + 3.6) * 10) / 10 : 10.5;
+  const rowPitch = nd > 1 ? 10.5 : 5;
+  const winTop = nd ? Math.round((DIAL_TOP + (nd - 1) * rowPitch + 7.2) * 10) / 10 : 10.5;
   const wh = Math.round(rows * ((w - 5.2) / cols) * 10) / 10;
   const h = Math.round((winTop + wh + 3 + 3.3 * 2 + 9) * 10) / 10;
   return {
     fixture: {
       id, kind: 'phmix', label: title, at: { ...at }, size: { w, h }, ...(pour ? { runLabel } : { noRun: true }), dials,
       props: {
-        hidden: ['na', 'nb'], backdrop: true, top: DIAL_TOP, Ka, ha0: ha, a0: a, names, reagent, acidSph, baseSph, pourVol, maxPour,
-        build, levels, meter, sealed, rows, cols, wh, winTop, V, empty, seed: [...id].reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 11)
+        hidden: ['na', 'nb'], backdrop: true, top: DIAL_TOP, rowPitch, Ka, ha0: ha, a0: a, names, reagent, acidSph, baseSph, pourVol, maxPour,
+        build, levels, meter, sealed, rows, cols, wh, winTop, V, empty, showCounts, seed: [...id].reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 11)
       }
     },
     size: { w, h }

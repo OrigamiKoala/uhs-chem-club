@@ -21,7 +21,7 @@ const CSS = `
 #npc-card .npc-name { font-family: var(--font-mono, monospace); font-size: 0.78rem; letter-spacing: 0.12em; color: var(--accent-amber, #e59b24); text-transform: uppercase; }
 #npc-card .npc-role { font-size: 0.72rem; color: var(--text-muted, #9a958c); }
 #npc-card .npc-line { font-size: 0.95rem; line-height: 1.45; margin: 0; }
-#npc-card .npc-next { margin-top: 8px; text-align: right; font-family: var(--font-mono, monospace); font-size: 0.68rem; letter-spacing: 0.1em; color: var(--text-muted, #9a958c); }
+#npc-card .npc-next { margin-top: 8px; text-align: right; font-family: var(--font-mono, monospace); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: var(--accent-amber, #e59b24); }
 #npc-carry { position: fixed; left: 16px; bottom: 16px; z-index: 1000; padding: 5px 10px; pointer-events: none;
   background: var(--plate-200, #161519); border: 1px solid var(--border-durasteel, rgba(214,196,168,0.16));
   font-family: var(--font-mono, monospace); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--accent-gold, #cca56e); }
@@ -51,7 +51,9 @@ function ensure() {
   chip.hidden = true;
   document.body.appendChild(chip);
   window.addEventListener('keydown', e => {
-    if (e.code === 'Escape' && isLineCardOpen()) closeLineCard();
+    if (!isLineCardOpen()) return;
+    if (e.code === 'Escape') closeLineCard();
+    else if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); advanceLineCard(); }
   });
 }
 

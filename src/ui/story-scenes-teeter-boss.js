@@ -64,23 +64,23 @@ function tipperOpen(ctx, w, h, t) {
   if (t <= 0.76) {
     // The Fifth's last pan, opened from A alone and from B alone.
     const p = ease(win(t, 0.52, 0.7));
-    text(ctx, 'A ⇌ B, opened from either end', w / 2, h * 0.07, { size: 24, color: C.dust });
-    [{ start: { A: 1, B: 0 }, title: 'from A alone', x: 0.27 }, { start: { A: 0, B: 1 }, title: 'from B alone', x: 0.73 }].forEach(({ start, title, x }) => {
+    text(ctx, 'butane ⇌ isobutane, opened from either end', w / 2, h * 0.07, { size: 24, color: C.dust });
+    [{ start: { A: 1, B: 0 }, title: 'from butane alone', x: 0.27 }, { start: { A: 0, B: 1 }, title: 'from isobutane alone', x: 0.73 }].forEach(({ start, title, x }) => {
       const eq = settleAmounts(AB, start);
       const now = { A: lerp(start.A, eq.A, p), B: lerp(start.B, eq.B, p) };
       const cx = w * x; const base = h * 0.62;
       ctx.fillStyle = '#100f0c'; ctx.fillRect(cx - 120, h * 0.14, 240, base - h * 0.14 + 40);
       ctx.strokeStyle = C.steel; ctx.strokeRect(cx - 119.5, h * 0.14 + 0.5, 239, base - h * 0.14 + 39);
       text(ctx, title, cx, h * 0.14 + 22, { size: 19, color: C.dust, weight: 700 });
-      bar(ctx, cx - 50, base, 'A', now.A, 1, A_INK);
-      bar(ctx, cx + 50, base, 'B', now.B, 1, B_INK);
-      text(ctx, `B over A = ${fmtNum(systemRatio(AB, now), 3)}`, cx, h * 0.84, { size: 24, color: C.amber, weight: 700 });
+      bar(ctx, cx - 50, base, 'butane', now.A, 1, A_INK);
+      bar(ctx, cx + 50, base, 'isobutane', now.B, 1, B_INK);
+      text(ctx, `isobutane ÷ butane = ${fmtNum(systemRatio(AB, now), 3)}`, cx, h * 0.84, { size: 20, color: C.amber, weight: 700 });
     });
     return;
   }
-  // The same pan, particle by particle: the changes each way since the graph went flat, counted from the particles' own changes.
+  // The same vessel, particle by particle: the changes each way since the graph went flat, counted from the particles' own changes.
   const k = 60 + Math.round(ease(win(t, 0.78, 0.92)) * 90);
-  text(ctx, 'the settled pan, particle by particle', w / 2, h * 0.07, { size: 24, color: C.dust });
+  text(ctx, 'the settled vessel, particle by particle', w / 2, h * 0.07, { size: 24, color: C.dust });
   const cols = 8; const rows = 6; const x0 = w * 0.1; const y0 = h * 0.16; const cw = 46; const ch = 46;
   for (let i = 0; i < N; i++) {
     const cx = x0 + (i % cols + 0.5) * cw; const cy = y0 + (Math.floor(i / cols) + 0.5) * ch;
@@ -91,8 +91,8 @@ function tipperOpen(ctx, w, h, t) {
   let f = 0; let v = 0;
   for (let i = 61; i <= k; i++) { f += PAN.fwd[i]; v += PAN.rev[i]; }
   const rx = w * 0.7;
-  text(ctx, `A turned to B: ${f}`, rx, h * 0.34, { size: 28, color: A_INK, weight: 700 });
-  text(ctx, `B turned to A: ${v}`, rx, h * 0.48, { size: 28, color: B_INK, weight: 700 });
+  text(ctx, `butane → isobutane: ${f}`, rx, h * 0.34, { size: 24, color: A_INK, weight: 700 });
+  text(ctx, `isobutane → butane: ${v}`, rx, h * 0.48, { size: 24, color: B_INK, weight: 700 });
   text(ctx, `counted since tick 60, now tick ${k}`, rx, h * 0.6, { size: 18, color: C.dim });
   const recent = tallyWindow(PAN, k, 40);
   text(ctx, `last 40 ticks: ${recent.fwd} and ${recent.rev}`, rx, h * 0.72, { size: 20, color: C.amber, weight: 700 });

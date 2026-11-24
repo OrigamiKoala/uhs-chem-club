@@ -36,7 +36,7 @@ export function toolNoteFor() { return null; }
 
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit09/q5-salts';
-const GUESS = { seven: 'Exactly 7', above: 'Above 7', below: 'Below 7', fourteen: '14' };
+const GUESS = { seven: 'Exactly 7', above: 'Above 7', below: 'Below 7', fourteen: 'About 4' };
 const guessLine = (sentence, g) => (g && GUESS[g] ? `You predicted "${GUESS[g]}". ${sentence}` : sentence);
 const TOL_PH = 0.03;
 const KINDS = ['Acidic', 'Neutral', 'Basic'];
@@ -99,12 +99,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   pourStage({
     id: 's1-strong', title: 'Acid Used Up', spec: S1, wantKind: 1,
-    prompt: 'What is the pH when sodium hydroxide has exactly used up the hydrochloric acid?',
+    prompt: 'What is the pH when the hydrochloric acid is completely neutralized by sodium hydroxide?',
     hints: [POUR_HINT, 'Compare the window and the meter after each pour.', 'Stop at the first pour where the window shows no acid left.'],
     reward: {
       log: 'The flask read 7.00 with the acid used up.',
       title: 'Strong Acid, Strong Base',
-      get body() { return `${fmt(mixAfter(S1, EQUAL_K).pH, 2)}. Na⁺ and Cl⁻ do not react with water. An acid and a base using each other up is neutralization.`; }
+      get body() { return `pH ${fmt(mixAfter(S1, EQUAL_K).pH, 2)} — Na⁺ and Cl⁻ do not react with water, so the solution is neutral. When acid and base use each other up, that is neutralization.`; }
     }
   }),
 
@@ -113,17 +113,21 @@ export const STAGES = [
     id: 's2-predict',
     title: 'What Will It Read?',
     predict: true,
-    prompt: 'What will the pH be when acetic acid and sodium hydroxide are mixed in equal amounts, with none of either left over?',
+    prompt: 'What will the pH be when acetic acid and sodium hydroxide are mixed in equal amounts, with none left over?',
     widget,
-    table: phTable({
-      pieces: [
-        note('seven', GUESS.seven, { x: 30, y: 12 }),
-        note('above', GUESS.above, { x: 80, y: 12 }),
-        note('below', GUESS.below, { x: 30, y: 33 }),
-        note('fourteen', GUESS.fourteen, { x: 80, y: 33 })
-      ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 23 }, size: { w: 36, h: 14 } }] }
-    }, { h: 50 }),
+    table: (() => {
+      const preview = neut(S3, { x: 46, y: 82 }, { meter: false, pour: false, title: 'Acetic acid + NaOH jug' });
+      return phTable({
+        pieces: [
+          note('seven', GUESS.seven, { x: 26, y: 12 }),
+          note('above', GUESS.above, { x: 76, y: 12 }),
+          note('below', GUESS.below, { x: 26, y: 34 }),
+          note('fourteen', GUESS.fourteen, { x: 76, y: 34 })
+        ],
+        fixtures: [preview.fixture],
+        zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 138, y: 24 }, size: { w: 46, h: 18 } }] }
+      }, { w: 170, h: 114 });
+    })(),
     hints: [
       'Use the four cards and the slot.',
       'Think about what the flask holds once the acid and the base are both used up.',
@@ -145,10 +149,10 @@ export const STAGES = [
   (() => {
     const st = pourStage({
       id: 's3-weak-acid', title: 'Acetic Acid Used Up', spec: S3, wantKind: 2,
-      prompt: 'What is the pH when sodium hydroxide has exactly used up the acetic acid?',
+      prompt: 'Pour sodium hydroxide until the acetic acid is all used up, then read the pH meter.',
       hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no acid left with the 7 you expected.', 'Ask what the acetate left behind by acetic acid does when it meets water.']
     });
-    Object.defineProperty(st, 'prompt', { get() { return guessLine('What is the pH when sodium hydroxide has exactly used up the acetic acid?', recall(QUEST_KEY)); }, enumerable: true });
+    Object.defineProperty(st, 'prompt', { get() { return guessLine('What is the pH when the acetic acid is completely neutralized by sodium hydroxide?', recall(QUEST_KEY)); }, enumerable: true });
     Object.defineProperty(st, 'reward', {
       enumerable: true,
       get() {
@@ -157,7 +161,7 @@ export const STAGES = [
         return {
           log: 'The flask read 8.72 with the acid used up.',
           title: 'Salt Hydrolysis',
-          body: `${v}Acetate takes protons from water, leaving OH⁻. An ionic compound left when an acid and a base react is a salt; its ion reacting with water is salt hydrolysis.`
+          body: `${v}Acetate is a weak base: it takes protons from water, making the salt basic (salt hydrolysis).`
         };
       }
     });
@@ -167,12 +171,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   pourStage({
     id: 's4-weak-base', title: 'Ammonia Used Up', spec: S4, wantKind: 0,
-    prompt: 'What is the pH when hydrochloric acid has exactly used up the ammonia?',
-    hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no base left with 7.', 'Ask what the base left behind by ammonia does when it meets water.'],
+    prompt: 'What is the pH when the ammonia is completely neutralized by hydrochloric acid?',
+    hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no base left with 7.', 'Ask what the ammonium made from ammonia does when it meets water.'],
     reward: {
       log: 'The flask read 5.28 with the base used up.',
       title: 'Acidic Salt',
-      get body() { return `Ammonium, the acid left behind by ammonia, gives protons to water, so the flask read ${fmt(mixAfter(S4, EQUAL_K).pH, 2)} and is acidic. Equal amounts of an acid and a base can leave a flask that is not neutral.`; }
+      get body() { return `Ammonium, made when ammonia takes a proton, gives a proton back to water, so the flask read ${fmt(mixAfter(S4, EQUAL_K).pH, 2)} and is acidic.`; }
     }
   }),
 
@@ -181,17 +185,17 @@ export const STAGES = [
     const X = [20, 58, 96, 134];
     const probe = flaskFixture('f0', { x: 0, y: 0 }, { solute: SALTS[0].solute, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12 });
     const fl = SALTS.map((s, i) => flaskFixture(`f${i + 1}`, { x: X[i], y: 1 + probe.size.h / 2 }, { solute: s.solute, label: s.name, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12, meter: i < 2 }));
-    const trays = [['acidic', 'Acidic', 24], ['neutral', 'Neutral', 72], ['basic', 'Basic', 120]].map(([id, label, x]) => ({ id, label, at: { x, y: 82 }, size: { w: 44, h: 26 }, cell: 22, cellH: 12 }));
+    const trays = [['acidic', 'Acidic', 26], ['neutral', 'Neutral', 78], ['basic', 'Basic', 130]].map(([id, label, x]) => ({ id, label, at: { x, y: 88 }, size: { w: 48, h: 30 }, cell: 26, cellH: 13 }));
     return {
       id: 's5-sort',
       title: 'Four Salts',
       prompt: 'Which salt solutions are acidic, which neutral and which basic?',
       widget,
       table: phTable({
-        pieces: [meterPiece('meter', { x: 158, y: 10 }), ...SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 160, y: 28 + i * 20 }))],
-        fixtures: [...fl.map(f => f.fixture), plaqueFixture('parents', 'Strong parents', { x: 72, y: 55 }, ['HCl, HNO₃ · NaOH, KOH'], { w: 98 })],
+        pieces: [meterPiece('meter', { x: 172, y: 10 }), ...SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 172, y: 34 + i * 20 }))],
+        fixtures: [...fl.map(f => f.fixture), plaqueFixture('parents', 'Strong parents', { x: 76, y: 58 }, ['HCl, HNO₃ · NaOH, KOH', 'A salt takes after its stronger parent'], { w: 108 })],
         zones: { trays, slots: fl.filter(f => f.slot).map(f => f.slot) }
-      }, { w: 184, h: 104 }),
+      }, { w: 196, h: 112 }),
       hints: [
         'Put the pH meter on sodium chloride and sodium fluoride, and read the strong-parents plate.',
         'Compare the two flasks you measured with the other two using the ions on the plate.',
@@ -201,7 +205,8 @@ export const STAGES = [
         const t = state.table;
         const where = Object.fromEntries(SALTS.map(s => [s.key, t.pieces[`c-${s.key}`].zone]));
         if (Object.values(where).some(z => !z || !z.startsWith('tray:'))) return { ok: false, notYet: true, msg: 'Drag every card into a tray.' };
-        for (const s of SALTS) {
+        for (let i = 0; i < SALTS.length; i++) {
+          const s = SALTS[i];
           const pH = flaskPHOf(s.solute);
           if (where[s.key] === `tray:${['acidic', 'neutral', 'basic'][kindOf(pH)]}`) continue;
           return { ok: false, msg: `The meter on ${s.name.toLowerCase()} reads ${fmt(pH, 2)}.` };
@@ -213,7 +218,7 @@ export const STAGES = [
         return {
           log: 'Sodium fluoride read basic and ammonium chloride read acidic.',
           title: 'Which Ions React',
-          body: `Sodium chloride and potassium nitrate read ${p.nacl}; sodium fluoride read ${p.naf} and ammonium chloride ${p.nh4cl}. An ion from a strong acid or a strong base does nothing to the pH; an ion from a weak one reacts with water.`
+          body: `NaCl and KNO₃ read ${p.nacl}; NaF read ${p.naf} and 0.10 M NH₄Cl read ${p.nh4cl} (more concentrated than stage 4). Ions from weak acids or bases react with water.`
         };
       }
     };
@@ -221,18 +226,18 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const m = neut(S6, { x: 46, y: 34 }, { poured: 1, meter: false });
+    const m = neut(S6, { x: 46, y: 34 }, { poured: 1, meter: false, pour: false });
     return {
       id: 's6-excess',
       title: 'Acid Left Over',
-      prompt: 'What is the pH of the flask after the pour?',
+      prompt: 'After 20 mL of sodium hydroxide is added to 30 mL of acid, what is the pH?',
       widget,
       entry: { id: 'ph', label: 'pH', unit: '' },
       table: phTable({ fixtures: [m.fixture] }, { w: 130, h: 68 }),
       hints: [
         'Type the pH in the field; the window shows the flask after the pour.',
         'Compare the units still grey in the window with the units that were used up.',
-        'Find the moles of acid that are left over, then divide by the total volume of liquid in the flask.'
+        'Find how much acid is left over, then divide by the total volume of liquid in the flask.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ph');
@@ -249,7 +254,7 @@ export const STAGES = [
         return {
           log: 'The acid left over decided the pH.',
           title: 'Excess Decides',
-          body: `${r.left} of 100 units of acid were left. Those left-over moles, spread through 50.0 mL, set the pH at ${fmt(r.pH, 2)}: when one reagent is in excess, it decides the pH.`
+          body: `${r.left} of 100 acid units were left over in 50.0 mL, setting the pH at ${fmt(r.pH, 2)}: whichever is left over decides the pH.`
         };
       }
     };
@@ -263,28 +268,23 @@ export const STAGES = [
       id: 's7-acetate',
       title: 'A Salt Between the Flasks',
       briefing: {
-        intro: 'For 0.050 M sodium acetate from stage 3:',
-        worked: [
-          'Kb = 1.0 × 10⁻¹⁴ ÷ 1.8 × 10⁻⁵ = 5.6 × 10⁻¹⁰',
-          'x² ÷ 0.050 = 5.6 × 10⁻¹⁰, x = 5.3 × 10⁻⁶ = [OH⁻]',
-          'pOH = 5.28, pH = 8.72'
-        ]
+        intro: 'Use Kb of acetate to find [OH⁻], then pOH, then pH = 14 − pOH.'
       },
-      prompt: 'What is the pH of 0.10 M sodium acetate, to two decimal places?',
+      prompt: 'What is the pH of 0.10 M sodium acetate (to two decimal places)?',
       widget,
       entry: { id: 'ph', label: 'pH', unit: '' },
-      table: phTable({ fixtures: [f2.fixture, plaqueFixture('plate', 'Acetic acid', { x: 108, y: 16 }, ['Ka', sci(ACIDS.acetic.Ka, 2)], { w: 44 })] }, { w: 140, h: 50 }),
+      table: phTable({ fixtures: [f2.fixture, plaqueFixture('plate', 'Acetate (CH₃COO⁻)', { x: 110, y: 18 }, [`Acetic acid Ka = ${sci(ACIDS.acetic.Ka, 2)}`, `Acetate Kb = Kw ÷ Ka = 5.6 × 10⁻¹⁰`], { w: 56 })] }, { w: 146, h: 52 }),
       hints: [
-        'Type the pH in the field; the constant is printed on the plate.',
-        'Compare this flask with the 0.050 M acetate flask you poured, and ask which ion is reacting.',
-        'Turn the plate\'s constant into the constant for acetate, then find the hydroxide it makes.'
+        'Use Calc with Kb from the plate to find [OH⁻], then pOH, then pH.',
+        'With [OH⁻] = √(Kb × 0.10), take −log to get pOH.',
+        'Subtract pOH from 14 to get pH.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ph');
         if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
         const s = flaskSol({ solute: ACETATE });
         if (Math.abs(v - s.pH) <= TOL_PH) return { ok: true };
-        if (Math.abs(v - s.pOH) <= 0.05) return { ok: false, msg: `${fmt(s.pOH, 2)} is the pOH of this flask; the question asks for its pH.` };
+        if (Math.abs(v - s.pOH) <= 0.05) return { ok: false, msg: 'That number is the pOH; the question asks for the pH (14 − pOH).' };
         if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: `The 0.050 M acetate flask read ${fmt(mixAfter(S3, EQUAL_K).pH, 2)} in the pour, not 7.00.` };
         return { ok: false, msg: `A pH of ${fmt(v, 2)} is not what 0.10 M sodium acetate reads.` };
       },

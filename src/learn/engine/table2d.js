@@ -311,7 +311,8 @@ export function drawTable(ctx, w, h, state, view = {}) {
         const kx = X(d.x0 + frac * (d.x1 - d.x0));
         ctx.fillRect(kx - 3, Y(d.y) - 5, 6, 10);
       }
-      const shown = dial.labels ? dial.labels[Math.round((dial.value - dial.min) / (dial.step || 1))] ?? dial.value : dial.value;
+      const rawShown = dial.labels ? dial.labels[Math.round((dial.value - dial.min) / (dial.step || 1))] ?? dial.value : dial.value;
+      const shown = typeof rawShown === 'string' && !rawShown.trim() ? '—' : rawShown;
       // The words stand well clear above the track, where the knob never covers them (the built knob is a real cylinder).
       const dialText = dial.label && dial.label.includes('_')
         ? dial.label.replace('_', shown)
@@ -325,6 +326,8 @@ export function drawTable(ctx, w, h, state, view = {}) {
       if (dial.step && dial.max > dial.min) {
         const n = Math.round((dial.max - dial.min) / dial.step);
         if (n > 0 && n <= 12) {
+          const curIdx = Math.round((dial.value - dial.min) / dial.step);
+          const showTicks = !f.props?.list && ((f.props?.tickLabels && n <= 8) || (dial.labels && n <= 6 && dial.labels.some(l => String(l ?? '').trim())));
           ctx.strokeStyle = mat ? PLATE_COLORS.dust : PLATE_COLORS.steel;
           ctx.lineWidth = Math.max(1.2, sc * 0.2);
           for (let i = 0; i <= n; i++) {
@@ -333,11 +336,14 @@ export function drawTable(ctx, w, h, state, view = {}) {
             ctx.moveTo(tx, Y(d.y) + sc * 1.1);
             ctx.lineTo(tx, Y(d.y) + sc * 2.4);
             ctx.stroke();
-            if (f.props?.tickLabels && dial.labels && n <= 6) {
-              const raw = String(dial.labels[i] ?? '').split(',')[0].trim();
+            if (showTicks) {
+              const raw = dial.labels
+                ? String(dial.labels[i] ?? '').split(',')[0].trim()
+                : String(Math.round((dial.min + i * dial.step) * 100) / 100);
               if (raw) {
                 const align = i === 0 ? 'left' : i === n ? 'right' : 'center';
-                words(raw, d.x0 + (i / n) * (d.x1 - d.x0), d.y + 3.7, { size: 1.85, color: ink.dim, align, maxW: (d.x1 - d.x0) / Math.max(2, n) });
+                const col = i === curIdx ? PLATE_COLORS.amber : PLATE_COLORS.text;
+                words(raw, d.x0 + (i / n) * (d.x1 - d.x0), d.y + 3.9, { size: 2.1, color: col, align, maxW: (d.x1 - d.x0) / Math.max(2, n) * 1.05 });
               }
             }
           }

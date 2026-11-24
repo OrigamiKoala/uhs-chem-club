@@ -89,8 +89,8 @@ const TOL_V = 0.02 + 1e-9;
 // Phase 4: a zinc concentration cell, the dilute beaker on the left.
 const P4 = { metal: 'zn', cLeft: 0.010, cRight: 1.0 };
 
-// Phase 5: zinc plated by 1.50 A for 20.0 minutes.
-const P5 = { metal: 'zn', I: 1.50, minutes: 20.0 };
+// Phase 5: copper plated from Brinewire's pool by 1.50 A for 20.0 minutes.
+const P5 = { metal: 'cu', I: 1.50, minutes: 20.0 };
 const TOL_G = 0.012 + 1e-9;
 const FARADAY_LINE = '1 mol of electrons carries 96,485 C';
 const MOLAR_LINES = ['Molar masses in g/mol:', 'Ni 58.7 · Cu 63.5 · Zn 65.4 · Ag 107.9'];
@@ -133,7 +133,7 @@ export const STAGES = [
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [], start: [] }
+          rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [], start: [], slots: 4 }
         }
       }, { w: 204, h: 122 });
     })(),
@@ -156,7 +156,9 @@ export const STAGES = [
       const E = id => METALS[id.slice(2)].E0;
       const k = order.findIndex((id, i) => i > 0 && E(id) < E(order[i - 1]));
       const a = order[k - 1].slice(2); const b = order[k].slice(2);
-      return { ok: false, msg: `${Nm(a)} sits left of ${nm(b)}. ${dipLine(t, P1_METALS, b, a)}` };
+      const res = triedIn({ fixtures: t.fixtures, pieces: t.pieces }, 'dip', bid(P1_METALS, a), b);
+      if (!res) return { ok: false, msg: `The ${nm(b)} strip has not been dipped in the ${METALS[a].ion} solution yet.` };
+      return { ok: false, msg: `${Nm(a)} sits left of ${nm(b)}, but ${dipLine(t, P1_METALS, b, a)}` };
     },
     get reward() {
       const o = P1_WANT;
@@ -174,7 +176,7 @@ export const STAGES = [
   {
     id: 'p2-anode',
     title: 'Phase 2 · The Open Cell',
-    prompt: 'Find the anode of the magnesium and silver cell.',
+    prompt: 'Press Run, then tap which strip on the Model is the anode of the magnesium and silver cell.',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 46 }, { left: P2.left, right: P2.right, link: 'fixed', ammeter: true });
@@ -269,7 +271,7 @@ export const STAGES = [
   {
     id: 'p4-bar',
     title: 'Phase 4 · The Zinc Beakers',
-    prompt: 'Which electrode do the electrons leave in the zinc cell?',
+    prompt: 'Press Run, then tap which electrode electrons leave in this zinc cell (one concentrated 1.0 M beaker and one dilute 0.010 M beaker).',
     widget,
     table: cellTable({
       fixtures: [
@@ -311,11 +313,11 @@ export const STAGES = [
   {
     id: 'p5-plate',
     title: 'Phase 5 · The Plating Run',
-    prompt: 'What mass of zinc, in grams, is plated by 1.50 A running for 20.0 minutes?',
+    prompt: 'What mass of copper, in grams, does the Clamp plate from Brinewire\'s pool at 1.50 A for 20.0 minutes?',
     widget,
-    entry: { id: 'g', label: 'Zinc plated', unit: 'g' },
+    entry: { id: 'g', label: 'Copper plated', unit: 'g' },
     table: (() => {
-      const s = supplyFixture('sup', { x: 52, y: 36 }, 'plate', { metal: P5.metal, solution: 'Zinc sulfate solution', half: 'Zn²⁺ + 2 e⁻ → Zn', currents: [1, 2], times: [30, 60], counter: true });
+      const s = supplyFixture('sup', { x: 52, y: 36 }, 'plate', { metal: P5.metal, solution: 'Copper(II) sulfate pool', half: 'Cu²⁺ + 2 e⁻ → Cu', currents: [1, 2], times: [30, 60], counter: true });
       return cellTable({
         fixtures: [s.fixture, plaqueFixture('plate', 'For reference', { x: 140, y: 52 }, [FARADAY_LINE, ...MOLAR_LINES], { w: 58 })]
       }, { w: 172, h: 84 });
@@ -324,12 +326,12 @@ export const STAGES = [
     encounter: {
       species: 'the clamp',
       act: 'Commit Mass',
-      intent: 'The Clamp pushes a current through a zinc bath and wants to know what it has taken.'
+      intent: 'The Clamp pushes 1.50 A through a copper pool—find how much copper it plates.'
     },
     hints: [
-      'Choose a current and a time with the two dials, press "Run", and type the grams in the field.',
+      'Choose a current and a time with the two dials, press "Run", and type the grams of copper in the field.',
       'Compare how the plated mass changes with the current and with the time across the runs.',
-      'Connect the charge passed in that time to moles of electrons and the half-reaction line on the bench.'
+      'Convert minutes to seconds, find moles of electrons, then use the half-reaction line and copper\'s molar mass.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'g');
@@ -340,30 +342,36 @@ export const STAGES = [
       const wrongM = id => want * METALS[id].M / METALS[P5.metal].M;
       const hit = slipOf(v, [
         [faradayMass(P5.I, P5.minutes, P5.metal), 'That treats 20.0 minutes as 20.0 s; the time in the question is in minutes.'],
-        [want * 2, 'The cell\'s half-reaction line reads Zn²⁺ + 2 e⁻ → Zn; that figure counts one electron for each zinc atom.'],
-        [wrongM('cu'), 'That uses 63.5 g/mol, the molar mass of copper; this bath holds zinc.'],
-        [wrongM('ag'), 'That uses 107.9 g/mol, the molar mass of silver; this bath holds zinc.'],
-        [wrongM('ni'), 'That uses 58.7 g/mol, the molar mass of nickel; this bath holds zinc.'],
+        [want * 2, 'You used one electron per copper atom; the line Cu²⁺ + 2 e⁻ → Cu shows two.'],
+        [wrongM('zn'), 'That uses 65.4 g/mol, the molar mass of zinc; this pool holds copper.'],
+        [wrongM('ag'), 'That uses 107.9 g/mol, the molar mass of silver; this pool holds copper.'],
+        [wrongM('ni'), 'That uses 58.7 g/mol, the molar mass of nickel; this pool holds copper.'],
         [charge(P5.I, t), 'That figure is a charge in coulombs; the field is in grams.']
       ], want);
       if (hit) return hit;
       if (v < 0) return { ok: false, msg: 'A mass plated is a size, not a negative number.' };
       const r = supplyRead(state.table, 'sup').rows.find(x => x.I === 2 && x.t === 60);
-      return { ok: false, msg: r ? `The bench plated ${fmt(r.g * 1000, 1)} mg of zinc in a 60 s run at 2.00 A; that does not lead to ${fmt(v, 2)} g for 20.0 minutes.` : 'Run the bench at 2.00 A to see what a short run plates.' };
+      return { ok: false, msg: r ? `The bench plated ${fmt(r.g * 1000, 1)} mg of copper in a 60 s run at 2.00 A; that does not lead to ${fmt(v, 2)} g for 20.0 minutes.` : 'Run the bench at 2.00 A to see what a short run plates.' };
     },
     get reward() {
       const t = P5.minutes * 60; const q = charge(P5.I, t); const mol = molesElectrons(q);
       return {
-        log: 'The plated mass followed the charge, the electrons per atom and the molar mass.',
+        log: 'The plated copper mass followed the charge, the electrons per atom, and copper\'s molar mass.',
         title: 'The Mass Follows the Charge',
-        body: `${fmt(P5.I, 2)} A × ${t} s = ${fmt(q, 0)} C, which is ${fmt(mol, 4)} mol of electrons, and two electrons plate each zinc atom: ${fmt(mol / 2, 4)} mol × 65.4 g/mol = ${fmt(faradayMass(P5.I, t, 'zn'), 2)} g.`
+        body: `${fmt(P5.I, 2)} A × ${t} s = ${fmt(q, 0)} C, which is ${fmt(mol, 4)} mol of electrons, and two electrons plate each copper atom: ${fmt(mol / 2, 4)} mol × 63.5 g/mol = ${fmt(faradayMass(P5.I, t, 'cu'), 2)} g of pure copper.`
       };
     }
   }
 ];
 
 /** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
-attachScenes(STAGES, { demos: {}, placement: 'below', inside: [0], foe: true, own: { 1: { sitesKey: 'sides', extra: { pickMap: [1, 2] } }, 3: { sitesKey: 'sides', extra: { pickMap: [1, 2] } } } });
+attachScenes(STAGES, {
+  demos: {}, placement: 'below', inside: [0], skip: [2], foe: true,
+  own: {
+    1: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteLabels: ['Left (Ag)', 'Right (Mg)'] } },
+    3: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteLabels: ['Left (0.010 M)', 'Right (1.0 M)'] } }
+  }
+});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -379,11 +387,11 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase put a cell in front of you that the Clamp never read: which metal loses, where the electrons leave, what the voltage is, which side is dilute, how much plates. Each one has an answer that a meter or a balance can show.'
+      body: 'Every phase tested a piece of electrochemistry the Clamp ignored: which metal loses electrons, where they leave, the cell voltage, which side is dilute, and how much metal plates.'
     },
     {
       heading: 'Next',
-      body: 'The last cell goes into the Case File. Its power came from the marsh itself, and the cell reads the same as every cell on the road.'
+      body: 'The last cell goes into the Case File—proof that the Fifth Guild is using stolen grid power to plate pure copper from the marsh pools.'
     }
   ]
 };
@@ -442,4 +450,5 @@ export function mount(container, ctx) {
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = { P1_METALS, P1_CARDS, P1_WANT, P2, P2_ANODE, P3, P3_WANT, P4, P5, TOL_V, TOL_G, loopCurrent, FARADAY };
 
+STAGES.forEach(s => { s.noTour = true; });
 markFights(STAGES);

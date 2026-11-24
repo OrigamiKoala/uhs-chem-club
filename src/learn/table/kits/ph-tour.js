@@ -14,17 +14,17 @@ import './heat-tour.js';
 const FIXTURES = {
   'ph:phflask': {
     title: 'Flask', dials: false,
-    text: 'The spheres are 200 units of the solution. Lay the pH meter on the seat.'
+    text: 'Each flask shows 200 particles. Drag the meter onto a flask to read its pH.'
   },
   'ph:phrig': {
     title: 'Expression board', dials: false,
-    text: 'Put cards above and below the line. Each column prints a number.'
+    text: 'Cards on the same side of the line multiply; top is divided by bottom.'
   }
 };
 
 const PIECES = {
-  phmeter: ['pH meter', 'Drag it onto a flask to read it.'],
-  phtile: ['Cards', 'Drag a card onto the board.'],
+  phmeter: ['pH meter', 'Drag onto a flask to read its pH.'],
+  phtile: ['Cards', 'Drag a card into a slot on the board.'],
   'ph:tag': ['Name cards', 'Drag a card to its place.'],
   'ph:note': ['Cards', 'Drag a card to its place.']
 };

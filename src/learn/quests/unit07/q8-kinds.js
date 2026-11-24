@@ -176,7 +176,7 @@ export const STAGES = [
         title: 'Synthesis and Decomposition',
         body: 'In a synthesis, two or more substances join into one. In a decomposition, one substance breaks into two or more.'
       },
-      prompt: 'Which reactions are a synthesis, which a decomposition and which neither?',
+      prompt: 'Which reactions are synthesis, which are decomposition, and which are neither?',
       widget,
       table: potTable({
         pieces: S1_POTS.map((p, i) => chip(p.id, p.name, { x: 10.5 + i * 18.6, y: 57.6 })),
@@ -186,13 +186,13 @@ export const STAGES = [
       hints: [
         'Use the "Vessel" dial and the "Run" key to look at each reaction, then drag the cards into the trays.',
         'Compare how many different substances stand on the left of the particle view with how many stand on the right.',
-        'Reactions belong together when their left and right groups change in the same way.'
+        'Group reactions by whether substances join together, break apart, or do neither.'
       ],
       check(state) {
         return sortCheck(state, S1_POTS, S1_TRAYS, p => SHAPE_TRAY[shapeOf(eqOf(p.eq))], (p, tray, i, t) => {
           const eq = eqOf(p.eq);
           if (!ranPot(t, 'win', i)) return `${p.name} has not been run in the particle view yet.`;
-          return `${p.name} showed ${plural(count(eq, 'lhs'), 'substance')} before and ${count(eq, 'rhs')} after, and it is in the tray "${trayLabel(S1_TRAYS, tray)}".`;
+          return `${p.name} showed ${plural(count(eq, 'lhs'), 'substance')} before and ${count(eq, 'rhs')} after, so it does not belong in "${trayLabel(S1_TRAYS, tray)}".`;
         });
       },
       reward: {
@@ -211,7 +211,7 @@ export const STAGES = [
       title: 'Three Gas Jars',
       briefing: {
         title: 'Testing Unknown Gases',
-        body: 'Each gas reacts differently to a glowing splint, a lit splint and limewater. Run the tests on each jar to tell them apart.'
+        body: 'Each gas reacts differently to a glowing splint, a lit splint, and limewater. Test each jar to identify the gas inside.'
       },
       prompt: 'Which gas is in each sample jar?',
       widget,
@@ -231,7 +231,7 @@ export const STAGES = [
       hints: [
         'Drag a sample jar onto the seat, turn the "Test" dial and press "Test", then drag a name onto each sample.',
         'Compare which tests change in each jar and which stay as they were.',
-        'Use as few tests on a jar as it takes to tell it from the other gases.'
+        'Run only the tests needed to tell each jar apart from the other gases.'
       ],
       check(state) {
         const t = state.table;
@@ -280,7 +280,7 @@ export const STAGES = [
       hints: [
         'Use the burner and its "Burn" key, then the gas tests with the "Test" dial and the "Test" key, then the tray.',
         'Compare how each test changes in the jar after the burner has run, and what that test is for.',
-        'File only what a test found in the jar; a test that changes nothing shows nothing.'
+        'A positive gas test means that substance was formed by burning the methane.'
       ],
       check(state) {
         const t = state.table;
@@ -292,9 +292,9 @@ export const STAGES = [
         if (!extra && !missing) return { ok: true };
         const jarOn = Object.values(t.pieces).find(p => p.kind === 'gjar');
         const tested = GAS_TEST_ORDER.filter(k => t.recorder.rows.some(r => r.label === `rig|${jarOn?.id}|${k}`));
-        if (!jarOn?.props.filled || !tested.length) return { ok: false, msg: 'Burn the fuel into the gas jar and try a test in it first.' };
-        if (extra) return { ok: false, msg: `${extra.label} is in the tray, but none of the tests tried in the jar found it.` };
-        return { ok: false, msg: 'A test tried in the jar changed, and nothing in the tray stands for it.' };
+        if (!jarOn?.props.filled || !tested.length) return { ok: false, msg: 'Burn the fuel into the gas jar and run a test first.' };
+        if (extra) return { ok: false, msg: `${extra.label} is in the tray, but none of the gas tests detected it.` };
+        return { ok: false, msg: 'One of the gas tests was positive, but its product is missing from the tray.' };
       },
       reward: {
         log: 'Methane burns to carbon dioxide and water.',
@@ -312,9 +312,9 @@ export const STAGES = [
       title: 'A Proton Moves',
       briefing: {
         title: 'Acid-Base Reactions',
-        body: 'A hydrogen ion, H⁺, is a single proton. In an acid-base reaction a proton passes from one molecule, the acid, to another, the base.'
+        body: 'A hydrogen ion (H⁺) is a single proton. In an acid-base reaction, a proton transfers from an acid to a base.'
       },
-      prompt: 'In which reactions does a proton pass from one molecule to another?',
+      prompt: 'In which reactions does a proton transfer from one molecule to another?',
       widget,
       table: potTable({
         pieces: S4_POTS.map((p, i) => chip(p.id, p.name, { x: 10.5 + i * 18.6, y: 57.6 })),
@@ -336,7 +336,7 @@ export const STAGES = [
       reward: {
         log: 'A hydrogen ion passes from an acid to a base.',
         title: 'Acid-Base Reaction',
-        body: 'Where the ringed hydrogen changed molecules, the reaction is acid-base. An acid being present is not enough.'
+        body: 'When the ringed H⁺ moves to a different molecule, the reaction is acid-base.'
       }
     };
   })(),
@@ -366,7 +366,7 @@ export const STAGES = [
       hints: [
         'Press "Run", then drag one particle into each slot.',
         'Compare the amber dots on each atom before the reaction with the dots after it.',
-        'The particle that has the dots before and not after lost them, and the one that has them after gained them.'
+        'The particle that loses dots is oxidised; the one that gains them is reduced.'
       ],
       check(state) {
         const t = state.table;
@@ -375,7 +375,7 @@ export const STAGES = [
         if (!gave && !took) return { ok: false, notYet: true, msg: 'Drag a particle into each slot.' };
         if (!gave || !took) return { ok: false, notYet: true, msg: 'Fill both slots.' };
         if (gave.el === 'Zn' && took.el === 'Cu') return { ok: true };
-        if (!ranPot(t, 'win', 0)) return { ok: false, msg: 'The particle view has not been run yet.' };
+        if (!ranPot(t, 'win', 0)) return { ok: false, msg: 'Run the particle view first.' };
         if (gave.el === 'SO4' || took.el === 'SO4') return { ok: false, msg: `${S5_PARTS[2].label} has no dots before the reaction or after it.` };
         if (gave.el === 'Cu') return { ok: false, msg: `${gave.label} has no dots before the reaction.` };
         return { ok: false, msg: `${took.label} has dots before the reaction already.` };
@@ -410,7 +410,7 @@ export const STAGES = [
       }),
       hints: [
         'Use the "Worked" dial to see three examples worked out, then type your answer.',
-        'Compare how the oxygen atoms and the charge decide the oxidation number on the other atom in each worked species.',
+        'See how the oxygen atoms and the overall charge determine the other atom\'s oxidation number in each example.',
         'Use the oxygen rule and the ion’s overall charge to find manganese’s oxidation number.'
       ],
       check(state) {
@@ -418,7 +418,7 @@ export const STAGES = [
         if (!(Number.isFinite(v)) || state.table.entries.on === undefined || state.table.entries.on === '') return { ok: false, notYet: true, msg: 'Type the oxidation number of manganese.' };
         if (v === MN_NUMBER) return { ok: true };
         const total = v + 4 * -2;
-        return { ok: false, msg: `With ${sgn(v)} on manganese and −2 on each of four oxygens, the total is ${sgn(total)}, and the ion's charge is ${sgn(S6_ASKED.charge)}.` };
+        return { ok: false, msg: `With ${sgn(v)} on manganese and −2 on each of four oxygens, the total is ${sgn(total)}, not the ion's charge of ${sgn(S6_ASKED.charge)}.` };
       },
       reward: {
         log: 'Manganese has oxidation number +7 in MnO₄⁻.',
@@ -447,7 +447,7 @@ export const STAGES = [
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the prediction slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -479,20 +479,20 @@ export const STAGES = [
       hints: [
         'Turn the "Look for" dial to a kind, then tap the cards that belong to it.',
         'Compare each card\'s reading with what that kind of reaction needs, and check the same card under every kind.',
-        'A card lit under one kind says nothing about the others, so go through all five kinds.'
+        'A reaction can belong to more than one kind, so check every card under all five kinds.'
       ],
       check(state) {
         const t = state.table;
         const filed = filedKinds(t);
         const cards = Object.values(t.pieces).filter(p => p.kind === 'rxn');
-        if (cards.every(c => !filed[c.id].size)) return { ok: false, notYet: true, msg: 'Light the cards that belong to a kind.' };
+        if (cards.every(c => !filed[c.id].size)) return { ok: false, notYet: true, msg: 'Tap the cards that match the selected reaction kind.' };
         for (const c of cards) {
           const want = kindsOfCard(c);
           const eq = equationOf(c.props.eq);
           for (const k of KINDS) {
             const has = filed[c.id].has(k);
-            if (want.has(k) && !has) return { ok: false, msg: `${c.label}: the ${KIND_LABEL[k]} reading is "${readingFor(k, eq)}", and the card is not lit under ${KIND_LABEL[k]}.` };
-            if (!want.has(k) && has) return { ok: false, msg: `${c.label} is lit under ${KIND_LABEL[k]}, whose reading is "${readingFor(k, eq)}".` };
+            if (want.has(k) && !has) return { ok: false, msg: `${c.label} matches ${KIND_LABEL[k]} ("${readingFor(k, eq)}"), so light it under ${KIND_LABEL[k]}.` };
+            if (!want.has(k) && has) return { ok: false, msg: `${c.label} does not match ${KIND_LABEL[k]} ("${readingFor(k, eq)}").` };
           }
         }
         return { ok: true };
@@ -500,12 +500,12 @@ export const STAGES = [
       get reward() {
         const g = recall(QUEST_KEY);
         const verdict = g && GUESS[g]
-          ? (g === 'many' ? 'The board agreed with your guess. ' : 'The board did not agree with your guess, which is how a guess gets better. ')
+          ? (g === 'many' ? 'The board agreed with your guess. ' : 'The board disagreed with your guess. ')
           : '';
         return {
           log: 'Magnesium burning is a synthesis, a combustion and a redox reaction.',
           title: 'A Reaction Has Many Kinds',
-          body: `${verdict}Burning magnesium is a synthesis, a combustion and a redox reaction at once. Each kind looks at something different: substances, oxygen, protons or electrons.`
+          body: `${verdict}Burning magnesium is a synthesis, a combustion, and a redox reaction at once. Each kind tracks a different feature: substances, oxygen, protons, or electrons.`
         };
       }
     };
@@ -532,7 +532,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A reaction can join, split, burn, pass a proton or move electrons, and most do more than one. A reaction can belong to several kinds at once because each looks at something different.'
+      body: 'A reaction can join substances, split them, burn in oxygen, transfer a proton, or move electrons. One reaction often belongs to several kinds at once because each tracks a different feature.'
     }
   ]
 };

@@ -1,7 +1,7 @@
 import { addTourText } from '../tour.js';
 
 addTourText({
-  'ph:phtransfer': { title: 'Proton bench', dials: false, text: 'Drag a proton to the particle that takes it.' }
+  'ph:phtransfer': { title: 'Proton bench', dials: false, text: 'Drag a proton onto the particle that ends up holding it.' }
 }, {
-  phproton: ['Proton', 'Drag it into a particle\'s seat.']
+  phproton: ['Proton', 'Drag the proton onto the particle that ends up holding it.']
 });

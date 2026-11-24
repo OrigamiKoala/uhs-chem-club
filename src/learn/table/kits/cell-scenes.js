@@ -314,6 +314,7 @@ export function demoSpec(name) {
     case 'zn-in-cu': return BUILD.cellredox(null, { props: { reaction: 'zncu' } });
     case 'unwired': return cell({ left: 'zn', right: 'cu', closed: false, bridge: 'none' });
     case 'running': return cell({ left: 'zn', right: 'cu', closed: true });
+    case 'sn-pb-running': return cell({ left: 'sn', right: 'pb', closed: true });
     default: return null;
   }
 }

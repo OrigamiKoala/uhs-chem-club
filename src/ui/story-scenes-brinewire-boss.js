@@ -136,12 +136,12 @@ function dilute(ctx, w, h, t) {
   if (p > 0.95) {
     const ratio = 10 ** ((barR - barL) / DEC);
     const V = (RT_F / METALS.zn.n) * Math.log(ratio);
-    text(ctx, `${Math.round(ratio)} to 1: ${fmt(V, 3)} V`, w / 2, 90, { size: 30, color: C.amber, weight: 700 });
+    text(ctx, `${Math.round(ratio)} to 1: ${fmt(V, 3)} V`, w / 2, 78, { size: 28, color: C.amber, weight: 700 });
     for (let i = 0; i < 4; i++) {
       const q = (t * 40 + i * 0.25) % 1;
-      disc(ctx, 320 + (720 - 320) * q, 100, 8, C.pale);
+      disc(ctx, 320 + (720 - 320) * q, 114, 8, C.pale);
     }
-    text(ctx, 'electrons leave this bar', 320, 130, { size: 20, color: C.amber });
+    text(ctx, 'electrons leave this bar', 320, 480, { size: 20, color: C.amber, weight: 700 });
   }
 }
 
@@ -152,7 +152,7 @@ const PX_A = 110; const PX_S = 0.45;                             // pixels per a
 const MOLE_PX = 400;                                             // one mole of electrons = this many pixels
 
 function plating(ctx, w, h, t) {
-  text(ctx, '1.50 A for 20.0 minutes through a zinc bath', w / 2, 34, { size: 24, color: C.dust });
+  text(ctx, '1.50 A for 20.0 minutes through a copper pool', w / 2, 34, { size: 24, color: C.dust });
   const p = ease(win(t, 0.8, 0.88));
   const x0 = 120; const y0 = 280;
   const rw = RUN.t * PX_S * p; const rh = RUN.I * PX_A;
@@ -165,15 +165,15 @@ function plating(ctx, w, h, t) {
     const molE = q / FARADAY;
     const q2 = ease(win(t, 0.88, 0.94));
     const eLen = molE * MOLE_PX * 14 * q2;                       // electrons, drawn at 14 times the scale so the bar is legible
-    const zLen = eLen / METALS.zn.n;
+    const cLen = eLen / METALS.cu.n;
     text(ctx, 'electrons', x0 - 16, y0 + 70, { size: 20, color: C.dust, align: 'right' });
     rect(ctx, x0, y0 + 54, Math.max(1, eLen), 32, C.pale);
     if (q2 > 0.95) text(ctx, `${fmt(eLen / (MOLE_PX * 14), 4)} mol`, x0 + eLen + 14, y0 + 70, { size: 22, color: C.text, weight: 700, align: 'left' });
-    text(ctx, 'zinc atoms', x0 - 16, y0 + 130, { size: 20, color: C.dust, align: 'right' });
-    rect(ctx, x0, y0 + 114, Math.max(1, zLen), 32, C.green);
+    text(ctx, 'copper atoms', x0 - 16, y0 + 130, { size: 20, color: C.dust, align: 'right' });
+    rect(ctx, x0, y0 + 114, Math.max(1, cLen), 32, C.green);
     if (q2 > 0.95) {
-      const molZn = zLen / (MOLE_PX * 14);
-      text(ctx, `${fmt(molZn, 4)} mol, ${fmt(molZn * METALS.zn.M, 2)} g`, x0 + zLen + 14, y0 + 130, { size: 22, color: C.text, weight: 700, align: 'left' });
+      const molCu = cLen / (MOLE_PX * 14);
+      text(ctx, `${fmt(molCu, 4)} mol, ${fmt(molCu * METALS.cu.M, 2)} g`, x0 + cLen + 14, y0 + 130, { size: 22, color: C.text, weight: 700, align: 'left' });
     }
   }
 }

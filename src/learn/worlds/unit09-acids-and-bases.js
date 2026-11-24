@@ -23,7 +23,7 @@ export const UNIT_09 = {
   place: 'Acid marsh',
   title: 'Acids and Bases',
   line: 'Proton transfer, the pH scale, weak acids and bases, titrations and buffers.',
-  brief: 'Acids hand protons to bases, and a pH reading counts the hydronium they leave. In Verdigris, read flasks of marsh water, find what sets an acid’s strength, follow a titration and see what holds a pH steady.',
+  brief: 'Acids donate protons to bases, and pH measures the hydronium they form. In Verdigris, test marsh water, see what makes an acid strong, follow a titration, and learn what keeps pH steady.',
 
   quests: [
     {
@@ -38,7 +38,7 @@ export const UNIT_09 = {
     {
       id: 'q2-scale',
       title: 'Reading the Scale',
-      line: 'The Fifth gives one number for the marsh; find what a pH number counts.',
+      line: 'The Fifth reports one number for the marsh; find what pH actually measures.',
       arena: 'bench',
       stageCount: 9,
       status: 'live',
@@ -47,7 +47,7 @@ export const UNIT_09 = {
     {
       id: 'q3-weak',
       title: 'Weak Acids and Bases',
-      line: 'Two tanks hold the same amount of acid; find why they do not read the same.',
+      line: 'Two tanks hold the same concentration of acid; find why their pH readings differ.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -65,7 +65,7 @@ export const UNIT_09 = {
     {
       id: 'q5-salts',
       title: 'Neutralization and Salts',
-      line: 'The Fifth neutralised a tank and called it safe; measure what was left.',
+      line: 'The Fifth neutralized a tank and called it safe; measure what was left.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -83,7 +83,7 @@ export const UNIT_09 = {
     {
       id: 'q7-buffer',
       title: 'Buffers',
-      line: 'One sluice resists acid and one does not; find what in the water does.',
+      line: 'One sluice resists acid and another does not; find what keeps the pH steady.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',

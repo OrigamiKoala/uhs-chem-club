@@ -35,8 +35,7 @@ export const VOCABULARY = [
   { term: /\belectrolytic cells?\b/i, introducedAt: 1 },
   { term: /\belectrolysis\b/i, introducedAt: 1 },
   { term: /\bcoulombs?\b/i, introducedAt: 3 },
-  { term: /\bFaraday's law\b/i, introducedAt: 4 },
-  { term: /\boverpotential\b/i, introducedAt: 6 }
+  { term: /\bFaraday's law\b/i, introducedAt: 4 }
 ];
 
 /** Built quests whose words this bench uses (oxidation/reduction, anode/cathode, cell voltage). */
@@ -86,13 +85,14 @@ export const STAGES = [
   {
     id: 's1-reverse',
     title: 'Reversing the Cell',
-    prompt: 'What does a supply need to do to make zinc plate out of the solution?',
+    briefing: { speaker: SPEAKER, body: 'A power supply sends electrons into whichever strip you choose. To plate a metal means to coat solid metal from the solution onto a strip.' },
+    prompt: 'Set the power supply dials and press Run so the zinc strip gains mass (plates zinc).',
     widget,
     table: cellTable({ fixtures: [supplyFixture('sup', { x: 64, y: 40 }, 'zncu').fixture] }, { w: 128, h: 82 }),
     hints: [
       'Set the two dials, press "Run", and read what the zinc strip did.',
       'Compare the zinc strip across runs at each setting of both dials.',
-      'Compare the supply\'s voltage with the 1.10 V the cell gives by itself.'
+      'To reverse the 1.10 V cell, the supply must beat 1.10 V and send electrons into zinc.'
     ],
     check(state) {
       const r = bench(state.table);
@@ -116,7 +116,8 @@ export const STAGES = [
   {
     id: 's2-melt',
     title: 'Molten Salt',
-    prompt: 'At which electrode does sodium form in molten sodium chloride?',
+    briefing: { speaker: SPEAKER, body: 'Molten means melted: liquid sodium chloride holds free Na⁺ and Cl⁻ ions that can move to the electrodes.' },
+    prompt: 'Set the direction dial, press Run, then tap the electrode on the Model where sodium forms in molten sodium chloride.',
     widget,
     table: cellTable({
       fixtures: [
@@ -127,7 +128,7 @@ export const STAGES = [
     hints: [
       'Set the "Electrons sent into" dial, press "Run", and tap the electrode you choose.',
       'Compare where the silvery liquid forms with the electrode the electrons were sent into.',
-      'Compare where the metal forms with the direction of the electrons, and remember which side reduction happens at.'
+      'Na⁺ ions gain electrons to form sodium metal, so look where electrons are sent.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -157,12 +158,12 @@ export const STAGES = [
     table: cellTable({
       pieces: S3_RUNS.map((r, i) => tag(`r${i + 1}`, `${r.I} A, ${r.t} s`, { x: 24 + i * 35, y: 70 })),
       fixtures: [supplyFixture('sup', { x: 59, y: 32 }, 'plate', { metal: 'ag', solution: 'Silver nitrate solution', runs: S3_RUNS }).fixture],
-      zones: { rail: { at: { x: 59, y: 90 }, size: { w: 104, h: 12 }, first: 'Least charge', last: 'Most charge', items: [], start: [] } }
+      zones: { rail: { at: { x: 59, y: 90 }, size: { w: 104, h: 12 }, first: 'Least charge', last: 'Most charge', items: [], start: [], slots: 3 } }
     }, { w: 118, h: 102 }),
     hints: [
       'Choose a run with the "Run" dial, press "Run" for each, then drag the three cards onto the rail.',
       'Compare the mass of silver each run put on the plate with the current and the time it used.',
-      'Charge depends on how much current flowed and for how long together, so rank by both numbers at once.'
+      'Multiply current (A) by time (s) to find the charge in coulombs for each run.'
     ],
     check(state) {
       const t = state.table;
@@ -194,15 +195,15 @@ export const STAGES = [
     title: 'Plating Copper',
     briefing: {
       speaker: SPEAKER,
-      body: 'A current and a time give a charge in coulombs, and one mole of electrons carries 96,485 C.',
+      body: 'Three steps to plated mass: (1) multiply amperes × seconds (convert minutes to seconds first) for coulombs; (2) divide by 96,485 C/mol for moles of electrons; (3) divide by electrons per atom and multiply by molar mass.',
       worked: [
-        'Al³⁺ + 3 e⁻ → Al',
-        '1.00 A × 965 s = 965 C',
-        '965 ÷ 96,485 = 0.0100 mol e⁻',
-        '÷ 3 = 0.00333 mol Al = 0.090 g'
+        'Example (Al³⁺ + 3 e⁻ → Al): 1.00 A for 965 s',
+        '1) Charge: 1.00 A × 965 s = 965 C',
+        '2) Moles e⁻: 965 ÷ 96,485 = 0.0100 mol e⁻',
+        '3) Mass: (0.0100 ÷ 3) × 27.0 = 0.090 g Al'
       ]
     },
-    prompt: 'What mass of copper, in grams, is plated by 2.00 A running for 30.0 minutes?',
+    prompt: 'What mass of copper, in grams, is plated by 2.00 A running for 30.0 minutes (convert minutes to seconds)?',
     widget,
     entry: { id: 'g', label: 'Copper plated', unit: 'g' },
     table: cellTable({
@@ -227,7 +228,7 @@ export const STAGES = [
         unitNote: true,
         cases: [
           [faradayMass(S4.I, S4.minutes, S4.metal), 'That treats 30.0 minutes as 30.0 s; the time in the question is in minutes.'],
-          [want * 2, 'The cell\'s half-reaction line reads Cu²⁺ + 2 e⁻ → Cu; that figure counts one electron for each copper atom.'],
+          [want * 2, 'You used one electron per copper atom; the half-reaction Cu²⁺ + 2 e⁻ → Cu shows two.'],
           [wrongM('ag'), 'That uses 107.9 g/mol, the molar mass of silver; this cell holds copper.'],
           [wrongM('zn'), 'That uses 65.4 g/mol, the molar mass of zinc; this cell holds copper.'],
           [charge(S4.I, S4.minutes * 60), 'That figure is a charge in coulombs; the field is in grams.']
@@ -243,7 +244,7 @@ export const STAGES = [
       return {
         log: 'The plated mass followed the charge, the electrons per atom and the molar mass.',
         title: "Faraday's Law",
-        body: `${fmt(q, 0)} C is ${fmt(mol, 4)} mol of electrons; two for each copper atom gives ${fmt(mol / 2, 4)} mol, ${fmt(faradayMass(S4.I, t, 'cu'), 2)} g. This is Faraday's law.`
+        body: `${fmt(q, 0)} C is ${fmt(mol, 4)} mol of electrons; two for each copper atom gives ${fmt(mol / 2, 4)} mol, about ${fmt(faradayMass(S4.I, t, 'cu'), 2)} g. This is Faraday's law.`
       };
     }
   },
@@ -252,7 +253,8 @@ export const STAGES = [
   {
     id: 's6-chain',
     title: 'Cells Driving Cells',
-    prompt: 'How many zinc–copper cells does it take to split water?',
+    briefing: { speaker: SPEAKER, body: 'Electricity can split water into hydrogen (H₂) and oxygen (O₂) gas if the voltage is high enough. Stack zinc–copper cells in the chain until gas collects in the tubes.' },
+    prompt: 'How many zinc–copper cells stacked in a chain are needed to split water?',
     widget,
     table: (() => {
       const s = supplyFixture('sup', { x: 62, y: 28 }, 'water', { cells: 3 });
@@ -290,9 +292,9 @@ export const STAGES = [
     title: 'Water and Brine',
     briefing: {
       speaker: SPEAKER,
-      body: 'Oxygen forms slowly at real electrodes and needs extra voltage (overpotential) to start. In salty brine, chloride ions can react instead when oxygen lags.'
+      body: 'Water and salty brine are both powered at 3.0 V. Use each tube\'s gas volume and test result to identify what formed.'
     },
-    prompt: 'Which gas does each tube collect?',
+    prompt: 'Press Run, then drag the matching gas bubble (H₂, O₂, or Cl₂) under each of the four tubes.',
     widget,
     table: (() => {
       const s = supplyFixture('sup', { x: 68, y: 40 }, 'compare', S7);
@@ -306,7 +308,7 @@ export const STAGES = [
     hints: [
       'Press "Run", then drag one gas bubble to the seat under each tube.',
       'Compare each tube\'s volume and what its gas does with the other three tubes.',
-      'Match each gas to the cell and the electrode it came from, using its volume and how it behaved.'
+      'H₂ pops, O₂ relights a glowing splint, and Cl₂ is pale green.'
     ],
     check(state) {
       const t = state.table;
@@ -327,7 +329,7 @@ export const STAGES = [
       return {
         log: 'The gas at the anode depended on what was in the cell.',
         title: 'What Forms',
-        body: `Water gave ${fmt(c.water.cathode.mL, 1)} mL of hydrogen and ${fmt(c.water.anode.mL, 1)} mL of oxygen; brine gave ${fmt(c.brine.cathode.mL, 1)} mL each of hydrogen and chlorine, because oxygen forms slowly at real electrodes (overpotential).`
+        body: `Water gave ${fmt(c.water.cathode.mL, 1)} mL of hydrogen and ${fmt(c.water.anode.mL, 1)} mL of oxygen; brine gave ${fmt(c.brine.cathode.mL, 1)} mL each of hydrogen and chlorine, because oxygen forms more slowly at real electrodes so chloride ions react instead.`
       };
     }
   },
@@ -336,7 +338,7 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'The Sealed Plate',
-    prompt: 'What current, in amperes, plated the sealed plate in the time shown?',
+    prompt: 'Lay Plate X on the balance, convert the plated time from minutes to seconds, and type the current in amperes.',
     widget,
     entry: { id: 'i', label: 'Current', unit: 'A' },
     table: (() => {
@@ -350,7 +352,7 @@ export const STAGES = [
     hints: [
       'Lay the plate on the balance to read its mass, then type the current in the field.',
       'Compare the mass on the balance with the time shown and the half-reaction line.',
-      'Run stage 4\'s chain backwards, from grams to coulombs.'
+      'Convert grams to moles of nickel, then moles of electrons, then coulombs, and divide by seconds.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'i');
@@ -381,7 +383,7 @@ export const STAGES = [
 ];
 
 /** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
-attachScenes(STAGES, { compact: [2, 5], demos: {}, own: { 1: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteX: [0.36, 0.64] } } } });
+attachScenes(STAGES, { compact: [2, 5], demos: {}, own: { 1: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteX: [0.36, 0.64], siteLabels: ['Left', 'Right'] } } } });
 
 export const DEBRIEF = {
   title: 'Electrolysis',

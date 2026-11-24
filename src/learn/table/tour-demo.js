@@ -160,7 +160,7 @@ function zoneSpot(table, kit, LAYOUT, a) {
 
 /** Synthesize a short live demonstration directly on `table` for a given Tour step (`fx`, `pc`, or `tool`). */
 export async function buildLiveDemo(table, step) {
-  if (!table || !step) return null;
+  if (!table || !step || step.noDemo) return null;
   const [MODEL, LAYOUT, KITS] = await Promise.all([import('./model.js'), import('./layout.js'), import('./kits/index.js')]);
   const kit = KITS.getKit(table.kit);
   const steps = [];
@@ -182,8 +182,8 @@ export async function buildLiveDemo(table, step) {
     const bedId = typeof f.props?.bed === 'string' && f.props.bed.startsWith('tray:') ? f.props.bed.slice(5) : null;
     const bedTray = bedId ? table.zones?.trays?.[bedId] : null;
 
-    if (f.kind === 'lead' || f.kind === 'rxn') {
-      // Predict clips and reaction viewers play in place; never swap the live bench to another stage.
+    if (f.kind === 'lead' || f.kind === 'rxn' || f.kind === 'clip' || f.kind === 'qk' || f.kind === 'kreader' || f.kind === 'rig' || f.kind === 'choice' || f.kind === 'pulls' || f.kind === 'ice') {
+      // Predict clips, reaction viewers, and answer/test boards highlight in place without giving away answers.
       return null;
     } else if (f.kind === 'hotplate') {
       const p = findDraggable(['slab', 'salt']);
@@ -260,8 +260,8 @@ export async function buildLiveDemo(table, step) {
     }
   } else if (step.pc && table.pieces?.[step.pc]) {
     const p = table.pieces[step.pc];
-    if (p.kind === 'element' || p.kind === 'hub' || p.kind === 'shift' || p.kind === 'gcard') {
-      // Highlight without giving away a sort answer.
+    if (p.kind === 'element' || p.kind === 'hub' || p.kind === 'shift' || p.kind === 'gcard' || p.kind === 'claim' || p.kind === 'card' || p.kind === 'mixc' || p.kind === 'rtile' || p.kind === 'rxnc' || p.kind === 'kval' || p.kind === 'chc' || p.kind === 'dgc' || p.kind === 'stmt' || p.kind === 'arr') {
+      // Highlight without giving away a sort, prediction, or answer-slot choice.
       return null;
     } else if (p.kind === 'block') {
       // Join two non-answer blocks (preferring the last two, or a valve/sample with a source) rather than dragging into a slot.

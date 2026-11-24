@@ -101,11 +101,11 @@ function windowAt(ctx, F, x, y, n, barSide, metal) {
   const bx = barSide === 'left' ? x + 2 : x + WIN.w - 2;
   bar(ctx, F, bx, y - 5, y + WIN.h - 1.5, metal);
   const x0 = barSide === 'left' ? x + 4.2 : x + 1.6;
-  ctx.fillStyle = '#dcd6cc';
+  ctx.fillStyle = barSide === 'left' ? '#7fb8e0' : '#e09a5c';
   for (let i = 0; i < n; i++) {
     const k = FLASH_ORDER[i];
     const cx = x0 + (k % 10) * 1.92 + 0.9; const cy = y + 3.3 + Math.floor(k / 10) * 2.15;
-    ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(1.5, F.len(0.55)), 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(2.0, F.len(0.75)), 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -140,8 +140,8 @@ function paintRun(ctx, f, state, b) {
     put(ctx, String(r.now.nAnode), F.x(p.lx + WIN.w / 2), F.y(ny + 4.2), F.size(3.4, 8), { color: AMBER, weight: 700 });
     put(ctx, String(r.now.nCathode), F.x(p.rx + WIN.w / 2), F.y(ny + 4.2), F.size(3.4, 8), { color: AMBER, weight: 700 });
   }
-  put(ctx, `Each beaker started at ${concLabel(p.cAnode0)}`, F.x(p.lx), F.y(ny + 9.4), F.size(2.1, 6), { align: 'left', color: DUST });
-  put(ctx, 'One dot is 0.02 M of ions', F.x(p.lx), F.y(ny + 13.2), F.size(2.1, 6), { align: 'left', color: DUST });
+  put(ctx, `Started at 50 dots each (${concLabel(p.cAnode0)})`, F.x(p.lx), F.y(ny + 9.4), F.size(2.3, 6.8), { align: 'left', color: '#d8d0c4' });
+  put(ctx, 'Each dot is a group of ions (blue = left, orange = right)', F.x(p.lx), F.y(ny + 13.2), F.size(2.3, 6.8), { align: 'left', color: '#d8d0c4' });
   // The plot of voltage against time, painted only to the tick reached.
   const Pr = p.plot;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(Pr.x0), F.y(Pr.y0), F.len(Pr.w), F.len(Pr.h));

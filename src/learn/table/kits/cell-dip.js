@@ -39,13 +39,13 @@ export const DIP_UNIT = Object.freeze({
   col: 30, cup: { w: 22, h: 20 }, slotY: 12, cupTop: 17, nameY: 41.5, readY: 45.4, legendY: 49.4, marksY: 53.6, h: 60, title: 5
 });
 
-/** The ink of a coating, by the metal that formed it: grey on grey stays distinct by shade and by the rough edge. */
+/** The ink of a coating, by the metal that formed it: vivid against the liquid so every coating is unmistakable. */
 export const COAT_INK = Object.freeze({
-  mg: '#e6e6e0', al: '#dfe2e3', zn: '#8fa3b8', fe: '#6a6c72', ni: '#b8bcb8', sn: '#c8cacc', pb: '#a8a8b0', cu: '#b4552d', ag: '#ecece6', au: '#e0b52c'
+  mg: '#f0f0e8', al: '#e8ecee', zn: '#a5bdd4', fe: '#8e949c', ni: '#c8d0c8', sn: '#d8dce0', pb: '#c4c4d0', cu: '#e0703c', ag: '#f5f5ee', au: '#f0c43c'
 });
 /** The dots of a mixed beaker's ions. */
-const ION_INK = Object.freeze({ cu: '#4f86a8', fe: '#8bb06a', zn: '#9aa3b8', mg: '#c9c4b4', ag: '#d8d8d2', pb: '#a8a8b0', ni: '#b8bcb8' });
-const LIQUID = Object.freeze({ cu: '#264559', fe: '#2f4636', acid: '#3a3a2e', mix: '#2c4650', default: '#2f3a42' });
+const ION_INK = Object.freeze({ cu: '#5ca0cc', fe: '#9ac476', zn: '#a8b8d0', mg: '#d4cfc0', ag: '#e6e6e0', pb: '#bcbcc8', ni: '#c4ccc4' });
+const LIQUID = Object.freeze({ cu: '#2c546e', fe: '#355440', acid: '#4a4a34', mix: '#325460', default: '#364652' });
 
 /** What a beaker is called on the rack. */
 export const beakerName = bk => bk.label ?? (bk.ion === 'acid' ? 'Acid, H⁺' : bk.ion === 'mix' ? 'Cu²⁺ and Fe²⁺' : `${METALS[bk.ion].ion} solution`);
@@ -77,36 +77,36 @@ function bubble(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2
 
 /** The strip in the liquid with its coating, bubbles or none. */
 function paintDipped(ctx, F, cx, top, res, stripId, sealed) {
-  const x0 = cx - 1.6; const bottom = top + 17; const surface = top + 5;
-  const ink = sealed ? '#8a8780' : (METAL_INK[stripId] || '#9a9690');
+  const x0 = cx - 2.1; const bottom = top + 17.5; const surface = top + 4.8;
+  const ink = sealed ? '#9e9a92' : (METAL_INK[stripId] || '#a8a49c');
   // The part above the liquid is the strip as it was.
-  ctx.fillStyle = ink; ctx.fillRect(F.x(x0), F.y(top - 1), F.len(3.2), F.len(surface - top + 1));
+  ctx.fillStyle = ink; ctx.fillRect(F.x(x0), F.y(top - 1), F.len(4.2), F.len(surface - top + 1));
   const wet = bottom - surface;
   if (res.coats.length) {
-    // Thinner core, with a rough layer of the coating round it.
-    ctx.fillStyle = ink; ctx.fillRect(F.x(cx - 1), F.y(surface), F.len(2), F.len(wet));
+    // Thinner core, with a vivid rough layer of the coating round it.
+    ctx.fillStyle = ink; ctx.fillRect(F.x(cx - 1.2), F.y(surface), F.len(2.4), F.len(wet));
     if (res.coats.length === 1) paintCoat(ctx, F, cx, surface, wet, res.coats[0], 0);
     else {
       let y = surface; let k = 0;
       while (y < bottom - 0.01) { const h = Math.min(3, bottom - y); paintCoat(ctx, F, cx, y, h, res.coats[k % res.coats.length], k); y += h; k++; }
     }
   } else {
-    ctx.fillStyle = ink; ctx.fillRect(F.x(x0), F.y(surface), F.len(3.2), F.len(wet));
+    ctx.fillStyle = ink; ctx.fillRect(F.x(x0), F.y(surface), F.len(4.2), F.len(wet));
     if (res.gas) {
-      ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, F.len(0.2));
-      [[-3.4, 14], [3.6, 11], [-3.8, 8.5], [3.5, 6], [-3.2, 4.2], [3.8, 2.6]].forEach(([dx, dy], i) => bubble(ctx, F.x(cx + dx), F.y(top + dy), Math.max(1.3, F.len(0.62 + (i % 2) * 0.2))));
+      ctx.strokeStyle = '#f5ecd8'; ctx.lineWidth = Math.max(1.6, F.len(0.45));
+      [[-4.2, 14.5], [4.4, 11.5], [-4.6, 8.8], [4.2, 6.2], [-3.8, 4.2], [4.5, 2.5], [-2.5, 11.2], [2.8, 8.2]].forEach(([dx, dy], i) => bubble(ctx, F.x(cx + dx), F.y(top + dy), Math.max(2.0, F.len(0.95 + (i % 2) * 0.3))));
       ctx.lineWidth = 1;
     }
   }
 }
 
 function paintCoat(ctx, F, cx, y, h, metalId, k) {
-  ctx.fillStyle = COAT_INK[metalId] || '#a0a0a0';
-  ctx.fillRect(F.x(cx - 2.5), F.y(y), F.len(5), F.len(h));
-  // A rough edge: small bumps of the same colour, the same every time.
+  ctx.fillStyle = COAT_INK[metalId] || '#c0c0c0';
+  ctx.fillRect(F.x(cx - 3.6), F.y(y), F.len(7.2), F.len(h));
+  // A rough edge: clear bumps of the same colour.
   for (let i = 0; i < Math.max(1, Math.round(h / 1.5)); i++) {
     const side = (i + k) % 2 ? 1 : -1;
-    ctx.beginPath(); ctx.arc(F.x(cx + side * 2.6), F.y(y + 0.7 + i * 1.5), Math.max(1, F.len(0.55)), 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(F.x(cx + side * 3.7), F.y(y + 0.7 + i * 1.5), Math.max(1.4, F.len(0.85)), 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -125,19 +125,19 @@ function paintIons(ctx, F, cx, cupTop, ions) {
   }
 }
 
-/** The small mark a beaker keeps for one strip. */
+/** The visible mark a beaker keeps for each dipped strip. */
 function paintMark(ctx, F, x, y, res, id) {
-  const s = F.len(2.1);
+  const s = Math.max(6, F.len(3.0));
   const x0 = F.x(x); const y0 = F.y(y) - s / 2;
   if (res.coats.length) {
     res.coats.forEach((m, i) => { ctx.fillStyle = COAT_INK[m]; ctx.fillRect(x0 + (i * s) / res.coats.length, y0, s / res.coats.length, s); });
-    ctx.strokeStyle = STEEL; ctx.strokeRect(x0 + 0.5, y0 + 0.5, s - 1, s - 1);
+    ctx.strokeStyle = PLATE_COLORS.amber; ctx.lineWidth = 1.5; ctx.strokeRect(x0 + 0.5, y0 + 0.5, s - 1, s - 1); ctx.lineWidth = 1;
   } else if (res.gas) {
-    ctx.strokeStyle = DUST; ctx.beginPath(); ctx.arc(x0 + s / 2, y0 + s / 2, s / 2 - 0.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#f5ecd8'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x0 + s / 2, y0 + s / 2, s / 2 - 0.5, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
   } else {
-    ctx.strokeStyle = STEEL; ctx.strokeRect(x0 + 0.5, y0 + 0.5, s - 1, s - 1);
+    ctx.strokeStyle = '#a8a095'; ctx.lineWidth = 1.2; ctx.strokeRect(x0 + 0.5, y0 + 0.5, s - 1, s - 1); ctx.lineWidth = 1;
   }
-  put(ctx, id, x0 + s + F.len(0.5), F.y(y), F.size(1.9, 5.6), { align: 'left', color: DUST });
+  put(ctx, id, x0 + s + F.len(0.6), F.y(y), F.size(2.3, 7), { align: 'left', color: '#f0e8dc', weight: 700 });
 }
 
 function paintDip(ctx, f, state, b) {
@@ -161,7 +161,8 @@ function paintDip(ctx, f, state, b) {
     put(ctx, beakerName(bk), F.x(cx), F.y(U.nameY), F.size(2.5, 6.6), { color: TEXT, weight: 700, maxW: F.len(U.col - 1.5) });
     if (r.now) {
       const label = r.now.piece.label;
-      put(ctx, `${label}: ${dipWords(r.res)}`, F.x(cx), F.y(U.readY), F.size(2.1, 6.0), { color: DUST, maxW: F.len(U.col - 1.5) });
+      const changed = r.res.coats.length > 0 || r.res.gas;
+      put(ctx, `${label}: ${dipWords(r.res)}`, F.x(cx), F.y(U.readY), F.size(2.4, 7.2), { color: changed ? PLATE_COLORS.amber : '#e6dfd4', weight: 700, maxW: F.len(U.col - 1.2) });
     }
     if (ions) {
       const keys = Object.keys(ions).sort((p, q) => (p === 'cu' ? -1 : q === 'cu' ? 1 : p === 'fe' ? -1 : q === 'fe' ? 1 : 0));
@@ -370,7 +371,9 @@ registerPiece('cellgas', {
     const r = c.hw * 0.9;
     const m = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), gasMaterial(c.mats));
     m.position.y = r; m.castShadow = true; m.receiveShadow = true; g.add(m);
-    g.userData.height = r * 2;
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(r * 1.9, r * 1.9), c.face());
+    face.rotation.x = -Math.PI / 2; face.position.y = r * 2 + 0.002; g.add(face);
+    g.userData.height = r * 2 + 0.003;
     return g;
   },
   printed: p => p.label

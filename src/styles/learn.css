@@ -3527,6 +3527,15 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
+.boss-hud-lamps { display: inline-flex; gap: 5px; align-items: center; }
+.boss-hud-lamps i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--plate-500);
+  border: 1px solid var(--plate-000);
+}
+.boss-hud-lamps i.on { background: var(--accent-danger); }
 .boss-hud-rig { display: inline-flex; gap: 5px; }
 .boss-hud-rig i {
   width: 18px;
@@ -4233,23 +4242,24 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
 }
 .lq-carry[hidden] { display: none; }
 
-/* The message plate: hints, the miss banner, a reward card. It floats over the
-   table's foot, never inside the dock, and is absent while it has nothing to say. */
+/* The message plate: hints, the miss banner, a reward card. It hangs just under
+   the top prompt strip (above the bench) so it never covers controls at the foot. */
 .lq-tmsg {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 4px);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  max-height: 34vh;
+  max-height: 26vh;
   overflow-y: auto;
   padding: 6px 8px;
   background: var(--bg-surface);
   border: 1px solid var(--border-durasteel);
   box-shadow: inset 0 1px 0 var(--seam-light), 0 6px 14px rgba(0, 0, 0, 0.6);
   pointer-events: auto;
+  z-index: 6;
 }
 .lq-tmsg:not(:has(.lq-banner:not(:empty), .lq-widget:not(:empty), .lq-hints:not(:empty))) { display: none; }
 .lq-tmsg .lq-banner { order: -1; }
@@ -4269,23 +4279,68 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
   .learn-quest-overworld .lq.lq-table-mode .lq-dock-bar { display: flex !important; }
 }
 
-/* At a bench the host bar and prompt strip stand under the header; the boss plate hangs below them, at the right, so it never covers the
-   prompt, and is kept narrow enough to leave the table's left side clear. */
+/* At a bench the host bar and prompt strip stand under the header; keep the boss plate centred and compact so it never covers the top-right tour or hint strip. */
 body.bench-deployed .boss-hud,
 body.bench-leaning .boss-hud {
-  top: calc(var(--hud-h, 56px) + 92px);
-  left: auto;
-  right: 12px;
-  transform: none;
-  width: min(340px, calc(100vw - 24px));
+  top: calc(var(--hud-h, 56px) + 6px);
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(290px, calc(100vw - 24px));
 }
 
 /* A stage that asks for a number: the field sits ahead of Hint and Submit. */
-.lq-entry { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; }
-.lq-entry-label { font-size: 12px; color: var(--text-muted); }
-.lq-entry-input { width: 96px; min-height: 36px; padding: 4px 8px; text-align: right; font-variant-numeric: tabular-nums; }
-.lq-entry-unit { font-size: 12px; color: var(--text-muted); min-width: 22px; }
+.lq-entry { display: inline-flex; align-items: center; gap: 8px; margin-right: 10px; }
+.lq-entry-label { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.lq-entry-input { width: 128px; min-height: 40px; padding: 6px 10px; font-size: 16px; text-align: right; font-variant-numeric: tabular-nums; border-color: var(--amber); }
+.lq-entry-unit { font-size: 14px; color: var(--text-secondary); min-width: 24px; }
 @media (max-width: 768px) { .lq-entry-input { min-height: 44px; } }
+
+/* Primer modal sliders: SCOURED PLATE rows with space between labels and custom track/thumb. */
+.lq-primers { display: flex; flex-direction: column; gap: 16px; }
+.lq-primers section { display: flex; flex-direction: column; gap: 10px; }
+.lq-primer-row {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) 1fr 48px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+.lq-primer-row output {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--amber);
+  font-weight: 700;
+}
+.lq-primer-row input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  outline: none;
+}
+.lq-primer-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--amber);
+  border: 1px solid var(--plate-000);
+  cursor: pointer;
+}
+.lq-primer-row input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--amber);
+  border: 1px solid var(--plate-000);
+  border-radius: 0;
+  cursor: pointer;
+}
+.lq-tmsg .lq-banner { cursor: pointer; }
 
 /* Shown over a built bench until its first frames are drawn (`stagerunner.js` `syncTabletop`). */
 .lq-building {

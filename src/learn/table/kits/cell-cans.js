@@ -33,7 +33,9 @@ registerPiece('cellcan', {
     body.rotation.z = Math.PI / 2; body.position.y = r; body.castShadow = true; body.receiveShadow = true; g.add(body);
     const cap = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.4, r * 0.4, c.hw * 0.25, 12), c.mats.labSteel);
     cap.rotation.z = Math.PI / 2; cap.position.set(c.hw + c.hw * 0.1, r, 0); g.add(cap);
-    g.userData.height = r * 2;
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(c.hw * 1.9, c.hh * 1.7), c.face());
+    face.rotation.x = -Math.PI / 2; face.position.y = r * 2 + 0.002; g.add(face);
+    g.userData.height = r * 2 + 0.003;
     return g;
   },
   printed: p => p.label

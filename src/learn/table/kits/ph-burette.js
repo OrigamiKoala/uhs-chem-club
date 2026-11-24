@@ -79,62 +79,69 @@ function paintBurette(ctx, f, state, b) {
   const p = f.props;
   r.samples.forEach((s, k) => {
     const x0 = 2 + k * PANEL;
-    const tx = x0 + 2.5; const tw = 5; const ty = 17; const th = 25;
-    put(ctx, ionText(s.title), F.x(x0 + PANEL / 2), F.y(13.6), F.size(2.2, 6.4), { color: DUST, weight: 700, maxW: F.len(PANEL - 2) });
+    const tx = x0 + 2.5; const tw = 5; const ty = 22.5; const th = 22;
+    // Title sits cleanly below the Pour size dial ticks (y = 9.2 + 3.9 = 13.1).
+    put(ctx, ionText(s.title), F.x(x0 + PANEL / 2), F.y(19.0), F.size(2.4, 7.0), { color: '#f0eae0', weight: 700, maxW: F.len(PANEL - 2) });
     // The burette: the titrant down to the level the pouring has reached, with a mark every tenth of its length.
-    ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(tx), F.y(ty), F.len(tw), F.len(th));
+    ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(tx), F.y(ty), F.len(tw), F.len(th));
     const level = ty + th * Math.min(1, r.mL / r.cap);
-    ctx.fillStyle = '#5c6e80'; ctx.fillRect(F.x(tx) + 1, F.y(level), F.len(tw) - 2, F.len(ty + th - level));
+    ctx.fillStyle = '#6c859e'; ctx.fillRect(F.x(tx) + 1, F.y(level), F.len(tw) - 2, F.len(ty + th - level));
     ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(tx)) + 0.5, Math.round(F.y(ty)) + 0.5, Math.round(F.len(tw)), Math.round(F.len(th)));
     ctx.strokeStyle = DUST;
     for (let i = 0; i <= 5; i++) { const y = ty + (th * i) / 5; ctx.beginPath(); ctx.moveTo(F.x(tx + tw), F.y(y)); ctx.lineTo(F.x(tx + tw + 1.4), F.y(y)); ctx.stroke(); }
-    put(ctx, '0', F.x(tx + tw + 2.2), F.y(ty), F.size(1.9, 6), { align: 'left', color: DIM });
-    put(ctx, String(r.cap), F.x(tx + tw + 2.2), F.y(ty + th), F.size(1.9, 6), { align: 'left', color: DIM });
-    ctx.fillStyle = STEEL; ctx.fillRect(F.x(tx + 1.6), F.y(ty + th), F.len(1.8), F.len(3.4));
+    put(ctx, '0', F.x(tx + tw + 2.2), F.y(ty), F.size(2.3, 6.8), { align: 'left', color: DUST });
+    put(ctx, String(r.cap), F.x(tx + tw + 2.2), F.y(ty + th), F.size(2.3, 6.8), { align: 'left', color: DUST });
+    ctx.fillStyle = STEEL; ctx.fillRect(F.x(tx + 1.6), F.y(ty + th), F.len(1.8), F.len(3.0));
     // The flask under it, with its liquid.
     const cx = x0 + 21;
     const hue = s.tint ? indicatorColour(s.tint, s.pH) : '#2f3d4a';
-    if (r.mL > 0) { ctx.fillStyle = '#7f95aa'; ctx.fillRect(F.x(tx + 2.2), F.y(ty + th + 3.4), Math.max(1.5, F.len(0.6)), F.len(3.2)); }
-    flaskShape(ctx, F, cx, 47, 52, hue);
+    if (r.mL > 0) { ctx.fillStyle = '#7f95aa'; ctx.fillRect(F.x(tx + 2.2), F.y(ty + th + 3.0), Math.max(1.5, F.len(0.6)), F.len(3.0)); }
+    flaskShape(ctx, F, cx, 49, 54, hue);
     // Inside the flask: the hydronium (amber) and hydroxide (blue) there are, in the ratio the pH gives, moving about.
     const clock = b.clock || 0; const dots = ionDots(s.pH, 24);
     for (let i = 0; i < 24; i++) {
       const wb = wobble(i + k * 40, clock);
-      const gx = cx - 7 + (i % 6) * 2.8 + wb.wx * 1.6; const gy = 56 + Math.floor(i / 6) * 2.9 + wb.wy * 1.2;
+      const gx = cx - 7 + (i % 6) * 2.8 + wb.wx * 1.6; const gy = 58 + Math.floor(i / 6) * 2.9 + wb.wy * 1.2;
       ball(ctx, F.x(gx), F.y(gy), Math.max(1.2, F.len(0.85)), i < dots.h ? '#d99423' : '#6f8fb0');
     }
     // A pour sends a drop down from the tip.
     const sc = scratch(f, b.sk);
     if (sc.tenths !== r.tenths) { sc.tenths = r.tenths; sc.pourAt = clock; }
     const dp = dropAt(clock - (sc.pourAt ?? -9));
-    if (dp != null) ball(ctx, F.x(tx + 2.5), F.y(ty + th + 3.4 + dp * (47 - (ty + th + 3.4))), Math.max(1.3, F.len(0.8)), '#9fb4c8');
-    let y = 68.6;
+    if (dp != null) ball(ctx, F.x(tx + 2.5), F.y(ty + th + 3.0 + dp * (49 - (ty + th + 3.0))), Math.max(1.3, F.len(0.8)), '#9fb4c8');
+    let y = 70.6;
     if (s.meter) {
-      ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(cx - 10), F.y(y - 2.6), F.len(20), F.len(5.2));
+      ctx.fillStyle = '#181612'; ctx.fillRect(F.x(cx - 10), F.y(y - 2.6), F.len(20), F.len(5.2));
       ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(cx - 10)) + 0.5, Math.round(F.y(y - 2.6)) + 0.5, Math.round(F.len(20)), Math.round(F.len(5.2)));
-      put(ctx, `pH ${fmt(s.pH, 2)}`, F.x(cx), F.y(y), F.size(3.3, 8), { color: AMBER, weight: 700, maxW: F.len(18) });
-      y += 5.2;
+      put(ctx, `pH ${fmt(s.pH, 2)}`, F.x(cx), F.y(y), F.size(3.3, 8.5), { color: AMBER, weight: 700, maxW: F.len(18) });
+      y += 5.4;
     }
-    [].concat(s.sub).forEach((line, i) => put(ctx, ionText(line), F.x(x0 + PANEL / 2), F.y(y + 1.2 + i * 3), F.size(1.95, 5.8), { color: DUST, maxW: F.len(PANEL - 1.5) }));
+    [].concat(s.sub).forEach((line, i) => put(ctx, ionText(line), F.x(x0 + PANEL / 2), F.y(y + 1.2 + i * 3.2), F.size(2.2, 6.4), { color: DUST, maxW: F.len(PANEL - 1.5) }));
   });
-  // The rack: one tube for each indicator, tinted by the first flask's pH.
+  // The rack: one tube for each indicator, tinted by the first flask's pH, with its pH range printed below.
   if (p.rack) {
     const s = r.samples[0];
     const x0 = 2 + r.samples.length * PANEL + 2;
     p.rack.forEach((id, j) => {
       const cx = x0 + 6 + j * TUBE_PITCH;
+      const ind = INDICATORS[id];
       ctx.fillStyle = indicatorColour(id, s.pH);
-      ctx.fillRect(F.x(cx - 3.5), F.y(21), F.len(7), F.len(18));
-      ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(cx - 3.5)) + 0.5, Math.round(F.y(21)) + 0.5, Math.round(F.len(7)), Math.round(F.len(18)));
-      put(ctx, INDICATORS[id].name, F.x(cx), F.y(42 + (j % 2) * 3.4), F.size(1.8, 5.6), { color: DUST, maxW: F.len(TUBE_PITCH * 2 - 1) });
+      ctx.fillRect(F.x(cx - 3.8), F.y(22), F.len(7.6), F.len(18));
+      ctx.strokeStyle = DUST; ctx.strokeRect(Math.round(F.x(cx - 3.8)) + 0.5, Math.round(F.y(22)) + 0.5, Math.round(F.len(7.6)), Math.round(F.len(18)));
+      put(ctx, ind.name, F.x(cx), F.y(43 + (j % 2) * 5.6), F.size(2.1, 6.2), { color: '#f0eae0', weight: 700, maxW: F.len(TUBE_PITCH * 2 - 1) });
+      put(ctx, `pH ${fmt(ind.pKa - 1, 1)}–${fmt(ind.pKa + 1, 1)}`, F.x(cx), F.y(45.6 + (j % 2) * 5.6), F.size(1.9, 5.8), { color: AMBER, maxW: F.len(TUBE_PITCH * 2 - 1) });
     });
   }
-  put(ctx, `Poured ${mlText(r.mL)} mL`, F.x(2), F.y(f.size.h - 3.4), F.size(2.8, 7), { align: 'left', color: AMBER, weight: 700 });
+  if (p.dyeNote) {
+    put(ctx, p.dyeNote, F.x(f.size.w / 2), F.y(f.size.h - 9.0), F.size(2.1, 6.4), { color: AMBER, weight: 600, maxW: F.len(f.size.w - 4) });
+  }
+  put(ctx, `Poured ${mlText(r.mL)} mL`, F.x(2), F.y(f.size.h - 3.4), F.size(2.9, 7.5), { align: 'left', color: AMBER, weight: 700 });
 }
 
 function run(state, fid) {
   const r = buretteRead(state, fid);
-  const next = r.tenths + POUR_STEPS[r.size - 1];
+  const steps = r.f.props.steps || POUR_STEPS;
+  const next = r.tenths + steps[r.size - 1];
   if (next > r.cap * 10) return { noop: `The burette holds only ${r.cap} mL.` };
   const mL = next / 10;
   const rows = r.f.props.samples.map((s, k) => ({ x: mL, y: Math.round(titrationML(s, mL) * 100) / 100, label: `${fid}|${k}` }));
@@ -151,14 +158,14 @@ registerFixture('phburette', {
  * The burette over its flasks. `samples`: [{ title, sub, analyte, c0, V0, ct, meter?, tint?, rack? }] (`analyte` as `titrationPH`, volumes
  * in mL, strengths in M); `rack`: indicator ids to stand as tubes; `cap`: mL the burette holds.
  */
-export function buretteFixture(id, at, { samples, cap = 50, rack = null, title = 'Burette' } = {}) {
+export function buretteFixture(id, at, { samples, cap = 50, rack = null, title = 'Burette', steps = POUR_STEPS, stepLabels = POUR_LABELS, startSize = 1, dyeNote = '' } = {}) {
   const w = 2 + samples.length * PANEL + (rack ? rack.length * TUBE_PITCH + 2 : 0) + 2;
   return {
-    id, kind: 'phburette', label: title, at: { ...at }, size: { w, h: 88 }, runLabel: 'Pour',
+    id, kind: 'phburette', label: title, at: { ...at }, size: { w, h: 92 }, runLabel: 'Pour',
     dials: {
-      size: { min: 1, max: 3, step: 1, value: 1, label: 'Pour size', labels: [...POUR_LABELS] },
+      size: { min: 1, max: stepLabels.length, step: 1, value: startSize, label: 'Pour size', labels: [...stepLabels] },
       v: { min: 0, max: cap * 10, step: 1, value: 0, label: 'Poured' }
     },
-    props: { hidden: ['v'], backdrop: true, samples: samples.map(s => ({ ...s })), cap, rack: rack ? [...rack] : null }
+    props: { hidden: ['v'], top: 9.2, backdrop: true, samples: samples.map(s => ({ ...s })), cap, rack: rack ? [...rack] : null, steps: [...steps], dyeNote }
   };
 }

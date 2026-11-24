@@ -71,7 +71,7 @@ function paintWindow(ctx, F, f, x, y, w, h, clock = 0) {
   const p = f.props;
   const win = windowOf(p);
   const sp = windowSpecies(win);
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(h));
+  ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(h));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(h)));
   const cells = cellGrid(win.units, p.cols, x + 0.6, y + 0.6, w - 1.2, h - 1.2);
   // Every unit wobbles, and in a weak solution units hand a proton over and take it back while their count stays the planner's.
@@ -96,7 +96,7 @@ function paintWindow(ctx, F, f, x, y, w, h, clock = 0) {
 function paintLegend(ctx, F, f, sp, win, x, y, w) {
   const items = win.ionized > 0 ? [sp.parts[0], sp.parts[1]] : [];
   if (win.whole > 0) items.push(sp.whole);
-  const size = F.size(1.9, 5.8);
+  const size = F.size(2.25, 6.6);
   const sw = F.len(1.7);
   const u = F.len(1);
   let cx = x; let cy = y;
@@ -116,15 +116,21 @@ function paintFlask(ctx, f, state, b) {
   const p = f.props;
   const w = f.size.w;
   // The strength of the solution, under the name the frame prints at the top left.
-  put(ctx, concText(p.solute.c), F.x(2), F.y(8.2), F.size(2.7, 6.6), { align: 'left', color: TEXT, weight: 700 });
+  put(ctx, concText(p.solute.c), F.x(2), F.y(8.2), F.size(2.7, 7.0), { align: 'left', color: TEXT, weight: 700 });
   const { win, sp } = paintWindow(ctx, F, f, 2, WIN_TOP, w - 4, p.wh, b.clock || 0);
-  if (p.waterNote) put(ctx, 'water not drawn', F.x(w - 2), F.y(8.2), F.size(1.8, 5.6), { align: 'right', color: DIM });
+  if (p.waterNote) put(ctx, 'water not drawn', F.x(w - 2), F.y(8.2), F.size(1.9, 5.8), { align: 'right', color: DIM });
+  if (p.showPct) {
+    const pct = flaskSol(p).percent;
+    put(ctx, `${pct.toFixed(1)}% ionized`, F.x(w / 2), F.y(8.2), F.size(2.1, 6.4), { align: 'center', color: AMBER, weight: 700 });
+  } else if (p.showCount) {
+    put(ctx, `${win.ionized}/${win.units} ions`, F.x(w / 2), F.y(8.2), F.size(2.0, 6.2), { align: 'center', color: AMBER, weight: 700 });
+  }
   if (p.legend) paintLegend(ctx, F, f, sp, win, 2, WIN_TOP + p.wh + 3.2, w - 4);
   // The seat: the last reading the flask was given, until the meter is laid there.
   if (p.seat) {
     const m = meterRead(state, f.id);
     const s = p.seatRel;
-    if (!m.meter) put(ctx, m.noted != null ? `pH ${fmt(m.noted, 2)}` : '', F.x(s.x), F.y(s.y), F.size(2.8, 6.8), { color: m.noted != null ? DUST : DIM, weight: 700 });
+    if (!m.meter) put(ctx, m.noted != null ? `pH ${fmt(m.noted, 2)}` : 'pH meter', F.x(s.x), F.y(s.y), F.size(m.noted != null ? 2.8 : 2.1, 6.6), { color: m.noted != null ? DUST : DIM, weight: 700 });
   }
 }
 
@@ -186,20 +192,22 @@ function dressFlask(f, state, c) {
  * `w`, `window` (the window's height in units), `meter: false` (no seat, no meter: the stage asks the player to work the pH out),
  * `legend: false`, `waterNote: false`. Returns `{ fixture, slot, size }`; add the slot (null without a meter) to the stage's slots.
  */
-export function flaskFixture(id, at, { solute, label, w = 38, window = 14, meter = true, legend = true, waterNote = true, units = UNITS, cols = 20, dilute = 0 } = {}) {
+export function flaskFixture(id, at, { solute, label, w = 38, window = 14, meter = true, legend = true, waterNote = true, units = UNITS, cols = 20, dilute = 0, showCount = false, showPct = false } = {}) {
   const wh = window;
   // The legend takes one row on a flask wide enough for its three names, two on a narrow one.
-  const legendRows = legend ? (w >= 40 ? 3.6 : 6.6) : 0;
+  const legendRows = legend ? (w >= 40 ? 4.2 : 7.4) : 0;
   const seatH = meter ? 12.5 : 0;
-  const h = Math.round((WIN_TOP + wh + 3.2 + legendRows + (meter ? 2 + seatH : 1)) * 10) / 10;
+  const h = Math.round((WIN_TOP + wh + 3.4 + legendRows + (meter ? 3 + seatH : 1.5)) * 10) / 10;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
-  const seatRel = { x: w / 2, y: h - 1 - seatH / 2, w: Math.min(22, w - 4), h: seatH };
+  // When Dilute key sits at bottom-right, shift meter seat left so it never covers the Dilute key.
+  const seatW = Math.min(22, dilute ? w - 18 : w - 4);
+  const seatRel = { x: dilute ? 2 + seatW / 2 : w / 2, y: h - 1.2 - seatH / 2, w: seatW, h: seatH };
   const slot = meter ? { id: `${id}.seat`, label: ' ', at: { x: x0 + seatRel.x, y: y0 + seatRel.y }, size: { w: seatRel.w, h: seatRel.h } } : null;
   return {
     fixture: {
       id, kind: 'phflask', label: label ?? `${solute.id}`, at: { ...at }, size: { w, h }, ...(dilute ? { runLabel: 'Dilute' } : { noRun: true }),
       dials: dilute ? { steps: { min: 0, max: dilute, step: 1, value: 0, label: 'Dilutions' } } : { x: { min: 0, max: 1, step: 1, value: 0, label: 'Flask' } },
-      props: { hidden: [dilute ? 'steps' : 'x'], dilute, c0: solute.c, backdrop: true, solute: { ...solute }, units, cols, wh, legend, waterNote, seat: slot ? slot.id : null, seatRel, noted: null }
+      props: { hidden: [dilute ? 'steps' : 'x'], dilute, c0: solute.c, backdrop: true, solute: { ...solute }, units, cols, wh, legend, waterNote, showCount, showPct, seat: slot ? slot.id : null, seatRel, noted: null }
     },
     slot,
     size: { w, h }
@@ -223,9 +231,9 @@ function paintMeter(ctx, p, state, o) {
   ctx.strokeStyle = o.lit ? AMBER : DUST; ctx.lineWidth = o.lit ? 2 : 1; ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h - 1); ctx.lineWidth = 1;
   put(ctx, 'pH meter', o.x, y0 + 2.1 * sc, Math.max(6.4, 1.9 * sc), { color: DUST, weight: 700, maxW: w - 1.6 * sc });
   const fl = seatFlask(p, state);
-  const reading = fl ? fmt(flaskPH(fl), 2) : '—';
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(x0 + 1.2 * sc, y0 + 3.9 * sc, w - 2.4 * sc, h - 5.1 * sc);
-  put(ctx, reading, o.x, y0 + 7.4 * sc, Math.max(9, 3.8 * sc), { color: fl ? AMBER : DIM, weight: 700, maxW: w - 3.4 * sc });
+  const reading = fl ? fmt(flaskPH(fl), 2) : 'Drag to flask';
+  ctx.fillStyle = '#181612'; ctx.fillRect(x0 + 1.2 * sc, y0 + 3.9 * sc, w - 2.4 * sc, h - 5.1 * sc);
+  put(ctx, reading, o.x, y0 + 7.4 * sc, fl ? Math.max(9, 3.8 * sc) : Math.max(7, 2.0 * sc), { color: fl ? AMBER : DUST, weight: 700, maxW: w - 2.8 * sc });
 }
 
 /** The meter: a brass-edged case with a probe, its display facing the player. */
@@ -246,7 +254,7 @@ function pieceMeter3d(p, state, c) {
 }
 
 registerPiece('phmeter', {
-  kind: { r: 8, rect: RECT_METER, nojoin: true },
+  kind: { r: 8.4, rect: RECT_METER, nojoin: true },
   paint: paintMeter,
   faceKey: (p, state) => { const fl = seatFlask(p, state); return `phmeter|${fl ? fmt(flaskPH(fl), 2) : '-'}`; },
   piece3d: pieceMeter3d,

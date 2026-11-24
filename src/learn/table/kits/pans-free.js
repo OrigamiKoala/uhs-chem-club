@@ -156,7 +156,7 @@ function paintPulls(ctx, f, state, b) {
     frame(ctx, F, bx, 10, bwid, 19);
     const T = r.pack.T0 + (r.shown ? (r.pack.T1 - r.pack.T0) * settleProgress(`${b.scope || ""}${f.id}:T`, true, b.clock || 0) : 0);
     say(ctx, `water ${T.toFixed(1)} °C`, F.x(bx + 2), F.y(13.6), sz, { color: r.shown ? AMBER : DUST, weight: 700, maxW: F.len(bwid - 9) });
-    say(ctx, r.shown ? `salt left ${r.pack.left.toFixed(2)} mol` : `salt ${r.pack.mol.toFixed(2)} mol, ${p.water.waterG} g water`, F.x(bx + 2), F.y(21.2), sz, { color: DUST, maxW: F.len(bwid - 9) });
+    say(ctx, r.shown ? `salt left ${r.pack.left.toFixed(2)} mol` : `salt ${r.pack.mol.toFixed(2)} mol, ${p.water.waterG} g water`, F.x(bx + 2), F.y(h - 2.6), sz, { color: DUST, maxW: F.len(bwid - 4) });
     // The salt dissolving: crystals at the foot go into the water as ions, and the ions slow as the water cools (the speed follows the reading).
     {
       const prog = r.shown ? settleProgress(`${b.scope || ""}${f.id}:T`, true, b.clock || 0) : 0;

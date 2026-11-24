@@ -31,61 +31,104 @@ function chip(ctx, x, y, r, ion, a = 1, showCharge = true) {
 function crateLabels(ctx, w, h, t) {
   ground(ctx, w, h);
   const u = h * 0.045;
-  /* Beat one (0 to 0.3): Mg and Cl chips slide into a cell; the needle's total is the sum of the chips that have arrived. */
-  {
-    const cell = { x: w * 0.3, y: h * 0.1, w: w * 0.4, h: h * 0.2 };
-    box(ctx, cell.x, cell.y, cell.w, cell.h, '#100f0c');
-    const ions = ['Mg', 'Cl', 'Cl'];
-    const arrived = {};
-    ions.forEach((ion, i) => {
-      const p = ease(win(t, 0.01 + i * 0.07, 0.1 + i * 0.07));
-      const sx = w * (0.06 + 0.08 * i); const sy = h * 0.2;
-      const tx = cell.x + cell.w * (0.22 + 0.28 * i); const ty = cell.y + cell.h / 2;
-      chip(ctx, sx + (tx - sx) * p, sy + (ty - sy) * p, u * 1.15, ion);
-      if (p > 0.98) arrived[ion] = (arrived[ion] || 0) + 1;
-    });
-    const q = netCharge(arrived);
-    if (t > 0.08) text(ctx, `charge in the cell: ${q > 0 ? '+' : q < 0 ? '−' : ''}${Math.abs(q)}`, w * 0.5, h * 0.355, { size: fs(h) * 1.1, color: q === 0 && Object.keys(arrived).length ? C.pale : C.amber, weight: 700 });
-  }
-  /* Beat two (0.3 to 0.6): the name is built from the ions' own names. */
-  const b = ease(win(t, 0.3, 0.42));
-  if (b > 0.01) {
-    const words = nameIonic('Mg', 'O').split(' ');
-    chip(ctx, w * 0.12, h * 0.52, u * 1.15, 'Mg', b);
-    chip(ctx, w * 0.2, h * 0.52, u * 1.15, 'O', b);
-    words.forEach((word, i) => {
-      const a = ease(win(t, 0.34 + i * 0.1, 0.44 + i * 0.1));
-      box(ctx, w * (0.32 + i * 0.22), h * 0.47, w * 0.2, h * 0.09, '#2a2620', C.dust);
-      ctx.globalAlpha = a;
-      text(ctx, word, w * (0.42 + i * 0.22), h * 0.515, { size: fs(h) * 1.1, color: C.text, weight: 700 });
-      ctx.globalAlpha = 1;
-    });
-  }
-  /* Beat three (0.6 to 1): the oxide chips' charges add up, the irons share them, the numeral is that share. */
-  const c = ease(win(t, 0.6, 0.7));
-  if (c > 0.01) {
-    const oxides = [0, 1, 2];
-    let running = 0;
-    oxides.forEach(i => {
-      const a = ease(win(t, 0.62 + i * 0.06, 0.7 + i * 0.06));
-      chip(ctx, w * (0.12 + 0.09 * i), h * 0.75, u * 1.15, 'O', a);
-      if (a > 0.98) running += IONS.O.q;
-    });
-    text(ctx, `oxide charges so far: ${running}`.replace('-', '−'), w * 0.3, h * 0.86, { size: fs(h), color: C.dust });
-    const irons = 2;
-    const share = ease(win(t, 0.82, 0.92));
-    for (let i = 0; i < irons; i++) {
-      chip(ctx, w * (0.62 + 0.1 * i), h * 0.75, u * 1.15, 'Fe3', c, false);
-      if (share > 0.01) {
-        line(ctx, w * (0.62 + 0.1 * i), h * 0.75 - u * 1.4, w * (0.62 + 0.1 * i), h * 0.75 - u * 2.4, C.amber, 2);
+  if (t <= 0.42) {
+    /* Beat one (0 to 0.2): Mg and Cl chips slide into a cell; the needle's total is the sum of the chips that have arrived. */
+    {
+      const cell = { x: w * 0.3, y: h * 0.08, w: w * 0.4, h: h * 0.2 };
+      box(ctx, cell.x, cell.y, cell.w, cell.h, '#100f0c');
+      const ions = ['Mg', 'Cl', 'Cl'];
+      const arrived = {};
+      ions.forEach((ion, i) => {
+        const p = ease(win(t, 0.01 + i * 0.05, 0.07 + i * 0.05));
+        const sx = w * (0.06 + 0.08 * i); const sy = h * 0.18;
+        const tx = cell.x + cell.w * (0.22 + 0.28 * i); const ty = cell.y + cell.h / 2;
+        chip(ctx, sx + (tx - sx) * p, sy + (ty - sy) * p, u * 1.15, ion);
+        if (p > 0.98) arrived[ion] = (arrived[ion] || 0) + 1;
+      });
+      const q = netCharge(arrived);
+      if (t > 0.05) text(ctx, `charge in the cell: ${q > 0 ? '+' : q < 0 ? '−' : ''}${Math.abs(q)}`, w * 0.5, h * 0.33, { size: fs(h) * 1.05, color: q === 0 && Object.keys(arrived).length ? C.pale : C.amber, weight: 700 });
+    }
+    /* Beat two (0.2 to 0.42): magnesium oxide and iron(III) oxide. */
+    const b = ease(win(t, 0.21, 0.3));
+    if (b > 0.01) {
+      const words = nameIonic('Mg', 'O').split(' ');
+      chip(ctx, w * 0.12, h * 0.5, u * 1.1, 'Mg', b);
+      chip(ctx, w * 0.2, h * 0.5, u * 1.1, 'O', b);
+      words.forEach((word, i) => {
+        box(ctx, w * (0.32 + i * 0.22), h * 0.45, w * 0.2, h * 0.09, '#2a2620', C.dust);
+        text(ctx, word, w * (0.42 + i * 0.22), h * 0.495, { size: fs(h) * 1.05, color: C.text, weight: 700 });
+      });
+      let running = 0;
+      [0, 1, 2].forEach(i => {
+        const a = ease(win(t, 0.25 + i * 0.03, 0.31 + i * 0.03));
+        chip(ctx, w * (0.12 + 0.09 * i), h * 0.73, u * 1.1, 'O', a);
+        if (a > 0.98) running += IONS.O.q;
+      });
+      text(ctx, `oxide charges: ${running}`.replace('-', '−'), w * 0.28, h * 0.85, { size: fs(h), color: C.dust });
+      const irons = 2;
+      const share = ease(win(t, 0.32, 0.39));
+      for (let i = 0; i < irons; i++) {
+        chip(ctx, w * (0.62 + 0.1 * i), h * 0.73, u * 1.1, 'Fe3', b, false);
+        if (share > 0.01) line(ctx, w * (0.62 + 0.1 * i), h * 0.73 - u * 1.4, w * (0.62 + 0.1 * i), h * 0.73 - u * 2.2, C.amber, 2);
+      }
+      if (share > 0.6) {
+        const q = metalChargeFrom(running, irons);
+        text(ctx, `each iron: +${q}`, w * 0.67, h * 0.85, { size: fs(h) * 1.05, color: C.amber, weight: 700 });
+        text(ctx, `${nameIonic('Fe3', 'O').replace('(III)', `(${romanOf(q)})`)}`, w * 0.5, h * 0.94, { size: fs(h) * 1.15, color: C.text, weight: 700 });
       }
     }
-    if (share > 0.7) {
-      const q = metalChargeFrom(running, irons);
-      text(ctx, `each iron: ${q > 0 ? '+' : ''}${q}`, w * 0.67, h * 0.86, { size: fs(h) * 1.05, color: C.amber, weight: 700 });
-      text(ctx, `${nameIonic('Fe3', 'O').replace('(III)', `(${romanOf(q)})`)}`, w * 0.5, h * 0.94, { size: fs(h) * 1.15, color: C.text, weight: 700 });
-    }
+    return;
   }
+  /* Beat three (0.42 to 0.64): polyatomic ions stay whole (Ca(NO3)2 & Fe2(SO4)3). */
+  if (t <= 0.64) {
+    const p = ease(win(t, 0.43, 0.56));
+    box(ctx, w * 0.08, h * 0.16, w * 0.84, h * 0.28, '#100f0c');
+    text(ctx, 'POLYATOMIC IONS STAY WHOLE', w * 0.5, h * 0.1, { size: fs(h), color: C.dust, weight: 700 });
+    chip(ctx, w * 0.22, h * 0.3, u * 1.15, 'Ca', p);
+    [0, 1].forEach(i => {
+      const cx = w * (0.44 + i * 0.18); const cy = h * 0.3;
+      disc(ctx, cx, cy, u * 1.35, '#20262c', C.amber);
+      text(ctx, 'NO₃⁻', cx, cy, { size: fs(h) * 0.95, color: C.text, weight: 700 });
+    });
+    text(ctx, 'Ca(NO₃)₂', w * 0.8, h * 0.3, { size: fs(h) * 1.2, color: C.amber, weight: 700 });
+    box(ctx, w * 0.08, h * 0.54, w * 0.84, h * 0.32, '#100f0c');
+    [0, 1].forEach(i => chip(ctx, w * (0.18 + i * 0.1), h * 0.68, u * 1.05, 'Fe3', p, false));
+    [0, 1, 2].forEach(i => {
+      const cx = w * (0.44 + i * 0.13); const cy = h * 0.68;
+      disc(ctx, cx, cy, u * 1.25, '#262319', C.amber);
+      text(ctx, 'SO₄²⁻', cx, cy, { size: fs(h) * 0.82, color: C.text, weight: 700 });
+    });
+    text(ctx, 'iron(III) sulfate · Fe₂(SO₄)₃', w * 0.5, h * 0.8, { size: fs(h) * 1.05, color: C.text, weight: 700 });
+    return;
+  }
+  /* Beat four (0.64 to 0.82): molecular prefixes (N2O4 -> dinitrogen tetroxide). */
+  if (t <= 0.82) {
+    const p = ease(win(t, 0.65, 0.76));
+    text(ctx, 'MOLECULAR PREFIXES COUNT ATOMS', w * 0.5, h * 0.14, { size: fs(h), color: C.dust, weight: 700 });
+    box(ctx, w * 0.14, h * 0.24, w * 0.72, h * 0.34, '#100f0c');
+    const nPos = [[0.42, 0.41], [0.58, 0.41]];
+    const oPos = [[0.32, 0.32], [0.32, 0.5], [0.68, 0.32], [0.68, 0.5]];
+    oPos.forEach(([ox, oy], i) => {
+      const [nx, ny] = nPos[i < 2 ? 0 : 1];
+      line(ctx, w * nx, h * ny, w * ox, h * oy, C.steel, 3);
+    });
+    line(ctx, w * 0.42, h * 0.41, w * 0.58, h * 0.41, C.steel, 3);
+    ctx.globalAlpha = p;
+    nPos.forEach(([nx, ny]) => { disc(ctx, w * nx, h * ny, u * 1.15, '#6f8fb0', C.dust); text(ctx, 'N', w * nx, h * ny, { size: fs(h), color: '#0f0e0b', weight: 700 }); });
+    oPos.forEach(([ox, oy]) => { disc(ctx, w * ox, h * oy, u * 0.95, '#a0522d', C.dust); text(ctx, 'O', w * ox, h * oy, { size: fs(h) * 0.9, color: '#0f0e0b', weight: 700 }); });
+    ctx.globalAlpha = 1;
+    text(ctx, '2 N (di-)  ·  4 O (tetra-)  →  dinitrogen tetroxide', w * 0.5, h * 0.72, { size: fs(h) * 1.1, color: C.amber, weight: 700 });
+    return;
+  }
+  /* Beat five (0.82 to 1): acid names (-ide -> hydro-...-ic, -ate -> ...-ic). */
+  const p = ease(win(t, 0.83, 0.94));
+  ctx.globalAlpha = p;
+  text(ctx, 'ACID NAMES', w * 0.5, h * 0.14, { size: fs(h), color: C.dust, weight: 700 });
+  box(ctx, w * 0.1, h * 0.24, w * 0.8, h * 0.24, '#100f0c');
+  text(ctx, 'H⁺ + Cl⁻ (chloride, -ide)  →  hydrochloric acid', w * 0.5, h * 0.36, { size: fs(h) * 1.1, color: C.text, weight: 700 });
+  box(ctx, w * 0.1, h * 0.56, w * 0.8, h * 0.24, '#100f0c');
+  text(ctx, 'H⁺ + NO₃⁻ (nitrate, -ate)  →  nitric acid', w * 0.5, h * 0.68, { size: fs(h) * 1.1, color: C.amber, weight: 700 });
+  ctx.globalAlpha = 1;
 }
 
 export const Q2_SCENES = { 'crate-labels': crateLabels };

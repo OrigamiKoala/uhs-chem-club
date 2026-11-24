@@ -7,6 +7,6 @@ import { addTourText } from '../tour.js';
 addTourText({
   'ph:phmix': {
     title: 'Mixing flask', dials: false,
-    text: 'Pour acid or base in. Spheres are the particles.'
+    text: 'Press Pour at the bottom right to add acid or base.'
   }
 }, {});

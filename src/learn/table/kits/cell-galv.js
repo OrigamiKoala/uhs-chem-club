@@ -121,13 +121,14 @@ function paintAmmeter(ctx, F, p, I) {
     ctx.beginPath(); ctx.moveTo(F.x(px + Math.sin(th) * (R - 1.4)), F.y(py - Math.cos(th) * (R - 1.4))); ctx.lineTo(F.x(px + Math.sin(th) * R), F.y(py - Math.cos(th) * R)); ctx.stroke();
   }
   ctx.lineWidth = 1;
-  put(ctx, 'left', F.x(cx - w / 2 + 3.6), F.y(y + 16.6), F.size(2.0, 6), { color: DUST });
-  put(ctx, 'right', F.x(cx + w / 2 - 4.2), F.y(y + 16.6), F.size(2.0, 6), { color: DUST });
+  put(ctx, 'LEFT', F.x(cx - w / 2 + 4.2), F.y(y + 16.4), F.size(2.4, 7.2), { color: I < -0.02 ? AMBER : '#e6dfd4', weight: 700 });
+  put(ctx, 'RIGHT', F.x(cx + w / 2 - 4.8), F.y(y + 16.4), F.size(2.4, 7.2), { color: I > 0.02 ? AMBER : '#e6dfd4', weight: 700 });
   const th = Math.max(-1, Math.min(1, I / NEEDLE_MAX)) * (60 * Math.PI) / 180;
-  ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1.6, F.len(0.45));
-  ctx.beginPath(); ctx.moveTo(F.x(px), F.y(py)); ctx.lineTo(F.x(px + Math.sin(th) * (R - 0.6)), F.y(py - Math.cos(th) * (R - 0.6))); ctx.stroke();
+  ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(2.6, F.len(0.75));
+  ctx.beginPath(); ctx.moveTo(F.x(px), F.y(py)); ctx.lineTo(F.x(px + Math.sin(th) * (R + 0.6)), F.y(py - Math.cos(th) * (R + 0.6))); ctx.stroke();
   ctx.lineWidth = 1;
-  ctx.fillStyle = AMBER; ctx.beginPath(); ctx.arc(F.x(px), F.y(py), Math.max(1.6, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = AMBER; ctx.beginPath(); ctx.arc(F.x(px), F.y(py), Math.max(2.2, F.len(0.95)), 0, Math.PI * 2); ctx.fill();
+  if (Math.abs(I) > 0.02) put(ctx, I < 0 ? '← left' : 'right →', F.x(cx), F.y(y + 9.2), F.size(2.4, 7.2), { color: AMBER, weight: 700 });
 }
 
 function paintGalv(ctx, f, state, b) {

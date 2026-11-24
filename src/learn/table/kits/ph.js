@@ -123,8 +123,12 @@ export function phTable(spec, { w = PH_BOUNDS.w, h = PH_BOUNDS.h, recorder = nul
 }
 
 import { selectorFixture as heatSelector } from './heat.js';
-/** A selector with its options listed on the card, so text choices are readable before the dial moves. */
-export const selectorFixture = (id, label, at, o = {}) => heatSelector(id, label, at, { list: false, ...o });
+/** A selector with its options listed in a column when labels are long, so text choices never overlap. */
+export const selectorFixture = (id, label, at, o = {}) => {
+  const opts = o.options || [];
+  const longLabels = opts.some(s => String(s || '').trim().length > 8) || opts.filter(s => String(s || '').trim()).length > 3;
+  return heatSelector(id, label, at, { list: longLabels, ...o });
+};
 export * from './heat.js';
 export * from './ph-read.js';
 export { flaskFixture, meterPiece } from './ph-flask.js';

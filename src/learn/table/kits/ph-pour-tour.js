@@ -4,8 +4,8 @@ import { addTourText } from '../tour.js';
 addTourText({
   'ph:phpour': {
     title: 'Particle window', dials: false,
-    text: 'Press Pour and watch the hydrogens move.'
+    text: 'Press Pour and watch where the hydrogens go.'
   }
 }, {
-  phchip: ['Formula cards', 'Drag it into a place.']
+  phchip: ['Formula cards', 'Drag a card into a slot.']
 });

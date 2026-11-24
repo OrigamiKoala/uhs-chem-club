@@ -420,17 +420,19 @@ addTourText(
     'pot:hsabprobe': {
       title: 'Cloud probe',
       dials: false,
-      text: 'Place an ion in the socket and press "Test" to test its cloud.'
+      text: 'Place an ion in the slot and press "Test" to see how its cloud responds.'
     },
     'pot:hsabwells': {
       title: 'Reaction Wells',
       dials: false,
-      text: 'Seat solution jars in the wells and press "Mix" to test for precipitate.'
+      text: f => (f.dials?.reagent
+        ? 'Choose a reagent with the dial and press "Mix" to see which wells form a precipitate.'
+        : 'Press "Mix" to see which wells form a precipitate.')
     },
     'pot:hsabbond': {
       title: 'Bond Viewer',
       dials: false,
-      text: 'Compare the two bond diagrams, then place matching cards in the sockets.'
+      text: 'Compare the two bond diagrams, then place the matching card under each.'
     }
   },
   {

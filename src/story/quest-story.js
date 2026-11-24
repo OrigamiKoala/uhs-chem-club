@@ -337,7 +337,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.26, say: 'Under load, the tin and lead cell dropped from 0.012 V to 0 V as tin ions built up and lead ions ran low.' },
       { to: 0.5, say: 'It stopped with 72 tin ions and 28 lead ions still left. A dead battery has reached balance, even before running empty.' },
-      { to: 0.74, say: 'Tin over lead was 2.6, matching this cell\'s K of 2.5. As Q rises toward K, the cell\'s voltage falls to 0 V.' },
+      { to: 0.74, say: 'Tin ions divided by lead ions was 2.6, matching K = 2.5. As Q rises toward K, cell voltage drops to 0 V.' },
       { to: 0.94, say: 'Zinc at 1.0 M with copper at 0.0010 M has Q = 1000 and reads 1.01 V. Copper at 0.010 M against 1.0 M has Q = 0.01 and reads 0.059 V.' }
     ],
     pin: 'As they run, their ion concentrations shift toward balance, and the voltage falls.'
@@ -347,9 +347,10 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'The Fifth is running cables from the power line into a pool. What is that current making in there?',
     beats: [
-      { to: 0.24, say: 'Pushed at 1.50 V against its own 1.10 V, the zinc-copper cell ran backwards and added 4.1 mg to the zinc strip. Electrolysis drives a cell in reverse.' },
-      { to: 0.48, say: 'In molten sodium chloride, 6 sodium ions took 6 electrons at the cathode to form sodium, while chloride ions gave electrons at the anode to form chlorine.' },
-      { to: 0.72, say: 'One ampere for 30 s passed 30 C and 2 A for 10 s passed 20 C, while 0.5 A for 100 s passed 50 C and plated the most silver.' },
+      { to: 0.22, say: 'Pushed at 1.50 V against its own 1.10 V, the zinc-copper cell ran backwards and added 4.1 mg to the zinc strip. Electrolysis drives a cell in reverse.' },
+      { to: 0.44, say: 'In molten sodium chloride, 6 sodium ions took 6 electrons at the cathode to form sodium, while chloride ions gave electrons at the anode to form chlorine.' },
+      { to: 0.64, say: 'One ampere for 30 s passed 30 C and 2 A for 10 s passed 20 C, while 0.5 A for 100 s passed 50 C and plated the most silver.' },
+      { to: 0.80, say: 'Two cells in series split water into hydrogen and oxygen gas; in salty brine, chloride reacts instead of oxygen to make chlorine gas.' },
       { to: 0.94, say: '2.00 A for 1800 s passed 3600 C, or 0.0373 mol of electrons. At two electrons per copper atom, that makes 0.0187 mol, or 1.19 g of copper by Faraday\'s law.' }
     ],
     pin: 'The stolen electricity is plating pure copper out of the marsh pools.'
@@ -360,28 +361,28 @@ export const QUEST_STORY = {
     mystery: 'Two different metals are bolted to every pylon. Which one gives up its electrons?',
     beats: [
       { to: 0.26, say: 'Both zinc and copper were coated in the silver solution, only zinc in the copper solution, and neither in the zinc solution. A coating means one metal took the place of another: displacement.' },
-      { to: 0.52, say: 'Zinc coated in 3 of the other solutions, iron in 2, lead in 1 and copper in none. That order, most readily giving to least, is the activity series.' },
-      { to: 0.76, say: 'Magnesium, zinc and iron bubbled in acid and copper and silver did not, so hydrogen sits after iron. A copper strip in zinc stayed clean: the swap runs one way only.' },
-      { to: 0.94, say: 'Nails wired to zinc or magnesium had no blue spots, and nails wired to copper or tin had 5. The more active partner gives its electrons first, so it is the one used up.' }
+      { to: 0.52, say: 'Zinc coated in 3 of the other solutions, iron in 2, lead in 1 and copper in none. That order, from most ready to lose electrons to least, is the activity series.' },
+      { to: 0.76, say: 'A copper strip in zinc solution stayed clean: the swap runs one way only. In acid, magnesium, zinc and iron bubbled while copper and silver did not, placing hydrogen after iron.' },
+      { to: 0.94, say: 'Nails wired to zinc or magnesium had no blue spots, and nails wired to copper or tin had 5. The more active metal in the activity series gives its electrons first, so it is used up.' }
     ],
     pin: 'The more active metal gives up its electrons first.'
   },
   'unit10/q1-halves': {
     scene: 'half-join',
     role: 'Direct Clue',
-    mystery: 'The pylon the Fifth tampered with is rotting where two metals are bolted together. What is passing between the metals?',
+    mystery: 'Look where two metals are bolted together on the pylon—it is rotting right at the joint. What is passing between them?',
     beats: [
       { to: 0.26, say: 'In the zinc and copper beaker, zinc went from 0 to +2 and copper from +2 to 0. An atom\'s oxidation number counts the electrons it has lost or gained.' },
-      { to: 0.5, say: 'Written as half-reactions, zinc loses 2 electrons in oxidation and copper gains 2 in reduction. The electrons lost are the electrons gained, so none vanish.' },
+      { to: 0.5, say: 'Written as half-reactions, zinc loses 2 electrons in oxidation and copper gains 2 in reduction—together a redox reaction. The electrons lost equal the electrons gained.' },
       { to: 0.76, say: 'Aluminium gives 3 electrons and copper takes 2, so the halves are written 2 and 3 times: 6 electrons given and 6 taken.' },
-      { to: 0.94, say: 'Permanganate in acid takes 5 electrons from 5 iron(II) ions, with charge 17 on each side. A redox reaction is one where some oxidation number changes.' }
+      { to: 0.94, say: 'Permanganate in acid takes 5 electrons from 5 iron(II) ions, with charge +17 on each side. A redox reaction is one where some oxidation number changes.' }
     ],
     pin: 'Electrons are moving between the two metals, and that is what corrodes the pylons.'
   },
   'unit10/q3-galvanic': {
     scene: 'cell-open',
     role: 'Station Fix',
-    mystery: 'The Fifth cut the salt bridges, and every marsh battery died at once. What does a battery need the bridge for?',
+    mystery: 'The Fifth cut the tube between the two beakers, and every marsh battery died. What does a battery need that bridge for?',
     beats: [
       { to: 0.24, say: 'With a wire alone the current fell from 0.50 A to zero at 3 s. A salt bridge held it at 0.50 A for the whole 10 s.' },
       { to: 0.48, say: 'In the zinc and copper cell, 4 electrons crossed the wire as Zn²⁺ rose from 8 to 10 and Cu²⁺ fell from 8 to 6. Oxidation happens at the anode and reduction at the cathode.' },
@@ -395,12 +396,13 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'The grid needs its strongest cells back. Which pair of metals gives the most voltage?',
     beats: [
-      { to: 0.26, say: 'Against one reference, magnesium read −2.37 V, zinc −0.76 V, copper +0.34 V and silver +0.80 V. Each reading is that metal\'s E°.' },
-      { to: 0.52, say: 'A cell takes its voltage from the gap between two readings: silver minus magnesium is 3.17 V. A positive gap lights the lamp.' },
-      { to: 0.76, say: 'Written twice over, the zinc and copper cell moved twice the electrons and gave out twice the energy, yet the voltmeter still read 1.10 V.' },
-      { to: 0.94, say: 'The energy follows ΔG° = −nFE°, and log K = nE° ÷ 0.0592. For zinc with silver, n = 2 and E° = 1.56 V.' }
+      { to: 0.22, say: 'Against one reference, magnesium read −2.37 V, zinc −0.76 V, copper +0.34 V and silver +0.80 V. Each reading is that metal\'s E°.' },
+      { to: 0.44, say: 'A cell takes its voltage from the gap between two readings: silver minus magnesium is 3.17 V. A positive gap lights the lamp.' },
+      { to: 0.66, say: 'Doubled, the zinc and copper cell moved twice as many electrons and released twice the energy, yet the voltmeter still read 1.10 V.' },
+      { to: 0.82, say: 'Energy released follows ΔG° = −nFE°. For zinc with silver (n = 2, E° = 1.56 V), ΔG° = −301 kJ.' },
+      { to: 0.95, say: 'Equilibrium follows log K = nE° ÷ 0.0592. For zinc with silver, log K = 52.7, so K is near 10⁵³.' }
     ],
-    pin: 'The voltage depends on the metal pair, so we can pick the strongest cells for Brinewire.'
+    pin: 'Magnesium paired with silver gives the highest voltage (3.17 V) for Brinewire\'s grid.'
   },
   /* ---- Brinewire: the Clamp's five cells, read the way every cell on the road was ---- */
   'unit10/boss-clamp': {
@@ -412,9 +414,9 @@ export const QUEST_STORY = {
       { to: 0.4, say: 'The ammeter read 1.44 A and the electrons moved toward the silver beaker, so they left through magnesium. Magnesium is the anode.' },
       { to: 0.6, say: 'Iron read −0.44 V and silver +0.80 V, and the gap between them is 1.24 V. A voltage is energy for each electron, so balancing the equation does not change it.' },
       { to: 0.78, say: 'Beakers of 0.010 M and 1.0 M zinc read 0.059 V, and the electrons left the bar in the dilute beaker. The dilute side is the anode.' },
-      { to: 0.94, say: '1.50 A for 1200 s passed 1800 C, which is 0.0187 mol of electrons, and two electrons plate each zinc atom. That plated 0.61 g of zinc.' }
+      { to: 0.94, say: '1.50 A for 1200 s passed 1800 C, or 0.0187 mol of electrons. At two electrons per copper atom, that plated 0.59 g of pure copper from the pool.' }
     ],
-    pin: 'Tons of pure copper are gone. The Fifth is wiring something huge.'
+    pin: 'Each clamp plates 0.59 g of copper per 20 minutes; they are wiring something huge.'
   },
   /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
   'unit09/q2-scale': {
@@ -422,9 +424,9 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'The acid meters on the marsh tanks read numbers only a few steps apart. How much more acidic is a tank one step lower?',
     beats: [
-      { to: 0.26, say: 'Each tenfold dilution of hydrochloric acid raised the pH by 1: 1.00, 2.00, 3.00. Because pH is a log scale, one step is a factor of ten.' },
+      { to: 0.26, say: 'Each tenfold dilution of hydrochloric acid raised the pH by 1: 1.00, 2.00, 3.00. Each step down on the pH scale is ten times more acidic.' },
       { to: 0.52, say: 'On sodium hydroxide, pOH counts hydroxide the way pH counts hydronium. At 25 °C the two always add up to 14.00.' },
-      { to: 0.78, say: 'Diluted repeatedly, hydrochloric acid read 6.00, 6.79, 6.98 and 7.00. Water\'s own hydronium ions stop the pH from rising past 7.' },
+      { to: 0.78, say: 'Starting at 1.0 × 10⁻⁶ M, diluting hydrochloric acid read 6.00, 6.79, 6.98 and 7.00. Water\'s own hydronium ions stop the pH from rising past 7.' },
       { to: 0.94, say: 'Water at 50 °C reads 6.63 yet still holds equal H₃O⁺ and OH⁻. Neutral means equal amounts of both ions, which equals pH 7 only at 25 °C.' }
     ],
     pin: 'Each pH step is a tenfold change in acidity.'
@@ -458,12 +460,12 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'Acid from the marsh keeps splashing into the fort\'s drinking water. What can we add to keep the water steady?',
     beats: [
-      { to: 0.28, say: 'The same pour of acid took the water from 7.00 to 2.04 and the mixture only from 4.74 to 4.66. The mixture is a buffer.' },
+      { to: 0.28, say: 'The same pour of acid took the water from 7.00 to 2.04 and the mixture only from 4.74 to 4.66. A weak acid with its conjugate base is a buffer.' },
       { to: 0.52, say: 'In the buffer each sphere of acid was caught by an acetate. Acetate fell from 100 spheres to 90 and acetic acid rose from 100 to 110.' },
       { to: 0.76, say: 'Base is caught the other way: acetic acid fell from 100 to 90 and acetate rose to 110, so the pH rose only from 4.74 to 4.83.' },
-      { to: 0.94, say: 'The pH is the pKa plus the log of acetate over acetic acid. Acetate to acetic acid of 100 to 100 reads 4.74, 150 to 50 reads 5.22, and 100 to 10 reads 5.74.' }
+      { to: 0.94, say: 'The pH is pKa plus log(acetate ÷ acetic acid): 100 acetate to 100 acetic acid reads 4.74, 150 to 50 reads 5.22, and 100 acetate to 10 acetic acid reads 5.74.' }
     ],
-    pin: 'A weak acid with its conjugate base holds the intake\'s pH steady against acid spikes.'
+    pin: 'A weak acid with its conjugate base holds intake pH steady against acid and base.'
   },
   'unit09/q3-weak': {
     scene: 'weak-windows',
@@ -473,9 +475,9 @@ export const QUEST_STORY = {
       { to: 0.26, say: 'At the same concentration, 0.10 M, hydrochloric acid donated every proton while acetic acid donated only a few: pH 1.00 against 2.88.' },
       { to: 0.54, say: 'Diluting acetic acid causes a larger fraction of it to ionize: 3 of 200 units at 0.10 M, 8 at 0.010 M and 25 at 0.0010 M.' },
       { to: 0.76, say: 'H₃O⁺ times CH₃COO⁻ divided by CH₃COOH equals the same constant Ka in every flask, regardless of concentration.' },
-      { to: 0.94, say: 'For any acid and its partner base, Ka times Kb equals 1.0 × 10⁻¹⁴, so a larger Ka always means a smaller Kb.' }
+      { to: 0.94, say: 'For any acid and the base it leaves, Ka times Kb equals 1.0 × 10⁻¹⁴, so a larger Ka always means a smaller Kb.' }
     ],
-    pin: 'The harsh tank holds a strong acid that splits completely; the weak acid barely splits.'
+    pin: 'The harsh tank holds a strong acid (ionizes completely); weak acids ionize only partly.'
   },
   'unit09/q6-titrate': {
     scene: 'titration-reads',
@@ -487,17 +489,19 @@ export const QUEST_STORY = {
       { to: 0.78, say: 'Half way to each equivalence point the pH matched the acid\'s pKa: 4.75 for acetic acid and 3.75 for formic acid. That is the half-equivalence point.' },
       { to: 0.94, say: 'Sulfurous acid rose steeply twice, at 10.0 mL and 20.0 mL. A polyprotic acid gives up its protons one step at a time.' }
     ],
-    pin: 'The pH curve pinpointed the exact neutralization point for the worst waste tank.'
+    pin: 'The pH curve pinpointed neutralization: 25.0 mL of 0.100 M base for 25.0 mL acid.'
   },
   'unit09/q4-structure': {
     scene: 'race-pairs',
-    role: 'Toolkit',
+    role: 'Direct Clue',
+    mystery: 'Why does one tank\'s acid eat through steel faster than another\'s?',
     beats: [
-      { to: 0.28, say: 'Raced against chloride, HF kept all 100 protons, while HCl gave all 100 to fluoride. Fluorine pulls hardest on electrons, yet HF is the weaker acid.' },
-      { to: 0.54, say: 'HBr gave 96 of 100 protons to chloride, and HCl gave only 4 to bromide. Down a group the bond is longer and the acid stronger.' },
+      { to: 0.28, say: 'Raced against chloride, HF kept all 100 protons while HCl gave all 100 to fluoride. Across a row, electronegativity wins; down a column, atom size wins.' },
+      { to: 0.54, say: 'HBr gave 96 of 100 protons to chloride (HCl gave only 4 to bromide). Down a column the atom is larger and the acid is stronger.' },
       { to: 0.78, say: 'Each extra oxygen on chlorine pulls charge toward itself, the inductive effect, so the leftover base holds its charge better and the acid is stronger.' },
-      { to: 0.94, say: 'Resonance spreads the charge of acetate over two oxygens. Acetic acid gave up its protons to ethoxide; ethanol could not return the favour.' }
-    ]
+      { to: 0.94, say: 'Resonance spreads the charge of acetate over two oxygens, making acetic acid far stronger than ethanol.' }
+    ],
+    pin: 'An acid is stronger when the base it leaves spreads or pulls negative charge better.'
   },
   'unit09/q5-salts': {
     scene: 'salt-reads',
@@ -505,10 +509,10 @@ export const QUEST_STORY = {
     mystery: 'The worst waste tank has been neutralized. Is its water safe now?',
     beats: [
       { to: 0.3, say: 'Acid and base used up exactly read 7.00 only when both were strong. Acetic acid with sodium hydroxide read 8.72, and ammonia with hydrochloric acid read 5.28.' },
-      { to: 0.62, say: 'Sodium chloride read 7.00, sodium fluoride 8.09 and ammonium chloride 5.13. The ion of a weak parent reacts with water; the ions of strong parents do not.' },
-      { to: 0.94, say: 'When one reagent is left over, it decides the pH. After 20.0 mL of base met 30.0 mL of acid, 33 of 100 acid units were left and the flask read 1.70.' }
+      { to: 0.62, say: 'Sodium chloride read 7.00, sodium fluoride 8.09 and ammonium chloride 5.13. An ion from a weak acid or base reacts with water; ions from strong ones do not.' },
+      { to: 0.94, say: 'When acid or base is left over, the excess decides the pH. After 20.0 mL of base met 30.0 mL of acid, 33 of 100 acid units remained and the flask read 1.70.' }
     ],
-    pin: 'Not always: neutralizing it can still leave an acidic or basic salt behind.'
+    pin: 'Not always: neutralizing the waste tank\'s weak acid still leaves a basic salt behind.'
   },
   /* ---- Verdigris: the Fifth called the marsh water acid and measured nothing ---- */
   'unit09/boss-leach': {
@@ -517,9 +521,9 @@ export const QUEST_STORY = {
     mystery: 'The Fifth\'s acid runoff pours out at a huge rate. What kind of work makes that much acid?',
     beats: [
       { to: 0.25, say: 'Warm water read 6.51 and held equal H₃O⁺ and OH⁻, so it was neutral. The base that read 7.00 held far more OH⁻ than H₃O⁺.' },
-      { to: 0.5, say: 'Formic acid read 2.54, acetic acid 2.88 and hydrofluoric acid 3.26. The pH followed the H₃O⁺ each flask held, not the share of its acid that had let go.' },
+      { to: 0.5, say: 'Formic acid read 2.54, acetic acid 2.88 and hydrofluoric acid 3.26. The pH depended on [H₃O⁺], not just the fraction ionized.' },
       { to: 0.76, say: 'Ammonia used up 25.0 mL of acid at a pH of 5.28. Methyl red changed within that volume, and the other dyes did not.' },
-      { to: 0.94, say: '100 acetic acid spheres with 227 of acetate read 5.10. A pH comes from a ratio you can build.' }
+      { to: 0.94, say: '100 acetic acid spheres with 227 acetate spheres read 5.10. Choosing the buffer ratio sets the target pH.' }
     ],
     pin: 'The runoff matches heavy ore washing, far beyond ordinary mining.'
   },
@@ -527,101 +531,105 @@ export const QUEST_STORY = {
   'unit08/boss-tipper': {
     scene: 'tipper-open',
     role: 'Boss Payoff',
-    mystery: 'Teeter\'s salt ponds are supposed to be abandoned, yet they never stop running. What are they really?',
+    mystery: 'Teeter\'s salt ponds are supposed to be abandoned, yet they never stop running. What is really happening?',
     beats: [
-      { to: 0.25, say: 'The Tipper\'s balance beam shifted with every test, tilting according to how the current ratio Q compared to K.' },
-      { to: 0.5, say: 'As the mixture settled, the beam leveled off. Equilibrium is reached when Q equals K, even when the two sides hold different amounts.' },
-      { to: 0.76, say: 'Behind the machine sits the Fifth Guild\'s final pond. Started from A alone or from B alone, it settles to the exact same ratio.' },
-      { to: 0.94, say: 'Its particles are still reacting in both directions. The Fifth Guild marked the pond closed, but it is still running in balance.' }
+      { to: 0.25, say: 'On every test vessel, the ratio Q compared to K showed which way the mixture would move.' },
+      { to: 0.5, say: 'As the mixture settled, Q reached K and the amounts leveled off, even when the two sides held different amounts.' },
+      { to: 0.76, say: 'Behind the Tipper sits the Fifth Guild\'s final pond. Started from butane alone or isobutane alone, a reversible vessel settles to the same ratio.' },
+      { to: 0.94, say: 'Its particles keep reacting in both directions at equal rates, and a drain pump pulling product out keeps it making more.' }
     ],
-    pin: 'The abandoned salt ponds are actually a hidden Fifth Guild chemical plant.'
+    pin: 'A pond that looks still can run both ways; a drain pump keeps it making product.'
   },
   'unit08/q4-properties': {
     scene: 'k-rewrite',
-    role: 'Toolkit',
+    role: 'Direct Clue',
+    mystery: 'How does K change when you flip, double, or combine equations?',
     beats: [
-      { to: 0.3, say: 'Flip a reaction around and the same mixture gives 1 over the old K. The constant depends on how the equation is written.' },
-      { to: 0.58, say: 'Double every coefficient in the equation and K gets squared, because every concentration in the ratio is raised to the power of two.' },
-      { to: 0.92, say: 'When two reactions add up to a third, the shared intermediate cancels out and the overall K equals the product of both constants.' }
-    ]
+      { to: 0.3, say: 'Flip a reaction around and the same settled vessel gives 1 over the old K. The constant depends on how the equation is written.' },
+      { to: 0.58, say: 'Double every coefficient in the equation and K gets squared, because every amount in the ratio is raised to the power of two.' },
+      { to: 0.92, say: 'When two reactions add up to a third, the shared substance cancels out and the overall K equals the product of both constants.' }
+    ],
+    pin: 'Flipping inverts K, doubling squares K, and adding reactions multiplies their K values.'
   },
   'unit08/q5-ice': {
     scene: 'ice-bars',
     role: 'Direct Clue',
-    mystery: 'Once a pond settles, how much product does it hold?',
+    mystery: 'Once a vessel settles, how much product does it hold?',
     beats: [
       { to: 0.32, say: 'A reactant drops by x and a product rises by x times its coefficient, so HI rises twice as far as H₂ falls.' },
       { to: 0.64, say: 'With a small K, very little reactant turns into product. K is a ratio of equilibrium amounts, not a fixed percentage.' },
-      { to: 0.94, say: 'Starting from a tiny amount uses up a much larger share of reactant, so the shortcut fails and you need the quadratic formula.' }
+      { to: 0.94, say: 'Starting from a tiny amount uses up a much larger share of reactant, so the small-x shortcut fails and you need the full equation.' }
     ],
-    pin: 'Tracking initial, change, and equilibrium amounts shows how much product each pond holds.'
+    pin: 'Tracking initial, change, and equilibrium amounts shows how much product each settled vessel holds.'
   },
   'unit08/q1-both': {
     scene: 'pan-both-ways',
     role: 'Direct Clue',
-    mystery: 'This pond is marked dead and nothing in it moves, yet someone came to check it. Is anything still happening in there?',
+    mystery: 'This pond looks dead and still, yet someone came to sample it. Is anything still happening inside?',
     beats: [
-      { to: 0.3, say: 'Start a pan with only A and the amounts level off with some A still left. The flat graph looks like the reaction stopped.' },
-      { to: 0.66, say: 'Tag a few particles and they keep switching between A and B at equal rates. That steady two-way traffic is dynamic equilibrium.' },
-      { to: 0.9, say: 'Start from B alone and the pan settles at the exact same amounts, because a reversible reaction can reach balance from either side.' }
+      { to: 0.3, say: 'Start a vessel with only butane and the amounts level off with some butane still left. The flat graph looks like the reaction stopped.' },
+      { to: 0.66, say: 'Ring a few particles and they keep switching between butane and isobutane at about the same rate. That steady two-way traffic is dynamic equilibrium.' },
+      { to: 0.9, say: 'Start from isobutane alone and the vessel settles at about the same amounts, because a reversible reaction reaches balance from either side.' }
     ],
-    pin: 'Yes. The pond is still reacting forward and backward at equal rates.'
+    pin: 'Yes. A pond that looks still can keep reacting both ways at equal rates.'
   },
   'unit08/q6-lean': {
     scene: 'lean-push',
     role: 'Direct Clue',
     mystery: 'Every pond on the flats has stopped making salt except the one with the pump. Why does that one keep going?',
     beats: [
-      { to: 0.3, say: 'Add H₂ to a settled vessel and Q drops below K, so the reaction uses up N₂ and makes more product until Q returns to K.' },
-      { to: 0.52, say: 'Squeeze the vessel and Q drops below K again, shifting the reaction to make more NH₃ and fewer total gas molecules.' },
-      { to: 0.72, say: 'Add inert argon and total pressure rises, but the reacting gases\' partial pressures stay the same, so Q stays at K.' },
-      { to: 0.92, say: 'Heat the vessel and K itself drops. Among all these stresses, only changing temperature changes the value of K.' }
+      { to: 0.25, say: 'Add H₂ to a settled vessel and Q drops below K, so the reaction uses up N₂ and makes more NH₃ until Q returns to K.' },
+      { to: 0.48, say: 'Squeeze the vessel and Q drops below K again, shifting the reaction to make more NH₃ and fewer total gas molecules.' },
+      { to: 0.68, say: 'Add inert argon and total pressure rises, but the amount of each reacting gas stays the same, so Q stays on K.' },
+      { to: 0.88, say: 'Heat the vessel and K itself changes—only temperature changes K. Taking NH₃ out lowers Q below K, so the vessel keeps making more.' }
     ],
-    pin: 'The drain pump keeps removing product, forcing the pond to keep making more.'
+    pin: 'The drain pump keeps removing product, lowering Q below K so the pond keeps making more.'
   },
   'unit08/q2-k': {
     scene: 'ratio-holds',
     role: 'Direct Clue',
-    mystery: 'Three ponds started with different amounts. Where does each one end up?',
+    mystery: 'Three vessels started with different amounts. What do they share once each one settles?',
     beats: [
-      { to: 0.33, say: 'Three pans of A and B started with different amounts and finished with different amounts, yet the ratio B over A matched on all three.' },
-      { to: 0.68, say: 'When H₂ and I₂ form 2 HI, the 2 becomes an exponent, so HI squared divided by H₂ times I₂ matches on every pan.' },
+      { to: 0.33, say: 'Three vessels of butane and isobutane started with different amounts and finished with different amounts, yet isobutane over butane matched on all three.' },
+      { to: 0.68, say: 'When H₂ and I₂ form 2 HI, the 2 becomes an exponent, so HI squared divided by H₂ times I₂ matches on every vessel.' },
       { to: 0.92, say: 'That fixed ratio is K. A large K means mostly products at balance, and a small K means mostly reactants.' }
     ],
-    pin: 'Every pond settles to the same product-to-reactant ratio, K.'
+    pin: 'Every vessel of the same reaction settles to the same product-to-reactant ratio, K.'
   },
   'unit08/q3-q': {
     scene: 'needle-to-k',
     role: 'Direct Clue',
-    mystery: 'A fresh mix has just been poured into a tank. Which way will it react?',
+    mystery: 'A fresh brine mix has just been poured into a tank. Which way will it react?',
     beats: [
-      { to: 0.33, say: 'A mixture with too much B has a current ratio Q above K, so it reacts backward to make A until Q drops to K.' },
-      { to: 0.66, say: 'A mixture with equal amounts has Q below K, so it reacts forward to make B. The ratio, not which pile is bigger, sets the direction.' },
-      { to: 0.92, say: 'When Q already equals K, nothing shifts. Below K a reaction makes products; above K it makes reactants.' }
+      { to: 0.33, say: 'A mixture with too much isobutane has a current ratio Q above K, so it shifts toward butane until Q drops to K.' },
+      { to: 0.66, say: 'For K = 2.0, equal amounts give Q = 1.0, below K, so the vessel shifts toward isobutane. The ratio, not which pile is bigger, sets the direction.' },
+      { to: 0.92, say: 'When Q already equals K, nothing shifts. With Q below K a reaction makes products; with Q above K it makes reactants.' }
     ],
-    pin: 'Comparing the current ratio Q to K shows which way the mix will react.'
+    pin: 'Comparing the current ratio Q to K shows which way the tank mix will move.'
   },
   'unit08/q8-free': {
     scene: 'free-k',
-    role: 'Toolkit',
+    role: 'Direct Clue',
+    mystery: 'Why do some reactions stop with mostly reactants while others make mostly product?',
     beats: [
-      { to: 0.26, say: 'Settle three pans and the lower the ΔG°, the more product each holds. Even the pan with a positive ΔG° holds some product.' },
-      { to: 0.52, say: 'Product held against ΔG° is one smooth curve. At ΔG° = 0 the pan holds equal amounts and K is 1; below zero, K is above 1.' },
-      { to: 0.76, say: 'Warm a pan and ΔG° = ΔH° − TΔS° moves along a line, taking K with it. For a reaction that takes in heat, K rises as it warms.' },
-      { to: 0.92, say: 'Pair a reaction that cannot run alone with one that can, and their ΔG° values add. Here +13.8 and −30.5 leave −16.7 kJ/mol, so the pair runs.' }
-    ]
+      { to: 0.26, say: 'Settle three vessels and the more negative ΔG° is, the more product each holds. Even a vessel with positive ΔG° holds a little product.' },
+      { to: 0.52, say: 'Product held against ΔG° is one smooth curve. At ΔG° = 0 the vessel holds equal amounts and K is 1; below zero, K is above 1.' },
+      { to: 0.76, say: 'Salt can dissolve even when it cools the water, because ΔG = ΔH − TΔS turns negative when the spread-out term TΔS beats the heat taken in.' },
+      { to: 0.92, say: 'Pair a reaction that cannot run alone with one that can, and their ΔG° values add. When the sum is negative, the coupled pair runs.' }
+    ],
+    pin: 'Free energy ΔG° sets K; coupling a positive-ΔG° step with a negative one makes it run.'
   },
   'unit08/q7-dissolve': {
     scene: 'solubility-trade',
     role: 'Station Fix',
-    mystery: 'Salt keeps crusting inside the pond pipes. Can we make it come out of the water before it gets there?',
+    mystery: 'Mineral scale keeps crusting inside the pond pipes. Can we make it come out of the water before it gets there?',
     beats: [
-      { to: 0.26, say: 'Add solid to water and the meters rise, until one more scoop changes nothing. The water is saturated, and the extra solid lies on the floor.' },
-      { to: 0.5, say: 'Even then, units keep leaving the solid and coming back, at about the same rate. That balance is why the Ksp, a product of ion concentrations, stays fixed.' },
-      { to: 0.76, say: 'Put the same ion in the water first and the solid gives up less. AgCl dissolves 1.3e−5 mol/L in water and 1.8e−9 mol/L with 0.10 mol/L chloride already there.' },
-      { to: 0.94, say: 'Ksp alone does not rank salts. Ag₂CrO₄ has the smaller Ksp and still holds more dissolved, 6.5e−5 mol/L against 1.3e−5.' }
+      { to: 0.26, say: 'Add solid CaF₂ to water and the ion meters rise, until one more scoop changes nothing. The water is saturated, and extra solid lies on the floor.' },
+      { to: 0.5, say: 'Even then, ions keep leaving the solid and returning at about the same rate. That balance is why Ksp, the product of ion concentrations, stays fixed.' },
+      { to: 0.76, say: 'Ksp alone does not rank salts. Ag₂CrO₄ has the smaller Ksp yet holds more dissolved, 6.5 × 10⁻⁵ mol/L against 1.3 × 10⁻⁵ mol/L for AgCl.' },
+      { to: 0.94, say: 'Put a shared ion in the water first and far less solid stays dissolved—for AgCl, 1.8 × 10⁻⁹ mol/L with 0.10 mol/L chloride instead of 1.3 × 10⁻⁵ mol/L.' }
     ],
-    pin: 'Adding a shared ion makes the salt come out of solution before it reaches the pipes.'
+    pin: 'Adding a shared ion pushes Q past Ksp, forcing scale out before the pipes.'
   },
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'unit01/q1-grain': {
@@ -902,9 +910,9 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'Two clear waste streams run into the pond, and where they meet the water turns cloudy yellow. What is forming?',
     beats: [
-      { to: 0.2, say: 'Two clear jars hold lead, nitrate, potassium and iodide ions. Pour them together and a cloud forms.' },
-      { to: 0.5, say: 'Only one pair of ions meets and packs into a solid, the precipitate. The lead and iodide ions leave the water, and nothing else moves.' },
-      { to: 0.74, say: 'The potassium and nitrate ions are spectator ions: the same discs stand in the water before and after the mixing.' },
+      { to: 0.2, say: 'One jar holds dissolved lead and nitrate ions; the other holds potassium and iodide ions. Pour them together and a yellow cloud forms.' },
+      { to: 0.5, say: 'Only lead and iodide ions lock together into a solid precipitate and leave the water.' },
+      { to: 0.74, say: 'The potassium and nitrate ions are spectator ions: they stay dissolved and unchanged before and after mixing.' },
       { to: 0.94, say: 'The net ionic equation keeps only what changed: the lead ion and two iodide ions packing into a solid.' }
     ],
     pin: 'One pair of ions formed a solid, and that solid clouds the pond.'
@@ -924,36 +932,37 @@ export const QUEST_STORY = {
   'unit07/q4-balance': {
     scene: 'recipe-board',
     role: 'Station Fix',
-    mystery: 'The furnace turns ore into iron. How many of each molecule does the recipe need so no atom is lost?',
+    mystery: 'The furnace turns ore into iron. How do we count atoms in a recipe so no atom is lost?',
     beats: [
       { to: 0.26, say: 'The furnace equation lists the reactants, Fe₂O₃ and CO, and the products, Fe and CO₂. Count the atoms and the sides disagree: oxygen is 4 on the left and 2 on the right.' },
-      { to: 0.6, say: 'A coefficient in front of a formula counts molecules, so it changes the atom counts and leaves each substance alone. Raise them one at a time and the rows come closer.' },
-      { to: 0.94, say: 'At 1, 3, 2 and 3 every row agrees: 2 iron, 3 carbon and 6 oxygen on each side.' }
+      { to: 0.6, say: 'A coefficient in front of a formula counts molecules, changing the atom counts while keeping each substance the same. Raise them one at a time until every row matches.' },
+      { to: 0.94, say: 'At 1, 3, 2, and 3, every row matches: 2 iron, 3 carbon, and 6 oxygen on each side.' }
     ],
     pin: 'The furnace equation balances as Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
   },
   'unit07/q2-names': {
     scene: 'crate-labels',
     role: 'Direct Clue',
-    mystery: 'The ore crates are stencilled Fe₂O₃ and nothing else. What is that, in words?',
+    mystery: 'The foundry crates are stencilled with formulas like Fe₂O₃ instead of names. How do formulas and names match the ions inside?',
     beats: [
-      { to: 0.3, say: 'Ions carry charges and a compound carries none. One magnesium ion cancels two chlorine ions, so the formula counts the ions in that smallest group: MgCl₂.' },
-      { to: 0.6, say: 'A name says the same in words. The metal keeps its name and the other ion takes the ending -ide, so Mg²⁺ with O²⁻ is magnesium oxide.' },
-      { to: 0.94, say: 'In Fe₂O₃ the three oxide ions hold 6− between them, so each of the two irons is 3+. The Roman numeral is that charge, not a count: iron(III) oxide.' }
+      { to: 0.2, say: 'Ions carry charges and a compound carries none. One Mg²⁺ cancels two Cl⁻, so the ionic formula is MgCl₂.' },
+      { to: 0.4, say: 'A two-element name keeps the metal and ends the nonmetal in -ide, as in magnesium oxide. In Fe₂O₃, three O²⁻ carry 6−, so each iron is 3+: iron(III) oxide.' },
+      { to: 0.62, say: 'A polyatomic ion stays together with parentheses when repeated, as in Ca(NO₃)₂. In the shed drum, three SO₄²⁻ carry 6−, giving iron(III) sulfate.' },
+      { to: 0.8, say: 'Two nonmetals form molecules, so molecular prefixes count atoms instead of charges: N₂O₄ is dinitrogen tetroxide.' },
+      { to: 0.96, say: 'An acid releases H⁺ in water. Ions ending in -ide take hydro- and -ic, as in hydrochloric acid; ions ending in -ate drop hydro-, as in nitric acid.' }
     ],
-    pin: 'The crates hold iron(III) oxide, Fe₂O₃.'
+    pin: 'The ore crates hold iron(III) oxide, Fe₂O₃, matching the foundry\'s iron ore.'
   },
   'unit07/q3-change': {
     scene: 'sealed-pot',
     role: 'Direct Clue',
     mystery: 'The foundry log says the furnace put out more metal than went into it. Can a reaction ever make mass?',
     beats: [
-      { to: 0.27, say: 'In an open vessel, burning iron takes oxygen from the air, so the balance counts more atoms and reads more.' },
-      { to: 0.52, say: 'The gases a burn makes float out of an open vessel, so the balance counts fewer atoms and reads less.' },
-      { to: 0.77, say: 'Seal the lid and nothing gets in or out. The atoms only join up differently, so the balance reads the same before and after.' },
-      { to: 0.94, say: 'The balance changes only when atoms cross the lid. A sealed vessel makes nothing and loses nothing.' }
+      { to: 0.3, say: 'In an open vessel, burning iron pulls in oxygen from the air, so the balance counts more atoms and reads higher.' },
+      { to: 0.62, say: 'When burning produces gases that escape from an open vessel, the balance counts fewer atoms and reads lower.' },
+      { to: 0.94, say: 'Seal the lid and nothing enters or leaves. The same iron and oxygen atoms form iron oxide, so the balance reads the same.' }
     ],
-    pin: 'No. A sealed reaction never creates mass, so something in the log is wrong.'
+    pin: 'A sealed reaction never creates mass. Either air entered the furnace, or the log is wrong.'
   },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
@@ -961,7 +970,7 @@ export const QUEST_STORY = {
     mystery: 'The foundry log says 40 tons of ore made 50 tons of iron. Is that possible?',
     beats: [
       { to: 0.24, say: 'An equation counts molecules, not grams. Two hydrogens and one oxygen make two waters, and the masses still add to 36.0 on both sides.' },
-      { to: 0.5, say: 'So grams reach grams through moles. Three hydrogens to two ammonias is a ratio of moles, whatever they weigh.' },
+      { to: 0.5, say: 'To go from grams of one substance to grams of another, convert through moles. Three moles of hydrogen to two moles of ammonia is a mole ratio, regardless of mass.' },
       { to: 0.72, say: 'Feed two reactants and the reaction stops when one runs out. What is left of the other is the excess.' },
       { to: 0.94, say: 'Forty tons of ore can give at most 28.0 tons of iron. A real furnace keeps only a part of that.' }
     ],
@@ -972,10 +981,10 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'The foundry\'s cleaning tank holds an acid of unknown strength. How strong is it?',
     beats: [
-      { to: 0.24, say: 'A burette lets base into the acid in measured drops, and its reading is the drops counted. Here each drop is half a millilitre.' },
-      { to: 0.5, say: 'Every drop holds the same moles of base, and each mole of base uses up a mole of acid. The flask is counted against the drops, particle for particle.' },
-      { to: 0.74, say: 'When the particles match, that is the equivalence point. The indicator turns on the very next drop, which is the endpoint.' },
-      { to: 0.95, say: 'So the acid\'s strength is the base\'s strength times the volume counted, over the volume in the flask.' }
+      { to: 0.24, say: 'A burette adds base to the acid in measured amounts. Its reading tracks the exact volume added.' },
+      { to: 0.5, say: 'Each milliliter holds a fixed number of moles of base, and each mole of base neutralizes one mole of acid.' },
+      { to: 0.74, say: 'When all the acid has reacted, that is the equivalence point. The indicator changes color right at the endpoint.' },
+      { to: 0.95, say: 'So the acid\'s concentration equals the moles of base added divided by the acid\'s volume in liters.' }
     ],
     pin: 'Titration gave the exact concentration of the acid in the cleaning tank.'
   },
@@ -983,10 +992,10 @@ export const QUEST_STORY = {
     scene: 'furnace-log',
     role: 'Toolkit',
     beats: [
-      { to: 0.24, say: 'The furnace log lists the ore reaction. In Fe₂O₃ each iron atom carries +3 and each oxygen −2, and all together they add up to the charge of the ore, 0.' },
-      { to: 0.5, say: 'The other reactant is CO. Its carbon carries +2 and its oxygen −2, worked the same way.' },
-      { to: 0.78, say: 'Six electrons move, two from each carbon to three on each iron. Iron falls from +3 to 0, so it gained electrons and was reduced; carbon rises to +4 and is oxidised.' },
-      { to: 0.97, say: 'The oxygen leaves the ore for the carbon. That is a redox reaction, and what stays behind is iron.' }
+      { to: 0.24, say: 'The furnace log lists the ore reaction. In Fe₂O₃, each iron atom has oxidation number +3 and each oxygen has −2, adding up to 0.' },
+      { to: 0.5, say: 'The other reactant is CO, where carbon is +2 and oxygen is −2.' },
+      { to: 0.78, say: 'Six electrons transfer from the three carbons to the two irons. Iron drops from +3 to 0 (reduced), and carbon rises from +2 to +4 (oxidized).' },
+      { to: 0.97, say: 'Oxygen moves from the ore to the carbon. Because electrons transfer, this is a redox reaction that leaves pure iron behind.' }
     ]
   },
   'unit07/q9-hsab': {

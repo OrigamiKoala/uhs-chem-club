@@ -104,18 +104,20 @@ export function playQuestStory(key) {
       pips.forEach((p, k) => { p.className = k < i ? 'done' : k === i ? 'on' : ''; });
       backBtn.disabled = i === 0;
       nextBtn.textContent = i === last ? 'Done' : 'Next';
+      nextBtn.disabled = !still;
       const isPin = Boolean(line.pin || line.filed);
       overlay.classList.toggle('story-anim-filed', isPin);
       // The Case Pin answers the question the quest opened on, so the question is shown again above it.
       askEl.textContent = isPin && line.ask ? line.ask : '';
       askEl.classList.toggle('hidden', !(isPin && line.ask));
+      const unlockNext = () => { nextBtn.disabled = false; };
       if (!tx) {
-        tx = createTransmissionElement({ speaker: 'Vess', text: line.say, variant: 'hero', badge: isPin ? 'Case Pin' : `${i + 1} / ${last + 1}` });
+        tx = createTransmissionElement({ speaker: 'Vess', text: line.say, variant: 'hero', badge: isPin ? 'Case Pin' : `${i + 1} / ${last + 1}`, onComplete: unlockNext });
         txHost.appendChild(tx.element);
       } else {
-        tx.update({ text: line.say, badge: isPin ? 'Case Pin' : `${i + 1} / ${last + 1}` });
+        tx.update({ text: line.say, badge: isPin ? 'Case Pin' : `${i + 1} / ${last + 1}`, onComplete: unlockNext });
       }
-      if (still) draw(now, 0);
+      if (still) { tx.finish(); draw(now, 0); }
     };
 
     const step = dir => {

@@ -135,7 +135,6 @@ const SCENES = { react: sceneReact, gasadd: sceneGasAdd, dissolve: sceneDissolve
 function paintClip(ctx, f, state, b) {
   const F = frameOf(b);
   const clock = b.clock || 0;
-  say(ctx, f.label, F.x(2), F.y(4.2), F.size(2.4, 6), { color: DUST, weight: 700, maxW: F.len(f.size.w - 4) });
   SCENES[f.props.scene](ctx, F, f, clock);
 }
 
@@ -160,7 +159,6 @@ function paintPgas(ctx, f, state, b) {
   const r = pgasRead(f);
   const { w, h } = f.size;
   const clock = b.clock || 0;
-  say(ctx, f.label, F.x(2), F.y(4.2), F.size(2.4, 6), { color: DUST, weight: 700, maxW: F.len(w - 4) });
   const bw = w - 4; const bh = h - 20;
   box(ctx, F, 2, 8, bw, bh);
   // Each particle crosses the box at a pace set by the temperature; each time it meets a wall it is counted.

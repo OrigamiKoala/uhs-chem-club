@@ -393,6 +393,10 @@ export class LearnFrame {
     });
 
     this.onClick = e => {
+      if (e.target.closest('.lq-banner') && !e.target.closest('button, a, [data-act]')) {
+        this.clearBanner();
+        return;
+      }
       const act = e.target.closest('[data-act]')?.dataset.act;
       if (act === 'submit') this.opts.onSubmit();
       else if (act === 'next') this.opts.onNext();
@@ -702,10 +706,12 @@ export class LearnFrame {
     strip.className = 'lq-tstrip';
     strip.setAttribute('role', 'region');
     strip.setAttribute('aria-label', 'Stage');
+    const tmsg = document.createElement('div');
+    tmsg.className = 'lq-tmsg';
+    strip.appendChild(tmsg);
     const dock = document.createElement('div');
     dock.className = 'lq-tdock';
     dock.innerHTML = `
-      <div class="lq-tmsg"></div>
       <div class="lq-tdock-row">
         <div class="lq-tdock-left">
           <span class="lq-carry" hidden></span>
@@ -716,7 +722,7 @@ export class LearnFrame {
     const q = sel => dock.querySelector(sel);
     this.el.tableStrip = strip;
     this.el.tableDock = dock;
-    this.el.tableMsg = q('.lq-tmsg');
+    this.el.tableMsg = tmsg;
     this.el.tableKeys = q('.lq-tkeys');
     this.el.stand = null;
     this.el.carry = q('.lq-carry');
@@ -775,6 +781,7 @@ export class LearnFrame {
    * }} stage
    */
   setStage(stage) {
+    this.closeTour?.();
     const advancing = this.stage !== null;
     if (this.activeBriefingTx?.destroy) {
       this.activeBriefingTx.destroy();
@@ -1063,9 +1070,10 @@ export class LearnFrame {
         <span class="banner-body">${esc(reward.log || 'Logged.')}</span>
       </div>
     `;
+    const hideTitle = this.isPredictStage() || reward.title === 'Prediction';
     this.el.widget.innerHTML = `
       <div class="lq-reward">
-        <p class="lq-reward-body"><strong>${esc(reward.title)}.</strong> ${esc(clampSentences(reward.body, 2))}</p>
+        <p class="lq-reward-body">${hideTitle ? '' : `<strong>${esc(reward.title)}.</strong> `}${esc(clampSentences(reward.body, 2))}</p>
       </div>
     `;
     this.el.actions.innerHTML = `
@@ -1138,12 +1146,11 @@ export class LearnFrame {
     return Boolean(this.stage?.predict || this.stage?.table?.predict);
   }
 
-  /** Which rung the player has earned: looking and missing both open the ladder. */
+  /** Which rung the player has earned: rung 2 opens right after rung 1; rung 3 after two wrong answers. */
   availableRung() {
     if (this.isPredictStage()) return 1;
     if (this.misses >= 2) return 3;
-    if (this.misses >= 1 || Date.now() - this.openedAt > RUNG2_AFTER_MS) return 2;
-    return 1;
+    return 2;
   }
 
   takeHint() {
@@ -1575,8 +1582,8 @@ export class LearnFrame {
     const here = this.stage ? this.stage.index : -1;
     const out = [];
     this.findings.forEach((r, i) => {
-      if (!r || !r.title) return;
-      if (i < this.cleared || (this.solved && i === here)) out.push({ index: i, reward: r });
+      if (!r || !r.title || r.title === 'Prediction') return;
+      if ((i < this.cleared && (here < 0 || i < here)) || (this.solved && i === here)) out.push({ index: i, reward: r });
     });
     return out;
   }

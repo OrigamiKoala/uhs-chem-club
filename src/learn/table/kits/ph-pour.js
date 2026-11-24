@@ -26,14 +26,16 @@ const DIM = PLATE_COLORS.dim;
 const STEEL = PLATE_COLORS.steel;
 const TEXT = PLATE_COLORS.text;
 
-export const WATER_INK = '#7d8b97';
-export const HYD_INK = '#5e584e';
+export const WATER_INK = '#9ab8cc';
+export const HYD_INK = '#9b9384';
 export const TAG_INK = '#f4f0e6';
-export const PAIR_INK = '#e8c15a';
-const F_INK = '#8a9a6a';
+export const PAIR_INK = '#ffd257';
+const F_INK = '#9ab373';
 export const POUR_UNITS = 8;
 const WIN_TOP = 14.5;
 const HOP = 1.6;
+// Pour start time keyed by fixture id + view key so cloning `state` on a proton drag never resets the poured animation.
+const POUR_T0 = new Map();
 
 /** The formulas of what a pour scene is made of. */
 export function sceneNames(p) {
@@ -74,8 +76,12 @@ function atoms(ctx, F, cx, cy, R, core, n, tags, extra = {}) {
   pos.forEach(([x, y], i) => ball(ctx, x, y, hr, tags[i] ? TAG_INK : HYD_INK));
   ball(ctx, cx, cy, R, core);
   if (extra.pair) {
-    ctx.fillStyle = PAIR_INK;
-    for (const dx of [-0.4, 0.4]) { ctx.beginPath(); ctx.arc(cx + dx * R, cy - R * 1.05, Math.max(1.3, R * 0.2), 0, Math.PI * 2); ctx.fill(); }
+    const pr = Math.max(2.6, R * 0.34);
+    for (const dx of [-0.45, 0.45]) {
+      ctx.fillStyle = PAIR_INK;
+      ctx.beginPath(); ctx.arc(cx + dx * R, cy - R * 1.12, pr, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.65)'; ctx.lineWidth = 1; ctx.stroke();
+    }
   }
   return pos;
 }
@@ -83,18 +89,19 @@ function atoms(ctx, F, cx, cy, R, core, n, tags, extra = {}) {
 function paintWindow(ctx, F, f, state, x, y, w, h, b = {}) {
   const p = f.props;
   const r = pourRead(state, f.id);
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(h));
+  ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(h));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(h)));
   const cells = cellGrid(r.units, p.cols, x + 0.6, y + 0.6, w - 1.2, h - 1.2);
   const gone = ionizedCells(r.units, r.moved, seedOf(p.solute ? { solute: p.solute } : { solute: { id: 'lewis', c: 1 } }));
   const nm = sceneNames(p);
   const hs = formulaStats(nm.solute).h;
-  // The pour is timed from the first frame it is seen poured; Start Over clears it. The proton crosses once, in HOP seconds.
+  // The pour is timed from the first frame it is seen poured; Start Over clears it. Keyed by id so moving other pieces does not un-pour.
   const clock = b.clock || 0;
-  const sc = scratch(f, b.sk);
-  if (!r.poured) delete sc.t0; else if (sc.t0 == null) sc.t0 = clock;
+  const tKey = `${f.id}|${b.sk || 'flat'}`;
+  if (!r.poured) POUR_T0.delete(tKey); else if (!POUR_T0.has(tKey)) POUR_T0.set(tKey, clock);
+  const t0 = POUR_T0.get(tKey) ?? clock;
   // A lead-in clip (`loop`) shows the hand-over again and again; a bench shows it once, when Pour is pressed.
-  const hop = p.loop ? Math.min(1, (clock % (HOP + 2.4)) / HOP) : r.poured ? Math.min(1, (clock - sc.t0) / HOP) : 0;
+  const hop = p.loop ? Math.min(1, (clock % (HOP + 2.4)) / HOP) : r.poured ? Math.min(1, (clock - t0) / HOP) : 0;
   cells.forEach((c, i) => {
     const R = F.len(Math.min(c.cw * 0.2, c.ch * 0.3));
     const wob = (k, sp) => Math.sin(clock * sp + i * 2.4 + k) * c.cw * 0.03;
@@ -140,15 +147,26 @@ function paintWindow(ctx, F, f, state, x, y, w, h, b = {}) {
     } else {
       const sh = Array(hs).fill(tagS);
       const pairOn = r.mark === 'pair';
-      const lx2 = done ? F.x(c.x - c.cw * 0.12) : lx; const rx2 = done ? F.x(c.x + c.cw * 0.12) : rx;
-      atoms(ctx, F, lx2, cy, R, BASE_INK, hs, sh, { pair: pairOn && !done, angle: Math.PI / 2 });
+      const u = r.poured && gone.has(i) ? ease(hop) : 0;
+      const lx2 = F.x(c.x - c.cw * (0.22 - 0.10 * u)); const rx2 = F.x(c.x + c.cw * (0.22 - 0.10 * u));
+      atoms(ctx, F, lx2, cy, R, BASE_INK, hs, sh, { pair: pairOn && !r.poured, angle: Math.PI / 2 });
       if (done) {
-        ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, F.len(0.3));
+        ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1.2, F.len(0.32));
         ctx.beginPath(); ctx.moveTo(lx2 + R, cy); ctx.lineTo(rx2 - R, cy); ctx.stroke(); ctx.lineWidth = 1;
-        if (pairOn) { ctx.fillStyle = PAIR_INK; for (const dy of [-0.3, 0.3]) { ctx.beginPath(); ctx.arc((lx2 + rx2) / 2, cy + dy * R, Math.max(1.3, R * 0.2), 0, Math.PI * 2); ctx.fill(); } }
       }
       ball(ctx, rx2, cy, R, ACID_INK);
-      for (let k = 0; k < 3; k++) { const a = Math.PI / 2 + 0.9 * (k - 1) + Math.PI / 2; ball(ctx, rx2 + Math.cos(a) * R * 1.45 + (done ? 0 : 0), cy + Math.sin(a) * R * 1.45, R * 0.45, F_INK); }
+      for (let k = 0; k < 3; k++) { const a = Math.PI / 2 + 0.9 * (k - 1) + Math.PI / 2; ball(ctx, rx2 + Math.cos(a) * R * 1.45, cy + Math.sin(a) * R * 1.45, R * 0.45, F_INK); }
+      if (pairOn && r.poured && gone.has(i)) {
+        // Visibly carry the lone pair from nitrogen to the bond between nitrogen and boron.
+        const pr = Math.max(2.6, R * 0.34);
+        const px = lx2 + ((lx2 + rx2) / 2 - lx2) * u;
+        const py = (cy - R * 1.12) * (1 - u) + cy * u;
+        for (const d of [-0.36, 0.36]) {
+          ctx.fillStyle = PAIR_INK;
+          ctx.beginPath(); ctx.arc(px + d * R * (1 - u), py + d * R * u, pr, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = 'rgba(0,0,0,0.65)'; ctx.lineWidth = 1; ctx.stroke();
+        }
+      }
     }
   });
   return r;
@@ -159,11 +177,11 @@ function legendItems(p, r) {
   const none = r.moved === 0;
   const items = [];
   if (p.scene === 'acid') {
-    if (!r.poured || r.moved < r.units) items.push([ACID_INK, nm.solute], [WATER_INK, 'H₂O']);
-    if (r.poured && !none) items.push([BASE_INK, nm.left], [H_INK, 'H₃O⁺']);
+    if (!r.poured || r.moved < r.units || p.hideProducts) items.push([ACID_INK, nm.solute], [WATER_INK, 'H₂O']);
+    if (r.poured && !none && !p.hideProducts) items.push([BASE_INK, nm.left], [H_INK, 'H₃O⁺']);
   } else if (p.scene === 'base') {
-    if (!r.poured || r.moved < r.units) items.push([BASE_INK, nm.solute], [WATER_INK, 'H₂O']);
-    if (r.poured && !none) items.push([ACID_INK, nm.left], [OH_INK, 'OH⁻']);
+    if (!r.poured || r.moved < r.units || p.hideProducts) items.push([BASE_INK, nm.solute], [WATER_INK, 'H₂O']);
+    if (r.poured && !none && !p.hideProducts) items.push([ACID_INK, nm.left], [OH_INK, 'OH⁻']);
   } else {
     items.push([BASE_INK, LEWIS.base], [ACID_INK, LEWIS.acid]);
   }
@@ -226,22 +244,22 @@ function dressPour(f, state, c) {
  * A pour window. `scene`: 'acid' (solute an ACIDS id), 'base' (a BASES id) or 'lewis'. `solute`: `{ id, c }`. `mark`: 'free' (the Mark dial
  * is on the plate) or a mark id that is set and hidden. Returns the fixture and its size.
  */
-export function pourFixture(id, at, { scene, solute = null, label = 'Particle window', w = 100, window = 34, mark = 'free', cols = 4, units = POUR_UNITS, loop = false } = {}) {
+export function pourFixture(id, at, { scene, solute = null, label = 'Particle window', w = 100, window = 34, mark = 'free', cols = 4, units = POUR_UNITS, loop = false, hideProducts = false, hideConc = false, runLabel = 'Pour', pour = true } = {}) {
   const nm = sceneNames({ scene, solute });
   const marks = scene === 'lewis' ? ['off', 'solute', 'pair'] : ['off', 'solute', 'water'];
-  const labels = scene === 'lewis' ? ['Off', `${nm.solute} hydrogens`, 'Lone pairs'] : ['Off', `${nm.solute} hydrogens`, 'Water hydrogens'];
+  const labels = scene === 'lewis' ? ['Off', `${nm.solute} H`, 'Lone pairs'] : ['Off', `${nm.solute} H`, 'Water H'];
   const hidden = mark !== 'free';
   const start = hidden ? marks.indexOf(mark) + 1 : 1;
   const h = Math.round((WIN_TOP + window + 3 + 3.3 * 2 + 4) * 10) / 10;
   return {
-    id, kind: 'phpour', label, at: { ...at }, size: { w, h }, ...(loop ? { noRun: true } : { runLabel: 'Pour' }),
+    id, kind: 'phpour', label, at: { ...at }, size: { w, h }, ...(loop || !pour ? { noRun: true } : { runLabel }),
     dials: {
       mark: { min: 1, max: 3, step: 1, value: start, label: 'Mark', labels },
-      poured: { min: 0, max: 1, step: 1, value: loop ? 1 : 0, label: 'Poured' }
+      poured: { min: 0, max: 1, step: 1, value: loop || !pour ? 1 : 0, label: 'Poured' }
     },
     props: {
-      hidden: hidden || loop ? ['mark', 'poured'] : ['poured'], loop, backdrop: true, scene, solute: solute ? { ...solute } : null, units, cols, wh: window, marks,
-      strength: scene === 'lewis' ? '' : `${concText(solute.c)} ${nm.solute}`
+      hidden: hidden || loop ? ['mark', 'poured'] : ['poured'], margin: 4.5, loop, backdrop: true, scene, solute: solute ? { ...solute } : null, units, cols, wh: window, marks, hideProducts,
+      strength: scene === 'lewis' || hideConc ? '' : `${concText(solute.c)} ${nm.solute}`
     }
   };
 }

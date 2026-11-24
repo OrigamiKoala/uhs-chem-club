@@ -74,7 +74,7 @@ export const UNIT_08 = {
     {
       id: 'q6-lean',
       title: 'Le Chatelier\u2019s Principle',
-      line: 'The Fifth added a drop to a settled vessel; see where the amounts go.',
+      line: 'The Fifth Guild added a feed to a settled vessel; see where the amounts go.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',

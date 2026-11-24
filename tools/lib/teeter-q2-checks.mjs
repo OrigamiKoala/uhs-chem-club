@@ -42,7 +42,7 @@ export async function checkTeeterQ2(ok, bad) {
   near(settleAmounts(S.ab, { A: 1 }, 2e5).A, 5e-6, 1e-4, 'A left, K = 2e5'); near(settleAmounts(S.ab, { A: 1 }, 3e-6).B, 3e-6, 1e-4, 'B made, K = 3e-6');
   // The gauge: Q = K/ 10 sits one decade left, 1.5 decades wide → −2/3; clamped at the ends.
   near(gaugePos(0.2, 2, 1.5), -2 / 3, 1e-9, 'gauge a decade below'); near(gaugePos(2e5, 2, 1.5), 1, 1e-12, 'gauge clamps');
-  if (fmtNum(54.02, 2) === '54' && fmtNum(6.7, 3) === '6.70' && fmtNum(2e5, 2) === '2.0 × 10^5' && fmtNum(3e-6, 2) === '3.0 × 10^−6') ok('q2 number formats'); else bad(`q2 number formats: ${fmtNum(54.02, 2)} ${fmtNum(2e5, 2)} ${fmtNum(3e-6, 2)}`);
+  if (fmtNum(54.02, 2) === '54' && fmtNum(6.7, 3) === '6.70' && fmtNum(2e5, 2) === '2.0 × 10⁵' && fmtNum(3e-6, 2) === '3.0 × 10⁻⁶') ok('q2 number formats'); else bad(`q2 number formats: ${fmtNum(54.02, 2)} ${fmtNum(2e5, 2)} ${fmtNum(3e-6, 2)}`);
 
   // The stages, through the module: the right tiles pass, the slips are refused with a reason that names the table.
   const { installUiStub } = await import('./ui-stub.mjs');

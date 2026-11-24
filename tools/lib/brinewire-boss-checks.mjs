@@ -92,19 +92,19 @@ export async function checkBrinewireBoss({ ok, fail }) {
   holds(run(3, []).notYet, 'phase 4 waits for the dial');
 
   /* ---- phase 5 ---- */
-  const g5 = C.faradayMass(1.5, 1200, 'zn');
-  near(g5, 0.60986, 2e-5, 'zinc plated'); near(C.charge(1.5, 1200), 1800, 1e-9, 'charge');
+  const g5 = C.faradayMass(1.5, 1200, 'cu');
+  near(g5, 0.59275, 2e-5, 'copper plated'); near(C.charge(1.5, 1200), 1800, 1e-9, 'charge');
   near(1800 / 96485.33212, 0.018655, 2e-6, 'moles of electrons');
   const r5 = v => run(4, [typed('g', v)]);
-  holds(r5('0.61').ok && r5('0.60').ok && r5('0.62').ok && !r5('0.64').ok && !r5('0.58').ok, 'phase 5 accepts 0.61 g within 0.012 g and refuses copper\'s molar mass');
-  const s5 = { min: r5('0.0102'), one: r5('1.22'), cu: r5('0.593'), ag: r5('1.006'), ni: r5('0.548'), coul: r5('1800'), mg: r5('610'), odd: r5('3.5') };
+  holds(r5('0.59').ok && r5('0.585').ok && r5('0.60').ok && !r5('0.62').ok && !r5('0.56').ok, 'phase 5 accepts 0.59 g within 0.012 g and refuses zinc\'s molar mass');
+  const s5 = { min: r5('0.0099'), one: r5('1.186'), zn: r5('0.610'), ag: r5('1.006'), ni: r5('0.548'), coul: r5('1800'), mg: r5('593'), odd: r5('3.5') };
   holds(!s5.min.ok && /20\.0 minutes as 20\.0 s/.test(s5.min.msg), `phase 5 names minutes read as seconds: "${s5.min.msg}"`);
-  holds(!s5.one.ok && /Zn²⁺ \+ 2 e⁻ → Zn/.test(s5.one.msg), 'phase 5 names one electron per atom');
-  holds(!s5.cu.ok && /63\.5 g\/mol/.test(s5.cu.msg) && !s5.ag.ok && /107\.9 g\/mol/.test(s5.ag.msg) && !s5.ni.ok && /58\.7 g\/mol/.test(s5.ni.msg), 'phase 5 names the wrong molar mass');
+  holds(!s5.one.ok && /Cu²⁺ \+ 2 e⁻ → Cu/.test(s5.one.msg), 'phase 5 names one electron per atom');
+  holds(!s5.zn.ok && /65\.4 g\/mol/.test(s5.zn.msg) && !s5.ag.ok && /107\.9 g\/mol/.test(s5.ag.msg) && !s5.ni.ok && /58\.7 g\/mol/.test(s5.ni.msg), 'phase 5 names the wrong molar mass');
   holds(!s5.coul.ok && /coulombs/.test(s5.coul.msg) && !s5.mg.ok && /milligrams/.test(s5.mg.msg), 'phase 5 names a charge and a milligram figure');
   holds(!s5.odd.ok && /Run the bench at 2\.00 A/.test(s5.odd.msg), 'phase 5 asks for a run before it quotes one');
   const m5 = run(4, [{ setDial: { fixture: 'sup', dial: 'cur', value: 2 } }, { setDial: { fixture: 'sup', dial: 'time', value: 2 } }, { run: 'sup' }, typed('g', '3.5')]);
-  holds(!m5.ok && /mg of zinc in a 60 s run at 2\.00 A/.test(m5.msg), `phase 5 quotes the bench's own run: "${m5.msg}"`);
+  holds(!m5.ok && /mg of copper in a 60 s run at 2\.00 A/.test(m5.msg), `phase 5 quotes the bench's own run: "${m5.msg}"`);
   holds(run(4, []).notYet && !r5('-1').ok, 'phase 5 waits for a number and refuses a negative one');
 
   /* ---- the Clamp's planner ---- */

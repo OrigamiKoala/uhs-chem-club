@@ -11,7 +11,7 @@ export const QUESTS = ['q2-names', 'q3-change', 'q4-balance', 'q5-ionic', 'q6-st
 export const TERMS = [
   { id: 'ionic-compound', term: 'ionic compound', gloss: 'a compound made of positive and negative ions held together, with no net charge', quest: 'q2-names', stage: 1, re: /\bionic compounds?\b/i },
   { id: 'charge-meter', term: 'charge meter', gloss: 'an instrument that adds up the charges of the ions in the tray', quest: 'q2-names', stage: 2, re: /\bcharge meters?\b/i },
-  { id: 'roman-numeral', term: 'Roman numeral', gloss: 'the number in brackets after a metal\'s name that gives the charge of one metal ion', quest: 'q2-names', stage: 4, re: /\bRoman numerals?\b/i },
+  { id: 'roman-numeral', term: 'Roman numeral', gloss: 'the number in parentheses after a metal\'s name that gives the charge of one metal ion', quest: 'q2-names', stage: 4, re: /\bRoman numerals?\b/i },
   { id: 'polyatomic-ion', term: 'polyatomic ion', gloss: 'a group of atoms that stays together and carries one charge', quest: 'q2-names', stage: 5, re: /\bpolyatomic ions?\b/i },
 
   { id: 'physical-change', term: 'physical change', gloss: 'a change in which the substance is the same afterwards', quest: 'q3-change', stage: 1, re: /\bphysical changes?\b/i },
@@ -23,7 +23,7 @@ export const TERMS = [
   { id: 'product', term: 'product', gloss: 'a substance formed in a reaction, written after the arrow', quest: 'q4-balance', stage: 1, re: /\bproducts?\b/i },
   { id: 'coefficient', term: 'coefficient', gloss: 'the number in front of a formula that counts molecules or formula units', quest: 'q4-balance', stage: 3, re: /\bcoefficients?\b/i },
   { id: 'subscript', term: 'subscript', gloss: 'the small number inside a formula that says how many atoms of that element are in one unit', quest: 'q4-balance', stage: 3, re: /\bsubscripts?\b/i },
-  { id: 'state-symbol', term: 'state symbol', gloss: 'a letter in brackets — (s), (l), (g) or (aq) — showing solid, liquid, gas or dissolved in water', quest: 'q4-balance', stage: 5, re: /\bstate symbols?\b/i },
+  { id: 'state-symbol', term: 'state symbol', gloss: 'a letter in parentheses: (s) solid, (l) liquid, (g) gas, or (aq) dissolved in water', quest: 'q4-balance', stage: 5, re: /\bstate symbols?\b/i },
 
   { id: 'solution', term: 'solution', gloss: 'a mixture of one substance dissolved evenly in another, usually water', quest: 'q5-ionic', stage: 1, re: /\bsolutions?\b/i },
   { id: 'precipitate', term: 'precipitate', gloss: 'a solid that forms when two solutions are mixed', quest: 'q5-ionic', stage: 1, re: /\bprecipitates?\b/i },
@@ -39,12 +39,12 @@ export const TERMS = [
   { id: 'theoretical-yield', term: 'theoretical yield', gloss: 'the most product a balanced equation allows from the reactants used', quest: 'q6-stoich', stage: 8, re: /\btheoretical yield\b/i },
   { id: 'percent-yield', term: 'percent yield', gloss: 'the mass actually made divided by the theoretical yield, times 100', quest: 'q6-stoich', stage: 8, re: /\bpercent yield\b/i },
 
-  { id: 'concentration', term: 'concentration (mol/L)', gloss: 'how many moles of solute are dissolved in each litre of solution', quest: 'q7-titrate', stage: 1, recap: 'Mirrowen', re: /\bconcentrations?\b|\bconcentrated\b/i },
-  { id: 'titration', term: 'titration', gloss: 'adding a measured volume of one solution to another until they have exactly reacted', quest: 'q7-titrate', stage: 2, re: /\btitrations?\b/i },
-  { id: 'burette', term: 'burette', gloss: 'a tall glass tube marked in millilitres for adding a measured volume of solution', quest: 'q7-titrate', stage: 2, re: /\bburettes?\b/i },
-  { id: 'indicator', term: 'indicator', gloss: 'a dye that changes colour when a reaction reaches a certain point', quest: 'q7-titrate', stage: 2, re: /\bindicators?\b/i },
-  { id: 'equivalence-point', term: 'equivalence point', gloss: 'the point in a titration where the moles of base added have exactly used up the acid', quest: 'q7-titrate', stage: 3, re: /\bequivalence point\b/i },
-  { id: 'endpoint', term: 'endpoint', gloss: 'the point in a titration where the indicator changes colour', quest: 'q7-titrate', stage: 6, re: /\bendpoint\b/i },
+  { id: 'concentration', term: 'concentration (mol/L)', gloss: 'how many moles of solute are dissolved in each liter of solution', quest: 'q7-titrate', stage: 1, recap: 'Mirrowen', re: /\bconcentrations?\b|\bconcentrated\b/i },
+  { id: 'titration', term: 'titration', gloss: 'adding a measured volume of one solution to another until they have completely reacted', quest: 'q7-titrate', stage: 2, re: /\btitrations?\b/i },
+  { id: 'burette', term: 'burette', gloss: 'a tall glass tube marked in milliliters for adding a measured volume of solution', quest: 'q7-titrate', stage: 2, re: /\bburettes?\b/i },
+  { id: 'indicator', term: 'indicator', gloss: 'a dye that changes color when a reaction reaches a certain point', quest: 'q7-titrate', stage: 2, re: /\bindicators?\b/i },
+  { id: 'equivalence-point', term: 'equivalence point', gloss: 'the point in a titration where the moles of base added have completely neutralized the acid', quest: 'q7-titrate', stage: 3, re: /\bequivalence point\b/i },
+  { id: 'endpoint', term: 'endpoint', gloss: 'the point in a titration where the indicator changes color', quest: 'q7-titrate', stage: 6, re: /\bendpoint\b/i },
 
   { id: 'synthesis', term: 'synthesis', gloss: 'a reaction in which two or more substances join into one', quest: 'q8-kinds', stage: 1, re: /\bsynthesis\b/i },
   { id: 'decomposition', term: 'decomposition', gloss: 'a reaction in which one substance breaks into two or more', quest: 'q8-kinds', stage: 1, re: /\bdecomposition\b/i },

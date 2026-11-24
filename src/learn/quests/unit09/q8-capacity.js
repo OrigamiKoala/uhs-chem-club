@@ -136,7 +136,7 @@ export const STAGES = [
     hints: [
       'Drag the "pH" dial to 3 and then to 6, then set the answer dial.',
       'Compare the two percentages at the amber line at each pH.',
-      'Compare the pH at the line with the pKa of acetic acid, and see which form is larger on each side of it.'
+      'Compare the pH to acetic acid’s pKa, and see which form dominates on each side.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -162,7 +162,7 @@ export const STAGES = [
     id: 's3-indicator',
     title: 'An Indicator',
     briefing: 'An indicator is a weak acid whose acid form and base form have different colours.',
-    prompt: 'Find the pH at which methyl red is half in its red form and half in its yellow form.',
+    prompt: 'At what pH is methyl red half in its red form and half in its yellow form?',
     widget,
     entry: { id: 'pka', label: 'pH', unit: '' },
     table: (() => {
@@ -332,7 +332,7 @@ export const STAGES = [
   {
     id: 's8-solubility',
     title: 'pH and Solubility',
-    prompt: 'Pour acid into both beakers: which solid dissolves more?',
+    prompt: 'When acid is added to both beakers, which solid dissolves more?',
     widget,
     table: (() => {
       const b1 = solidFixture('mg', { x: 28, y: 23 }, { salt: 'Mg_OH_2', basic: true, w: 44, title: 'Mg(OH)₂' });

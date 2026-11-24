@@ -42,7 +42,7 @@ const S_AG2 = molarSolubility(KSP.Ag2CrO4.ksp, KSP.Ag2CrO4.ions);
 
 /** Beat one: the bar of [Ca²⁺] after each of six scoops. */
 function scoops(ctx, w, h, p) {
-  const bw = w * 0.07; const gap = w * 0.035; const x0 = w * 0.14; const y1 = h * 0.64; const H = h * 0.4;
+  const bw = w * 0.06; const gap = w * 0.025; const x0 = w * 0.08; const y1 = h * 0.64; const H = h * 0.4;
   const vmax = 1.15 * S_CAF2;
   text(ctx, 'CaF₂ added a scoop at a time', w * 0.5, h * 0.1, { size: fs(h), color: C.dust });
   box(ctx, x0 - gap, y1 - H - 6, 6 * (bw + gap) + gap, H + 12);
@@ -61,7 +61,7 @@ function scoops(ctx, w, h, p) {
   }
   const read = (last / H) * vmax * CAF2.ions[0];
   text(ctx, `[Ca²⁺] after scoop ${shown}: ${fmt(read)} mol/L`, w * 0.5, h * 0.84, { size: fs(h) * 1.1, color: C.amber, weight: 700 });
-  text(ctx, Math.abs(last - prev) < 0.5 && shown > 1 ? 'this scoop changed the bar by 0 px; solid lies on the floor' : 'bar read from its height', w * 0.5, h * 0.92, { size: fs(h), color: C.dim });
+  text(ctx, Math.abs(last - prev) < 0.5 && shown > 1 ? 'water is saturated — extra solid stays on the floor' : 'concentration rises with each scoop', w * 0.5, h * 0.92, { size: fs(h), color: C.dust });
   // The right half: the beaker's floor, a square of solid for each scoop's worth that is left over.
   const st = dissolveState(CAF2.ksp, CAF2.ions, shown * SCOOP * S_CAF2);
   const fx = w * 0.72; const fw = w * 0.2;
@@ -70,13 +70,13 @@ function scoops(ctx, w, h, p) {
   const n = st.solid > 0 ? Math.max(1, Math.round((st.solid / S_CAF2) * 6)) : 0;
   const sq = w * 0.018;
   for (let k = 0; k < n; k++) { ctx.fillStyle = SOLID; ctx.fillRect(fx + 10 + k * (sq + 3), h * 0.62 - sq - 4, sq, sq); }
-  text(ctx, n ? `${n} squares of solid on the floor` : 'no solid on the floor', fx + fw / 2, h * 0.68, { size: fs(h), color: C.dust });
+  text(ctx, n ? `${n} crystals of solid on the floor` : 'no solid on the floor', fx + fw / 2, h * 0.68, { size: fs(h), color: C.dust });
 }
 
-/** Beat two: 24 surface units, the units that left and the units that came back counted from the drawn run. */
+/** Beat two: 24 surface ions, those that left and those that came back counted from the drawn run. */
 function trade(ctx, w, h, p) {
   const k = 50 + Math.round(ease(p) * 50);
-  text(ctx, 'units at the surface of the solid, counted over the run', w * 0.5, h * 0.1, { size: fs(h), color: C.dust });
+  text(ctx, 'ions at the surface of the solid, counted over the run', w * 0.5, h * 0.1, { size: fs(h), color: C.dust });
   const dx = w * 0.08; const dy = h * 0.2; const dw = w * 0.36; const dh = h * 0.42;
   box(ctx, dx, dy, dw, dh);
   const cols = 6; const rows = 4; const cw = dw / cols; const ch = dh / rows;

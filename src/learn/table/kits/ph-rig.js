@@ -42,15 +42,15 @@ function paintRig(ctx, f, state, b) {
   for (let j = 0; j < n; j++) {
     const col = p.cols[j];
     const cx = lw + (j + 0.5) * cw;
-    ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(lw + j * cw + 0.4), F.y(6.4), F.len(cw - 0.8), F.len(f.size.h - 7.8));
-    ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(lw + j * cw + 0.4)) + 0.5, Math.round(F.y(6.4)) + 0.5, Math.round(F.len(cw - 0.8)), Math.round(F.len(f.size.h - 7.8)));
-    put(ctx, ionText(col.title), F.x(cx), F.y(9.6), F.size(2.2, 6), { color: DUST, weight: 700, maxW: F.len(cw - 1.6) });
-    (col.lines || []).forEach((ln, k) => put(ctx, ionText(ln), F.x(cx), F.y(13.2 + k * 3.3), F.size(2.0, 5.8), { color: DUST, maxW: F.len(cw - 1.6) }));
+    ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(lw + j * cw + 0.4), F.y(6.4), F.len(cw - 0.8), F.len(f.size.h - 7.8));
+    ctx.strokeStyle = DUST; ctx.strokeRect(Math.round(F.x(lw + j * cw + 0.4)) + 0.5, Math.round(F.y(6.4)) + 0.5, Math.round(F.len(cw - 0.8)), Math.round(F.len(f.size.h - 7.8)));
+    put(ctx, ionText(col.title), F.x(cx), F.y(9.6), F.size(2.8, 8.2), { color: '#f0eae0', weight: 700, maxW: F.len(cw - 1.4) });
+    (col.lines || []).forEach((ln, k) => put(ctx, ionText(ln), F.x(cx), F.y(13.6 + k * 3.6), F.size(2.55, 7.6), { color: '#e5dfd3', maxW: F.len(cw - 1.4) }));
     const v = r.readings[j];
-    if (r.laid) put(ctx, numText(v), F.x(cx), F.y(f.size.h - 7.4), F.size(4.2, 10), { color: AMBER, weight: 700, maxW: F.len(cw - 1.6) });
-    else put(ctx, '—', F.x(cx), F.y(f.size.h - 7.4), F.size(4.2, 10), { color: DIM, weight: 700 });
+    if (r.laid) put(ctx, numText(v), F.x(cx), F.y(f.size.h - 6.8), F.size(4.2, 10), { color: AMBER, weight: 700, maxW: F.len(cw - 1.4) });
+    else put(ctx, '—', F.x(cx), F.y(f.size.h - 6.8), F.size(4.2, 10), { color: DIM, weight: 700 });
   }
-  put(ctx, 'reads', F.x(lw - 1.2), F.y(f.size.h - 7.4), F.size(2.0, 5.8), { align: 'right', color: DUST });
+  put(ctx, 'reads', F.x(lw - 1.2), F.y(f.size.h - 6.8), F.size(2.2, 6.5), { align: 'right', color: DUST });
 }
 
 registerFixture('phrig', { paint: paintRig });

@@ -600,9 +600,9 @@ export class BossArena {
       return;
     }
     this.queuedHit = rig;
-    const wind = this.reduced ? 0.15 : 0.35;
+    const wind = this.reduced ? 0.15 : 0.3;
     // Brief gaze up for the bolt, then back to the bench so the miss message stays readable.
-    this.gaze(wind + 0.65);
+    this.gaze(wind + 0.35, { inS: 0.2, outS: 0.35 });
     this.monster.triggerTelegraph(wind);
     this.fx?.chargeOrb(() => this.mouthPoint(), wind, this.look.attack);
   }

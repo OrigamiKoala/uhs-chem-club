@@ -98,7 +98,7 @@ export const STAGES = [
     predict: true,
     briefing: {
       speaker: 'Vess',
-      body: 'ΔG° = ΔH − TΔS combines reaction heat (ΔH) and temperature in kelvin times entropy change (TΔS). When ΔG° is negative, the reaction runs toward products from standard amounts.'
+      body: 'Free energy change ΔG° = ΔH − TΔS combines heat change (ΔH) with how much particles spread out (entropy, TΔS, at temperature T in kelvin). When ΔG° is negative, the reaction favors products.'
     },
     prompt: `Starting from reactant alone in a reaction with ΔG° = +${DG_PREDICT} kJ/mol, what does the vessel hold once settled?`,
     widget,
@@ -110,7 +110,7 @@ export const STAGES = [
         note('most', GUESS.most, { x: 78, y: 36 })
       ],
       fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'hill', { title: 'ΔG° and the wells', dG: -4, h: 32 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
       'Lay one of the four cards in the slot.',
@@ -201,7 +201,7 @@ export const STAGES = [
       fixtures: [
         kbarsFixture('a', { x: 26, y: 25 }, { title: 'Vessel A', sys: MODEL_PAN, cols: [{ dG: K_PANS[0] }], showDG: true }),
         kbarsFixture('b', { x: 76, y: 25 }, { title: 'Vessel B', sys: MODEL_PAN, cols: [{ dG: K_PANS[1] }], showDG: true }),
-        plaqueFixture('given', 'Given', { x: 126, y: 18 }, ['ΔG° = −RT ln K', 'R = 8.314 J/(mol·K)', `T = ${T_BENCH} K`, 'Standard states'], { w: 44 })
+        plaqueFixture('given', 'Given', { x: 126, y: 18 }, ['K = exp(−ΔG° ÷ RT)', 'R = 8.314 J/(mol·K)', `T = ${T_BENCH} K`], { w: 46 })
       ]
     }),
     hints: [
@@ -213,6 +213,7 @@ export const STAGES = [
       const v = entryNumber(state.table, 'k');
       if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type K as a number above zero.' };
       if (Math.abs(v - K_TYPED) / K_TYPED <= 0.02) return { ok: true };
+      if (Math.abs(v - 7.5) <= 0.4) return { ok: false, msg: '7.5 is the worked example\'s K for −5.0 kJ/mol; this reaction has ΔG° = −10.0 kJ/mol.' };
       const ks = K_PANS.map(d => settledAt(MODEL_PAN, d, T_BENCH).K);
       const reads = `Vessel A at ${fmt1(K_PANS[0])} kJ/mol and Vessel B at ${fmt1(K_PANS[1])} kJ/mol settle with K ${sigK(ks[0])} and ${sigK(ks[1])}.`;
       if (Math.abs(Math.log(v)) < 0.05) return { ok: false, msg: `A K of ${v} would leave a vessel with about equal amounts of reactant and product, and both vessels on the bench hold far more product than reactant.` };
@@ -220,9 +221,9 @@ export const STAGES = [
       return { ok: false, msg: `${reads} A K of ${v} does not follow the same pattern at ${fmt1(DG_TYPED)} kJ/mol.` };
     },
     reward: {
-      log: 'K came from ΔG° with ΔG° = −RT ln K.',
+      log: 'K came from ΔG° with K = exp(−ΔG° ÷ RT).',
       title: 'ΔG° and K',
-      body: 'K is 57. A ΔG° of zero would give K = 1, and each step more negative multiplies K.'
+      body: 'K is 57. ΔG° = 0 gives K = 1, and every −5.7 kJ/mol makes K ten times larger.'
     }
   },
 
@@ -230,12 +231,12 @@ export const STAGES = [
   {
     id: 's4-salts',
     title: 'Salts in Water',
-    prompt: `Which salt has a negative ΔG of dissolving at ${T_BENCH} K?`,
+    prompt: `Which salt has a negative ΔG = ΔH − TΔS of dissolving at ${T_BENCH} K?`,
     widget,
     table: pansTable({
       fixtures: [
-        ...SALT_ORDER.map((id, i) => pickable(pullsFixture(`s${i + 1}`, { x: 24 + i * 50, y: 21 }, { title: `Salt ${i + 1}`, change: { dH: DISSOLVE[id].dH, dS: DISSOLVE[id].dS }, range: SALT_RANGE }), i + 1)),
-        choiceFixture('pick', 'Negative ΔG', { x: 75, y: 52 }, { options: ['Salt 1', 'Salt 2', 'Salt 3', ' '], start: 4, w: 56 })
+        ...SALT_ORDER.map((id, i) => pickable(pullsFixture(`s${i + 1}`, { x: 24 + i * 50, y: 21 }, { title: `Salt ${i + 1}: ${DISSOLVE[id].name}`, change: { dH: DISSOLVE[id].dH, dS: DISSOLVE[id].dS }, range: SALT_RANGE }), i + 1)),
+        choiceFixture('pick', 'Negative ΔG (ΔH − TΔS)', { x: 75, y: 52 }, { options: ['Salt 1', 'Salt 2', 'Salt 3', ' '], start: 4, w: 56, placeholder: 'tap a salt' })
       ]
     }),
     hints: [
@@ -275,7 +276,7 @@ export const STAGES = [
       fixtures: [
         pullsFixture('cup', { x: 42, y: 24 }, { title: 'Salt in water', change: { dH: DISSOLVE.nh4cl.dH, dS: DISSOLVE.nh4cl.dS }, range: SALT_RANGE, water: PACK, w: 80, h: 36 })
       ],
-      zones: { slots: [{ id: 'why', label: 'What the beaker shows', at: { x: 122, y: 22 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'why', label: 'What the beaker shows', at: { x: 122, y: 22 }, size: { w: 46, h: 16 } }] }
     }, { h: 72 }),
     hints: [
       'Press "Run" on the beaker, then lay a card in the slot.',
@@ -294,7 +295,7 @@ export const STAGES = [
       return {
         log: 'The salt dissolved while its water cooled.',
         title: 'Entropy Can Win',
-        body: `The salt took in ${NH4.dH.toFixed(1)} kJ/mol, so the water cooled, but TΔS was ${NH4.TdS.toFixed(1)} kJ/mol, so ΔG was negative.`
+        body: `The salt took in ${NH4.dH.toFixed(1)} kJ/mol, so the water cooled, but entropy (spread-out-ness, TΔS = ${NH4.TdS.toFixed(1)} kJ/mol) was larger, so ΔG was negative.`
       };
     }
   },
@@ -327,7 +328,7 @@ export const STAGES = [
       const t = state.table;
       const r = stackRead(t, 'wanted');
       if (r.empty) return { ok: false, notYet: true, msg: 'Stack the cards first.' };
-      if (!r.matches) return { ok: false, msg: `The stack adds up to a different reaction from the one wanted: ${stackGap(t, 'wanted')}.` };
+      if (!r.matches) return { ok: false, msg: 'Those cards do not add up to the target reaction; pick two cards whose shared substances (like Pi and H₂O) sit on opposite sides so they cancel.' };
       return { ok: true };
     },
     get reward() {
@@ -349,20 +350,20 @@ export const STAGES = [
     table: pansTable({
       fixtures: [
         ...REACTIONS8.map((c, i) => pickable(pullsFixture(`x${i + 1}`, { x: 24 + i * 50, y: 21 }, { title: `Reaction ${i + 1}`, change: c, range: [-50, 70] }), i + 1)),
-        choiceFixture('pick', 'Most product', { x: 75, y: 52 }, { options: ['Reaction 1', 'Reaction 2', 'Reaction 3', ' '], start: 4, w: 56 })
+        choiceFixture('pick', 'Most product', { x: 75, y: 52 }, { options: ['Reaction 1', 'Reaction 2', 'Reaction 3', ' '], start: 4, w: 56, placeholder: 'tap a reaction' })
       ]
     }),
     hints: [
       'Compare the ΔH and TΔS bars of each reaction, then tap the reaction you choose.',
       'Compare both bars together, not ΔH alone.',
-      'ΔG° decides where a vessel settles, and it is made of both bars.'
+      'ΔG° = ΔH − TΔS decides where a vessel settles.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
       if (v === ANSWER8) return { ok: true };
-      const a = pulls({ ...REACTIONS8[v - 1], T: T_BENCH }); const b = pulls({ ...REACTIONS8[ANSWER8 - 1], T: T_BENCH });
-      return { ok: false, msg: `Reaction ${v} has ΔH ${fmt1(a.dH)} and TΔS ${fmt1(a.TdS)} kJ/mol; Reaction ${ANSWER8} has ΔH ${fmt1(b.dH)} and TΔS ${fmt1(b.TdS)} kJ/mol.` };
+      const a = pulls({ ...REACTIONS8[v - 1], T: T_BENCH });
+      return { ok: false, msg: `Reaction ${v} has ΔG = ΔH − TΔS = ${fmt1(a.dG)} kJ/mol; look for the reaction with the most negative ΔG.` };
     },
     reward: {
       log: 'The lowest ΔG settled with the most product.',

@@ -142,5 +142,5 @@ export function dressRecorded(handler, opts = {}) {
 
 /** Give every live fixture of the pans kit a 3D dress made from its own painter. Run once, after every bench has registered. */
 export function installDresses() {
-  for (const h of allFixtureHandlers()) if (h.live && h.paint && !h.dress3d) h.dress3d = dressRecorded(h);
+  for (const h of allFixtureHandlers()) if (h.live && h.paint && !h.dress3d) h.dress3d = dressRecorded(h, { flat: Boolean(h.flat3d) });
 }

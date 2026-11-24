@@ -536,14 +536,14 @@ export class Table3D extends BenchViewer3D {
       }
       const knobs = {};
       // A world with gear of its own turns a bigger knob in a wider groove: a dial that is hard to see is a dial nobody turns.
-      const knobR = this.skin ? Math.min(0.042, s * 2.5) : Math.min(0.032, s * 1.9);
+      const knobR = this.skin ? Math.min(0.056, s * 3.2) : Math.min(0.044, s * 2.6);
       for (const d of lay.dials) {
         if ((f.kind === 'view' || f.props?.joystick) && (d.name === 'turn' || d.name === 'tilt')) continue;
         const a = this.map.toPlate({ x: d.x0, y: d.y });
         const b = this.map.toPlate({ x: d.x1, y: d.y });
         const span = Math.max(0.02, b.x - a.x);
         // The groove the knob rides in: a dark recessed track with a bright steel rail so it reads clearly on every deck.
-        const groove = new THREE.Mesh(new THREE.BoxGeometry(span + knobR * 1.2, 0.006, this.skin ? 0.026 : 0.018), this.kitMats.lining);
+        const groove = new THREE.Mesh(new THREE.BoxGeometry(span + knobR * 1.2, 0.006, this.skin ? 0.034 : 0.026), this.kitMats.lining);
         groove.position.set((a.x + b.x) / 2, DECK_TOP + 0.003, a.z);
         groove.receiveShadow = true;
         this.fixtureRoot.add(groove);
@@ -1761,6 +1761,7 @@ export class Table3D extends BenchViewer3D {
       const s = this._savedState;
       this._savedState = null;
       this.setState(s, { preview: true });
+      this.settleToTargets(true);
     }
   }
 

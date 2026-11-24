@@ -221,7 +221,7 @@ registerFixture('titrator', { paint: paintTitrator, run: runTitrator });
    TOUR WORDS
    ------------------------------------------------------------------ */
 
-const TITRATOR_TEXT = f => `Set "Per press" and press "${f.runLabel}" to add base to the flask.`;
+const TITRATOR_TEXT = f => `Set "Per press" and press "${f.runLabel}" to add solution from the burette to the flask.`;
 
 addTourText({
   'pot:titrator': { title: f => f.label, dials: false, text: TITRATOR_TEXT }

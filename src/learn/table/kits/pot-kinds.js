@@ -483,5 +483,5 @@ addTourText({
   }
 }, {
   rxn: ['Reaction cards', 'Tap a reaction card to mark or unmark it.'],
-  gjar: ['Gas jars', 'Fill an empty jar at the burner, then test it on the gas rig.']
+  gjar: ['Gas jars', 'Place a gas jar on the gas test slot to test what is inside.']
 });

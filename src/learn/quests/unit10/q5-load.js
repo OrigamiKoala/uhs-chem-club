@@ -90,22 +90,22 @@ export const STAGES = [
     title: 'Run Until It Stops',
     // A PREDICT STAGE: no cell is on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'When a tin and lead cell has driven a small load until its voltmeter reads zero, what does each beaker hold?',
+    prompt: 'When a tin-and-lead battery powers a lamp until it stops, what is left in each beaker?',
     widget,
     table: cellTable({
       pieces: [
-        tag('st1', 'Tin and lead cell, 1.0 M ions in each beaker', { x: 76, y: 9 }),
-        note('tin', GUESS.tin, { x: 36, y: 30 }),
-        note('lead', GUESS.lead, { x: 100, y: 30 }),
-        note('empty', GUESS.empty, { x: 36, y: 52 }),
-        note('both', GUESS.both, { x: 100, y: 52 })
+        tag('st1', 'Tin and lead cell, equal ions in each beaker', { x: 76, y: 14 }),
+        note('tin', GUESS.tin, { x: 36, y: 34 }),
+        note('lead', GUESS.lead, { x: 100, y: 34 }),
+        note('empty', GUESS.empty, { x: 36, y: 56 }),
+        note('both', GUESS.both, { x: 100, y: 56 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 156, y: 41 }, size: { w: 36, h: 14 } }] }
-    }, { w: 176, h: 66 }),
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 158, y: 45 }, size: { w: 46, h: 16 } }] }
+    }, { w: 186, h: 70 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Picture the cell running until the voltmeter reads zero, and what is left in each beaker.',
-      'Ask whether a cell that has stopped must have run out of something.'
+      'Drag one prediction card into My prediction, then press Submit.',
+      'Think about whether a dead battery has used up all of its ions.',
+      'Can a reaction reach balance and stop while both kinds of ion are still present?'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -127,7 +127,7 @@ export const STAGES = [
   {
     id: 's2-run',
     title: 'The Cell Runs Down',
-    get prompt() { return guessLine('Which ions are still present when the cell\'s voltage reaches zero?', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Press Run until the voltage reaches zero, then tap each ion (Sn²⁺, Pb²⁺) on the Model that is still present.', recall(QUEST_KEY)); },
     widget,
     table: cellTable({
       fixtures: [
@@ -135,9 +135,9 @@ export const STAGES = [
       ]
     }, { w: 176, h: 76 }),
     hints: [
-      'Press "Run" until the voltmeter stops falling, then tap each kind of ion that is still in its beaker.',
-      'Compare the two windows at the start and after each run, and the voltage on the plot.',
-      'Check whether either window has emptied by the time the voltmeter reads zero.'
+      'Press "Run" until the voltmeter reaches 0 V, then tap each ion still visible on the Model.',
+      'Watch the tin and lead ion counts as the voltage drops to zero.',
+      'If both ions are still in the beakers at 0 V, tap both on the Model.'
     ],
     check(state) {
       const d = state.table.fixtures.scene.dials;
@@ -164,7 +164,8 @@ export const STAGES = [
   {
     id: 's3-zinc',
     title: 'More Zinc Ions',
-    prompt: 'What happens to the cell\'s voltage when the zinc ion concentration is raised from 0.010 M to 1.0 M?',
+    briefing: { speaker: SPEAKER, body: 'Concentration (measured in M, molarity) tells how crowded the ions are: 0.010 M has fewer ions; 1.0 M has many more ions.' },
+    prompt: 'What happens to the cell\'s voltage when the zinc ion concentration is raised from 0.010 M (fewer ions) to 1.0 M (more ions)?',
     widget,
     table: cellTable({
       fixtures: [
@@ -200,7 +201,7 @@ export const STAGES = [
   {
     id: 's4-balance',
     title: 'The Balance Point',
-    briefing: { speaker: SPEAKER, body: 'The ratio of product ions to reactant ions at any moment is the reaction quotient, Q.' },
+    briefing: { speaker: SPEAKER, body: 'The ratio of product ions to reactant ions at any moment is the reaction quotient, Q. K is the balance ratio where the cell stops.' },
     prompt: 'Why does the cell\'s voltage reach zero?',
     widget,
     table: cellTable({
@@ -211,14 +212,14 @@ export const STAGES = [
       pieces: [
         note('out', 'The reactant ions ran out', { x: 34, y: 86 }),
         note('equal', 'The two kinds of ion became equal', { x: 99, y: 86 }),
-        note('eq', 'The ratio of ions, Q, reached K', { x: 164, y: 86 })
+        note('eq', 'The cell reached balance (Q matched K)', { x: 164, y: 86 })
       ],
       zones: { slots: [{ id: 'reason', label: 'Why it stopped', at: { x: 176, y: 49 }, size: { w: 42, h: 14 } }] }
     }, { w: 198, h: 95 }),
     hints: [
-      'Compare the tin and lead ion counts under the windows with the K value on the plate.',
+      'Look at the tin and lead ion counts, then drag one reason card into Why it stopped.',
       'Compare the ratio of tin ions to lead ions under the windows with the K value on the plate.',
-      'Ask what happens to the cell\'s voltage when Q reaches K.'
+      'A cell stops at 0 V when its ion ratio Q matches K.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'reason');
@@ -242,7 +243,8 @@ export const STAGES = [
   {
     id: 's5-copper',
     title: 'Two Copper Beakers',
-    prompt: 'In a copper cell with a 1.0 M beaker and a 0.010 M beaker, which electrode do the electrons leave?',
+    briefing: { speaker: SPEAKER, body: 'Even with the same metal on both sides, different ion concentrations create a voltage as the cell works to make both beakers equal.' },
+    prompt: 'In this copper cell (1.0 M vs 0.010 M), press Run, then tap the electrode on the Model that electrons leave.',
     widget,
     table: cellTable({
       fixtures: [
@@ -253,7 +255,7 @@ export const STAGES = [
     hints: [
       'Press "Run", read the ammeter, then tap the electrode you choose.',
       'Compare the side the ammeter pointer swings toward with the concentration printed under each beaker.',
-      'Find the electrode the electrons move away from and read the concentration of its beaker.'
+      'The ammeter needle points toward the beaker receiving electrons, so they leave the other side.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -279,8 +281,8 @@ export const STAGES = [
     title: 'A Cell Nobody Wired',
     briefing: {
       speaker: SPEAKER,
-      body: 'The Nernst equation corrects E° for concentration: E = E° − (0.0592 ÷ n) × log Q.',
-      worked: ['0.010 M Zn²⁺, 1.0 M Cu²⁺ (E° = 1.10 V, n = 2):', 'Q = 0.010 ÷ 1.0 = 0.010, log Q = −2', '(0.0592 ÷ 2) × (−2) = −0.059', 'E = 1.10 + 0.059 = 1.16 V']
+      body: 'More product ions lower the voltage; more reactant ions raise it. The Nernst equation gives the exact value: E = E° − (0.0592 ÷ n) × log Q.',
+      worked: ['0.010 M Zn²⁺, 1.0 M Cu²⁺ (E° = 1.10 V, n = 2):', 'Q = 0.010 ÷ 1.0 = 0.010, log Q = −2', 'E = 1.10 − (0.0592 ÷ 2) × (−2) = 1.16 V']
     },
     prompt: 'What is the voltage, in volts, of the zinc and copper cell with 1.0 M zinc ions and 0.0010 M copper ions?',
     widget,
@@ -292,7 +294,7 @@ export const STAGES = [
       ]
     }, { w: 156, h: 66 }),
     hints: [
-      'Read the concentrations under the beakers and type the voltage in the field.',
+      'Read the concentrations under the beakers, open the calculator icon at the bottom right if needed, and type the voltage.',
       'Compare the charges on the two ions and the two concentrations with the equation on the plate.',
       'Follow the worked case in the briefing using this cell\'s concentrations and n = 2.'
     ],
@@ -336,13 +338,13 @@ export const STAGES = [
       return cellTable({
         fixtures,
         pieces: S7_CELLS.map(([, cid, name], i) => canPiece(cid, name, { x: 32 + i * 28, y: 70 })),
-        zones: { rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Lowest voltage', last: 'Highest voltage', items: [], start: [] } }
+        zones: { rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Lowest voltage', last: 'Highest voltage', items: [], start: [], slots: 3 } }
       }, { w: 176, h: 106 });
     })(),
     hints: [
       'Drag the three cans onto the rail first, then press "Run" on each cell.',
       'Compare the voltages the three voltmeters read, and the concentrations printed under the beakers.',
-      'Compare product ions with reactant ions in each cell before you run it.'
+      'More reactant (Cu²⁺) raises voltage above E°; more product (Zn²⁺) lowers it.'
     ],
     check(state) {
       const t = state.table;
@@ -372,8 +374,8 @@ export const STAGES = [
 attachScenes(STAGES, {
   own: {
     1: { sitesKey: 'ionsLeft', dials: { t0: { min: 0, max: 1, step: 1, value: 0, label: 'Tin ions' }, t1: { min: 0, max: 1, step: 1, value: 0, label: 'Lead ions' } } },
-    4: { sitesKey: 'sides', extra: { pickMap: [1, 2] } }
-  }, compact: [6], demos: { 0: 'running' } });
+    4: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteLabels: ['1.0 M', '0.010 M'] } }
+  }, compact: [6], demos: { 0: 'sn-pb-running' } });
 
 export const DEBRIEF = {
   title: 'Under Load',

@@ -194,11 +194,8 @@ export function createRunner(container, ctx, cfg) {
     renderWidget();
     syncTabletop(stage);
 
-    // Stage briefings always trigger (including on replay); the generic tabletop Tour only auto-opens on first run.
-    const brief = () => {
-      if (frame.disposed || index !== i) return;
-      if (stage.briefing || (stage.widget?.type === 'table' && !ctx.isComplete && cleared <= i)) frame.showBriefing();
-    };
+    // Tour only opens when the student presses the Tour button (never unprompted on stage arrival).
+    const brief = () => {};
     // A quest opens on its question (`story/quest-story.js` `mystery`), once each time it is opened at stage 1, before
     // any briefing; the debrief answers it.
     // A scene in the world that has just asked it (`three/mystery/director.js`) counts as asking.
@@ -570,7 +567,7 @@ export function createRunner(container, ctx, cfg) {
     const last = state.table.last;
     if (last?.verb && last.joined === false && last.reason && state.table.opts?.explain !== false) frame.note(last.reason);
     else if ((last?.verb === 'run' || last?.verb === 'place') && last.ok === false && last.reason) frame.note(last.reason);
-    else if (last?.joined === true || last?.verb === 'split') frame.clearBanner();
+    else if (last?.joined === true || last?.verb === 'split' || (last?.ok === true && (last.verb === 'place' || last.verb === 'run' || last.verb === 'setDial' || last.verb === 'pick' || last.verb === 'predict' || last.verb === 'reorder'))) frame.clearBanner();
     tabletop?.setState?.(state.table, { undo: history.length });
     cfg.onWidgetChange?.(runner);
     return state.table;
@@ -625,7 +622,7 @@ export function createRunner(container, ctx, cfg) {
     }
     // The Tour explains each instrument and kind of piece on this stage's table.
     // A briefing teaches before the stage that needs it (at most two sentences, with an optional worked case as `worked` lines); it is the Tour's first step on any stage that has one.
-    frame.setTourSteps(stage.noTour ? [] : tourSteps(state.table, stage.briefing?.body ? { intro: stage.briefing.parts || stage.briefing.body, speaker: stage.briefing.speaker || 'Vess', worked: stage.briefing.worked || null } : {}), state.table, tabletop);
+    frame.setTourSteps(stage.noTour ? [] : tourSteps(state.table, stage.briefing?.body ? { intro: stage.briefing.parts || stage.briefing.body, speaker: stage.briefing.speaker || 'Vess', worked: stage.briefing.worked || null, fx: stage.briefing.fx || null } : {}), state.table, tabletop);
   }
 
   // Ctrl+Z (or Cmd+Z) is Undo on a table, wherever the focus is except a field being typed in.

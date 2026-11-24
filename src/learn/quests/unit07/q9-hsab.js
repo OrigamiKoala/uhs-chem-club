@@ -66,7 +66,7 @@ export const STAGES = [
       title: 'Hard and Soft',
       briefing: {
         title: 'Electron Clouds',
-        body: 'An ion\'s electrons form a cloud round its nucleus. The probe brings a charge near the ion and shows whether the cloud keeps its shape.'
+        body: 'An ion\'s electrons form a cloud around its nucleus. The probe brings a charge nearby to show whether the cloud keeps its shape or stretches.'
       },
       prompt: 'Which ions are hard and which are soft?',
       widget,
@@ -78,7 +78,7 @@ export const STAGES = [
       reward: {
         log: 'Small ions keep their shape; large ions pull out of shape.',
         title: 'Hard and Soft Ions',
-        body: 'An ion whose electron cloud keeps its shape is a hard ion; one whose cloud pulls out of shape is a soft ion. Small ions hold their electrons close and are usually hard; large ions are usually soft.'
+        body: 'An ion whose electron cloud keeps its shape is a hard ion; one whose cloud stretches out of shape is a soft ion. Small ions hold electrons tightly and are usually hard, while large ions are usually soft.'
       },
       table: potTable({
         fixtures: [p.fixture],
@@ -129,13 +129,13 @@ export const STAGES = [
       widget,
       hints: [
         'Use the reagent dial on the wells and press "Mix".',
-        'Compare which well turns cloudy with fluoride against which turns cloudy with iodide.',
+        'Compare which wells turn cloudy with fluoride versus iodide.',
         'Compare each pair that formed a solid with what Stage 1 showed about its two ions.'
       ],
       reward: {
         log: 'Hard paired with hard and soft with soft formed solids.',
         title: 'Hard-Hard and Soft-Soft Pairs',
-        body: 'Ca²⁺ and F⁻, both hard, formed a solid, and so did Ag⁺ and I⁻, both soft. The mixed pairs stayed dissolved.'
+        body: 'Hard Ca²⁺ paired with hard F⁻ to form a solid, and soft Ag⁺ paired with soft I⁻ to form a solid. The mismatched pairs stayed dissolved.'
       },
       table: potTable({
         fixtures: [w.fixture],
@@ -187,7 +187,7 @@ export const STAGES = [
       reward: {
         log: 'Hard ions attract as charges; soft ions share clouds.',
         title: 'What Holds Each Solid',
-        body: 'Hard ions stay as separate charged spheres that attract. Soft ions’ clouds stretch toward each other and share electrons.'
+        body: 'Hard ions stay as separate charged spheres held by electrical attraction. Soft ions stretch their electron clouds toward each other and share electrons.'
       },
       table: potTable({
         fixtures: [b.fixture],
@@ -226,7 +226,7 @@ export const STAGES = [
     widget,
     hints: [
       'Pick the card that states your prediction.',
-      'Compare the softness of sulfide with Ag⁺ and Ca²⁺.',
+      'Compare sulfide\'s soft electron cloud with Ag⁺ and Ca²⁺.',
       'Decide whether sulfide will pair with the soft ion, the hard ion, both or neither.'
     ],
     reward: {
@@ -343,7 +343,7 @@ export const STAGES = [
       reward: {
         log: 'Soft sulfide removed Pb²⁺ and left hard Mg²⁺ dissolved.',
         title: 'Separating Metals',
-        body: 'Soft sulfide formed a solid with soft Pb²⁺ and left hard Mg²⁺ dissolved. Hard and soft is a rough guide, not a law.'
+        body: 'Soft sulfide precipitated soft Pb²⁺ while leaving hard Mg²⁺ dissolved. Hard-soft pairing is a useful guide, though it has exceptions.'
       },
       table: potTable({
         fixtures: [w.fixture],

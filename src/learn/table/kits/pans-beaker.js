@@ -216,7 +216,7 @@ function run(state, fid) {
   return { x: next, y: Math.round((after.dissolved / r.s0) * 1000) / 1000, label: fid, dials: { [fid]: { n: next } } };
 }
 
-registerFixture('beaker', { paint: paintBeaker, run, live: () => true });
+registerFixture('beaker', { paint: paintBeaker, run, live: () => true, flat3d: true });
 
 /**
  * A beaker of `salt` (a key of `KSP`). Options:
@@ -281,5 +281,5 @@ registerFixture('kspform', { paint: paintForm });
 export function kspFormFixture(id, at, { salt, title = 'Expression', w = 70 } = {}) {
   const dials = {};
   for (const s of formSpecies(salt)) dials[s.id] = { min: 0, max: 3, step: 1, value: 1, label: `Power of ${s.text}`, labels: ['0', '1', '2', '3'] };
-  return { id, kind: 'kspform', label: title, at: { ...at }, size: { w, h: 40 }, noRun: true, dials, props: { salt, top: 13, rowPitch: 7, margin: 3.6 } };
+  return { id, kind: 'kspform', label: title, at: { ...at }, size: { w, h: 48 }, noRun: true, dials, props: { salt, top: 14, rowPitch: 9.5, margin: 3.6, dialIndent: 5, tickLabels: true } };
 }

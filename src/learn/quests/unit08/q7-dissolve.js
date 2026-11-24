@@ -94,7 +94,7 @@ export const STAGES = [
   {
     id: 's1-limit',
     title: 'Adding Solid',
-    prompt: 'How many scoops of CaF₂ can this water dissolve?',
+    prompt: 'Add scoops of CaF₂ until no more dissolves, then submit.',
     widget,
     table: pansTable({
       fixtures: [beakerFixture('jar', { x: 75, y: 27 }, { salt: S1_SALT, scoops: true, title: 'CaF₂ in water' })]
@@ -109,7 +109,7 @@ export const STAGES = [
       if (r.n === 0) return { ok: false, notYet: true, msg: 'The beaker has no solid in it yet.' };
       const prev = read(S1_SALT, (r.n - 1) * SCOOP * r.s0);
       if (r.n >= 2 && r.dissolved > 0 && prev.dissolved === r.dissolved) return { ok: true };
-      return { ok: false, msg: `The last scoop moved [${ionText(r.S.cation)}] from ${sci(prev.cat)} to ${sci(r.cat)} mol/L.` };
+      return { ok: false, msg: `The last scoop still dissolved ([${ionText(r.S.cation)}] rose from ${sci(prev.cat)} to ${sci(r.cat)} mol/L). Keep adding scoops until extra solid stays on the floor.` };
     },
     reward: {
       log: 'The meters stopped rising once solid stayed on the floor.',
@@ -123,7 +123,7 @@ export const STAGES = [
     id: 's2-expression',
     title: 'Writing the Expression',
     briefing: 'A solid at equilibrium with its dissolved ions has an equilibrium constant, called the solubility product constant, Ksp.',
-    prompt: 'What is the Ksp expression for Ag₂CrO₄?',
+    prompt: 'Write the equilibrium constant expression (Ksp) for dissolving Ag₂CrO₄(s).',
     widget,
     table: pansTable({
       fixtures: [
@@ -158,9 +158,9 @@ export const STAGES = [
     title: 'How Much Dissolves',
     briefing: {
       speaker: 'Vess',
-      body: 'Molar solubility, s, is the moles of a salt that dissolve in one litre. The BaSO₄ beaker shows how one salt\'s Ksp sets its dissolved ions; use the Ksp plate to find AgCl.'
+      body: 'Molar solubility, s, is the moles of salt dissolving in 1 L; for a 1:1 salt, Ksp = s × s. Use the Ksp plate and calculator to find AgCl.'
     },
-    prompt: 'What is the molar solubility of AgCl, in mol/L?',
+    prompt: 'Using the calculator, what is the molar solubility of AgCl in mol/L?',
     entry: { id: 's', label: 'AgCl dissolved', unit: 'mol/L' },
     widget,
     table: pansTable({
@@ -205,10 +205,10 @@ export const STAGES = [
         note('same', GUESS.same, { x: 126, y: 14 })
       ],
       fixtures: [
-        clipFixture('clip', { x: 82, y: 45 }, 'dissolve', { title: 'A solid in water', w: 34 }),
-        plaqueFixture('ksp', 'Ksp at 25 °C', { x: 36, y: 42 }, [`${name('AgCl')}   ${sci(ksp('AgCl'))}`, `${name('Ag2CrO4')}   ${sci(ksp('Ag2CrO4'))}`], { w: 56 })
+        clipFixture('clip', { x: 78, y: 45 }, 'dissolve', { title: 'A solid in water', w: 34 }),
+        plaqueFixture('ksp', 'Ksp at 25 °C', { x: 32, y: 42 }, [`${name('AgCl')}   ${sci(ksp('AgCl'))}`, `${name('Ag2CrO4')}   ${sci(ksp('Ag2CrO4'))}`], { w: 54 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 42 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 122, y: 42 }, size: { w: 42, h: 14 } }] }
     }),
     hints: [
       'Lay one of the three cards in the slot.',
@@ -247,7 +247,7 @@ export const STAGES = [
         fixtures: [
           pickable(beakerFixture('agcl', { x: 40, y: 25 }, { salt: 'AgCl', total: t, ref, showDissolved: true, title: 'AgCl in water' }), 1),
           pickable(beakerFixture('ag2', { x: 112, y: 25 }, { salt: 'Ag2CrO4', total: t, ref, showDissolved: true, title: 'Ag₂CrO₄ in water' }), 2),
-          choiceFixture('pick', 'Holds more dissolved', { x: 75, y: 60 }, { same: 3, options: ['AgCl', 'Ag₂CrO₄', 'The same', ' '], start: 4 })
+          choiceFixture('pick', 'Holds more dissolved', { x: 75, y: 60 }, { same: 3, options: ['AgCl', 'Ag₂CrO₄', 'The same', ' '], start: 4, placeholder: 'tap a beaker' })
         ]
       }, { h: 70 }),
       hints: [
@@ -312,7 +312,7 @@ export const STAGES = [
     reward: {
       log: 'Added sulfate drove BaSO₄ out of solution as a solid.',
       title: 'Common-Ion Effect',
-      body: 'The extra sulfate put Q above Ksp, so BaSO₄ left the water as a precipitate until Q was back on Ksp. This is the common-ion effect.'
+      body: 'The extra sulfate put Q above Ksp, so BaSO₄ left the water as a solid (precipitate) until Q was back on Ksp. This is the common-ion effect.'
     }
   },
 
@@ -325,13 +325,13 @@ export const STAGES = [
     return {
       id: 's7-mix',
       title: 'Mixing Two Solutions',
-      prompt: 'In which mixture does a precipitate form?',
+      prompt: 'Using the calculator, in which mixture does a solid (precipitate) form?',
       widget,
       table: pansTable({
         fixtures: [
           pickable(jar(0, 26), 1), pickable(jar(1, 75), 2), pickable(jar(2, 124), 3),
-          plaqueFixture('ksp', 'Ksp at 25 °C', { x: 75, y: 49 }, [`${name('PbI2')}   ${sci(ksp('PbI2'))}`], { w: 46 }),
-          choiceFixture('pick', 'Forms a precipitate', { x: 75, y: 68 }, { options: ['Mix 1', 'Mix 2', 'Mix 3', ' '], start: 4 })
+          plaqueFixture('ksp', 'Ksp at 25 °C', { x: 75, y: 49 }, [`${name('PbI2')}   ${sci(ksp('PbI2'))}`, 'Q = [Pb²⁺] × [I⁻]²'], { w: 54 }),
+          choiceFixture('pick', 'Forms a precipitate', { x: 75, y: 68 }, { options: ['Mix 1', 'Mix 2', 'Mix 3', ' '], start: 4, placeholder: 'tap a beaker' })
         ]
       }, { h: 80 }),
       hints: [

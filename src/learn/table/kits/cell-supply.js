@@ -175,6 +175,8 @@ function paintPlate(ctx, f, state, b, F, r, T) {
   const by = T + 5;
   cup(ctx, F, 6, by, 30, 16, '#3a4a55');
   bar(ctx, F, 13, by - 4, 3.6, 18, METAL_INK[p.metal]);
+  const platedThick = r.rows.length ? Math.min(3.0, 0.8 + r.rows.length * 0.6) : 0;
+  if (platedThick > 0) bar(ctx, F, 27 - platedThick / 2, by + 1, 3.6 + platedThick, 13, METAL_INK[p.metal]);
   bar(ctx, F, 27, by - 4, 3.6, 18, '#8a8780');
   put(ctx, `${m.name[0].toUpperCase()}${m.name.slice(1)} bar`, F.x(14.8), F.y(by + 20), size(F, 1.9, 5.6), { color: TEXT, maxW: F.len(15) });
   put(ctx, 'Plate', F.x(28.8), F.y(by + 20), size(F, 1.9, 5.6), { color: TEXT });
@@ -237,7 +239,7 @@ function paintCompare(ctx, f, state, b, F, r, T) {
           ctx.arc(F.x(bx), F.y(by), Math.max(1.2, F.len(0.55)), 0, Math.PI * 2);
           ctx.fill();
         }
-        put(ctx, fast ? 'fast bubbles' : 'slow (overpotential)', F.x(x), F.y(T + 35.8), size(F, 1.75, 5.2), { color: fast ? DUST : AMBER, maxW: F.len(25) });
+        put(ctx, fast ? 'fast bubbles' : 'slow bubbles', F.x(x), F.y(T + 35.8), size(F, 1.9, 5.8), { color: fast ? DUST : AMBER, maxW: F.len(25) });
         put(ctx, `${fmt(g.mL, 1)} mL`, F.x(x), F.y(T + 39.2), size(F, 2.3, 6.4), { color: AMBER, weight: 700, maxW: F.len(24) });
         put(ctx, look[1], F.x(x), F.y(T + 43), size(F, 1.9, 5.6), { color: DUST, maxW: F.len(25) });
       }
@@ -262,8 +264,8 @@ function paintWeigh(ctx, f, state, b, F, r, T) {
   put(ctx, 'Plate X', F.x(78.8), F.y(T + 28), size(F, 1.9, 5.6), { color: TEXT });
   put(ctx, p.solution, F.x(71), F.y(T + 32), size(F, 1.9, 5.6), { color: DUST, maxW: F.len(42) });
   put(ctx, p.half, F.x(71), F.y(T + 36), size(F, 2.3, 6.4), { color: DUST, maxW: F.len(42) });
-  panel(ctx, F, 54, T + 39, 36, 6);
-  put(ctx, `Plated for ${fmt(p.t / 60, 1)} min`, F.x(72), F.y(T + 42), size(F, 2.4, 6.6), { color: AMBER, weight: 700, maxW: F.len(34) });
+  panel(ctx, F, 52, T + 38, 40, 8);
+  put(ctx, `Plated for ${fmt(p.t / 60, 1)} min`, F.x(72), F.y(T + 42), size(F, 3.3, 8.5), { color: AMBER, weight: 700, maxW: F.len(38) });
 }
 
 function paintSupply(ctx, f, state, b) {

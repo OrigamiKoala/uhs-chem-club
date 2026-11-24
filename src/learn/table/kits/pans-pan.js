@@ -20,7 +20,7 @@ const STEEL = PLATE_COLORS.steel;
 const AMBER = PLATE_COLORS.amber;
 /** A is orange and B is blue on every pan; these are the colours the plot, the window and the strip share. */
 export const A_INK = '#c0652b';
-export const B_INK = '#6f8fb0';
+export const B_INK = '#4c9be8';
 
 function frame(ctx, F, x, y, w, h) {
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(h));
@@ -34,8 +34,8 @@ function frame(ctx, F, x, y, w, h) {
  * every count is `panRead`; only the drift is drawn. With the clock frozen (reduced motion) the dish shows the tick reached, standing still.
  */
 const SHOWN = new Map();
-const TICKS_PER_SECOND = 14;
-const REPLAY_PER_SECOND = 36;
+const TICKS_PER_SECOND = 6;
+const REPLAY_PER_SECOND = 28;
 let restarting = false;
 /** A miss replays the cause: every vessel plays its run again from the first tick, faster, with the changes ringed as they happen. */
 export function replayPans() {
@@ -77,7 +77,7 @@ function paintWindow(ctx, F, r, x, y, w, h, tracer, clock, shown) {
     const isB = stateOfParticle(r.hist, i, shown);
     ctx.fillStyle = isB ? B_INK : A_INK;
     ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(2, F.len(rad)), 0, Math.PI * 2); ctx.fill();
-    const flipped = clock && shown > 0 && [0, 1, 2].some(k => shown - k > 0 && stateOfParticle(r.hist, i, shown - k) !== stateOfParticle(r.hist, i, shown - k - 1));
+    const flipped = tracer && clock && shown > 0 && [0, 1, 2].some(k => shown - k > 0 && stateOfParticle(r.hist, i, shown - k) !== stateOfParticle(r.hist, i, shown - k - 1));
     if (flipped) {
       ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1, F.len(0.25));
       ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(3, F.len(rad * 1.5)), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
@@ -112,20 +112,28 @@ function paintPlot(ctx, F, f, r, x, y, w, h) {
   const p = f.props;
   if (p.ghost) {
     const gh = historyOf({ ...r.sys, b0: p.ghost.b0, seed: p.ghost.seed });
-    ctx.globalAlpha = 0.35;
-    ctx.setLineDash([3, 3]);
+    ctx.globalAlpha = 0.72;
+    ctx.setLineDash([4, 3]);
+    ctx.lineWidth = Math.max(1.8, F.len(0.35));
     for (const [pick, ink] of [[t => n - gh.b[t], A_INK], [t => gh.b[t], B_INK]]) {
       ctx.strokeStyle = ink; ctx.beginPath();
-      for (let t = 0; t <= r.t; t++) { const px = F.x(X(t)); const py = F.y(Y(pick(t))); if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+      for (let t = 0; t <= PAN_TICKS; t++) { const px = F.x(X(t)); const py = F.y(Y(pick(t))); if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
       ctx.stroke();
     }
+    ctx.lineWidth = 1;
     ctx.setLineDash([]); ctx.globalAlpha = 1;
+    say(ctx, 'dashed: Stage 1', F.x(x + w) - 3, F.y(y) + sz * 0.7, sz, { color: DUST, align: 'right' });
   }
   draw(t => n - r.hist.b[t], A_INK);
   draw(t => r.hist.b[t], B_INK);
+  // Key for the two curves inside the top of the plot.
+  const aLab = p.aName ?? 'A';
+  const bLab = p.bName ?? 'B';
+  say(ctx, `${aLab}`, F.x(x + w * 0.28), F.y(y) + sz * 0.7, sz, { color: A_INK, weight: 700 });
+  say(ctx, `${bLab}`, F.x(x + w * 0.56), F.y(y) + sz * 0.7, sz, { color: B_INK, weight: 700 });
   // The time reached.
   ctx.strokeStyle = DIM; ctx.beginPath(); ctx.moveTo(F.x(X(r.t)), F.y(y)); ctx.lineTo(F.x(X(r.t)), F.y(y + h)); ctx.stroke();
-  say(ctx, 'time', F.x(x + w) - 3, F.y(y + h) + sz * 1.0, sz, { color: DIM, align: 'right' });
+  say(ctx, 'time (s)', F.x(x + w) - 3, F.y(y + h) + sz * 1.0, sz, { color: DUST, align: 'right' });
 }
 
 /** Eight rows, one per ringed particle; a cell per tick over the last forty, orange for A and blue for B. */
@@ -157,7 +165,7 @@ function paintPan(ctx, f, state, b) {
   paintPlot(ctx, F, f, r, px, top, w - px - 3.5, ph);
   if (p.tracer) {
     paintStrip(ctx, F, r, px, top + ph + 5, w - px - 3.5, 13.5);
-    say(ctx, 'ringed particles, last 40 s', F.x(px), F.y(top + ph + 2.6), F.size(1.9, 5.6), { color: DIM, maxW: F.len(w - px - 3.5) });
+    say(ctx, `8 ringed particles (orange = ${p.aName ?? 'A'}, blue = ${p.bName ?? 'B'})`, F.x(px), F.y(top + ph + 2.6), F.size(2.1, 5.8), { color: DUST, maxW: F.len(w - px - 3.5) });
   }
   const y = h - 3.6;
   const sz = F.size(2.3, 6);
@@ -167,8 +175,11 @@ function paintPan(ctx, f, state, b) {
   if (p.tallies !== false) {
     if (hasWin) say(ctx, `last 50 s: ${aName}→${bName} ${r.fwd}, ${bName}→${aName} ${r.rev}`, F.x(18), F.y(y), sz, { color: AMBER, weight: 700, maxW: F.len(w - 18 - 14) });
     else {
-      say(ctx, `${aName}→${bName} ${r.fwd}`, F.x(2.5), F.y(y - 0.2), sz, { color: AMBER, weight: 700 });
-      say(ctx, `${bName}→${aName} ${r.rev}`, F.x(2.5 + 17), F.y(y - 0.2), sz, { color: AMBER, weight: 700 });
+      const aShort = aName.length > 4 ? 'R' : aName;
+      const bShort = bName.length > 4 ? 'P' : bName;
+      const half = (w - 16) / 2;
+      say(ctx, `${aShort}→${bShort} ${r.fwd}`, F.x(2.5), F.y(y - 0.2), sz, { color: AMBER, weight: 700, maxW: F.len(half - 1) });
+      say(ctx, `${bShort}→${aShort} ${r.rev}`, F.x(2.5 + half), F.y(y - 0.2), sz, { color: AMBER, weight: 700, maxW: F.len(half - 1) });
     }
   }
 }

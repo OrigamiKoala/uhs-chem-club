@@ -72,7 +72,7 @@ function column(ctx, F, x, y, w, h) {
 }
 
 /** Rows of the bar picture, in table units from the top of a fixture. */
-const ROW = { title: 8.6, k: 11.4, base: 26.5, hmax: 11.3, names: 30.2 };
+const ROW = { title: 8.2, k: 11.0, base: 27.2, hmax: 9.8, names: 31.0 };
 
 /**
  * The bars of one vessel: a bar for each substance at `now`, a line across it at `start` once `ticks`, the amount printed over the bar,
@@ -91,8 +91,9 @@ function glided(key, now, clock) {
   if (!clock || !key) return now;
   const sig = JSON.stringify(now);
   let g = GLIDE.get(key);
-  if (!g) g = { sig, from: { ...now }, to: { ...now }, t0: clock - GLIDE_SECONDS };
-  if (g.sig !== sig) {
+  const sameSpecies = g && Object.keys(now).every(s => Number.isFinite(g.from[s]) && Number.isFinite(g.to[s]));
+  if (!g || !sameSpecies) g = { sig, from: { ...now }, to: { ...now }, t0: clock - GLIDE_SECONDS };
+  else if (g.sig !== sig) {
     const cur = glideAt(g, clock);
     g = { sig, from: cur, to: { ...now }, t0: clock };
   }
@@ -102,7 +103,10 @@ function glided(key, now, clock) {
 function glideAt(g, clock) {
   const k = Math.max(0, Math.min(1, (clock - g.t0) / GLIDE_SECONDS));
   const e = k * k * (3 - 2 * k);
-  return Object.fromEntries(Object.keys(g.to).map(s => [s, g.from[s] + (g.to[s] - g.from[s]) * e]));
+  return Object.fromEntries(Object.keys(g.to).map(s => {
+    const f0 = Number.isFinite(g.from[s]) ? g.from[s] : g.to[s];
+    return [s, f0 + (g.to[s] - f0) * e];
+  }));
 }
 /** Drifting dots inside a bar's rectangle: `count` of them, each about its own spot. */
 function crowd(ctx, F, cx, bw, base, hgt, count, clock, seed) {
@@ -272,6 +276,8 @@ function paintRig(ctx, f, state, b) {
   ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1.4, F.len(0.3));
   ctx.beginPath(); ctx.moveTo(F.x(2), F.y(16.5)); ctx.lineTo(F.x(2 + rowN * 16.5 + 0.5), F.y(16.5)); ctx.stroke(); ctx.lineWidth = 1;
   const sz = F.size(2.0, 5.8);
+  put(ctx, 'top', F.x(2.2), F.y(6.2), F.size(1.8, 5.2), { color: DUST, align: 'left' });
+  put(ctx, 'bottom', F.x(2.2), F.y(27.0), F.size(1.8, 5.2), { color: DUST, align: 'left' });
   for (let j = 0; j < n; j++) {
     const cx = lw + (j + 0.5) * cw;
     column(ctx, F, lw + j * cw + 0.4, 6.4, cw - 0.8, 20.6);

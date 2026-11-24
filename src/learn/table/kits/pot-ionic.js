@@ -373,8 +373,8 @@ function paintFilter(ctx, f, state, b) {
 
 function runFilter(state, fid) {
   const r = filterRead(state, fid);
-  if (!r.pot.ran) return { noop: 'Nothing has been mixed in the pot yet.' };
-  if (!r.solid) return { noop: 'The pot holds nothing to filter out.' };
+  if (!r.pot.ran) return { noop: 'Nothing has been mixed in the vessel yet.' };
+  if (!r.solid) return { noop: 'The vessel holds nothing to filter out.' };
   return { x: r.pot.out.lamp.after, y: r.solid.units, label: `${r.pot.sig}|filter` };
 }
 
@@ -385,8 +385,8 @@ registerFixture('ionfilter', { paint: paintFilter, run: runFilter });
    ------------------------------------------------------------------ */
 
 const POT_TEXT = f => (f.props.mixes
-  ? 'Pick a "Mixture" and press "Mix" to pour them together.'
-  : 'Drag two jars onto the seats and press "Mix".');
+  ? 'Pick a "Mixture" with the dial and press "Mix" to combine the solutions.'
+  : 'Press "Mix" to combine the two solutions in the vessel.');
 
 addTourText({
   'pot:ionpot': { title: 'Reaction vessel', dials: false, text: POT_TEXT },

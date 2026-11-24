@@ -250,10 +250,11 @@ export function layoutIn(zone, fallback, n, total = 0) {
  */
 export function railPositions(rail, count, gapAt = null) {
   const r = rectOf(rail, SIZES.rail);
-  const slots = count + (gapAt === null ? 0 : 1);
-  const step = r.w / Math.max(1, slots);
+  const used = count + (gapAt === null ? 0 : 1);
+  const total = Math.max(used, rail.slots || 0);
+  const step = r.w / Math.max(1, total);
   const out = [];
-  for (let i = 0; i < slots; i++) {
+  for (let i = 0; i < used; i++) {
     if (gapAt !== null && i === gapAt) continue;
     out.push({ x: r.x0 + step * (i + 0.5), y: rail.at.y });
   }

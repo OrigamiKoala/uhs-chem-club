@@ -69,14 +69,14 @@ function melt(ctx, w, h, t) {
     if (e > 0 && e < 1) disc(ctx, 666 - e * 372, 96 + Math.sin(e * Math.PI) * 0, 9, C.pale);
   }
   line(ctx, 294, 150, 294, 96, C.dust, 2); line(ctx, 294, 96, 666, 96, C.dust, 2); line(ctx, 666, 96, 666, 150, C.dust, 2);
-  text(ctx, `${inN} electrons taken by ${inN} sodium ions`, 294, 420, { size: 21, color: C.amber, weight: 700 });
-  text(ctx, `${outN} electrons given up by ${outN} chloride ions`, 666, 420, { size: 21, color: C.green, weight: 700 });
+  text(ctx, `${inN} e⁻ taken by ${inN} sodium ions`, 260, 420, { size: 20, color: C.amber, weight: 700 });
+  text(ctx, `${outN} e⁻ given by ${outN} chloride ions`, 700, 420, { size: 20, color: C.green, weight: 700 });
 }
 
 /** Beat three: three runs as current-by-time rectangles. */
 function runs(ctx, w, h, t) {
   text(ctx, 'Silver plated by three runs', w / 2, 36, { size: 24, color: C.dust });
-  const p = ease(win(t, 0.5, 0.66));
+  const p = ease(win(t, 0.46, 0.60));
   const TS = 1.6; const IS = 70; const MG = 8;
   [[1, 30, 60], [2, 10, 340], [0.5, 100, 620]].forEach(([I, s, x]) => {
     const rw = s * TS * p; const rh = I * IS;
@@ -92,10 +92,30 @@ function runs(ctx, w, h, t) {
   });
 }
 
-/** Beat four: charge, then moles of electrons, then grams. */
+/** Beat four: splitting water vs brine gases. */
+function gases(ctx, w, h, t) {
+  text(ctx, 'Splitting water and salty brine', w / 2, 36, { size: 24, color: C.dust });
+  const p = ease(win(t, 0.66, 0.78));
+  const panels = [
+    { x: 140, title: 'Water (2 cells = 2.20 V)', left: ['H₂', 1.0, C.pale], right: ['O₂', 0.5, C.amber] },
+    { x: 540, title: 'Salty brine (3.0 V)', left: ['H₂', 1.0, C.pale], right: ['Cl₂', 1.0, '#9fb04a'] }
+  ];
+  panels.forEach(q => {
+    text(ctx, q.title, q.x + 140, 100, { size: 22, color: C.dust, weight: 700 });
+    rect(ctx, q.x, 260, 280, 120, '#2a3d46', C.steel);
+    [[q.x + 70, q.left], [q.x + 210, q.right]].forEach(([cx, [sym, frac, col]]) => {
+      rect(ctx, cx - 26, 140, 52, 130, C.bg1, C.steel);
+      const gh = 110 * frac * p;
+      rect(ctx, cx - 24, 142, 48, gh, col);
+      text(ctx, sym, cx, 412, { size: 26, color: col, weight: 700 });
+    });
+  });
+}
+
+/** Beat five: charge, then moles of electrons, then grams. */
 function faraday(ctx, w, h, t) {
   text(ctx, 'Copper plated by 2.00 A for 1800 s', w / 2, 36, { size: 24, color: C.dust });
-  const p = ease(win(t, 0.78, 0.9));
+  const p = ease(win(t, 0.82, 0.92));
   const TS = 0.3; const IS = 40;
   const rw = 1800 * TS; const rh = 2 * IS;
   rect(ctx, 150, 90, rw * p, rh, '#4a463e', C.steel);
@@ -120,9 +140,10 @@ function faraday(ctx, w, h, t) {
 
 function electrolysisPush(ctx, w, h, t) {
   ground(ctx, w, h);
-  if (t <= 0.24) return push(ctx, w, h, t);
-  if (t <= 0.48) return melt(ctx, w, h, t);
-  if (t <= 0.72) return runs(ctx, w, h, t);
+  if (t <= 0.22) return push(ctx, w, h, t);
+  if (t <= 0.44) return melt(ctx, w, h, t);
+  if (t <= 0.64) return runs(ctx, w, h, t);
+  if (t <= 0.80) return gases(ctx, w, h, t);
   return faraday(ctx, w, h, t);
 }
 

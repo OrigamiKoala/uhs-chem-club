@@ -39,9 +39,13 @@ export function bodiesDress(f, state, c, paint) {
   const group = new THREE.Group();
   group.name = 'ph-bodies';
   const geo = new THREE.SphereGeometry(1, 10, 7);
-  // The host's own steel, whitened so the instance colours (one per species) show as they are: a world's materials stay its own.
+  // The host's own steel, whitened and softened so instance colours read brightly against Verdigris's dark plate.
   const mat = c.mats.labSteel.clone();
   mat.color = new THREE.Color(0xffffff);
+  mat.metalness = 0.12;
+  mat.roughness = 0.42;
+  mat.emissive = new THREE.Color(0x26221c);
+  mat.emissiveIntensity = 0.35;
   const mesh = new THREE.InstancedMesh(geo, mat, CAP);
   mesh.frustumCulled = false; mesh.castShadow = false; mesh.receiveShadow = false;
   mesh.count = 0;

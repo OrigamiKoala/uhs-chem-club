@@ -358,7 +358,7 @@ export const EPISODES = {
     bossId: 'boss-tipper',
     clueId: 'clue_teeter_pan',
     incident: 'Ponds that look stopped are still pumping out chemicals.',
-    objective: 'Test how the ponds settle and how the Fifth Guild\'s drain pump keeps them running nonstop.',
+    objective: 'Test how each pond reaches balance and how a pump draining product out keeps the reaction running nonstop.',
     caseFileNote: 'Abandoned salt ponds are a hidden Fifth Guild chemical plant.'
   },
   unit09: {
@@ -378,7 +378,7 @@ export const EPISODES = {
     worldId: 'unit10',
     worldName: 'Brinewire',
     act: 'act3',
-    arrival: 'The Fifth Guild clamped illegal power taps onto Brinewire\'s salt pools, draining the grid and stripping copper.',
+    arrival: 'The Fifth Guild clamped illegal cables onto Brinewire\'s power lines and salt pools—stealing electricity, cutting the marsh batteries, and rotting the pylons.',
     closing: 'The power taps are off, and we caught the Fifth Guild pulling tons of pure copper out of the marsh.',
     spoilFamily: 'Power clamps',
     bossId: 'boss-clamp',

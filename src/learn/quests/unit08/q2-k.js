@@ -125,7 +125,7 @@ export const STAGES = [
         note('gone', GUESS.gone, { x: 78, y: 58 })
       ],
       fixtures: [clipFixture('clip', { x: 126, y: 30 }, 'react', { title: 'A reaction starting', kf: 0.12, kr: 0.03, seed: 9, span: 36, h: 22, w: 40 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 57 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 57 }, size: { w: 46, h: 16 } }] }
     }, { h: TABLE_H }),
     hints: [
       'Drag one of the four prediction cards into the slot.',
@@ -176,6 +176,10 @@ export const STAGES = [
   {
     id: 's3-powers',
     title: 'Two of the Same',
+    briefing: {
+      speaker: 'Vess',
+      body: 'When a substance has a coefficient in front of it, try the squared tile (HI² means HI multiplied by itself) on the ratio board.'
+    },
     prompt: 'Which ratio is the same for all three settled vessels of H₂ + I₂ ⇌ 2 HI?',
     widget,
     table: rigTable('hi', HI_PANS, [['H2', 1], ['I2', 1], ['HI', 1], ['HI', 2]], { top: 2, bottom: 2 }),
@@ -188,7 +192,7 @@ export const STAGES = [
     reward: {
       log: 'HI squared over H₂ times I₂ held at one number.',
       title: 'Coefficients Become Powers',
-      body: `HI² ÷ (H₂ × I₂) is ${fmtNum(HI.K, 2)} in every vessel: the 2 in front of HI became a power. With concentrations in mol/L, the constant is written Kc.`
+      body: `HI² ÷ (H₂ × I₂) is ${fmtNum(HI.K, 2)} in every vessel: the 2 in front of HI became a power. With concentrations in mol/L (written in brackets [ ]), K is called Kc.`
     }
   },
 
@@ -196,7 +200,11 @@ export const STAGES = [
   {
     id: 's4-solids',
     title: 'A Vessel With Solids',
-    prompt: 'Which ratio is the same for all three settled vessels of CaCO₃ ⇌ CaO + CO₂?',
+    briefing: {
+      speaker: 'Vess',
+      body: 'CaCO₃ and CaO are solids (s) and CO₂ is a gas (g), measured in atm. You can leave the bottom of the ratio board empty if only one substance belongs.'
+    },
+    prompt: 'Which ratio is the same for all three settled vessels of CaCO₃(s) ⇌ CaO(s) + CO₂(g)?',
     widget,
     table: rigTable('caco3', CA_PANS, [['CaCO3', 1], ['CaO', 1], ['CO2', 1]], { top: 2, bottom: 2 }),
     hints: [
@@ -208,7 +216,7 @@ export const STAGES = [
     reward: {
       log: 'Only the gas stayed the same from vessel to vessel.',
       title: 'Solids Are Left Out',
-      body: 'Only the CO₂ pressure is the same in every vessel, because a pure solid\'s concentration does not depend on how much is there. With pressures the constant is written Kp.'
+      body: 'Only the CO₂ gas pressure matches across vessels: adding more solid does not change how crowded a solid is, so solids are left out of K (written Kp for gas pressures).'
     }
   },
 
@@ -282,7 +290,7 @@ export const STAGES = [
     reward: {
       log: 'Vessel 2 went nearly to completion.',
       title: 'Large K',
-      body: `Vessel 2 settled with almost no Reactant; its K is ${fmtNum(K_BIG[BIG_PICK - 1], 2)}. A K far above 1 means the vessel settles as nearly all product (a large K).`
+      body: `Vessel 2 settled with almost no Reactant; its K is ${fmtNum(K_BIG[BIG_PICK - 1], 2)}. A K far above 1 means the vessel settles as nearly all product.`
     }
   },
 
@@ -308,12 +316,12 @@ export const STAGES = [
       if (v === 5) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === SMALL_PICK) return { ok: true };
       const eq = vslRead(state.table, 'pans').pans[v - 1].eq;
-      return { ok: false, msg: `Vessel ${v} has K = ${fmtNum(K_SMALL[v - 1], 2)}, which makes ${fmtNum(eq.P, 3)} mol/L of Product.` };
+      return { ok: false, msg: `Vessel ${v} has K = ${fmtNum(K_SMALL[v - 1], 2)}, which makes ${fmtNum(eq.P, 3)} mol/L of Product—more than the smallest-K vessel.` };
     },
     reward: {
       log: 'Vessel 3 barely started.',
       title: 'Small K',
-      body: `Vessel 3, with K = ${fmtNum(K_SMALL[SMALL_PICK - 1], 2)}, makes almost no product. A K far below 1 means the vessel settles as nearly all reactant (a small K).`
+      body: `Vessel 3, with K = ${fmtNum(K_SMALL[SMALL_PICK - 1], 2)}, makes almost no product. A K far below 1 means the vessel settles as nearly all reactant.`
     }
   }
 ];

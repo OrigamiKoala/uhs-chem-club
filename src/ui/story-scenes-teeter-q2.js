@@ -9,12 +9,13 @@
 import { K_SYSTEMS, settleAmounts, systemRatio, fmtNum } from '../learn/engine/eqdata.js';
 import { C, text, ground, win, ease } from './story-kit.js';
 
-const A_INK = '#c0652b'; const B_INK = '#6f8fb0';
+const A_INK = '#c0652b'; const B_INK = '#4c9be8';
 const AB = K_SYSTEMS.ab; const HI = K_SYSTEMS.hi;
 const fill = (sys, s) => Object.fromEntries(Object.keys(sys.species).map(k => [k, s[k] ?? 0]));
 const lerp = (a, b, v) => a + (b - a) * v;
+const dispName = s => (s === 'A' ? 'butane' : s === 'B' ? 'isobutane' : s.replace('2', '₂').replace('4', '₄'));
 
-/** One pan: a bar for each substance, from its start to where it settles by `p` (0 to 1); returns the amounts drawn. */
+/** One vessel: a bar for each substance, from its start to where it settles by `p` (0 to 1); returns the amounts drawn. */
 function pan(ctx, sys, start, K, p, x, y, w, h, scale, title) {
   const eq = settleAmounts(sys, start, K);
   const names = Object.keys(sys.species);
@@ -29,7 +30,7 @@ function pan(ctx, sys, start, K, p, x, y, w, h, scale, title) {
     const cx = x + (i + 0.5) * gw;
     ctx.fillStyle = sys.species[s] < 0 ? A_INK : B_INK;
     ctx.fillRect(cx - bw / 2, base - bh, bw, Math.max(1, bh));
-    text(ctx, s.replace('2', '₂').replace('4', '₄'), cx, base + 17, { size: 17, color: C.text, weight: 700 });
+    text(ctx, dispName(s), cx, base + 17, { size: 15, color: C.text, weight: 700 });
     text(ctx, fmtNum(now[s], 3), cx, base - bh - 12, { size: 15, color: C.dust });
   });
   return now;
@@ -47,23 +48,22 @@ function ratioHolds(ctx, w, h, t) {
       : [{ A: 1.2 }, { B: 1.8 }, { A: 0.3, B: 0.3 }];
     const p = ease(win(t, hi ? 0.37 : 0.02, hi ? 0.55 : 0.2));
     const scale = hi ? 1.6 : 1.8;
-    text(ctx, hi ? 'H₂ + I₂ ⇌ 2 HI' : 'A ⇌ B', w / 2, h * 0.07, { size: 26, color: C.dust });
+    text(ctx, hi ? 'H₂ + I₂ ⇌ 2 HI' : 'butane ⇌ isobutane', w / 2, h * 0.07, { size: 26, color: C.dust });
     starts.forEach((s, i) => {
-      const now = pan(ctx, sys, fill(sys, s), sys.K, p, x(i), py, pw, ph, scale, `Pan ${i + 1}`);
+      const now = pan(ctx, sys, fill(sys, s), sys.K, p, x(i), py, pw, ph, scale, `Vessel ${i + 1}`);
       const r = systemRatio(sys, now);
-      const label = hi ? 'HI² over H₂ × I₂' : 'B over A';
-      text(ctx, `${label} = ${fmtNum(r, 3)}`, x(i) + pw / 2, h * 0.76, { size: 22, color: C.amber, weight: 700 });
+      const label = hi ? 'HI² ÷ (H₂ × I₂)' : 'isobutane ÷ butane';
+      text(ctx, `${label} = ${fmtNum(r, 3)}`, x(i) + pw / 2, h * 0.76, { size: 19, color: C.amber, weight: 700 });
     });
-    text(ctx, 'worked out from the bars as they stand', w / 2, h * 0.9, { size: 18, color: C.dim });
   } else {
-    const p = ease(win(t, 0.72, 0.9));
-    const rows = [{ K: 2e5, name: 'a large K' }, { K: 3e-6, name: 'a small K' }];
-    text(ctx, 'A ⇌ B, each pan beginning with A alone', w / 2, h * 0.07, { size: 24, color: C.dust });
+    const p = ease(win(t, 0.70, 0.76));
+    const rows = [{ K: 2e5, name: 'Large K (mostly product)' }, { K: 3e-6, name: 'Small K (mostly reactant)' }];
+    text(ctx, 'Reactant ⇌ Product, starting with Reactant alone', w / 2, h * 0.07, { size: 24, color: C.dust });
     rows.forEach((r, i) => {
       const px = w * (0.1 + i * 0.45);
       const now = pan(ctx, AB, { A: 1, B: 0 }, r.K, p, px, py, w * 0.35, ph, 1.1, r.name);
       text(ctx, `K = ${fmtNum(r.K, 2)}`, px + w * 0.175, h * 0.76, { size: 22, color: C.amber, weight: 700 });
-      text(ctx, `A left ${fmtNum(now.A, 2)}`, px + w * 0.175, h * 0.86, { size: 20, color: C.dust });
+      text(ctx, `Reactant left: ${fmtNum(now.A, 2)}`, px + w * 0.175, h * 0.86, { size: 20, color: C.dust });
     });
   }
 }

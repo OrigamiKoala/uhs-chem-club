@@ -52,21 +52,21 @@ function handoverWindow(ctx, scene, solute, p, x, y, w, h, title) {
 
 function handover(ctx, w, h, t) {
   ground(ctx, w, h);
-  if (t < 0.26) {
-    const p = ease(win(t, 0.03, 0.2));
+  if (t <= 0.26 || t > 0.94) {
+    const p = t > 0.94 ? 1 : ease(win(t, 0.03, 0.2));
     text(ctx, 'HCl poured into water; the marked hydrogen of each HCl', w / 2, 34, { size: 24, color: C.dust });
     const n = handoverWindow(ctx, 'acid', { id: 'hcl', c: 0.10 }, p, 220, 110, 520, 200, '0.10 M hydrochloric acid');
     text(ctx, `${n} of 8 hydrogens have reached a water molecule`, w / 2, 350, { size: 22, color: C.amber, weight: 700 });
     return;
   }
-  if (t < 0.52) {
+  if (t <= 0.52) {
     const p = ease(win(t, 0.28, 0.46));
     text(ctx, 'Ammonia in water; the marked hydrogens of the water', w / 2, 34, { size: 24, color: C.dust });
     const n = handoverWindow(ctx, 'base', { id: 'nh3', c: 0.00010 }, p, 220, 110, 520, 200, '0.00010 M ammonia');
     text(ctx, `${n} of 8 ammonia particles have taken a hydrogen`, w / 2, 350, { size: 22, color: C.amber, weight: 700 });
     return;
   }
-  if (t < 0.78) {
+  if (t <= 0.78) {
     const k = ease(win(t, 0.54, 0.72));
     text(ctx, 'Hydrogens and charge of each pair', w / 2, 34, { size: 24, color: C.dust });
     const pairs = [['HNO₃', 'NO₃⁻'], ['H₂O', 'OH⁻'], ['NH₄⁺', 'NH₃']];
@@ -95,7 +95,7 @@ function handover(ctx, w, h, t) {
 /** `scale` (q2): spheres counted per flask, pH and pOH side by side, a dilution chain against its floor, and warm water against cold. */
 function scale(ctx, w, h, t) {
   ground(ctx, w, h);
-  if (t < 0.26) {
+  if (t <= 0.26) {
     const k = ease(win(t, 0.03, 0.2));
     text(ctx, 'Hydrochloric acid, diluted tenfold each time; one sphere is 0.001 mol/L of H₃O⁺', w / 2, 34, { size: 22, color: C.dust });
     [0.1, 0.01, 0.001].forEach((c, i) => {
@@ -108,7 +108,7 @@ function scale(ctx, w, h, t) {
     });
     return;
   }
-  if (t < 0.52) {
+  if (t <= 0.52) {
     const k = ease(win(t, 0.28, 0.46));
     text(ctx, 'Sodium hydroxide: the two meters', w / 2, 34, { size: 24, color: C.dust });
     [0.1, 0.01, 0.001].forEach((c, i) => {
@@ -120,7 +120,7 @@ function scale(ctx, w, h, t) {
     });
     return;
   }
-  if (t < 0.78) {
+  if (t <= 0.78) {
     const k = ease(win(t, 0.54, 0.74));
     text(ctx, 'Hydrochloric acid, diluted again and again', w / 2, 34, { size: 24, color: C.dust });
     const cs = [1e-6, 1e-7, 1e-8, 1e-9];

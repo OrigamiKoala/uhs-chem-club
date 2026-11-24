@@ -49,7 +49,7 @@ export function transferRead(state, fid) {
 const posOf = i => 3 + COL * (i + 0.5);
 
 /** One particle: its core, its hydrogens (not the proton it can give: that is the loose piece), and its name. */
-function drawMol(ctx, F, m, i, state, clock, fromRead, demoU) {
+function drawMol(ctx, F, m, i, state, clock, fromRead, demoU, f) {
   const cx = posOf(i);
   const gave = fromRead.gave.has(m.key); const took = fromRead.took.has(m.key);
   const changed = gave || took || (demoU != null && demoU >= 1 && (m.key === fromRead.demoFrom || m.key === fromRead.demoTo));
@@ -62,8 +62,8 @@ function drawMol(ctx, F, m, i, state, clock, fromRead, demoU) {
     const w2 = wobble(i * 7 + k + 1, clock);
     ball(ctx, F.x(x + Math.cos(a) * (R + HR * 0.7) + w2.wx * 0.4), F.y(y + Math.sin(a) * (R + HR * 0.7) + w2.wy * 0.4), F.len(HR), HYD_INK);
   }
-  const name = gave ? m.lost : took ? m.gained : (demoU != null && demoU >= 1 && m.key === fromRead.demoFrom) ? m.lost : (demoU != null && demoU >= 1 && m.key === fromRead.demoTo) ? m.gained : m.label;
-  put(ctx, ionText(name), F.x(cx), F.y(30), F.size(2.7, 6.6), { color: changed ? AMBER : TEXT, weight: 700, maxW: F.len(COL - 2) });
+  const name = f.props?.keepNames ? m.label : (gave ? m.lost : took ? m.gained : (demoU != null && demoU >= 1 && m.key === fromRead.demoFrom) ? m.lost : (demoU != null && demoU >= 1 && m.key === fromRead.demoTo) ? m.gained : m.label);
+  put(ctx, ionText(name), F.x(cx), F.y(30), F.size(2.9, 7.2), { color: changed ? AMBER : TEXT, weight: 700, maxW: F.len(COL - 2) });
 }
 
 function paintTransfer(ctx, f, state, b) {
@@ -80,9 +80,20 @@ function paintTransfer(ctx, f, state, b) {
     ball(ctx, F.x(posOf(i0) + 6.5 + (posOf(i1) - posOf(i0) - 6.5) * ease), F.y(11 + (36 - 11) * ease - Math.sin(ease * Math.PI) * 6), F.len(2.4), PROTON_INK);
   }
   p.mols.forEach((m, i) => {
-    drawMol(ctx, F, m, i, state, clock, read, demoU);
+    // Tether line showing which particle each loose proton belongs to, plus an empty stock ring once moved.
+    if (m.gives) {
+      const sx = posOf(i) + 6.5; const sy = 11;
+      ctx.save();
+      ctx.strokeStyle = read.gave.has(m.key) ? 'rgba(218,165,68,0.45)' : DUST;
+      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = Math.max(1.2, F.len(0.28));
+      ctx.beginPath(); ctx.moveTo(F.x(posOf(i)), F.y(CORE_Y)); ctx.lineTo(F.x(sx), F.y(sy)); ctx.stroke();
+      ctx.beginPath(); ctx.arc(F.x(sx), F.y(sy), F.len(3.4), 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+    drawMol(ctx, F, m, i, state, clock, read, demoU, f);
     // The seat's line to its particle.
-    ctx.strokeStyle = STEEL; ctx.beginPath(); ctx.moveTo(F.x(posOf(i)), F.y(CORE_Y + 15)); ctx.lineTo(F.x(posOf(i)), F.y(37)); ctx.stroke();
+    ctx.strokeStyle = STEEL; ctx.beginPath(); ctx.moveTo(F.x(posOf(i)), F.y(CORE_Y + 15)); ctx.lineTo(F.x(posOf(i)), F.y(38)); ctx.stroke();
   });
   // A replay of a wrong move: the proton goes straight back to where it came from.
   if (p.rv === 2 && read.moved) {
@@ -148,7 +159,7 @@ registerPiece('phproton', {
  * The bench for a stage. Returns `{ fixture, slots, pieces, size }`: add the slots to `zones.slots` and the pieces to `pieces`.
  * `mols`: [{ key, label, ink, ink2, hs, gives, lost, gained }]; `goal`: { from, to }.
  */
-export function transferParts(id, at, { mols, goal, title = 'Proton bench' }) {
+export function transferParts(id, at, { mols, goal, title = 'Proton bench', keepNames = true }) {
   const W = mols.length * COL + 6;
   const x0 = at.x - W / 2; const y0 = at.y - H / 2;
   const slots = mols.map((m, i) => ({ id: takeSlot(id, m.key), label: ' ', at: { x: x0 + posOf(i), y: y0 + 44 }, size: { w: 17, h: 11 } }));
@@ -159,7 +170,7 @@ export function transferParts(id, at, { mols, goal, title = 'Proton bench' }) {
   return {
     fixture: {
       id, kind: 'phtransfer', label: title, at: { ...at }, size: { w: W, h: H }, noRun: true, dials: {},
-      props: { hidden: [], backdrop: true, mols: mols.map(m => ({ ...m })), goal: { ...goal }, wrong: false }
+      props: { hidden: [], backdrop: true, mols: mols.map(m => ({ ...m })), goal: { ...goal }, wrong: false, keepNames }
     },
     slots, pieces, size: { w: W, h: H }
   };

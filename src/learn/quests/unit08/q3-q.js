@@ -133,7 +133,7 @@ export const STAGES = [
       zones: { slots: [vessel('butane', true).seat] }
     }, { h: TABLE_H }),
     hints: [
-      'Lay each mixture card in the vessel and press "Run".',
+      'Lay each mixture card in the test vessel to see where its Q marker stands.',
       'Compare where the Q marker stands against the K line for each mixture.',
       'A mixture at equilibrium has Q equal to K and does not change when run.'
     ],
@@ -143,7 +143,7 @@ export const STAGES = [
     reward: {
       log: 'The mixture with Q on K did not change.',
       title: 'Q, the Ratio Now',
-      body: 'The mixture with Q, the reaction quotient, on K did not change when run. At equilibrium, Q equals K.'
+      body: 'Mixture 1 has Q, the reaction quotient, equal to K (2.00), so it did not change when run. At equilibrium, Q equals K.'
     }
   },
 
@@ -152,19 +152,19 @@ export const STAGES = [
     id: 's2-predict',
     title: 'Far More Isobutane',
     predict: true,
-    prompt: 'What does this mixture do when it is left alone?',
+    prompt: 'What does this mixture do once it settles?',
     widget,
     table: pansTable({
       pieces: [
         mixCard('m-click', 'Mixture', { x: 28, y: 14 }, 'butane', CLICK_MIX, { fixed: true }),
-        tag('k-note', `K for butane ⇌ isobutane is ${fmtNum(BUT.K, 2)}`, { x: 74, y: 14 }),
+        tag('k-note', `K = ${fmtNum(BUT.K, 2)} · Q = isobutane ÷ butane`, { x: 74, y: 14 }),
         note('more', GUESS_CLICK.more, { x: 30, y: 38 }),
         note('stay', GUESS_CLICK.stay, { x: 78, y: 38 }),
         note('back', GUESS_CLICK.back, { x: 30, y: 58 }),
         note('all', GUESS_CLICK.all, { x: 78, y: 58 })
       ],
       fixtures: [clipFixture('clip', { x: 126, y: 17 }, 'react', { title: 'Starting with mostly isobutane', b0: 40, kf: 0.1, kr: 0.05, seed: 3, span: 30, h: 24, w: 40 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 48 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 48 }, size: { w: 46, h: 16 } }] }
     }, { h: TABLE_H }),
     hints: [
       'Drag one of the four prediction cards into the slot.',
@@ -204,6 +204,8 @@ export const STAGES = [
       'See which substance forms as Q falls back to the K line.'
     ],
     check(state) {
+      const r = qkRead(state.table, 'tv');
+      if (!r.ran) return { ok: false, notYet: true, msg: 'Press "Run" on the test vessel first to watch which way the bars move.' };
       const v = dialValue(state.table, 'dir');
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 1) return { ok: true };
@@ -215,8 +217,8 @@ export const STAGES = [
       const Q = CLICK_MIX.isobutane / CLICK_MIX.butane;
       return {
         log: 'The mixture with Q above K made more butane.',
-        title: 'Above K Runs Backward',
-        body: `${verdict}Q was ${fmtNum(Q, 2)} against a K of ${fmtNum(BUT.K, 2)}, and isobutane turned back into butane until Q reached K. Above K a reaction runs toward reactants; below K, toward products.`
+        title: 'Above K Runs Toward Reactants',
+        body: `${verdict}Q was ${fmtNum(Q, 2)} against K = ${fmtNum(BUT.K, 2)}, so isobutane turned back into butane until Q reached K. Above K a reaction shifts toward reactants; below K, toward products.`
       };
     }
   },
@@ -233,7 +235,7 @@ export const STAGES = [
       'Compare where Q stands relative to K for each of the three mixtures.',
       'From the last stage, decide whether Q needs to be above or below K to make more product.'
     ],
-    check: seatCheck('butane', S4, 'forward', (c, r) => `${c.label} has Q = ${fmtNum(r.Q0, 3)} against K = ${fmtNum(BUT.K, 3)}.`),
+    check: seatCheck('butane', S4, 'forward', (c, r) => `${c.label} has Q = ${fmtNum(r.Q0, 3)} against K = ${fmtNum(BUT.K, 3)}, so it does not make more isobutane.`),
     reward: {
       log: 'The mixture with equal amounts had Q below K and made more isobutane.',
       title: 'Equal Amounts Move Too',
@@ -255,7 +257,7 @@ export const STAGES = [
         pieces: S5.map((c, i) => cardOf('n2o4', c, i)),
         fixtures: [
           tv.fixture,
-          selectorFixture('ans', 'Makes more NO₂', { x: 133, y: 22 }, { options: ['Mixture 1', 'Mixture 2', 'Mixture 3', ' '], start: 4, w: 30 })
+          selectorFixture('ans', 'Makes more NO₂', { x: 134, y: 22 }, { options: ['Mixture 1', 'Mixture 2', 'Mixture 3', ' '], start: 4, w: 30 })
         ],
         zones: { slots: [tv.seat] }
       }, { h: TABLE_H }),
@@ -282,15 +284,15 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   (() => {
     const slots = [
-      { id: 'go-p', label: 'Makes more product', at: { x: 124, y: 12 }, size: { w: 40, h: 14 } },
-      { id: 'go-r', label: 'Makes more reactant', at: { x: 124, y: 31 }, size: { w: 40, h: 14 } },
-      { id: 'stay', label: 'Does not change', at: { x: 124, y: 50 }, size: { w: 40, h: 14 } }
+      { id: 'go-p', label: 'Makes more product', at: { x: 124, y: 12 }, size: { w: 42, h: 14 } },
+      { id: 'go-r', label: 'Makes more reactant', at: { x: 124, y: 31 }, size: { w: 42, h: 14 } },
+      { id: 'stay', label: 'Does not change', at: { x: 124, y: 50 }, size: { w: 42, h: 14 } }
     ];
     const WAY = { 'go-p': 'forward', 'go-r': 'reverse', stay: 'none' };
     return {
       id: 's8-sealed',
       title: 'Three Sealed Mixtures',
-      prompt: 'Which way will each mixture run?',
+      prompt: 'Using the calculator to find Q, which way will each mixture run?',
       widget,
       table: pansTable({
         pieces: S6.map((c, i) => mixCard(c.id, c.label, { x: 20 + i * 28, y: 52 }, 'so3', c.amounts)),
@@ -323,7 +325,7 @@ export const STAGES = [
       reward: {
         log: 'Each mixture went the way its Q against K said.',
         title: 'Reading Q Anywhere',
-        body: 'Below K a mixture makes products, above K it makes reactants, and on K it does not change.'
+        body: 'With Q below K a mixture makes products, with Q above K it makes reactants, and with Q equal to K it does not change.'
       }
     };
   })()
@@ -338,7 +340,7 @@ export const DEBRIEF = {
 export const SOLUTIONS = [
   [put('c1', 'slot:tv.seat')],
   [put('back', 'slot:guess')],
-  [dial('dir', 'value', 1)],
+  [{ run: 'tv' }, dial('dir', 'value', 1)],
   [put('m1', 'slot:tv.seat')],
   [dial('ans', 'value', 1), put('n1', 'slot:tv.seat'), { run: 'tv' }],
   [put('q1', 'slot:go-p'), put('q2', 'slot:go-r'), put('q3', 'slot:stay')]
@@ -347,7 +349,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [put('c2', 'slot:tv.seat')],
   [],
-  [dial('dir', 'value', 2)],
+  [{ run: 'tv' }, dial('dir', 'value', 2)],
   [put('m2', 'slot:tv.seat')],
   [dial('ans', 'value', 2), put('n2', 'slot:tv.seat'), { run: 'tv' }],
   [put('q1', 'slot:go-r'), put('q2', 'slot:go-p'), put('q3', 'slot:stay')]

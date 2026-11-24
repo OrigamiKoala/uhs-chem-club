@@ -41,53 +41,53 @@ function paintCurve(ctx, f, state, b) {
   const R = plotRect(f);
   const X = mL => R.x0 + (mL / p.xMax) * R.w;
   const Y = pH => R.y1 - (pH / 14) * R.h;
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(R.x0), F.y(R.y0), F.len(R.w), F.len(R.h));
-  ctx.strokeStyle = 'rgba(140,131,118,0.28)';
+  ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(R.x0), F.y(R.y0), F.len(R.w), F.len(R.h));
+  ctx.strokeStyle = 'rgba(160,150,136,0.32)';
   for (let v = 0; v <= 14; v += 2) {
     ctx.beginPath(); ctx.moveTo(F.x(R.x0), F.y(Y(v))); ctx.lineTo(F.x(R.x1), F.y(Y(v))); ctx.stroke();
-    put(ctx, String(v), F.x(R.x0 - 1.4), F.y(Y(v)), F.size(2.0, 6), { align: 'right', color: DUST });
+    put(ctx, String(v), F.x(R.x0 - 1.4), F.y(Y(v)), F.size(2.3, 6.8), { align: 'right', color: DUST });
   }
   for (let m = 0; m <= p.xMax + 1e-9; m += p.xTick) {
     ctx.beginPath(); ctx.moveTo(F.x(X(m)), F.y(R.y1)); ctx.lineTo(F.x(X(m)), F.y(R.y1 + 1.2)); ctx.stroke();
-    put(ctx, String(m), F.x(X(m)), F.y(R.y1 + 3.2), F.size(2.0, 6), { color: DUST });
+    put(ctx, String(m), F.x(X(m)), F.y(R.y1 + 3.2), F.size(2.3, 6.8), { color: DUST });
   }
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(R.x0)) + 0.5, Math.round(F.y(R.y0)) + 0.5, Math.round(F.len(R.w)), Math.round(F.len(R.h)));
-  put(ctx, 'pH', F.x(2.4), F.y(R.y0 + 1.6), F.size(2.2, 6.4), { color: DUST, weight: 700, align: 'left' });
-  put(ctx, 'mL poured', F.x(R.x1), F.y(f.size.h - 1.6), F.size(2.0, 6), { color: DIM, align: 'right' });
+  put(ctx, 'pH', F.x(2.4), F.y(R.y0 + 1.6), F.size(2.4, 7.0), { color: DUST, weight: 700, align: 'left' });
+  put(ctx, 'mL poured', F.x(R.x1), F.y(f.size.h - 1.6), F.size(2.2, 6.6), { color: DUST, align: 'right' });
   const all = p.series.map((s, k) => ({ s, rows: curveRows(state, p.burette, s.sample) }));
   all.forEach(({ s, rows }, k) => {
     const ink = CURVE_INKS[k % CURVE_INKS.length];
-    ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1.6, F.len(0.4)); ctx.beginPath();
+    ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1.8, F.len(0.45)); ctx.beginPath();
     rows.forEach((r, i) => { const px = F.x(X(r.x)); const py = F.y(Y(r.y)); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
     ctx.stroke(); ctx.lineWidth = 1;
     ctx.fillStyle = ink;
-    for (const r of rows) { ctx.beginPath(); ctx.arc(F.x(X(r.x)), F.y(Y(r.y)), Math.max(2, F.len(0.7)), 0, Math.PI * 2); ctx.fill(); }
+    for (const r of rows) { ctx.beginPath(); ctx.arc(F.x(X(r.x)), F.y(Y(r.y)), Math.max(2.2, F.len(0.75)), 0, Math.PI * 2); ctx.fill(); }
     if (p.series.length > 1) {
-      const lx = R.x0 + 2 + k * 30; const ly = R.y0 + 2.4;
-      ctx.fillStyle = ink; ctx.fillRect(F.x(lx), F.y(ly) - 3, 6, 6);
-      put(ctx, ionText(s.name), F.x(lx + 1.6), F.y(ly), F.size(2.0, 6), { align: 'left', color: DUST });
+      const lx = R.x0 + 2 + k * 32; const ly = R.y0 + 2.8;
+      ctx.fillStyle = ink; ctx.fillRect(F.x(lx), F.y(ly) - 3.5, 7, 7);
+      put(ctx, ionText(s.name), F.x(lx + 2.0), F.y(ly), F.size(2.5, 7.2), { align: 'left', color: '#f0eae0', weight: 700 });
     }
   });
   if (p.mark) {
     const m = f.dials.mark.value;
     if (m > 0) {
-      ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1.6, F.len(0.4));
+      ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1.8, F.len(0.45));
       ctx.beginPath(); ctx.moveTo(F.x(X(m)), F.y(R.y0)); ctx.lineTo(F.x(X(m)), F.y(R.y1)); ctx.stroke(); ctx.lineWidth = 1;
     }
   }
   if (p.log) {
     const lx = f.size.w - LOG_W + 1;
-    put(ctx, 'mL', F.x(lx + 1), F.y(R.y0 + 1.6), F.size(2.0, 6), { align: 'left', color: DIM });
-    all.forEach(({ s }, k) => put(ctx, ionText(s.short || s.name), F.x(lx + 11 + k * 8), F.y(R.y0 + 1.6), F.size(1.8, 5.6), { align: 'left', color: CURVE_INKS[k % 2], maxW: F.len(8) }));
-    const n = Math.floor((R.h - 4) / 3.4);
+    put(ctx, 'mL', F.x(lx + 1), F.y(R.y0 + 1.6), F.size(2.2, 6.6), { align: 'left', color: DUST, weight: 700 });
+    all.forEach(({ s }, k) => put(ctx, ionText(s.short || s.name), F.x(lx + 11 + k * 8), F.y(R.y0 + 1.6), F.size(2.1, 6.4), { align: 'left', color: CURVE_INKS[k % 2], weight: 700, maxW: F.len(8) }));
+    const n = Math.floor((R.h - 4) / 3.8);
     const base = all[0].rows;
     const first = Math.max(0, base.length - n);
     base.slice(first).forEach((r, i) => {
-      const y = R.y0 + 5.6 + i * 3.4;
-      put(ctx, mlText(r.x), F.x(lx + 1), F.y(y), F.size(2.0, 6), { align: 'left', color: DUST });
+      const y = R.y0 + 5.8 + i * 3.8;
+      put(ctx, mlText(r.x), F.x(lx + 1), F.y(y), F.size(2.3, 6.8), { align: 'left', color: '#f0eae0' });
       all.forEach(({ rows }, k) => {
         const q = rows[first + i];
-        if (q) put(ctx, fmt(q.y, 2), F.x(lx + 11 + k * 8), F.y(y), F.size(2.0, 6), { align: 'left', color: CURVE_INKS[k % 2] });
+        if (q) put(ctx, fmt(q.y, 2), F.x(lx + 11 + k * 8), F.y(y), F.size(2.3, 6.8), { align: 'left', color: CURVE_INKS[k % 2], weight: 600 });
       });
     });
   }
@@ -99,10 +99,10 @@ registerFixture('phcurve', { paint: paintCurve });
  * The plotter. `burette`: the burette fixture's id; `series`: [{ sample, name, short? }] (flasks to draw, in ink order); `xMax` the mL the
  * axis runs to; `mark: true` adds the volume mark dial; `log: true` the list of readings. At least 36 by 22 units of plot.
  */
-export function curveFixture(id, at, { burette, series, xMax = 50, xTick = 10, mark = false, log = false, w = 96, h = 64, title = 'Curve' } = {}) {
+export function curveFixture(id, at, { burette, series, xMax = 50, xTick = 10, mark = false, markStep = 0.5, log = false, w = 96, h = 64, title = 'Curve' } = {}) {
   return {
     id, kind: 'phcurve', label: title, at: { ...at }, size: { w, h }, noRun: true,
-    dials: mark ? { mark: { min: 0, max: xMax, step: 0.5, value: 0, label: 'Mark at (mL)' } } : {},
+    dials: mark ? { mark: { min: 0, max: xMax, step: markStep, value: 0, label: 'Mark at (mL)' } } : {},
     props: { backdrop: true, burette, series, xMax, xTick, mark, log }
   };
 }

@@ -94,20 +94,20 @@ export const STAGES = [
   {
     id: 's1-reference',
     title: 'Against a Reference',
-    briefing: { speaker: SPEAKER, body: 'Each electrode is measured against the same hydrogen electrode, which is set at 0 V. The reading is the metal\'s standard reduction potential, E°.' },
-    prompt: 'Order these metals from lowest to highest standard reduction potential.',
+    briefing: { speaker: SPEAKER, body: 'Voltage measures how strongly a half-reaction pulls electrons. Each metal is measured against a hydrogen reference (0 V); that reading is its standard reduction potential, E°.' },
+    prompt: 'Drag each metal into the board seat to read it, then order all four on the rail from lowest reading to highest.',
     widget,
     table: boardTable(
       S1_METALS.map((m, i) => electrodePiece(`e-${m}`, m, { x: 112 + (i % 2) * 34, y: 10 + Math.floor(i / 2) * 20 })),
       {
         w: 176, h: 108,
-        zones: { rail: { at: { x: 88, y: 98 }, size: { w: 150, h: 12 }, first: 'Lowest reading', last: 'Highest reading', items: [], start: [] } }
+        zones: { rail: { at: { x: 88, y: 98 }, size: { w: 150, h: 12 }, first: 'Lowest reading', last: 'Highest reading', items: [], start: [], slots: 4 } }
       }
     ),
     hints: [
       'Drag an electrode into the seat to read it, then drag the four electrodes onto the rail.',
-      'Compare the signed readings on the strip, each taken against the same reference.',
-      'Line the cards up from the lowest reading to the highest, negative readings first.'
+      'Compare the positive and negative voltages recorded on the board.',
+      'Line the electrodes up from the lowest reading to the highest, negative readings first.'
     ],
     check(state) {
       const t = state.table;
@@ -126,7 +126,7 @@ export const STAGES = [
       return {
         log: 'Each metal read its own voltage against the hydrogen reference.',
         title: 'Standard Reduction Potential',
-        body: `${r.join(', ')}. The higher the E°, the more readily the metal's ions gain electrons.`
+        body: `${r.join(', ')}. The lower the E° reading, the more readily the metal gives electrons away—the same left-to-right order as the activity series.`
       };
     }
   },
@@ -135,7 +135,7 @@ export const STAGES = [
   {
     id: 's2-cell',
     title: 'A Cell Nobody Wired',
-    briefing: { speaker: SPEAKER, body: 'A cell\'s voltage is the gap between its two electrodes\' potentials: the higher one is the cathode.' },
+    briefing: { speaker: SPEAKER, body: 'A cell\'s voltage is the gap between its two electrodes\' potentials: subtract the lower (anode) potential from the higher (cathode) potential.' },
     prompt: 'What is the voltage, in volts, of a cell made from magnesium and silver?',
     widget,
     entry: { id: 'e', label: 'Cell voltage', unit: 'V' },
@@ -143,7 +143,7 @@ export const STAGES = [
     hints: [
       'Read both electrodes on the board, then type the voltage of the cell in the field.',
       'Compare the two readings: the cell takes its voltage from how far apart they are.',
-      'Find how far apart the two readings are on one scale; one of them is below zero.'
+      'Subtract the negative magnesium reading from the positive silver reading to find the total gap.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'e');
@@ -154,7 +154,7 @@ export const STAGES = [
       const near = x => Math.abs(v - x) <= 0.03;
       if (near(hi + lo)) return { ok: false, msg: `${fmt(hi + lo, 2)} is the two readings added together, ${voltText(lo)} and ${voltText(hi)}.` };
       if (near(-want)) return { ok: false, msg: 'That is the difference taken the other way round.' };
-      if (near(hi) || near(lo) || near(-lo)) return { ok: false, msg: 'That is one electrode\'s reading by itself; the cell uses both.' };
+      if (near(hi) || near(lo) || near(-lo)) return { ok: false, msg: 'That is one electrode\'s reading by itself; subtract the lower reading from the higher one to find the gap.' };
       if (near(2 * want)) return { ok: false, msg: 'That is twice the gap between the two readings.' };
       return { ok: false, msg: `The board read ${voltText(lo)} V for magnesium and ${voltText(hi)} V for silver; that does not make ${fmt(v, 2)} V.` };
     },
@@ -172,7 +172,7 @@ export const STAGES = [
   {
     id: 's3-lamp',
     title: 'Which Cells Run',
-    prompt: 'Which cells run by themselves?',
+    prompt: 'Tap the lamp on each cell you predict will light, then press Run on all four cells to test.',
     widget,
     table: (() => {
       const rigs = S3_CELLS.map(([id, l, r, name], i) => rigFixture(id, { x: 26 + (i % 2) * 52, y: 26 + Math.floor(i / 2) * 50 }, { left: l, right: r, title: name, markable: true }));
@@ -183,7 +183,7 @@ export const STAGES = [
     hints: [
       'Tap the lamp of each cell you predict will light, then press "Run" on each cell.',
       'Compare each cell\'s voltmeter reading with its lamp, and look at which metal stands on which side.',
-      'Look at the sign of each reading: the lamp follows it.'
+      'Check the sign of each voltage: only a positive voltage lights the lamp.'
     ],
     check(state) {
       const t = state.table;
@@ -214,23 +214,23 @@ export const STAGES = [
     title: 'Twice Over',
     // A PREDICT STAGE: no cell is on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'A zinc–copper cell reads 1.10 V: what does it read when every coefficient in its equation is doubled?',
+    prompt: 'When a 1.10 V zinc–copper cell reacts twice as much metal, what does it read?',
     widget,
     table: cellTable({
       pieces: [
-        tag('st1', 'Zn + Cu²⁺ → Zn²⁺ + Cu reads 1.10 V', { x: 40, y: 9 }),
-        tag('st2', '2 Zn + 2 Cu²⁺ → 2 Zn²⁺ + 2 Cu reads ?', { x: 112, y: 9 }),
-        note('same', GUESS.same, { x: 30, y: 30 }),
-        note('double', GUESS.double, { x: 80, y: 30 }),
-        note('half', GUESS.half, { x: 30, y: 50 }),
-        note('zero', GUESS.zero, { x: 80, y: 50 })
+        tag('st1', 'Zn + Cu²⁺ → Zn²⁺ + Cu reads 1.10 V', { x: 40, y: 14 }),
+        tag('st2', '2 Zn + 2 Cu²⁺ → 2 Zn²⁺ + 2 Cu reads ?', { x: 112, y: 14 }),
+        note('same', GUESS.same, { x: 30, y: 34 }),
+        note('double', GUESS.double, { x: 80, y: 34 }),
+        note('half', GUESS.half, { x: 30, y: 54 }),
+        note('zero', GUESS.zero, { x: 80, y: 54 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 128, y: 40 }, size: { w: 36, h: 14 } }] }
-    }, { w: 150, h: 62 }),
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 132, y: 44 }, size: { w: 46, h: 16 } }] }
+    }, { w: 160, h: 66 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Picture what each voltage counts, and what changes when twice as much reacts.',
-      'Ask whether the voltage depends on how many electrons there are.'
+      'Drag one prediction card into My prediction, then press Submit.',
+      'Think about whether voltage measures energy per electron or total energy.',
+      'Does doubling the amount of metal change how hard each electron is pulled?'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -268,7 +268,7 @@ export const STAGES = [
     hints: [
       'Press "Run" at both settings of the equation dial, then set the answer dial.',
       'Compare the two lines kept on the cell: the voltage and the energy released for each setting.',
-      'See which of the two numbers is the same in both lines and which one follows the number of electrons moved.'
+      'Check which number stays constant and which one doubles with the equation.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -297,10 +297,10 @@ export const STAGES = [
     title: 'The Energy Released',
     briefing: {
       speaker: SPEAKER,
-      body: 'Electric charge is counted in coulombs (C), and the Faraday constant F is 96,485 C for one mole of electrons. One volt is one joule (J) of energy per coulomb, so ΔG° = −nFE° gives the free energy change.',
-      worked: ['2 mol e⁻ × 96,485 C/mol = 192,970 C', '× 1.10 V = 212,000 J = 212 kJ']
+      body: 'Three steps to energy: (1) find total charge in coulombs using the Faraday constant F = 96,485 C per mole of electrons; (2) multiply by volts (1 V = 1 J/C) to get joules; (3) divide by 1000 for kJ. In symbols: ΔG° = −nFE°.',
+      worked: ['1) Charge: 1 mol e⁻ × 96,485 C/mol = 96,485 C', '2) Energy: 96,485 C × 0.80 V = 77,188 J', '3) In kJ: 77,188 ÷ 1000 ≈ 77 kJ']
     },
-    prompt: 'How much energy, in kJ, is released when one mole of magnesium reacts with copper(II) ions?',
+    prompt: 'After running the cell (n = 2 electrons per Mg), how much energy, in kJ, is released per mole?',
     widget,
     entry: { id: 'kj', label: 'Energy released', unit: 'kJ' },
     table: cellTable({
@@ -311,7 +311,7 @@ export const STAGES = [
     }, { w: 164, h: 84 }),
     hints: [
       'Press "Run" on the cell and type the energy in kJ in the field.',
-      'Compare the equation printed under the cell with the voltage on its meter.',
+      'Read the voltage on the meter and note n = 2 from the equation.',
       'Use the same steps as the worked case in the briefing, with this cell\'s electrons and voltage.'
     ],
     check(state) {
@@ -377,7 +377,7 @@ export const STAGES = [
       return {
         log: 'A large cell voltage means the reaction goes almost to completion.',
         title: 'Voltage and K',
-        body: `For Zn + 2 Ag⁺ the cell gives n = ${n} electrons and E° = ${fmt(E0, 2)} V, so log K = ${fmt(logK(E0, n), 1)}, a K near 10^${fmt(logK(E0, n), 0)}.`
+        body: `For Zn + 2 Ag⁺ the cell gives n = ${n} electrons and E° = ${fmt(E0, 2)} V, so log K = ${fmt(logK(E0, n), 1)}, a K near 10⁵³.`
       };
     }
   }

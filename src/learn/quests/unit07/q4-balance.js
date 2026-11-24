@@ -74,7 +74,7 @@ const PROPANE_COEFS = smallestCoefs(EQ_PROPANE);
 const WATER_COEFS = smallestCoefs(EQ_WATER);
 const O_ROW = atomLedger(parseEquation(EQ_WATER)).rows.find(r => r.el === 'O');
 
-const GUESS = { chg: 'Change the small 2 in H₂O', front: 'Put a number in front of a formula', add: 'Add an O atom on the right' };
+const GUESS = { chg: 'Change the small number in H₂O', front: 'Put a number in front of a formula', add: 'Add a separate O atom on the right' };
 
 /* ------------------------------------------------------------------
    HELPERS
@@ -83,11 +83,11 @@ const GUESS = { chg: 'Change the small 2 in H₂O', front: 'Put a number in fron
 const board = t => boardRead(t, 'bd');
 const untouched = r => r.coefs.every(n => n === 1) && !Object.keys(r.subs).length;
 const rowOf = (rows) => rows.find(r => r.left !== r.right);
-const countsMsg = (row) => `The ledger counts ${pretty(row.el)}: ${row.left} on the left and ${row.right} on the right.`;
+const countsMsg = (row) => `${pretty(row.el)} does not match: ${row.left} on the left and ${row.right} on the right.`;
 
-/** A balanced-or-not verdict for a board stage: the ledger's first row that disagrees, named by what it prints. */
+/** A balanced-or-not verdict for a board stage: the first atom/group row that disagrees. */
 function ledgerMiss(t, lid = 'led') {
-  const { rows } = ledgerRead(t, lid);
+  const rows = t.fixtures[lid] ? ledgerRead(t, lid).rows : atomLedger(board(t).plan.eq).rows;
   const row = rowOf(rows);
   return row ? countsMsg(row) : null;
 }
@@ -98,33 +98,34 @@ function ledgerMiss(t, lid = 'led') {
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const b = eqBench({ eq: EQ_WATER, dialed: [], lex: 0, ledger: false });
+    const b = eqBench({ eq: EQ_WATER, dialed: [], lex: 1, ledger: false });
     return {
       id: 's1-count',
       title: 'Count the Atoms',
       briefing: {
         speaker: SPEAKER,
-        body: 'A chemical equation writes a change: the reactants before the arrow, the products after it. The particle view draws the molecules the equation names.'
+        fx: 'bd',
+        body: 'A chemical equation records a reaction: reactants go before the arrow, and products go after it. The particle view draws the exact molecules in the equation.'
       },
-      prompt: 'How many oxygen atoms does this equation show before the change, and how many after?',
+      prompt: 'In H₂ + O₂ → H₂O, how many oxygen atoms appear before and after the arrow?',
       widget,
-      table: potTable({ fixtures: [...b.fixtures, tallyFixture('tally', { x: 39, y: 37 })], zones: { slots: [] } }),
+      table: potTable({ fixtures: [...b.fixtures, tallyFixture('tally', { x: 39, y: 40 })], zones: { slots: [] } }),
       hints: [
-        'Look at the particle view and the two dials on the tally.',
-        'Count the oxygen circles in the left half of the particle view, then in the right half.',
-        'Each cluster is one molecule, so add up the oxygen atoms across every cluster on a side.'
+        'Look at the equation board, the particle view, and the two dials on the tally.',
+        'Count the oxygen atoms on the left of the particle view, then on the right.',
+        'Each cluster is one molecule, so add up the oxygen atoms across every molecule on each side.'
       ],
       check(state) {
         const v = tallyRead(state.table, 'tally');
         if (v.before === 0 && v.after === 0) return { ok: false, notYet: true, msg: 'Set the tally dials to your count.' };
-        if (v.before !== O_ROW.left) return { ok: false, msg: 'The left half of the particle view does not show that many oxygen atoms.' };
-        if (v.after !== O_ROW.right) return { ok: false, msg: 'The right half of the particle view does not show that many oxygen atoms.' };
+        if (v.before !== O_ROW.left) return { ok: false, msg: 'The left side of the particle view does not show that many oxygen atoms.' };
+        if (v.after !== O_ROW.right) return { ok: false, msg: 'The right side of the particle view does not show that many oxygen atoms.' };
         return { ok: true };
       },
       reward: {
         log: 'H₂ + O₂ → H₂O shows 2 oxygen atoms before and 1 after.',
         title: 'Reactants and Products',
-        body: 'Two oxygen atoms in the reactants and one in the product. Atoms are not destroyed in a reaction, so the chemical equation is not yet right.'
+        body: 'There are 2 oxygen atoms in the reactants and 1 in the product. Atoms cannot disappear, so this chemical equation does not match yet.'
       }
     };
   })(),
@@ -134,12 +135,12 @@ export const STAGES = [
     id: 's2-predict',
     title: 'A Way to Agree',
     predict: true,
-    prompt: 'How would you make the oxygen atoms agree on both sides of H₂ + O₂ → H₂O?',
+    prompt: 'How can you make the oxygen atoms match on both sides of H₂ + O₂ → H₂O?',
     widget,
     table: potTable({
-      pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 44, y: 10 + Math.floor(i / 2) * 16 })),
+      pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 44, y: 12 + Math.floor(i / 2) * 18 })),
       fixtures: [plaqueFixture('eq', 'Equation', { x: 116, y: 12 }, ['H₂ + O₂ → H₂O'], { w: 50 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 116, y: 38 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 116, y: 38 }, size: { w: 42, h: 16 } }] }
     }),
     hints: [
       'Look at the three cards and the prediction slot.',
@@ -148,7 +149,7 @@ export const STAGES = [
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the prediction slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -170,17 +171,18 @@ export const STAGES = [
       title: 'Make Them Agree',
       briefing: {
         speaker: SPEAKER,
+        fx: 'bd',
         body: 'The number in front of a formula is a coefficient. The small number inside a formula is a subscript.'
       },
       get prompt() {
         const g = recall(QUEST_KEY);
         const pre = g && GUESS[g] ? `You chose "${GUESS[g]}". ` : '';
-        return `${pre}Which numbers can change to balance the equation without changing the substances?`;
+        return `${pre}Which coefficients give both sides the same number of each atom?`;
       },
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Turn the dials on the board and watch the atom ledger and particle view.',
+        'Look at the equation board, the atom ledger, and the particle view.',
         'After each turn of a dial, compare the two columns of the ledger and look at what the particle view redraws.',
         'One kind of dial changes how many molecules there are, and the other changes which molecule it is.'
       ],
@@ -200,7 +202,7 @@ export const STAGES = [
         return {
           log: '2 H₂ + O₂ → 2 H₂O agrees; H₂ + O₂ → H₂O₂ is a different molecule.',
           title: 'The Coefficient',
-          body: `${verdict}Coefficients count molecules, so changing them keeps the substances. Changing a subscript made a different substance.`
+          body: `${verdict}2 H₂ + O₂ → 2 H₂O. Coefficients change how many molecules you have without changing the substance; changing a subscript makes a different compound.`
         };
       }
     };
@@ -208,17 +210,17 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const b = eqBench({ eq: EQ_FURNACE, dialed: 'all', lex: 2, ledger: false, pot: { eq: EQ_FURNACE, feed: FURNACE_POT }, boardTitle: 'Equation' });
+    const b = eqBench({ eq: EQ_FURNACE, dialed: 'all', lex: 2, ledger: 'atoms', pot: { eq: EQ_FURNACE, feed: FURNACE_POT }, boardTitle: 'Equation' });
     return {
       id: 's4-furnace',
       title: 'The Furnace Equation',
-      prompt: 'Which balanced equation describes the change in the particle view?',
+      prompt: 'Which balanced equation matches the reaction shown in the particle view?',
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Look at the particle view and turn the four dials on the board.',
-        'Compare what the particle view shows before the change with what it shows after, one substance at a time.',
-        'Only molecules that changed belong in the equation: a substance still there afterwards was not all used.'
+        'Look at the particle view before and after the reaction and at the atom ledger.',
+        'Compare what the particle view shows before the reaction with what it shows after, one substance at a time.',
+        'Only include molecules that actually reacted; leftover molecules do not belong in the equation.'
       ],
       check(state) {
         const t = state.table;
@@ -229,15 +231,15 @@ export const STAGES = [
         for (let i = 0; i < sp.length; i++) {
           if (r.coefs[i] === want[i]) continue;
           const left = FURNACE.after.find(([f]) => f === sp[i].f);
-          if (i < r.nl && left) return { ok: false, msg: `The particle view shows ${left[1]} ${pretty(sp[i].f)} still there after the change.` };
-          return { ok: false, msg: `The board does not match the number of ${pretty(sp[i].f)} in the particle view.` };
+          if (i < r.nl && left) return { ok: false, msg: `The particle view shows ${left[1]} ${pretty(sp[i].f)} still there after the reaction.` };
+          return { ok: false, msg: `The board does not match how many ${pretty(sp[i].f)} reacted in the particle view.` };
         }
         return { ok: true };
       },
       reward: {
         log: 'The furnace equation: Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.',
         title: 'The Furnace Equation',
-        body: 'Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂. The carbon monoxide still there afterwards did not react, so it is not in the equation.'
+        body: 'Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂. The leftover carbon monoxide (CO) did not react, so it is left out of the equation.'
       }
     };
   })(),
@@ -249,16 +251,16 @@ export const STAGES = [
     return {
       id: 's5-states',
       title: 'Which State',
-      prompt: 'What state is each substance in?',
+      prompt: 'In 2 Na + 2 H₂O → 2 NaOH + H₂, what physical state is each substance in?',
       widget,
       table: potTable({
-        pieces: order.map((s, i) => stateTile(`t_${s}`, s, { x: 12 + i * 19, y: 54 })),
+        pieces: order.map((s, i) => stateTile(`t_${s}`, s, { x: 11 + i * 19.5, y: 54 })),
         fixtures: b.fixtures,
         zones: { slots: b.slots }
       }),
       hints: [
-        'Look at the particle view and drag a state tile under each substance.',
-        'Look at how the particles of each substance sit in the particle view: locked in rows, jumbled, far apart or among water.',
+        'Look at how each substance\'s particles sit in the particle view.',
+        'Compare each row in the particle view with the cues on the state tiles: rows, jumbled, far apart, or in water.',
         'Use how the particles are arranged to decide whether each substance is solid, liquid, gas or in water.'
       ],
       check(state) {
@@ -277,24 +279,24 @@ export const STAGES = [
       reward: {
         log: '2 Na(s) + 2 H₂O(l) → 2 NaOH(aq) + H₂(g).',
         title: 'State Symbols',
-        body: 'A state symbol in brackets says each state: (s) solid, (l) liquid, (g) gas, (aq) dissolved in water. Those match what the particle view shows.'
+        body: 'A state symbol in parentheses shows each state: (s) solid, (l) liquid, (g) gas, and (aq) dissolved in water.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const b = eqBench({ eq: EQ_PROPANE, dialed: 'all', lex: 2, ledger: 'atoms', boardTitle: 'Equation' });
+    const b = eqBench({ eq: EQ_PROPANE, dialed: 'all', lex: 2, ledger: 'check', boardTitle: 'Equation' });
     return {
       id: 's6-propane',
       title: 'Propane',
-      prompt: 'What coefficients balance propane burning in oxygen?',
+      prompt: 'Which coefficients balance propane burning in oxygen (C₃H₈ + O₂ → CO₂ + H₂O)?',
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Turn the four dials on the board and read the atom ledger.',
-        'Compare the two columns of the ledger one atom at a time, and see which rows move when each dial turns.',
-        'Balance the atoms that appear in only one substance on each side first, leaving oxygen for last.'
+        'Look at the carbon, hydrogen, and oxygen atoms on each side of the particle view.',
+        'Start with carbon and hydrogen, which each appear in one product; oxygen is in both products, so set it last.',
+        'Balance carbon first, then hydrogen, and count total oxygen on the right to set O₂ last.'
       ],
       check(state) {
         const t = state.table;
@@ -306,7 +308,7 @@ export const STAGES = [
       reward: {
         log: 'C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O.',
         title: 'Burning Propane',
-        body: 'C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O. Oxygen is in both products, so it is set last.'
+        body: 'C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O. Because oxygen appears in both products, balancing it last is easiest.'
       }
     };
   })(),
@@ -317,7 +319,7 @@ export const STAGES = [
     return {
       id: 's7-groups',
       title: 'Groups That Stay Whole',
-      prompt: 'What coefficients balance this equation, counting each ringed group as one piece?',
+      prompt: 'Which coefficients balance this equation if you count each ringed group as one unit?',
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
@@ -335,7 +337,7 @@ export const STAGES = [
       reward: {
         log: '3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 6 H₂O.',
         title: 'Groups That Stay Whole',
-        body: 'PO₄ stays whole, so it is balanced as a single piece: 3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 6 H₂O.'
+        body: 'Because PO₄ stays intact on both sides, you can balance it as one unit: 3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 6 H₂O.'
       }
     };
   })(),
@@ -365,7 +367,7 @@ export const STAGES = [
       reward: {
         log: 'P₄ + 5 O₂ → 2 P₂O₅.',
         title: 'An Unknown Formula',
-        body: 'Four phosphorus and ten oxygen atoms went in and two bags came out, so each holds P₂O₅.'
+        body: 'Four phosphorus and ten oxygen atoms go in, and two identical bags come out, so each bag holds P₂O₅.'
       }
     };
   })()
@@ -378,7 +380,7 @@ const NOTES = {
   3: ['Turn the board dials and read the ledger.'],
   4: ['Turn the board dials. The particle view cannot be changed.'],
   5: ['Drag a tile into the slot under each substance.'],
-  6: ['Turn the board dials and read the ledger.'],
+  6: ['Turn the board dials and count atoms in the particle view.'],
   7: ['Turn the board dials and read the ledger.'],
   8: ['Turn the formula dials to build the formula.']
 };
@@ -392,7 +394,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A balanced equation has the same atoms on both sides, and the only way to get there is with the coefficients in front. The furnace equation is Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
+      body: 'A balanced equation has the same number of each atom on both sides, achieved only by adjusting coefficients. The furnace reaction is Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
     }
   ]
 };

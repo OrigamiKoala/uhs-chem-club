@@ -112,7 +112,7 @@ export const STAGES = [
   {
     id: 's1-coat',
     title: 'Coated or Clean',
-    prompt: 'Which solution\'s ions gain electrons from both of the other metals?',
+    prompt: 'Dip each strip in each beaker, then tap the beaker whose ions take electrons from both of the other two metals.',
     widget,
     table: (() => {
       const d = rack(S1_METALS, { x: 49, y: 33 });
@@ -154,7 +154,8 @@ export const STAGES = [
   {
     id: 's2-rank',
     title: 'Ranking Four Metals',
-    prompt: 'Which of zinc, iron, lead and copper loses electrons most readily and which least?',
+    briefing: { speaker: 'Vess', body: 'A metal that loses electrons most easily will coat in the most solutions.' },
+    prompt: 'Dip the strips in the beakers, then order them on the rail from most ready to lose electrons to least.',
     widget,
     table: (() => {
       const d = rack(S2_METALS, { x: 64, y: 33 });
@@ -163,7 +164,7 @@ export const STAGES = [
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: [], start: [] }
+          rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: [], start: [], slots: 4 }
         }
       }, { w: 200, h: 122 });
     })(),
@@ -180,7 +181,9 @@ export const STAGES = [
       const E = id => METALS[id.slice(2)].E0;
       const k = order.findIndex((id, i) => i > 0 && E(id) < E(order[i - 1]));
       const a = order[k - 1].slice(2); const b = order[k].slice(2);
-      return { ok: false, msg: `${Nm(a)} sits left of ${nm(b)}. ${dipLine(t, S2_METALS, b, a)}` };
+      const res = triedIn({ fixtures: t.fixtures, pieces: t.pieces }, 'dip', bid(S2_METALS, a), b);
+      if (!res) return { ok: false, msg: `Dip the ${nm(b)} strip in the ${solutionOf(a)} to compare ${nm(a)} and ${nm(b)}.` };
+      return { ok: false, msg: `${Nm(a)} sits left of ${nm(b)}, but ${dipLine(t, S2_METALS, b, a)}` };
     },
     get reward() {
       const o = S2_WANT;
@@ -198,23 +201,23 @@ export const STAGES = [
     title: 'Back the Other Way',
     // A PREDICT STAGE: no rack is on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'A zinc strip is coated with copper in a copper solution; what does a copper strip do in a zinc solution?',
+    prompt: 'When zinc coats with copper in copper solution, what will copper do in zinc solution?',
     widget,
     table: cellTable({
       pieces: [
-        tag('st1', 'Zinc strip in copper solution: coated with copper', { x: 40, y: 9 }),
-        tag('st2', 'Copper strip in zinc solution: ?', { x: 112, y: 9 }),
-        note('coat', GUESS.coat, { x: 30, y: 30 }),
-        note('clean', GUESS.clean, { x: 80, y: 30 }),
-        note('dissolve', GUESS.dissolve, { x: 30, y: 50 }),
-        note('swap', GUESS.swap, { x: 80, y: 50 })
+        tag('st1', 'Zinc strip in copper solution: coated with copper', { x: 40, y: 14 }),
+        tag('st2', 'Copper strip in zinc solution: ?', { x: 112, y: 14 }),
+        note('coat', GUESS.coat, { x: 30, y: 34 }),
+        note('clean', GUESS.clean, { x: 80, y: 34 }),
+        note('dissolve', GUESS.dissolve, { x: 30, y: 54 }),
+        note('swap', GUESS.swap, { x: 80, y: 54 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 128, y: 40 }, size: { w: 36, h: 14 } }] }
-    }, { w: 150, h: 62 }),
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 132, y: 44 }, size: { w: 46, h: 16 } }] }
+    }, { w: 160, h: 66 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Picture the zinc strip in the copper solution, then the copper strip in the zinc solution.',
-      'Ask whether a swap that happens one way must happen the other way too.'
+      'Drag one prediction card into My prediction, then press Submit.',
+      'Think about which metal gave electrons to which in the first beaker.',
+      'If zinc gives electrons to copper, can copper give electrons back to zinc?'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -236,7 +239,7 @@ export const STAGES = [
   {
     id: 's4-test',
     title: 'Copper in Zinc',
-    get prompt() { return guessLine('What happens to a copper strip in a zinc solution?', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Test your prediction: dip the copper strip in the zinc solution and choose what happens.', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const d = rack(S4_METALS, { x: 34, y: 33 });
@@ -261,7 +264,7 @@ export const STAGES = [
       if (v === 2) return { ok: true };
       const res = triedIn({ fixtures: t.fixtures, pieces: t.pieces }, 'dip', bid(S4_METALS, 'zn'), 'cu');
       if (!res) return { ok: false, msg: `The copper strip has not been dipped in the ${solutionOf('zn')} yet.` };
-      return { ok: false, msg: `That does not match the window of the copper strip in the ${solutionOf('zn')}; compare it with the zinc strip in the ${solutionOf('cu')}.` };
+      return { ok: false, msg: `That does not match what you saw when dipping the copper strip in the ${solutionOf('zn')}.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
@@ -278,7 +281,8 @@ export const STAGES = [
   {
     id: 's5-hydrogen',
     title: 'Hydrogen in the List',
-    prompt: 'Order these five metals and hydrogen from loses electrons most readily to least readily.',
+    briefing: { speaker: 'Vess', body: 'Acid holds H⁺ ions. Any metal that loses electrons more readily than hydrogen turns H⁺ into H₂ gas bubbles—place H₂ on the rail between the metals that bubble and those that stay clean.' },
+    prompt: 'Order these five metals and hydrogen (H₂) on the rail from most ready to lose electrons to least.',
     widget,
     table: (() => {
       const d = rack(['acid', 'zn', 'fe', 'cu', 'ag'], { x: 79, y: 33 });
@@ -290,7 +294,7 @@ export const STAGES = [
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 114 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: [], start: [] }
+          rail: { at: { x: 88, y: 114 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: [], start: [], slots: 6 }
         }
       }, { w: 192, h: 128 });
     })(),
@@ -330,18 +334,19 @@ export const STAGES = [
   {
     id: 's6-nails',
     title: 'Iron and a Partner',
-    prompt: 'Which metals, wired to an iron nail, keep it from rusting in brine?',
+    briefing: { speaker: 'Vess', body: 'Rusting happens when iron loses electrons in salty water (brine). Each iron nail is wired to a partner metal; blue spots show where iron is rusting.' },
+    prompt: 'Press Leave a Week, then tap the clean iron nails (no blue spots) on the Model.',
     widget,
     table: (() => {
       const n = nailsFixture('nails', { x: 64, y: 31 }, { partners: S6_PARTNERS });
       return cellTable({
         fixtures: [n]
-      }, { w: 204, h: 114 });
+      }, { w: 132, h: 66 });
     })(),
     hints: [
-      'Press "Leave a Week", then watch which nails stay free of blue spots.',
+      'Press "Leave a Week", then tap the nails on the Model that stay free of blue spots.',
       'Compare the nails after the week: the blue spots show where iron is dissolving.',
-      'Compare the partners that kept iron from dissolving with their place in the activity series.'
+      'A partner higher in the activity series loses electrons instead of iron, keeping the nail clean.'
     ],
     check(state) {
       const t = state.table;
@@ -380,7 +385,7 @@ export const STAGES = [
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: S7_KNOWN.map(m => `s-${m}`), start: S7_KNOWN.map(m => `s-${m}`) }
+          rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: S7_KNOWN.map(m => `s-${m}`), start: S7_KNOWN.map(m => `s-${m}`), slots: 5 }
         }
       }, { w: 176, h: 108 });
     })(),
@@ -417,20 +422,20 @@ export const STAGES = [
   {
     id: 's8-mix',
     title: 'Take Out the Copper',
-    prompt: 'Which metal removes copper(II) ions from the solution and leaves the iron(II) ions?',
+    prompt: 'Dip the strips to find which metal displaces only copper(II) ions and leaves iron(II) ions, then place it in Answer.',
     widget,
     table: (() => {
       const d = rack(S8_STRIPS.map(() => 'mix'), { x: 64, y: 33 });
       return cellTable({
         pieces: strips(S8_STRIPS, { x: 19, y: 71 }, 30, { row: true, caption: false }),
         fixtures: [d.fixture],
-        zones: { slots: [...d.slots, { id: 'answer', label: 'Chosen strip', at: { x: 64, y: 96 }, size: { w: 30, h: 12 } }] }
+        zones: { slots: [...d.slots, { id: 'answer', label: 'Answer', at: { x: 64, y: 96 }, size: { w: 30, h: 12 } }] }
       }, { w: 176, h: 112 });
     })(),
     hints: [
-      'Dip each strip in a beaker, then lay the strip you choose in the answer seat.',
+      'Dip each strip in a beaker, then lay the strip you choose in the Answer slot.',
       'Compare the coating on each strip, and the ions left in its beaker, with the copper and iron ions at the start.',
-      'A metal displaces only ions of metals less active than itself in the activity series.'
+      'A metal displaces only ions of metals below it in the activity series.'
     ],
     check(state) {
       const t = state.table;
@@ -447,7 +452,7 @@ export const STAGES = [
       return {
         log: 'One strip took out the copper alone.',
         title: 'A New Case',
-        body: `${Nm(S8_ANSWER)} took out the copper only; ${list(both.map(nm))} took out the iron too, and ${list(none.map(nm))} neither. A strip displaces only the less active metals.`
+        body: `${Nm(S8_ANSWER)} took out the copper(II) ions alone and left the iron(II) ions behind. A metal strip displaces only ions of metals below it in the activity series.`
       };
     }
   }
@@ -455,7 +460,7 @@ export const STAGES = [
 
 /** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
 attachScenes(STAGES, {
-  compact: [6], inside: [1, 4, 5, 7], demos: { 2: 'zn-in-cu' },
+  compact: [6], inside: [1, 4, 7], demos: { 2: 'zn-in-cu' },
   own: { 5: { sitesKey: 'nails', dials: Object.fromEntries(S6_PARTNERS.map((m, i) => [`n${i}`, { min: 0, max: 1, step: 1, value: 0, label: `Nail ${i + 1}` }])) } }
 });
 

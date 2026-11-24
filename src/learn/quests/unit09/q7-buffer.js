@@ -95,17 +95,22 @@ export const STAGES = [
     id: 's1-predict',
     title: 'Which Moves More?',
     predict: true,
-    prompt: 'Which flask\'s pH moves more when acid is added to water and to acetic acid with sodium acetate?',
+    prompt: 'When the same drop of acid is added to water and to acetic acid with sodium acetate, which pH changes more?',
     widget,
-    table: phTable({
-      pieces: [
-        note('water', GUESS.water, { x: 34, y: 12 }),
-        note('mix', GUESS.mix, { x: 92, y: 12 }),
-        note('same', GUESS.same, { x: 34, y: 33 }),
-        note('none', GUESS.none, { x: 92, y: 33 })
-      ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 150, y: 22 }, size: { w: 36, h: 14 } }] }
-    }, { w: 184, h: 46 }),
+    table: (() => {
+      const w = flaskAt('fw', 26, 48, { title: 'Water', ha: 0, a: 0, pour: false, meter: false, rows: 6 });
+      const m = flaskAt('fm', 76, 48, { title: 'Acetic acid + sodium acetate', ...MIX, pour: false, meter: false, rows: 6 });
+      return phTable({
+        pieces: [
+          note('water', GUESS.water, { x: 26, y: 12 }),
+          note('mix', GUESS.mix, { x: 76, y: 12 }),
+          note('same', GUESS.same, { x: 26, y: 34 }),
+          note('none', GUESS.none, { x: 76, y: 34 })
+        ],
+        fixtures: [w.fixture, m.fixture],
+        zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 140, y: 24 }, size: { w: 46, h: 18 } }] }
+      }, { w: 172, h: 94 });
+    })(),
     hints: [
       'Use the four cards and the slot.',
       'Picture what each flask holds before any acid goes in.',
@@ -127,17 +132,17 @@ export const STAGES = [
   {
     id: 's2-pour',
     title: 'The Same Acid, Two Flasks',
-    get prompt() { return guessLine('Which flask\'s pH moves more when the same acid is poured into each?', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('When you pour acid into both flasks, which flask’s pH changes more?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const w = flaskAt('fw', 26, 1, { title: 'Water', ha: 0, a: 0 });
       const m = flaskAt('fm', 74, 1, { title: 'Acetic acid with sodium acetate', ...MIX });
       return phTable({
-        fixtures: [w.fixture, m.fixture, selectorFixture('pick', 'The pH that moves more', { x: 130, y: 20 }, { options: S2_OPTIONS, start: 4, w: 56 })]
-      }, { w: 164, h: 52 });
+        fixtures: [w.fixture, m.fixture, selectorFixture('pick', 'The pH that moves more', { x: 132, y: 26 }, { options: S2_OPTIONS, start: 4, w: 62 })]
+      }, { w: 168, h: 58 });
     })(),
     hints: [
-      'Press "Pour" on each flask, then set the answer dial.',
+      'Press "Pour" on both flasks, then set the answer dial.',
       'Compare the pH each flask read before the pour with the pH it reads after.',
       'Look at how many spheres change in each window while the acid goes in.'
     ],
@@ -146,16 +151,16 @@ export const STAGES = [
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 1) return { ok: true };
       const w = read(0, 0, 1); const m = read(MIX.ha, MIX.a, 1);
-      return { ok: false, msg: `After one pour the water reads ${fmt(read(0, 0).pH, 2)} then ${fmt(w.pH, 2)}, and the other flask reads ${fmt(read(MIX.ha, MIX.a).pH, 2)} then ${fmt(m.pH, 2)}.` };
+      return { ok: false, msg: `After one pour water reads ${fmt(read(0, 0).pH, 2)} then ${fmt(w.pH, 2)}, and the mixture reads ${fmt(read(MIX.ha, MIX.a).pH, 2)} then ${fmt(m.pH, 2)}.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
       const w = read(0, 0, 1).pH; const m = read(MIX.ha, MIX.a, 1).pH;
-      const verdict = g === 'water' ? 'The water did move more, as you predicted. ' : g ? 'The water moved more, not what you predicted. ' : '';
+      const verdict = g === 'water' ? 'The water moved more, as predicted. ' : g ? 'The water moved more. ' : '';
       return {
         log: 'The water flask moved far more than the acetic acid and sodium acetate flask.',
         title: 'A Buffer',
-        body: `${verdict}One pour of acid moved the water from ${fmt(read(0, 0).pH, 2)} to ${fmt(w, 2)} and the other flask from ${fmt(read(MIX.ha, MIX.a).pH, 2)} to ${fmt(m, 2)}. A solution whose pH changes little when acid or base is added is a buffer.`
+        body: `${verdict}Water went ${fmt(read(0, 0).pH, 2)} to ${fmt(w, 2)}; the mixture went ${fmt(read(MIX.ha, MIX.a).pH, 2)} to ${fmt(m, 2)}. A weak acid with its salt is a buffer.`
       };
     }
   },
@@ -167,25 +172,25 @@ export const STAGES = [
     prompt: 'What must a flask contain to hold its pH against both added acid and added base?',
     widget,
     table: (() => {
-      const f = flaskAt('fb', 46, 1, { title: 'Your flask', build: true, levels: LEVELS, reagent: 'dial', rows: 14 });
-      return phTable({ fixtures: [f.fixture] }, { w: 96, h: f.size.h + 4 });
+      const f = flaskAt('fb', 48, 1, { title: 'Your flask', build: true, levels: LEVELS, reagent: 'dial', rows: 12, w: 56 });
+      return phTable({ fixtures: [f.fixture] }, { w: 100, h: f.size.h + 4 });
     })(),
     hints: [
-      'Set the two dials for acetic acid and acetate, then press "Pour" with the "Pour in" dial on acid and again on base.',
+      'Set the two dials for acetic acid and acetate, then press "Pour" with "Pour in" on Acid and again on Base.',
       'Compare the pH after each pour with the pH before it, for several settings.',
-      'Try a flask with only one of the two substances, then one with both, and see which pours it can take.'
+      'Compare a flask with only one substance to a flask with both.'
     ],
     check(state) {
       const r = mixRead(state.table, 'fb');
       const acid = ph(r.ha0, r.a0, 1) - ph(r.ha0, r.a0); const base = ph(r.ha0, r.a0, 0, 1) - ph(r.ha0, r.a0);
       if (Math.abs(acid) < MOVE_OK && Math.abs(base) < MOVE_OK && r.ha0 + r.a0 > 0) return { ok: true };
-      return { ok: false, msg: `A flask with ${r.ha0} spheres of acetic acid and ${r.a0} of acetate reads ${fmt(ph(r.ha0, r.a0), 2)}, then ${fmt(ph(r.ha0, r.a0, 1), 2)} after a pour of acid and ${fmt(ph(r.ha0, r.a0, 0, 1), 2)} after a pour of base.` };
+      return { ok: false, msg: `A flask with ${r.ha0} spheres of acetic acid and ${r.a0} of acetate reads ${fmt(ph(r.ha0, r.a0), 2)}, then ${fmt(ph(r.ha0, r.a0, 1), 2)} after acid and ${fmt(ph(r.ha0, r.a0, 0, 1), 2)} after base.` };
     },
     get reward() {
       return {
         log: 'Only a flask holding both acetic acid and acetate held its pH against acid and against base.',
         title: 'Both Members',
-        body: 'A flask held its pH against both pours only when it held acetic acid and acetate together, in large amounts. Acetate is the conjugate base of acetic acid: the acid takes added base, and the conjugate base takes added acid.'
+        body: 'The flask held its pH against both pours when it held acetic acid and acetate together. Acetate is the conjugate base: acid takes added base, and conjugate base takes added acid.'
       };
     }
   },
@@ -198,13 +203,13 @@ export const STAGES = [
     widget,
     // The graded answer is where the proton is carried on the bench; the flask shows what the pour did.
     table: (() => {
-      const f = flaskAt('fm', 26, 1, { title: 'Acetic acid with sodium acetate', ...MIX });
+      const f = flaskAt('fm', 26, 1, { title: 'Acetic acid with sodium acetate', ...MIX, showCounts: true });
       const b = transferParts('bench', { x: 150, y: 28 }, BENCH_BUFFER);
       return phTable({
         pieces: b.pieces,
         fixtures: [f.fixture, b.fixture],
         zones: { slots: b.slots }
-      }, { w: 196, h: 56 });
+      }, { w: 196, h: 58 });
     })(),
     hints: [
       'Press "Pour" and watch which spheres change in number, then carry the proton on the bench.',
@@ -213,17 +218,17 @@ export const STAGES = [
     ],
     check(state) {
       const r = transferRead(state.table, 'bench');
-      if (!r.moved) return { ok: false, notYet: true, msg: 'Carry the proton to a seat.' };
+      if (!r.moved) return { ok: false, notYet: true, msg: 'Drag the proton onto the particle that takes it.' };
       if (r.right) return { ok: true };
       const m = read(MIX.ha, MIX.a, 1);
-      return { ok: false, msg: `After one pour the window holds ${Math.round(m.A / U)} acetate spheres and ${Math.round(m.HA / U)} acetic acid spheres, from ${MIX.a} and ${MIX.ha}; the proton you carried comes straight back.` };
+      return { ok: false, msg: `After one pour, acetate dropped from ${MIX.a} to ${Math.round(m.A / U)} spheres and acetic acid rose from ${MIX.ha} to ${Math.round(m.HA / U)}; move the proton to the particle that gained it.` };
     },
     get reward() {
       const m = read(MIX.ha, MIX.a, 1);
       return {
         log: 'The acetate caught the added acid.',
         title: 'Acid Taken Up',
-        body: `Each of the ${PER} spheres of acid poured in was caught by an acetate: acetate fell from ${MIX.a} to ${Math.round(m.A / U)} spheres and acetic acid rose from ${MIX.ha} to ${Math.round(m.HA / U)}. The conjugate base takes up added acid, so the pH barely moves.`
+        body: `Acetate caught the ${PER} spheres of added acid: acetate fell to ${Math.round(m.A / U)} and acetic acid rose to ${Math.round(m.HA / U)}. The conjugate base absorbs added acid, keeping the pH steady.`
       };
     }
   },
@@ -233,13 +238,13 @@ export const STAGES = [
     id: 's5-hh',
     title: 'The pH of a Mixture',
     briefing: 'A buffer\'s pH sits at the pKa when its two members are equal, and one unit above for each tenfold excess of the base. In full: pH = pKa + log(base ÷ acid), the Henderson–Hasselbalch equation.',
-    prompt: 'Find the pH of the flask with no meter, to two decimal places.',
+    prompt: 'What is the pH of the unmetered flask (to one decimal place)?',
     widget,
     entry: { id: 'ph', label: 'pH', unit: '' },
     table: (() => {
-      const a = flaskAt('f1', 24, 1, { title: '100 acetic acid, 100 acetate', ...REF1, pour: false });
-      const b = flaskAt('f2', 70, 1, { title: '10 acetic acid, 100 acetate', ...REF2, pour: false });
-      const c = flaskAt('f3', 116, 1, { title: 'No meter', ...TYPED, pour: false, meter: false });
+      const a = flaskAt('f1', 24, 1, { title: '100 acetic acid, 100 acetate', ...REF1, pour: false, showCounts: true });
+      const b = flaskAt('f2', 70, 1, { title: '10 acetic acid, 100 acetate', ...REF2, pour: false, showCounts: true });
+      const c = flaskAt('f3', 116, 1, { title: 'No meter', ...TYPED, pour: false, meter: false, showCounts: true });
       return phTable({
         fixtures: [a.fixture, b.fixture, c.fixture, plaqueFixture('plate', 'Acetic acid', { x: 164, y: 14 }, [`pKa ${fmt(PLATE_PKA, 2)}`], { w: 36 })]
       }, { w: 186, h: 52 });
@@ -247,13 +252,13 @@ export const STAGES = [
     hints: [
       'Type the pH in the field; the two meters read the flasks beside it.',
       'Compare each flask\'s number of acetate spheres per acetic acid sphere with the pH it reads.',
-      'Use the equation from the briefing with the counts of acetate and acetic acid spheres in the third flask.'
+      'Use pH = pKa + log(acetate ÷ acetic acid) in Calc.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ph');
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
       const want = ph(TYPED.ha, TYPED.a);
-      if (Math.abs(v - want) <= TOL_PH) return { ok: true };
+      if (Math.abs(v - want) <= 0.06) return { ok: true };
       const r1 = fmt(ph(REF1.ha, REF1.a), 2); const r2 = fmt(ph(REF2.ha, REF2.a), 2);
       if (Math.abs(v - (2 * PLATE_PKA - want)) <= 0.05) return { ok: false, msg: `${fmt(v, 2)} is below the ${r1} that the 100 and 100 flask reads, and this flask holds ${TYPED.a} acetate spheres against ${TYPED.ha} of acetic acid.` };
       if (Math.abs(v - PLATE_PKA) <= 0.04) return { ok: false, msg: `${fmt(v, 2)} is what the 100 and 100 flask reads; this flask holds ${TYPED.a} acetate spheres and ${TYPED.ha} of acetic acid.` };
@@ -280,18 +285,18 @@ export const STAGES = [
         'ratio = 10^0.30 = 2.0'
       ]
     },
-    prompt: `Find the ratio of acetate to acetic acid that gives a pH of ${fmt(TARGET, 2)}.`,
+    prompt: `What decimal ratio of acetate to acetic acid gives a pH of ${fmt(TARGET, 2)}?`,
     widget,
-    entry: { id: 'ratio', label: 'Acetate per acetic acid', unit: '' },
+    entry: { id: 'ratio', label: 'Acetate ÷ acetic acid (decimal)', unit: '' },
     table: (() => {
-      const a = flaskAt('f1', 24, 1, { title: '100 acetic acid, 100 acetate', ...REF1, pour: false });
-      const b = flaskAt('f2', 70, 1, { title: '10 acetic acid, 100 acetate', ...REF2, pour: false });
+      const a = flaskAt('f1', 24, 1, { title: '100 acetic acid, 100 acetate', ...REF1, pour: false, showCounts: true });
+      const b = flaskAt('f2', 70, 1, { title: '10 acetic acid, 100 acetate', ...REF2, pour: false, showCounts: true });
       return phTable({
         fixtures: [a.fixture, b.fixture, plaqueFixture('plate', 'Acetic acid', { x: 120, y: 14 }, [`pKa ${fmt(PLATE_PKA, 2)}`, `Target pH ${fmt(TARGET, 2)}`], { w: 40 })]
       }, { w: 150, h: 52 });
     })(),
     hints: [
-      'Type the ratio in the field; the plate gives the pKa and the target.',
+      'Type the decimal ratio in the field; the plate gives the pKa and the target.',
       'Compare the target with the pKa to see which side of the 100 and 100 flask it lies on.',
       'Find how far the target lies from the pKa and turn that distance back into a ratio with a power of ten.'
     ],
@@ -308,7 +313,7 @@ export const STAGES = [
       return {
         log: 'The ratio comes from the distance below the pKa.',
         title: 'Working Backwards',
-        body: `A pH of ${fmt(TARGET, 2)} lies ${fmt(PLATE_PKA - TARGET, 2)} below the pKa, so the ratio of acetate to acetic acid is 10 to the power ${fmt(TARGET - PLATE_PKA, 2)}, which is ${fmt(r, 2)}. The Henderson–Hasselbalch equation runs in both directions.`
+        body: `pH ${fmt(TARGET, 2)} lies ${fmt(PLATE_PKA - TARGET, 2)} below pKa, so acetate ÷ acetic acid is 10^(−${fmt(PLATE_PKA - TARGET, 2)}) ≈ ${fmt(r, 2)} (0.44–0.47 accepted).`
       };
     }
   },
@@ -320,10 +325,10 @@ export const STAGES = [
     prompt: 'What happens to the buffer\'s pH when base is poured in?',
     widget,
     table: (() => {
-      const f = flaskAt('fm', 26, 1, { title: 'Acetic acid with sodium acetate', ...MIX, reagent: 'base' });
+      const f = flaskAt('fm', 26, 1, { title: 'Acetic acid with sodium acetate', ...MIX, reagent: 'base', showCounts: true });
       return phTable({
-        fixtures: [f.fixture, selectorFixture('pick', 'The pH', { x: 88, y: 20 }, { options: ['Rises a lot', 'Rises a little', 'Falls', 'Stays the same', ' '], start: 5, w: 46 })]
-      }, { w: 120, h: 52 });
+        fixtures: [f.fixture, selectorFixture('pick', 'The pH', { x: 92, y: 26 }, { options: ['Rises a lot', 'Rises a little', 'Falls', 'Stays the same', ' '], start: 5, w: 50 })]
+      }, { w: 126, h: 58 });
     })(),
     hints: [
       'Press "Pour", then set the answer dial.',
@@ -335,7 +340,7 @@ export const STAGES = [
       if (v === 5) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 2) return { ok: true };
       const m = read(MIX.ha, MIX.a, 0, 1);
-      return { ok: false, msg: `The meter reads ${fmt(read(MIX.ha, MIX.a).pH, 2)} before the pour and ${fmt(m.pH, 2)} after it.` };
+      return { ok: false, msg: `The meter rose by only 0.09 (from ${fmt(read(MIX.ha, MIX.a).pH, 2)} to ${fmt(m.pH, 2)}) — a small rise, not zero.` };
     },
     get reward() {
       const m = read(MIX.ha, MIX.a, 0, 1);
@@ -351,16 +356,16 @@ export const STAGES = [
   {
     id: 's8-half-equiv',
     title: 'Halfway to Equivalence',
-    briefing: 'When a weak acid (HA) meets half as many moles of strong base (OH⁻), half the HA becomes its conjugate base A⁻, forming a buffer with [HA] = [A⁻] and pH = pKa. At equal moles (1:1 equivalence), all HA becomes A⁻, so pH > 7.',
-    prompt: 'What is the pH after pouring 50 spheres of NaOH into 100 spheres of CH₃COOH (2:1 mole ratio)?',
+    briefing: 'When a weak acid (HA) meets half as many moles of strong base (OH⁻), half the HA becomes its conjugate base A⁻, forming a buffer with [HA] = [A⁻] and pH = pKa.',
+    prompt: 'What is the pH when 50 spheres of NaOH (5 pours) are added to 100 spheres of CH₃COOH?',
     widget,
     entry: { id: 'ph', label: 'pH at 2:1 ratio', unit: '' },
     table: (() => {
-      const f = flaskAt('fm', 26, 1, { title: 'CH₃COOH (100 spheres)', ha: 100, a: 0, reagent: 'base', meter: false });
+      const f = flaskAt('fm', 26, 1, { title: 'CH₃COOH (100 spheres)', ha: 100, a: 0, reagent: 'base', meter: false, showCounts: true });
       return phTable({
         fixtures: [
           f.fixture,
-          plaqueFixture('plate', 'Acetic acid', { x: 86, y: 14 }, [`pKa ${fmt(PLATE_PKA, 2)}`, 'Equivalence (10 pours): pH 8.72'], { w: 54 })
+          plaqueFixture('plate', 'Acetic acid', { x: 86, y: 14 }, [`pKa ${fmt(PLATE_PKA, 2)}`, '1 pour = 10 spheres NaOH'], { w: 54 })
         ]
       }, { w: 124, h: 52 });
     })(),
@@ -372,22 +377,21 @@ export const STAGES = [
     check(state) {
       const r = mixRead(state.table, 'fm');
       if (r.nb === 0) return { ok: false, notYet: true, msg: 'Pour 50 spheres of NaOH (5 pours) first.' };
-      if (r.nb === 10) return { ok: false, msg: '10 pours is a 1:1 mole ratio (equivalence), where all CH₃COOH becomes CH₃COO⁻ (pH 8.72); the prompt asks for 2:1.' };
-      if (r.nb !== 5) return { ok: false, msg: `You poured ${r.nb * PER} spheres of NaOH (${r.nb} pours); 50 spheres (5 pours) gives a 2:1 mole ratio with 100 spheres of CH₃COOH.` };
+      if (r.nb === 10) return { ok: false, msg: '10 pours is a 1:1 ratio (equivalence), where all CH₃COOH becomes CH₃COO⁻ (pH 8.72); the prompt asks for 2:1.' };
+      if (r.nb !== 5) return { ok: false, msg: `You poured ${r.nb * PER} spheres of NaOH (${r.nb} pours); 50 spheres (5 pours) gives a 2:1 ratio with 100 spheres of CH₃COOH.` };
       const v = entryNumber(state.table, 'ph');
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the pH in the field.' };
       const want = ph(50, 50);
       if (Math.abs(v - want) <= TOL_PH) return { ok: true };
-      if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: 'At 2:1, equal moles of CH₃COOH and CH₃COO⁻ form a buffer; the pH is set by pKa, not 7.00.' };
+      if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: 'At 2:1, equal amounts of CH₃COOH and CH₃COO⁻ form a buffer; the pH equals pKa, not 7.00.' };
       if (Math.abs(v - 8.72) <= 0.1) return { ok: false, msg: '8.72 is the pH at equivalence (1:1, all CH₃COO⁻), not at the 2:1 buffer.' };
       return { ok: false, msg: `${fmt(v, 2)} does not match a 50:50 buffer of CH₃COOH and CH₃COO⁻ with pKa ${fmt(PLATE_PKA, 2)}.` };
     },
     get reward() {
-      const m = read(50, 50);
       return {
-        log: 'A 2:1 weak-acid to strong-base mixture formed a buffer at pH = pKa (4.74).',
-        title: 'Weak Acid + Strong Base Regimes',
-        body: `With 2:1 CH₃COOH to NaOH, half the acid became CH₃COO⁻, giving [HA] = [A⁻] and pH = pKa = ${fmt(m.pH, 2)}. At 1:1 equivalence, only CH₃COO⁻ remains and pH > 7.`
+        log: `A 2:1 weak-acid to strong-base mixture formed a buffer at pH = pKa (${fmt(PLATE_PKA, 2)}).`,
+        title: 'Halfway to Equivalence',
+        body: `With 2:1 CH₃COOH to NaOH, half the acid became CH₃COO⁻, giving [HA] = [A⁻] and pH = pKa = ${fmt(PLATE_PKA, 2)}.`
       };
     }
   }
@@ -401,7 +405,7 @@ export const DEBRIEF = {
 export const SOLUTIONS = [
   [put('same', 'slot:guess')],
   [pour('fw'), pour('fm'), dial('pick', 'value', 1)],
-  [dial('fb', 'ha', 3), dial('fb', 'a', 3), pour('fb')],
+  [dial('fb', 'ha', 3), dial('fb', 'a', 3), pour('fb'), dial('fb', 'rg', 2), pour('fb')],
   [pour('fm'), put('bench.h.h3o', 'slot:bench.take.a')],
   [{ type: { entry: 'ph', value: '5.22' } }],
   [{ type: { entry: 'ratio', value: '0.45' } }],

@@ -94,10 +94,10 @@ function firstChange(t, fid) {
 /** A refusal of a typed figure that names the burette's own reading. */
 function missMsg(t, fid, shown, unit) {
   const r = titratorRead(t, fid);
-  if (!r.rows.length) return { ok: false, msg: 'The burette has not been used yet.' };
+  if (!r.rows.length) return { ok: false, msg: 'Open the tap to titrate the flask first.' };
   const seen = firstChange(t, fid);
-  const tail = seen == null ? 'the flask has not changed colour yet.' : `the flask first changed colour at ${fixed(seen, 1)} mL.`;
-  return { ok: false, msg: `${shown} ${unit} does not follow from the burette: ${tail}` };
+  const tail = seen == null ? 'the flask has not changed color yet.' : `the flask first changed color at ${fixed(seen, 1)} mL.`;
+  return { ok: false, msg: `${shown} ${unit} does not match the burette: ${tail}` };
 }
 
 /* ------------------------------------------------------------------
@@ -111,9 +111,9 @@ export const STAGES = [
     predict: true,
     briefing: {
       title: 'Concentration in mol/L',
-      body: 'A base releases OH⁻ ions to cancel an acid\'s H⁺ ions. Concentration in mol/L tells how many moles are dissolved in each litre.'
+      body: 'A base releases OH⁻ ions that neutralize an acid\'s H⁺ ions. Concentration (mol/L) tells how many moles are dissolved in each liter.'
     },
-    prompt: 'How much of the base do you expect it takes to use up all the acid?',
+    prompt: 'How much base do you expect will use up all the acid?',
     widget,
     table: potTable({
       pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 38, y: 12 + Math.floor(i / 2) * 16 })),
@@ -129,7 +129,7 @@ export const STAGES = [
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the prediction slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -139,7 +139,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, run the base into a flask of the acid and see what volume it takes.'
+      body: 'Next, add the base to the acid flask and see what volume it takes.'
     }
   },
 
@@ -151,12 +151,12 @@ export const STAGES = [
       title: 'Watch the Colour',
       briefing: {
         title: 'Titration and Indicators',
-        body: 'A titration adds one solution from a burette, a tube marked in millilitres, to another until they have exactly reacted. An indicator is a dye that changes colour when that happens.'
+        body: 'In a titration, you add a measured volume of one solution from a burette into another until they completely react. An indicator is a dye that changes color when that happens.'
       },
       get prompt() {
         const g = recall(QUEST_KEY);
         const guess = g && GUESS[g] ? `You guessed ${GUESS[g]}. ` : '';
-        return `${guess}What volume of base changes the indicator's colour?`;
+        return `${guess}What volume of base makes the indicator change color?`;
       },
       widget,
       table: potTable({
@@ -183,9 +183,9 @@ export const STAGES = [
           ? (GUESS_VALUE[g] === EQ2 ? 'Your guess was right, and the flask changed colour a half step after it. ' : `Your guess was ${GUESS[g]}, and the flask changed at ${fixed(END2, 1)} mL. `)
           : '';
         return {
-          log: `The flask changed colour at ${fixed(END2, 1)} mL.`,
+          log: `The flask changed color at ${fixed(END2, 1)} mL.`,
           title: 'Titration',
-          body: `${verdict}The indicator changed at about ${fixed(END2, 1)} mL on the burette: that titration used up the acid in 25.0 mL.`
+          body: `${verdict}The indicator changed at about ${fixed(END2, 1)} mL on the burette, showing how much base it took to neutralize 25.0 mL of acid.`
         };
       }
     };
@@ -206,11 +206,11 @@ export const STAGES = [
       hints: [
         'Use the "Per press" dial and "Open Tap", and watch the particle view.',
         'Compare the circles of H⁺ with the circles of OH⁻ as the reading grows.',
-        'Each press removes the same number of H⁺; see how many are left.'
+        'Each press removes the same amount of H⁺; stop when none are left.'
       ],
       check(state) {
         const r = titratorRead(state.table, 'tit');
-        if (!r.rows.length) return { ok: false, notYet: true, msg: 'Nothing has run into the flask yet.' };
+        if (!r.rows.length) return { ok: false, notYet: true, msg: 'Open the tap to add base to the flask first.' };
         if (within(r.vMl, EQ3, 0.01)) return { ok: true };
         const n = (r.flask.acidLeft || r.flask.baseLeft) / UNIT3;
         return r.flask.acidLeft > 0
@@ -220,7 +220,7 @@ export const STAGES = [
       reward: {
         log: `${fixed(EQ3, 1)} mL of base used up the acid.`,
         title: 'Equivalence Point',
-        body: 'At 20.0 mL no H⁺ and no OH⁻ are left over. That is the equivalence point: all the acid has reacted with the base added (1:1 here, so moles of base equal moles of acid).'
+        body: 'At 20.0 mL, no H⁺ or OH⁻ is left over. That is the equivalence point: all the acid has reacted with the added base (1:1 here, so moles of base equal moles of acid).'
       }
     };
   })(),
@@ -246,7 +246,7 @@ export const STAGES = [
       hints: [
         'Use the card, the "Per press" dial and "Open Tap", then type the concentration.',
         'Compare the burette reading at the colour change with the 25.0 mL of acid in the flask.',
-        'Follow the worked lines from Stage 3 in the briefing: find the moles of base added, then divide by the acid volume in litres.'
+        'Follow the worked steps in the briefing: find the moles of base added, then divide by the acid volume in litres.'
       ],
       check(state) {
         const t2 = state.table;
@@ -279,8 +279,8 @@ export const STAGES = [
       }),
       hints: [
         'Use the card, the "Per press" dial and "Open Tap", then type the concentration.',
-        'Compare how many H⁺ one H₂SO₄ gives here with how many one HCl gave before.',
-        'The base counts H⁺, and each acid molecule gave two.'
+        'Compare how many H⁺ ions one H₂SO₄ releases with how many one HCl released.',
+        'Each mole of base neutralizes one mole of H⁺, and each H₂SO₄ molecule releases two H⁺ ions.'
       ],
       check(state) {
         const t2 = state.table;
@@ -292,7 +292,7 @@ export const STAGES = [
       reward: {
         log: 'The sulfuric acid is 0.0720 mol/L.',
         title: 'Two H⁺ for One Acid',
-        body: '36.0 mL of 0.100 mol/L base is 0.00360 mol, which meets half as many moles of H₂SO₄: 0.0720 mol/L.'
+        body: '36.0 mL of 0.100 mol/L base is 0.00360 mol OH⁻, which neutralizes half as many moles of H₂SO₄ (0.00180 mol in 25.0 mL): 0.0720 mol/L.'
       }
     };
   })(),
@@ -327,14 +327,14 @@ export const STAGES = [
         if (!r.indicator) return { ok: false, msg: 'Put the methyl orange card in the slot beside the flask.' };
         if (r.vMl < END6) return { ok: false, notYet: true, msg: `Keep adding base until the indicator changes colour (at ${fixed(r.vMl, 1)} mL it has not changed yet).` };
         const card = Object.values(t2.pieces).find(p => p.zone === 'slot:when');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a statement card in the slot.' };
-        if (card.id !== 'before') return { ok: false, msg: 'Look at the particle view when the colour changed: H⁺ was still left in the flask.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
+        if (card.id !== 'before') return { ok: false, msg: 'Look at the particle view when the color changed: H⁺ was still left in the flask.' };
         return { ok: true };
       },
       reward: {
-        log: 'Methyl orange changed colour before the equivalence point.',
+        log: 'Methyl orange changed color before the equivalence point.',
         title: 'Endpoint',
-        body: 'The colour changed while H⁺ was still left. Where the indicator changes is the endpoint; a good indicator has its endpoint close to the equivalence point.'
+        body: 'The color changed while H⁺ was still left in the flask. Where the indicator changes color is the endpoint; a good indicator has its endpoint close to the equivalence point.'
       }
     };
   })()
@@ -342,12 +342,12 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the card you choose', 'into the slot.'],
+  1: ['Drag your chosen card', 'into the slot.'],
   2: ['Drag the card into the slot,', 'set the dial, press the key.'],
   3: ['Set the dial, press the key,', 'then watch the particle view.'],
   4: ['Drag the card into the slot,', 'run the base in, then type.'],
   5: ['Drag the card into the slot,', 'run the base in, then type.'],
-  6: ['Add the indicator, run the base,', 'lay a chip in the slot.']
+  6: ['Add the indicator, run the base,', 'place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -359,7 +359,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A titration counts an acid by the base that meets it. At the equivalence point, moles of base added equal moles of acid, and an indicator shows that point only nearly.'
+      body: 'A titration measures an unknown acid using the volume of base needed to neutralize it. At the equivalence point, the acid and base have completely reacted, and an indicator\'s color change marks that point closely.'
     }
   ]
 };

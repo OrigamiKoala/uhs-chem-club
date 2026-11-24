@@ -11,9 +11,10 @@
  */
 
 import { settledAt, MODEL_PAN, WARM, columnRead, COUPLE, dGOf } from '../learn/engine/eqdata-free.js';
+import { fmtNum } from '../learn/engine/eqdata.js';
 import { C, text, ground, win, ease } from './story-kit.js';
 
-const R_INK = '#c0652b'; const P_INK = '#6f8fb0';
+const R_INK = '#c0652b'; const P_INK = '#4c9be8';
 const fs = h => Math.max(14, h * 0.042);
 const sgn = (v, d = 1) => `${v < 0 ? '−' : '+'}${(Math.abs(v) + 1e-9).toFixed(d)}`;
 
@@ -37,7 +38,7 @@ function pans(ctx, w, h, p) {
     ctx.fillStyle = P_INK; ctx.fillRect(x + bw * 0.58, base - hB, bw * 0.26, hB);
     text(ctx, `ΔG° ${sgn(dG, 0)} kJ/mol`, x + bw / 2, top - h * 0.04, { size: fs(h), color: C.amber, weight: 700 });
     // K, measured from the two bars as drawn.
-    if (p > 0.97) text(ctx, `product ÷ reactant = ${(hB / hA).toPrecision(2)}`, x + bw / 2, top + hh + h * 0.07, { size: fs(h), color: C.dust });
+    if (p > 0.97) text(ctx, `K = ${(hB / hA).toPrecision(2)}`, x + bw / 2, top + hh + h * 0.07, { size: fs(h), color: C.dust });
   });
   text(ctx, 'reactant (orange) and product (blue) bars, 1.00 mol/L at the start', w / 2, h * 0.9, { size: fs(h) * 0.9, color: C.dim });
 }
@@ -62,9 +63,9 @@ function curve(ctx, w, h, p) {
   ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(X(d), Y(share), 9, 0, Math.PI * 2); ctx.fill();
   // The readings are taken from the dot: its height gives the share, the share gives K.
   const shown = (y1 - Y(share)) / (y1 - y0);
-  text(ctx, `ΔG° ${sgn(d)} kJ/mol`, w * 0.3, h * 0.8, { size: fs(h) * 1.15, color: C.amber, weight: 700 });
-  text(ctx, `product held ${(shown * 100).toFixed(0)}%`, w * 0.5, h * 0.8, { size: fs(h) * 1.15, color: P_INK, weight: 700 });
-  text(ctx, `K = ${(shown / (1 - shown)).toPrecision(2)}`, w * 0.74, h * 0.8, { size: fs(h) * 1.15, color: C.dust, weight: 700 });
+  text(ctx, `ΔG° ${sgn(d)} kJ/mol`, w * 0.22, h * 0.8, { size: fs(h), color: C.amber, weight: 700 });
+  text(ctx, `product ${(shown * 100).toFixed(0)}%`, w * 0.52, h * 0.8, { size: fs(h), color: P_INK, weight: 700 });
+  text(ctx, `K = ${fmtNum(shown / (1 - shown), 2)}`, w * 0.8, h * 0.8, { size: fs(h), color: C.dust, weight: 700 });
   text(ctx, 'half of it product', x0 + 80, Y(0.5) - 12, { size: fs(h) * 0.85, color: C.dim });
 }
 

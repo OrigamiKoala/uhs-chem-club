@@ -7,6 +7,6 @@ import { addTourText } from '../tour.js';
 addTourText({
   'ph:phsolid': {
     title: 'Beaker with a solid', dials: false,
-    text: 'Pour acid onto the solid. Ions dissolve.'
+    text: 'Press Pour acid to see if the solid dissolves.'
   }
 }, {});

@@ -28,10 +28,10 @@ const AMBER = PLATE_COLORS.amber;
 const TEXT = PLATE_COLORS.text;
 
 export const SITES = 100;
-const CARD = { hw: 10.5, hh: 9 };
+const CARD = { hw: 11.5, hh: 9.5 };
 const W = 166; const H = 70;
 const COL = { a: 23, b: 71 };
-const WIN = { y: 36, s: 30 };
+const WIN = { y: 33, s: 28 };
 
 /** The words a card goes by in the first place and in the second. */
 export const nameAcid = c => (c.props.anon ? String(c.label) : RACE[c.props.acid].acid);
@@ -89,15 +89,15 @@ function drawConjBase(ctx, p, box, sc, ox) {
     else drawShade(ctx, gx - 1.1 * sc, cy, 1.35 * sc, 1.35 * sc, 0.56);
   }
   const tag = p.props.anon ? 'base⁻' : spec.tag;
-  put(ctx, ionText(tag), ox + 4.4 * sc, cy + 0.1 * sc, Math.max(5.5, 1.55 * sc), { color: DUST, maxW: 8.5 * sc });
+  put(ctx, ionText(tag), ox + 4.8 * sc, cy + 0.1 * sc, Math.max(7.2, 2.0 * sc), { color: '#e5dfd3', maxW: 9 * sc });
 }
 
 function paintCard(ctx, p, state, o) {
-  const box = slab(ctx, o, CARD, '#1d1a16');
+  const box = slab(ctx, o, CARD, '#24201a');
   const sc = o.sc; const rows = p.props.rows || [];
   const big = ionText(p.label);
-  put(ctx, big, o.x, box.y0 + (rows.length ? 4.1 : 8.5) * sc, Math.max(8, Math.min(3.1 * sc, (box.w - 1.2 * sc) / (Math.max(2, big.length) * 0.58))), { weight: 700, maxW: box.w - 1 * sc });
-  rows.slice(0, 2).forEach((r, i) => put(ctx, ionText(r), o.x, box.y0 + (8.0 + i * 2.9) * sc, Math.max(5.8, 1.58 * sc), { color: DUST, maxW: box.w - 1 * sc }));
+  put(ctx, big, o.x, box.y0 + (rows.length ? 4.0 : 8.5) * sc, Math.max(10, Math.min(3.7 * sc, (box.w - 1.2 * sc) / (Math.max(2, big.length) * 0.56))), { weight: 700, color: '#f4efe6', maxW: box.w - 1 * sc });
+  rows.slice(0, 2).forEach((r, i) => put(ctx, ionText(r), o.x, box.y0 + (8.2 + i * 3.3) * sc, Math.max(8.2, 2.25 * sc), { color: '#e5dfd3', weight: 600, maxW: box.w - 1 * sc }));
   drawConjBase(ctx, p, box, sc, o.x);
 }
 
@@ -144,21 +144,21 @@ function paintRace(ctx, f, state, bx) {
   const landedAt = k => (k / Math.max(1, total)) * STAGGER + FLIGHT;
   let landed = 0; for (let k = 0; k < total; k++) if (el >= landedAt(k)) landed++;
   const sz = (k, m = 6) => F.size(k, m);
-  put(ctx, 'Acid', F.x(COL.a), F.y(7), sz(2.4), { color: DUST, weight: 700 });
-  put(ctx, 'Base it leaves', F.x(COL.b), F.y(7), sz(2.4), { color: DUST, weight: 700, maxW: F.len(40) });
-  if (r.a) put(ctx, ionText(nameAcid(r.a)), F.x(COL.a), F.y(31), sz(2.8), { color: TEXT, weight: 700, maxW: F.len(40) });
-  if (r.b) put(ctx, ionText(nameBase(r.b)), F.x(COL.b), F.y(31), sz(2.8), { color: TEXT, weight: 700, maxW: F.len(40) });
+  put(ctx, 'Acid', F.x(COL.a), F.y(6.8), sz(2.6, 7), { color: TEXT, weight: 700 });
+  put(ctx, 'Base it leaves (drop an acid)', F.x(COL.b), F.y(6.8), sz(2.2, 6.4), { color: TEXT, weight: 700, maxW: F.len(46) });
+  if (r.a) put(ctx, ionText(nameAcid(r.a)), F.x(COL.a), F.y(30), sz(2.9, 7.5), { color: TEXT, weight: 700, maxW: F.len(40) });
+  if (r.b) put(ctx, ionText(nameBase(r.b)), F.x(COL.b), F.y(30), sz(2.9, 7.5), { color: TEXT, weight: 700, maxW: F.len(40) });
   const ready = r.a && r.b;
   const n = key ? landed : 0;
   const seeds = [3, 11];
   [[COL.a, SITES - n, 'On the acid'], [COL.b, n, 'On the base']].forEach(([cx, held, cap], k) => {
     const x = cx - WIN.s / 2;
-    ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(WIN.y), F.len(WIN.s), F.len(WIN.s));
+    ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(x), F.y(WIN.y), F.len(WIN.s), F.len(WIN.s));
     ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(WIN.y)) + 0.5, Math.round(F.len(WIN.s)), Math.round(F.len(WIN.s)));
     const cells = cellGrid(SITES, 10, x + 0.6, WIN.y + 0.6, WIN.s - 1.2, WIN.s - 1.2);
     const without = ionizedCells(SITES, SITES - held, seeds[k]);
     cells.forEach((c, i) => { const wb = wobble(i + k * 100, clock); ball(ctx, F.x(c.x + wb.wx * c.cw * 0.5), F.y(c.y + wb.wy * c.ch * 0.5), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.42)), without.has(i) ? BASE_INK : ACID_INK); });
-    put(ctx, ready || k === 0 ? `${cap}: ${held}` : `${cap}: 0`, F.x(cx), F.y(WIN.y + WIN.s + 3.4), sz(2.6), { color: ready && r.crossed != null ? AMBER : DIM, weight: 700, maxW: F.len(WIN.s + 12) });
+    put(ctx, ready || k === 0 ? `${cap}: ${held}` : `${cap}: 0`, F.x(cx), F.y(WIN.y + WIN.s + 3.4), sz(2.8, 7.5), { color: ready && r.crossed != null ? AMBER : DUST, weight: 700, maxW: F.len(WIN.s + 14) });
   });
   // Protons in flight: from a cell of the acid's window to a cell of the base's, in an arc.
   if (key) {
@@ -171,19 +171,19 @@ function paintRace(ctx, f, state, bx) {
     }
   }
   // The list of races run, and what the colours mean.
-  put(ctx, 'Races run', F.x(100), F.y(7), sz(2.4), { align: 'left', color: DUST, weight: 700 });
-  put(ctx, 'Protons on the base, of 100', F.x(100), F.y(11), sz(1.9, 5.6), { align: 'left', color: DIM, maxW: F.len(64) });
+  put(ctx, 'Races run', F.x(98), F.y(6.8), sz(2.8, 7.5), { align: 'left', color: TEXT, weight: 700 });
+  put(ctx, 'Protons on the base, of 100', F.x(98), F.y(11.4), sz(2.3, 6.8), { align: 'left', color: DUST, maxW: F.len(66) });
   const names = id => { const c = state.pieces[id]; return c ? c : null; };
   r.log.slice(-6).forEach((l, i) => {
     const ca = names(l.a); const cb = names(l.b);
     if (!ca || !cb) return;
-    put(ctx, `${ionText(nameAcid(ca))} + ${ionText(baseShort(cb))}`, F.x(100), F.y(16 + i * 4.2), sz(2.1, 5.8), { align: 'left', color: DUST, maxW: F.len(48) });
-    put(ctx, String(l.n), F.x(163), F.y(16 + i * 4.2), sz(2.3, 6), { align: 'right', color: AMBER, weight: 700 });
+    put(ctx, `${ionText(nameAcid(ca))} + ${ionText(baseShort(cb))}`, F.x(98), F.y(17 + i * 4.8), sz(2.7, 7.8), { align: 'left', color: TEXT, maxW: F.len(50) });
+    put(ctx, String(l.n), F.x(163), F.y(17 + i * 4.8), sz(2.9, 8.2), { align: 'right', color: AMBER, weight: 700 });
   });
-  ctx.fillStyle = ACID_INK; ctx.beginPath(); ctx.arc(F.x(100.8), F.y(47.5), F.len(0.9), 0, Math.PI * 2); ctx.fill();
-  put(ctx, 'holds a proton', F.x(103), F.y(47.5), sz(1.9, 5.6), { align: 'left', color: DUST });
-  ctx.fillStyle = BASE_INK; ctx.beginPath(); ctx.arc(F.x(100.8), F.y(51.5), F.len(0.9), 0, Math.PI * 2); ctx.fill();
-  put(ctx, 'holds none', F.x(103), F.y(51.5), sz(1.9, 5.6), { align: 'left', color: DUST });
+  ctx.fillStyle = ACID_INK; ctx.beginPath(); ctx.arc(F.x(99.2), F.y(49.5), F.len(1.0), 0, Math.PI * 2); ctx.fill();
+  put(ctx, 'holds a proton', F.x(102), F.y(49.5), sz(2.3, 6.6), { align: 'left', color: DUST });
+  ctx.fillStyle = BASE_INK; ctx.beginPath(); ctx.arc(F.x(99.2), F.y(54.0), F.len(1.0), 0, Math.PI * 2); ctx.fill();
+  put(ctx, 'holds none', F.x(102), F.y(54.0), sz(2.3, 6.6), { align: 'left', color: DUST });
 }
 
 function run(state, fid) {

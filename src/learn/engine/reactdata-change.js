@@ -83,7 +83,7 @@ export const CASES = Object.freeze({
     eq: '2 Mg(s) + O2(g) -> 2 MgO(s)', feed: { Mg: 1.0 }, air: ['O2'], sealedIn: { O2: 0.5 }
   },
   wood: {
-    id: 'wood', name: 'Wood chips', verb: 'burned', kind: 'chemical', unit: 0.1, dH: -2815,
+    id: 'wood', name: 'Wood shavings', verb: 'burned', kind: 'chemical', unit: 0.1, dH: -2815,
     eq: 'C6H10O5(s) + 6 O2(g) -> 6 CO2(g) + 5 H2O(g)', feed: { C6H10O5: 0.1 }, air: ['O2'], sealedIn: { O2: 0.6 }
   }
 });

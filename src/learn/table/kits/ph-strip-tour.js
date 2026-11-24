@@ -7,6 +7,6 @@ import { addTourText } from '../tour.js';
 addTourText({
   'ph:phstrip': {
     title: 'Fraction strip', dials: false,
-    text: 'Move the pH dial. The row shows the molecules.'
+    text: 'Move the pH dial to see which form dominates at each pH.'
   }
 }, {});

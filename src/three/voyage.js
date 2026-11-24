@@ -896,7 +896,7 @@ export class Voyage {
     const tanE = new THREE.Vector3(0, Math.sin(ENTRY_TILT), Math.cos(ENTRY_TILT));
     const tan = new THREE.Vector3(), up = new THREE.Vector3();
     return {
-      name: 'approach', dur: 8.5, label: () => `Approaching ${self.dest.def.name}`,
+      name: 'approach', dur: 4.5, label: () => `Approaching ${self.dest.def.name}`,
       enter() {
         const H = PLANET_C.clone().addScaledVector(upE, PLANET_R + HOLD_ALT);
         const start = self.shipPos.clone();

@@ -15,6 +15,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { addTourText } from '../tour.js';
+import { addTourDemo, stageDemo } from '../tour-demo.js';
 import { registerFixture, registerPiece } from './pot-registry.js';
 import { frameOf, say, slab } from './pot-draw.js';
 import { seatedIn, dialAt } from './pot-read.js';
@@ -127,13 +128,14 @@ const WINDOW_H = 26;
  * `unit` is the moles one disc stands for (the change's own when omitted). Returns the fixture, its seat slot and its size.
  */
 export function changePotFixture(id, at, o = {}) {
-  const { caseId = null, seat = !caseId, lid = 'open', amounts = null, unit = null, title = 'Reaction vessel', runLabel = 'Run', w = 76 } = o;
+  const { caseId = null, seat = !caseId, lid = 'open', lidStart = 1, amounts = null, unit = null, hideAir = false, title = 'Reaction vessel', runLabel = 'Run', w = 76 } = o;
   const dials = {};
   const lidDial = lid === 'dial';
-  if (lidDial) dials.lid = { min: 1, max: 2, step: 1, value: 1, label: 'Lid', labels: ['Open', 'Sealed'] };
+  if (lidDial) dials.lid = { min: 1, max: 2, step: 1, value: lidStart, label: 'Lid', labels: ['Open', 'Sealed'] };
   if (amounts) dials.amount = { min: 1, max: amounts.list.length, step: 1, value: 1, label: amounts.label, labels: amounts.list.map(g => `${g} g`) };
   const nd = Object.keys(dials).length;
-  const top = contentTop(nd);
+  const rowPitch = 7.6;
+  const top = nd ? 9.6 + (nd - 1) * rowPitch + 5.4 : contentTop(0);
   const seatH = seat ? 16.4 : 2.4;
   const h = Math.round((top + seatH + WINDOW_H + 7) * 10) / 10;
   const x0 = at.x - w / 2;
@@ -144,28 +146,42 @@ export function changePotFixture(id, at, o = {}) {
     seatId = `${id}.in`;
     slots.push({ id: seatId, label: ' ', at: { x: x0 + 11, y: y0 + top + 7.5 }, size: { ...SEAT } });
   }
+  const grab = {};
+  for (const k of Object.keys(dials)) grab[k] = 3.4;
   return {
     fixture: {
       id, kind: 'changepot', label: title, at: { ...at }, size: { w, h }, dials, runLabel,
-      props: { backdrop: true, seat: seatId, caseId, lid, lidDial, amounts: amounts ? { ...amounts } : null, unit, panelTop: Math.round((top + seatH) * 10) / 10 }
+      props: {
+        backdrop: true, seat: seatId, caseId, lid, lidDial, hideAir,
+        amounts: amounts ? { ...amounts } : null, unit,
+        ...(nd ? { rowPitch, grab, tickLabels: true } : {}),
+        panelTop: Math.round((top + seatH) * 10) / 10
+      }
     },
     slots, seatSlot: seatId, size: { w, h }
   };
 }
 
-const DISC_MAX = 12;
-const STATE_WORD = { s: '(s)', l: '(l)', g: '(g)', aq: '(aq)' };
+const DISC_MAX = 10;
+const STATE_WORD = { s: 'solid', l: 'liquid', g: 'gas', aq: 'in water' };
+const PLAIN_NAME = {
+  H2O: 'Water', O2: 'Oxygen', CO2: 'Carbon dioxide', Fe: 'Iron', Fe2O3: 'Iron oxide',
+  C12H22O11: 'Sugar', C: 'Carbon', Mg: 'Magnesium', MgO: 'Magnesium oxide',
+  C6H10O5: 'Wood', NaCl: 'Salt', 'Na+': 'Na⁺ ion', 'Cl-': 'Cl⁻ ion'
+};
 
-/** One row of the window: the species and its state, then as many discs as it has `unit` moles. `dim` draws it as something that left. */
+/** One row of the window: the species in plain words with its state, then particles as balls. `dim` draws it as something that left. */
 function row(ctx, F, item, unit, x0, x1, y, size, dim = false, prefix = '') {
-  const text = `${prefix}${label(item.f)}${STATE_WORD[item.st] || ''}`;
-  say(ctx, text, F.x(x0), F.y(y), size, { color: dim ? DIM : DUST, weight: 700, maxW: F.len(15.2) });
+  const name = PLAIN_NAME[item.f] || label(item.f);
+  const st = STATE_WORD[item.st] ? ` (${STATE_WORD[item.st]})` : '';
+  const text = `${prefix}${name}${st}`;
+  say(ctx, text, F.x(x0), F.y(y), size, { color: dim ? DIM : DUST, weight: 700, maxW: F.len(18.5) });
   const n = Math.max(1, Math.round(item.mol / unit));
-  const r = F.len(0.62);
-  const step = F.len(Math.min(1.7, (x1 - x0 - 16.4) / DISC_MAX));
+  const r = F.len(0.9);
+  const step = F.len(Math.min(2.1, (x1 - x0 - 19.6) / DISC_MAX));
   ctx.fillStyle = dim ? '#4a463f' : inkOf(item.f);
   for (let i = 0; i < Math.min(n, DISC_MAX); i++) {
-    ctx.beginPath(); ctx.arc(F.x(x0 + 16.2) + i * step + r, F.y(y), r, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(F.x(x0 + 19.4) + i * step + r, F.y(y), r, 0, Math.PI * 2); ctx.fill();
   }
   if (n > DISC_MAX) say(ctx, `+${n - DISC_MAX}`, F.x(x1), F.y(y), size, { align: 'right', color: DIM });
 }
@@ -179,33 +195,32 @@ function paintChangePot(ctx, f, state, b) {
   if (p.caseId) say(ctx, CASES[p.caseId].name, F.x(px + 1), F.y(py - 1.2), F.size(2.3, 6.5), { color: DUST, weight: 700 });
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(px), F.y(py), F.len(pw), F.len(ph));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(px)) + 0.5, Math.round(F.y(py)) + 0.5, Math.round(F.len(pw)), Math.round(F.len(ph)));
-  const size = F.size(2.2, 6.2);
+  const size = F.size(2.1, 6.5);
   const midx = px + pw / 2;
   ctx.strokeStyle = STEEL; ctx.beginPath(); ctx.moveTo(F.x(midx), F.y(py + 1)); ctx.lineTo(F.x(midx), F.y(py + ph - 1)); ctx.stroke();
-  say(ctx, 'BEFORE', F.x(px + 1.5), F.y(py + 2.1), F.size(2.1, 6), { color: DIM });
-  say(ctx, 'AFTER', F.x(midx + 1.5), F.y(py + 2.1), F.size(2.1, 6), { color: DIM });
+  say(ctx, 'BEFORE', F.x(px + 1.5), F.y(py + 2.1), F.size(2.1, 6.2), { color: DIM });
+  say(ctx, 'AFTER', F.x(midx + 1.5), F.y(py + 2.1), F.size(2.1, 6.2), { color: DIM });
   const plan = r.plan;
   if (!plan) {
-    say(ctx, 'nothing in the pot', F.x(px + pw / 2), F.y(py + ph / 2), F.size(2.1, 6), { align: 'center', color: DIM });
+    say(ctx, 'nothing in the pot', F.x(px + pw / 2), F.y(py + ph / 2), F.size(2.1, 6.2), { align: 'center', color: DIM });
     return;
   }
-  const rowY = i => py + 6.6 + i * 4.9;
+  const rowY = i => py + 6.6 + i * 5.0;
   const left = [...plan.before];
-  if (r.ran) left.push(...plan.air);
+  if (r.ran && !p.hideAir) left.push(...plan.air);
   left.forEach((it, i) => row(ctx, F, it, r.unit, px + 1.5, midx - 1.5, rowY(i), size, it.from === 'air', it.from === 'air' ? '+' : ''));
   if (r.ran) {
     const right = [...plan.after, ...plan.escaped];
     right.forEach((it, i) => row(ctx, F, it, r.unit, midx + 1.5, px + pw - 1.5, rowY(i), size, it.from === 'escaped', it.from === 'escaped' ? 'out ' : ''));
   } else {
-    say(ctx, 'press Run', F.x(midx + pw / 4), F.y(py + ph / 2), F.size(2.1, 6), { align: 'center', color: DIM });
+    say(ctx, 'press Run', F.x(midx + pw / 4), F.y(py + ph / 2), F.size(2.1, 6.2), { align: 'center', color: DIM });
   }
-  // The foot: what the pot is open to or shut from, what it stands in, and what a disc is.
+  // The foot: what the pot is open to or shut from, and whether it is in water.
   const foot = py + ph - 1.8;
   const bits = [];
   if (plan.sealed) bits.push('SEALED'); else if (CASES[r.caseId]?.air?.length) bits.push('OPEN TO AIR');
   if (plan.solvent) bits.push('IN WATER');
-  if (bits.length) say(ctx, bits.join(' · '), F.x(px + 1.5), F.y(foot), F.size(1.9, 5.8), { color: DIM });
-  say(ctx, `1 disc = ${r.unit} mol`, F.x(px + pw - 1.5), F.y(foot), F.size(1.8, 5.6), { align: 'right', color: DIM });
+  if (bits.length) say(ctx, bits.join(' · '), F.x(px + 1.5), F.y(foot), F.size(2.0, 6.2), { color: DIM });
 }
 
 function runChangePot(state, fid) {
@@ -237,7 +252,7 @@ function paintPotScale(ctx, f, state, b) {
   };
   line('BEFORE', r.before, 8.2);
   line('AFTER', r.after, 13);
-  say(ctx, 'vessel mass left out', F.x(w / 2), F.y(f.size.h - 2.2), F.size(1.8, 5.6), { align: 'center', color: DIM });
+  say(ctx, 'vessel mass left out', F.x(w / 2), F.y(f.size.h - 2.1), F.size(2.2, 7), { align: 'center', color: DUST });
 }
 
 registerFixture('potscale', { paint: paintPotScale });
@@ -268,7 +283,7 @@ function paintEvidence(ctx, f, state, b) {
     ctx.strokeStyle = lit ? AMBER : STEEL; ctx.lineWidth = 1; ctx.stroke();
     say(ctx, name, F.x(x + 4), cy, F.size(2.2, 6.2), { color: lit ? PLATE_COLORS.text : DIM, weight: lit ? 700 : 500, maxW: F.len(grid ? 26 : f.size.w - 11) });
   });
-  say(ctx, r.ran ? 'lit: the pot did this' : 'run the pot', F.x(f.size.w / 2), F.y(f.size.h - 2.2), F.size(1.8, 5.6), { align: 'center', color: DIM });
+  say(ctx, r.ran ? 'Lit: observed in vessel' : 'Run vessel to test', F.x(f.size.w / 2), F.y(f.size.h - 2.1), F.size(2.2, 7), { align: 'center', color: DUST });
 }
 
 registerFixture('evidence', { paint: paintEvidence });
@@ -279,8 +294,11 @@ registerFixture('evidence', { paint: paintEvidence });
 
 const POT_TEXT = f => {
   const p = f.props;
-  return p.seat ? 'Drag a jar into the seat, set dials, and press "Run".'
-    : `Set dials and press "${f.runLabel || 'Run'}" to see before and after.`;
+  const hasDials = Object.keys(f.dials || {}).length > 0;
+  if (p.seat) return hasDials
+    ? `Drag a jar into the seat, set the dials, and press "${f.runLabel || 'Run'}".`
+    : `Drag a jar into the seat and press "${f.runLabel || 'Run'}".`;
+  return `Set the dials and press "${f.runLabel || 'Run'}" to see before and after.`;
 };
 
 addTourText({
@@ -290,3 +308,6 @@ addTourText({
 }, {
   cjar: ['Sample jars', 'Drag a jar into the vessel seat to test it.']
 });
+
+const loadQ3 = () => import('../../quests/unit07/q3-change.js');
+addTourDemo('pot:fx_changepot', () => stageDemo(loadQ3, 0, { max: 2 }));

@@ -15,6 +15,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { addTourText } from '../tour.js';
+import { addTourDemo, stageDemo } from '../tour-demo.js';
 import { registerFixture, registerPiece } from './pot-registry.js';
 import { frameOf, say, slab } from './pot-draw.js';
 import { seatedIn, piecesInTray } from './heat-read.js';
@@ -72,13 +73,13 @@ function paintIonChip(ctx, p, state, o) {
   const sc = o.sc;
   const ion = IONS[p.props.ion];
   const poly = isPolyatomic(p.props.ion);
-  const cx = o.x - 0.6 * sc;
-  const R = (poly ? 3.7 : 3.5) * sc;
-  const cy = box.y0 + (poly ? 5.2 : 5.8) * sc;
+  const cx = o.x - 0.8 * sc;
+  const R = (poly ? 3.6 : 3.4) * sc;
+  const cy = box.y0 + (poly ? 5.2 : 5.6) * sc;
   drawIon(ctx, p.props.ion, cx, cy, R, { symbols: false });
-  if (poly) say(ctx, p.label, o.x, box.y0 + box.h - 2.4 * sc, Math.max(6, 2.4 * sc), { align: 'center', weight: 700, maxW: box.w - 1.2 * sc });
-  if (!p.props.hide) say(ctx, chargeText(ion.q), box.x0 + box.w - 0.8 * sc, box.y0 + 2.4 * sc, Math.max(6.2, 2.5 * sc), { align: 'right', weight: 700, color: AMBER });
-  if (!poly) say(ctx, p.label, o.x, box.y0 + box.h - 1.9 * sc, Math.max(6, 2.2 * sc), { align: 'center', weight: 700, maxW: box.w - 1.2 * sc, color: DUST });
+  if (poly) say(ctx, p.label, o.x, box.y0 + box.h - 2.3 * sc, Math.max(7.2, 2.9 * sc), { align: 'center', weight: 700, maxW: box.w - 1.2 * sc });
+  if (!p.props.hide) say(ctx, chargeText(ion.q), box.x0 + box.w - 0.7 * sc, box.y0 + 2.5 * sc, Math.max(7.8, 3.2 * sc), { align: 'right', weight: 700, color: AMBER });
+  if (!poly) say(ctx, p.label, o.x, box.y0 + box.h - 2.0 * sc, Math.max(7.2, 2.8 * sc), { align: 'center', weight: 700, maxW: box.w - 1.2 * sc, color: DUST });
 }
 
 registerPiece('ionchip', {
@@ -158,7 +159,8 @@ function paintNeedle(ctx, f, state, b) {
   const end = F.size(2.8, 7);
   say(ctx, '−', cx + Math.cos(-Math.PI / 2 - sweep) * R - end * 0.9, cy + Math.sin(-Math.PI / 2 - sweep) * R + end * 0.2, end, { align: 'center', weight: 700, color: DUST });
   say(ctx, '+', cx + Math.cos(-Math.PI / 2 + sweep) * R + end * 0.9, cy + Math.sin(-Math.PI / 2 + sweep) * R + end * 0.2, end, { align: 'center', weight: 700, color: DUST });
-  say(ctx, q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`, F.x(w - 2.4), F.y(12.4), F.size(3.4, 8), { align: 'right', weight: 700, color: q === 0 ? DUST : AMBER });
+  say(ctx, q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`, F.x(w - 2.4), F.y(11.6), F.size(3.5, 8.5), { align: 'right', weight: 700, color: q === 0 ? DUST : AMBER });
+  say(ctx, 'net charge', F.x(w / 2), F.y(f.size.h - 1.4), F.size(1.9, 6), { align: 'center', color: DIM });
 }
 
 registerFixture('ionneedle', { paint: paintNeedle });
@@ -174,7 +176,7 @@ const WORD = 1.75; // units per character at the strip's word size
  * A label strip. `parts` runs left to right: a string is a word the label already carries, `null` is a slot for a card or chip.
  * Returns the fixture, its slots (stand them where they say) and its size.
  */
-export function labelerFixture(id, at, { parts, title = 'Label', slotLabels = [], slotW = SLOT.w, slotH = SLOT.h, gap = 2, pad = 6 } = {}) {
+export function labelerFixture(id, at, { parts, title = 'Label', slotLabels = [], slotW = SLOT.w, slotH = SLOT.h, gap = 2, pad = 6, strip = false } = {}) {
   const top = 10;
   const widths = parts.map(x => (x === null ? slotW : Math.max(3, x.length * WORD + 1)));
   const w = Math.round((widths.reduce((s, v) => s + v, 0) + gap * (parts.length - 1) + 6) * 10) / 10;
@@ -187,7 +189,7 @@ export function labelerFixture(id, at, { parts, title = 'Label', slotLabels = []
   parts.forEach((part, i) => {
     if (part === null) {
       k++;
-      slots.push({ id: `${id}.s${k}`, label: slotLabels[k - 1] || ' ', at: { x: x + slotW / 2, y: y0 + top + slotH / 2 + 0.5 }, size: { w: slotW, h: slotH } });
+      slots.push({ id: `${id}.s${k}`, label: slotLabels[k - 1] || ' ', at: { x: x + slotW / 2, y: y0 + top + slotH / 2 + 0.5 }, size: { w: slotW, h: slotH }, ...(strip ? { row: id } : {}) });
     } else words.push({ text: part, x: x - x0, w: widths[i] });
     x += widths[i] + gap;
   });
@@ -258,21 +260,21 @@ function paintWindow(ctx, f, state, b) {
   const c = r.content;
   if (c.type === 'molecule') {
     const m = moleculeAtoms(c.formula);
-    const R = F.len(Math.min(ph * 0.42, pw * 0.2));
+    const R = F.len(Math.min(ph * 0.44, pw * 0.24));
     const cx = F.x(px + pw / 2); const cy = F.y(py + ph / 2);
-    ctx.strokeStyle = STEEL; ctx.lineWidth = Math.max(1, R * 0.08);
+    ctx.strokeStyle = STEEL; ctx.lineWidth = Math.max(1.2, R * 0.09);
     for (const [i, j, order] of m.bonds) {
       for (let k = 0; k < order; k++) {
         const off = (k - (order - 1) / 2) * R * 0.18;
-        ctx.beginPath(); ctx.moveTo(cx + m.atoms[i].x * R * 1.3, cy + m.atoms[i].y * R * 1.3 + off); ctx.lineTo(cx + m.atoms[j].x * R * 1.3, cy + m.atoms[j].y * R * 1.3 + off); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + m.atoms[i].x * R * 1.25, cy + m.atoms[i].y * R * 1.25 + off); ctx.lineTo(cx + m.atoms[j].x * R * 1.25, cy + m.atoms[j].y * R * 1.25 + off); ctx.stroke();
       }
     }
     ctx.lineWidth = 1;
     for (const a of m.atoms) {
-      const ax = cx + a.x * R * 1.3; const ay = cy + a.y * R * 1.3; const ar = R * 0.34;
+      const ax = cx + a.x * R * 1.25; const ay = cy + a.y * R * 1.25; const ar = R * 0.44;
       ctx.fillStyle = inkOf(a.el); ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = DUST; ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.stroke();
-      say(ctx, a.el, ax, ay, Math.max(6, ar * 1.1), { align: 'center', weight: 700, color: '#0f0e0b' });
+      say(ctx, a.el, ax, ay, Math.max(8, ar * 1.25), { align: 'center', weight: 700, color: '#0f0e0b' });
     }
     return;
   }
@@ -282,12 +284,16 @@ function paintWindow(ctx, f, state, b) {
   const cols = Math.min(items.length, 4);
   const rows = Math.ceil(items.length / cols);
   const cellW = pw / cols; const cellH = ph / rows;
-  const R = F.len(Math.min(cellW, cellH) * 0.34);
+  const R = F.len(Math.min(cellW, cellH) * 0.31);
   items.forEach((ion, i) => {
-    const cx = F.x(px + (i % cols + 0.5) * cellW); const cy = F.y(py + (Math.floor(i / cols) + 0.5) * cellH);
+    const cx = F.x(px + (i % cols + 0.5) * cellW); const cy = F.y(py + (Math.floor(i / cols) + 0.44) * cellH);
     drawIon(ctx, ion, cx, cy, R, { symbols: true });
     const hidden = (c.hide || []).includes(ion) || c.charges === 'none';
-    if (!hidden) say(ctx, chargeText(IONS[ion].q), cx + R * 1.25, cy - R * 0.9, Math.max(6.2, R * 0.7), { weight: 700, color: AMBER });
+    if (!hidden) say(ctx, chargeText(IONS[ion].q), cx + R * 1.2, cy - R * 0.85, Math.max(7.2, R * 0.78), { weight: 700, color: AMBER });
+    if (isPolyatomic(ion)) {
+      const tag = `${pretty(IONS[ion].f)}${chargeText(IONS[ion].q).replace('+', '⁺').replace('−', '⁻').replace('1', '')}`;
+      say(ctx, tag, cx, cy + R + F.len(1.8), Math.max(7, R * 0.72), { align: 'center', weight: 700, color: DUST });
+    }
   });
 }
 
@@ -300,13 +306,26 @@ registerFixture('window', { paint: paintWindow, run: runWindow });
 addTourText({
   'pot:ionneedle': {
     title: 'Charge meter', dials: false,
-    text: 'Adds up the charges of ions placed in the tray.'
+    text: (f, t) => Object.values(t.pieces || {}).some(p => p.kind === 'ionchip' && p.props?.hide)
+      ? 'The iron ions\' charge is not printed. The meter shows the oxide charge the iron must cancel.'
+      : 'Adds up the charges of ions placed in the tray.'
   },
   'pot:window': {
     title: 'Particle view', dials: false,
-    text: 'Drag a sample onto the seat and press the key to inspect its particles.'
+    text: f => `Drag a sample into the slot and press "${f.runLabel || 'Dissolve'}" to see its particles.`
+  },
+  'pot:labeler': {
+    title: f => (f.label === 'Formula' ? 'Formula strip' : 'Label'), dials: false,
+    text: f => (f.label === 'Formula'
+      ? 'Drag formula cards into the strip from left to right. Dropping on a filled slot shifts cards over.'
+      : 'Drag a card into each label slot.')
   }
 }, {
   'pot:ionchip': ['Ions', 'Drag an ion into a tray to group or balance charges.'],
-  'pot:crate': ['Samples', 'Drag a sample onto the particle view seat to inspect it.']
+  'pot:crate': ['Samples', 'Drag a sample into the particle view slot to inspect it.']
 });
+
+const loadQ2 = () => import('../../quests/unit07/q2-names.js');
+addTourDemo('pot:predict_slot', () => stageDemo(loadQ2, 0, { max: 1 }));
+addTourDemo('pot:fx_labeler', () => stageDemo(loadQ2, 2, { max: 2 }));
+addTourDemo('pot:fx_window', () => stageDemo(loadQ2, 4, { max: 2 }));

@@ -219,7 +219,9 @@ export function createTable(spec, seedKey = '') {
       // A rail may stand its end words higher: a card on it has thickness, and in 3D its top edge rises over the word.
       ...(z.rail.labelLift ? { labelLift: z.rail.labelLift } : {}),
       // Its end words printed under it, not over it (`near.js` sets this on a rail it moves to the far side).
-      ...(z.rail.labelsBelow ? { labelsBelow: true } : {})
+      ...(z.rail.labelsBelow ? { labelsBelow: true } : {}),
+      // Fixed slot count so dropping pieces left-to-right on an empty rail keeps them in dropped order.
+      ...(z.rail.slots ? { slots: z.rail.slots } : {})
     };
   }
 
@@ -279,6 +281,11 @@ export function createTable(spec, seedKey = '') {
   }
   // A row of loose pieces packed against one side of its line stands in the middle of it (`balance.js`).
   if (spec.layout !== 'as-drawn') balanceRows(s, getKit(spec.kit));
+  // Lock final starting coordinates as each piece's home (except rail pieces and captioned tools).
+  for (const p of Object.values(s.pieces)) {
+    if (!p.caption && p.zone !== 'rail') p.home = { ...p.at };
+    if (p.zone && p.zone.startsWith('tray:')) p.homeZone = p.zone;
+  }
   return s;
 }
 
@@ -311,6 +318,7 @@ function relayout(s, key) {
   if (!zone) return;
   const fallback = kind === 'tray' ? SIZES.tray : SIZES.container;
   // Joined pieces stay side by side: lay out cluster by cluster.
+  // Pieces that originated in this supply/pool tray (`homeZone === key`) stay at their home slot instead of reflowing.
   const members = Object.values(s.pieces).filter(p => p.zone === key && !p.hidden).map(p => p.id);
   const seen = new Set();
   let n = 0;
@@ -319,6 +327,10 @@ function relayout(s, key) {
     for (const c of clusterOf(s, m)) {
       if (s.pieces[c].zone !== key || seen.has(c)) continue;
       seen.add(c);
+      if (kind === 'tray' && s.pieces[c].homeZone === key && !zone.orbit) {
+        s.pieces[c].at = { ...s.pieces[c].home };
+        continue;
+      }
       s.pieces[c].at = layoutIn(zone, fallback, n++, members.length);
     }
   }
@@ -600,6 +612,7 @@ function drop(s, kit, id, t) {
     if (kit.returnFree && p.home) {
       if (isTool(kit, p)) unlinkAll(s, id);
       leaveZone(s, id);
+      p.zone = p.homeZone || null;
       p.at = { ...p.home };
       return { placed: 'free' };
     }
@@ -631,7 +644,7 @@ function drop(s, kit, id, t) {
     const zone = t.kind === 'tray' ? s.zones.trays[t.id] : s.zones.containers[t.id];
     if (zone?.single) {
       for (const o of Object.values(s.pieces)) {
-        if (o.zone === key && o.id !== id) { o.zone = null; o.at = { ...o.home }; }
+        if (o.zone === key && o.id !== id) { o.zone = o.homeZone || null; o.at = { ...o.home }; }
       }
     }
     const group = clusterOf(s, id);
@@ -646,7 +659,7 @@ function drop(s, kit, id, t) {
     leaveZone(s, id);
     if (s.zones.slots[t.id].row) return fileIntoRow(s, id, s.zones.slots[t.id]);
     for (const o of Object.values(s.pieces)) {
-      if (o.zone === key && o.id !== id) { o.zone = null; o.at = { ...o.home }; }
+      if (o.zone === key && o.id !== id) { o.zone = o.homeZone || null; o.at = { ...o.home }; }
     }
     p.zone = key;
     relayout(s, key);
@@ -682,7 +695,7 @@ function fileIntoRow(s, id, slot) {
   const now = new Set(Object.values(out.placed));
   for (const z of row) {
     for (const o of Object.values(s.pieces)) {
-      if (o.zone === `slot:${z.id}` && !now.has(o.id)) { o.zone = null; o.at = { ...o.home }; }
+      if (o.zone === `slot:${z.id}` && !now.has(o.id)) { o.zone = o.homeZone || null; o.at = { ...o.home }; }
     }
   }
   for (const z of row) {
@@ -690,7 +703,7 @@ function fileIntoRow(s, id, slot) {
     if (pid) { s.pieces[pid].zone = `slot:${z.id}`; s.pieces[pid].at = { ...z.at }; }
   }
   // A card the row could not hold goes home.
-  for (const pid of out.drawer) { s.pieces[pid].zone = null; s.pieces[pid].at = { ...s.pieces[pid].home }; }
+  for (const pid of out.drawer) { s.pieces[pid].zone = s.pieces[pid].homeZone || null; s.pieces[pid].at = { ...s.pieces[pid].home }; }
   return { placed: zoneKey('slot', slot.id), pushed: Object.keys(out.placed).length };
 }
 

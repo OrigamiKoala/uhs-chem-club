@@ -161,7 +161,7 @@ const SKIP_PIECES = new Set([
  * @param {{intro?: string, speaker?: string, worked?: string[]|null}} [opts]
  * @returns {Array<{flag: string, name: string, desc: string}>}
  */
-export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null } = {}) {
+export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null, fx = null } = {}) {
   if (!table) return [];
   const kit = table.kit;
   const steps = [];
@@ -173,10 +173,11 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
     intro.forEach((part, idx) => {
       const text = typeof part === 'string' ? part : part.body;
       const title = typeof part === 'string' ? speaker : (part.title || speaker);
-      if (text) steps.push({ flag: `tour_bench_${kit}_${hash(text)}_${idx}`, name: title, desc: text, isBriefing: true, ...(idx === intro.length - 1 && worked?.length ? { lines: worked.slice() } : {}) });
+      const partFx = typeof part === 'object' ? part.fx : null;
+      if (text) steps.push({ flag: `tour_bench_${kit}_${hash(text)}_${idx}`, name: title, desc: text, isBriefing: true, ...(partFx ? { fx: partFx } : {}), ...(idx === intro.length - 1 && worked?.length ? { lines: worked.slice() } : {}) });
     });
   } else if (intro) {
-    steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, isBriefing: true, ...(worked?.length ? { lines: worked.slice() } : {}) });
+    steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, isBriefing: true, ...(fx ? { fx } : {}), ...(worked?.length ? { lines: worked.slice() } : {}) });
   }
 
   // The instruments, in the order they stand on the plate (top to bottom, left to right). One step per fixture kind,
@@ -187,7 +188,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
     return da - db || a.at.y - b.at.y || a.at.x - b.at.x;
   });
   for (const f of fixtures) {
-    if (f.props?.backdrop && f.noRun && !Object.keys(f.dials || {}).length) continue;
+    if (f.props?.backdrop && f.noRun && !Object.keys(f.dials || {}).length && f.kind !== 'labeler') continue;
     if (SKIP_FIXTURES.has(f.kind)) continue;
     const twin = steps.some(st => st.flag === `tour_${kit}_fx_${f.kind}`);
     if (twin) continue;
@@ -218,7 +219,9 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
     if (kind === 'speck' && hasFixture('field')) continue;
     if (kind === 'sample' && (hasFixture('assay') || hasFixture('tester') || hasFixture('flask'))) continue;
     if (kind === 'cuvette:cuvette' && hasFixture('spectro')) continue;
-    if (kind === 'crate') continue;
+    if (kind === 'crate' || (kind === 'pot:crate' && hasFixture('window'))) continue;
+    if (kind === 'cjar' && hasFixture('changepot')) continue;
+    if ((kind === 'pot:ionchip' || kind === 'ionchip') && allPieces.filter(q => q.kind === 'ionchip').every(q => q.fixed)) continue;
     if (kind === 'charge' && hasFixture('cup')) continue;
     if (kind === 'ptc' && hasFixture('cells')) continue;
     if (kind === 'specimen' && allPieces.filter(q => q.kind === 'specimen').every(q => q.fixed)) continue;
@@ -234,9 +237,11 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
     }
     const lig = ligarPiece(kind, kit, table);
     if (lig) { add(lig[2] || `pc_${kind}`, lig[0], lig[1], { pc: p.id }); continue; }
+    if ((kind === 'pans:ichip' || kind === 'ichip') && allPieces.filter(q => q.kind === 'ichip').every(q => q.fixed)) continue;
     const entry = EXTRA.pieces[`${kit}:${kind}`] || PIECE[kind];
     if (!entry) continue;
-    add(`pc_${kind.replace(':', '_')}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''), { pc: p.id });
+    const desc = typeof entry[1] === 'function' ? entry[1](p, table) : entry[1];
+    add(`pc_${kind.replace(':', '_')}`, entry[0], desc + (entry[2] ? entry[2](table) : ''), { pc: p.id });
   }
 
   // On the photocell bench, introduce dragging a metal plate onto the holder before adjusting the photocell dials.
@@ -263,13 +268,15 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
       ...(demoOf(`tool_${t}`) ? { demo: demoOf(`tool_${t}`) } : {})
     });
   }
-  if (!steps.length) {
+  const hasActionStep = steps.some(s => !s.isBriefing);
+  if (!hasActionStep) {
     const slot = Object.values(table.zones?.slots || {}).find(z => z.label && /predict/i.test(z.label));
     if (slot) {
       steps.push({
         flag: `tour_${kit}_predict_slot`,
         name: 'Make a prediction',
-        desc: `Drag the card you think is right into the "${slot.label}" slot. Your prediction is not graded — the next bench tests it.`
+        desc: `Drag the card you think is right into the "${slot.label}" slot. Your prediction is not graded — the next bench tests it.`,
+        ...(demoOf('predict_slot') ? { demo: demoOf('predict_slot') } : {})
       });
     }
   }

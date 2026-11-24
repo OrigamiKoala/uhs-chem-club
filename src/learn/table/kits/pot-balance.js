@@ -90,7 +90,7 @@ function stemOf(formula, el) {
  * that turns the count of `el` in species `at` (written as 1) up to 3; `states` lists the slot id under each species; `sealed` the
  * species hidden as `?`; `lex` is how many of the bench's words are earned (0 none, 1 reactant and product, 2 coefficient too).
  */
-export function boardFixture(id, at, { eq, dialed = 'all', start = {}, sub = null, states = null, sealed = [], lex = 0, title = 'Board', w = 72, coefMax = 6 } = {}) {
+export function boardFixture(id, at, { eq, dialed = 'all', start = {}, sub = null, states = null, sealed = [], lex = 0, title = 'Board', w = 74, coefMax = 6 } = {}) {
   const base = parseEquation(eq);
   const all = [...base.lhs, ...base.rhs];
   const dl = dialed === 'all' ? all.map((_, i) => i) : dialed;
@@ -99,15 +99,21 @@ export function boardFixture(id, at, { eq, dialed = 'all', start = {}, sub = nul
     dials[`c${i}`] = { min: 1, max: coefMax, step: 1, value: start[i] ?? 1, label: `_ ${sealed.includes(i) ? '?' : pretty(all[i].f)}` };
   });
   if (sub) {
-    const labels = [1, 2, 3].map(n => (n === 1 ? '' : String(n).split('').map(d => '₀₁₂₃₄₅₆₇₈₉'[+d]).join('')));
-    dials.sub = { min: 1, max: 3, step: 1, value: 1, label: `${pretty(stemOf(all[sub.at].f, sub.el))}_`, labels };
+    const labels = ['1', '2', '3'];
+    dials.sub = { min: 1, max: 3, step: 1, value: 1, label: `Subscript in ${pretty(stemOf(all[sub.at].f, sub.el))}_`, labels };
   }
   const nd = Object.keys(dials).length;
-  const top = contentTop(nd);
-  const h = R1(top + 11);
+  const rowPitch = 7.8;
+  const eqTop = nd ? 9.6 + (nd - 1) * rowPitch + 5.8 : 9.6;
+  const h = R1(eqTop + 13);
+  const grab = {};
+  for (const k of Object.keys(dials)) grab[k] = 3.2;
   return {
     id, kind: 'eqboard', label: title, at: { ...at }, size: { w, h }, dials, noRun: true,
-    props: { backdrop: true, eq, dialed: dl, sub, states, sealed, lex, top }
+    props: {
+      backdrop: true, eq, dialed: dl, sub, states, sealed, lex, eqTop,
+      ...(nd ? { rowPitch, grab, tickLabels: true } : {})
+    }
   };
 }
 
@@ -118,14 +124,14 @@ function paintBoard(ctx, f, state, b) {
   const species = r.plan.species;
   const left = sideText(species.slice(0, r.nl), r.sealed, 0);
   const right = sideText(species.slice(r.nl), r.sealed, r.nl);
-  const y = p.top + 5.2;
-  const half = (f.size.w - 8) / 2 - 2.2;
-  const chars = Math.max(left.length, right.length, 8);
-  const size = F.size(Math.min(3.6, half / (chars * 0.62)), 6.4);
+  const y = p.eqTop + 6.4;
+  const half = (f.size.w - 6) / 2 - 2.4;
+  const chars = Math.max(left.length, right.length, 7);
+  const size = F.size(Math.min(5.0, half / (chars * 0.56)), 9.5);
   const mid = f.size.w / 2;
   if (p.lex >= 1) {
-    say(ctx, 'Reactants', F.x(mid - 3), F.y(y - 4.4), F.size(1.9, 6), { align: 'right', color: DIM });
-    say(ctx, 'Products', F.x(mid + 3), F.y(y - 4.4), F.size(1.9, 6), { color: DIM });
+    say(ctx, 'Reactants', F.x(mid - 3), F.y(y - 4.8), F.size(2.2, 6.8), { align: 'right', color: DIM });
+    say(ctx, 'Products', F.x(mid + 3), F.y(y - 4.8), F.size(2.2, 6.8), { color: DIM });
   }
   say(ctx, left, F.x(mid - 3), F.y(y), size, { align: 'right', weight: 700, maxW: F.len(half) });
   say(ctx, '→', F.x(mid), F.y(y), size, { align: 'center', color: AMBER, weight: 700 });
@@ -138,11 +144,11 @@ registerFixture('eqboard', { paint: paintBoard });
    THE PARTICLE WINDOW
    ------------------------------------------------------------------ */
 
-const K = 2;
+const K = 2.6;
 const CAP = 24;
 const GAP = 0.8;
-const LABEL_W = 10;
-const WINDOW_BODY = { top: 5.2, bottom: 5.6 };
+const LABEL_W = 11.5;
+const WINDOW_BODY = { top: 5.2, bottom: 6.2 };
 
 /** Rings round the groups that travel as one piece (atom indexes of each group, by formula). */
 export const RINGS = { 'Ca(OH)2': [[1, 3], [2, 4]], H3PO4: [[0, 1, 2, 3, 4]], 'Ca3(PO4)2': [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]], H2O: [[0, 1]] };
@@ -195,7 +201,7 @@ function paintSide(ctx, F, groups, x0, w, y0, bodyH, o) {
   const fit = fitSide(groups, w - LABEL_W, bodyH);
   const rowsFixed = o.phases ? bodyH / Math.max(1, groups.length) : null;
   let y = y0;
-  const tiny = F.size(1.9, 6);
+  const tiny = F.size(2.4, 7.2);
   fit.plan.forEach(({ g, tw, th, per, h, n }, gi) => {
     const rowH = rowsFixed ?? h;
     say(ctx, g.sealed ? '?' : pretty(g.f), F.x(x0), F.y(y + Math.min(rowH, th + GAP) / 2), tiny, { color: DUST, weight: 700, maxW: F.len(LABEL_W - 1) });
@@ -260,11 +266,11 @@ function paintWindow(ctx, f, state, b) {
   const els = [];
   for (const g of [...r.before, ...r.after]) if (!g.sealed) for (const a of shapeOf(g.f)) if (!els.includes(a.el)) els.push(a.el);
   els.forEach((el, i) => {
-    const x = 4 + i * 8;
-    ctx.beginPath(); ctx.arc(F.x(x), F.y(h - 3.4), Math.max(2, F.len(0.8)), 0, Math.PI * 2); ctx.fillStyle = INK[el]; ctx.fill();
-    say(ctx, el, F.x(x + 1.6), F.y(h - 3.4), F.size(1.9, 6), { color: DUST });
+    const x = 4.5 + i * 10;
+    ctx.beginPath(); ctx.arc(F.x(x), F.y(h - 3.4), Math.max(3, F.len(1.1)), 0, Math.PI * 2); ctx.fillStyle = INK[el]; ctx.fill();
+    say(ctx, el, F.x(x + 2.0), F.y(h - 3.4), F.size(2.4, 7.2), { color: DUST, weight: 700 });
   });
-  if (p.pot) say(ctx, 'fixed picture', F.x(w - 3), F.y(h - 3.4), F.size(1.8, 5.8), { align: 'right', color: DIM });
+  if (p.pot) say(ctx, 'fixed picture', F.x(w - 3), F.y(h - 3.4), F.size(2.1, 6.5), { align: 'right', color: DIM });
 }
 
 /** The window. `board` is the board it draws; or `pot` is `{ eq, feed }` for a locked diagram of a pot; `phases` draws each substance's state; `rings` rings the groups that stay whole. */
@@ -279,9 +285,24 @@ registerFixture('eqwindow', { paint: paintWindow });
    ------------------------------------------------------------------ */
 
 /** The ledger: one row per kind of atom (or per group when `groups` lists them), the count on each side of the arrow. */
-export function ledgerFixture(id, at, { board, groups = null, rows = 3, lex = 1, w = 68, title = 'Atom ledger' } = {}) {
-  const h = R1(Math.min(26, 11.4 + rows * 4.1));
-  return { id, kind: 'eqledger', label: groups ? 'Ledger' : title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, board, groups, lex } };
+export function ledgerFixture(id, at, { board, groups = null, rows = 3, lex = 1, w = 68, title = 'Atom ledger', checkMode = false } = {}) {
+  const h = R1(Math.min(27, (checkMode ? 14 : 11.4) + rows * 4.1));
+  return {
+    id, kind: 'eqledger', label: groups ? 'Ledger' : title, at: { ...at }, size: { w, h }, dials: {},
+    noRun: !checkMode, ...(checkMode ? { runLabel: 'Check' } : {}),
+    props: { backdrop: true, board, groups, lex, ...(checkMode ? { checkMode: true } : {}) }
+  };
+}
+
+function ledgerSig(state, fid) {
+  const f = state.fixtures[fid];
+  const r = boardRead(state, f.props.board);
+  return `${fid}|${r.coefs.join(',')}`;
+}
+
+function runLedger(state, fid) {
+  const sig = ledgerSig(state, fid);
+  return { x: state.recorder.rows.length + 1, y: 0, label: sig };
 }
 
 function paintLedger(ctx, f, state, b) {
@@ -289,27 +310,31 @@ function paintLedger(ctx, f, state, b) {
   const { rows } = ledgerRead(state, f.id);
   const w = f.size.w;
   const hs = F.size(2.1, 6);
+  const showRight = !f.props.checkMode || state.recorder.rows.some(r => r.label === ledgerSig(state, f.id));
   say(ctx, f.props.groups ? 'Pieces' : 'Atoms', F.x(4), F.y(8), hs, { color: DIM });
   say(ctx, 'Reactants', F.x(w * 0.58), F.y(8), hs, { align: 'center', color: DIM });
   say(ctx, 'Products', F.x(w * 0.86), F.y(8), hs, { align: 'center', color: DIM });
-  const size = F.size(3.4, 8);
+  const size = F.size(2.9, 7.5);
   rows.forEach((r, i) => {
     const y = 12.4 + i * 4.1;
     say(ctx, pretty(r.el), F.x(4), F.y(y), size, { weight: 700 });
     say(ctx, String(r.left), F.x(w * 0.58), F.y(y), size, { align: 'center', color: AMBER, weight: 700 });
-    say(ctx, String(r.right), F.x(w * 0.86), F.y(y), size, { align: 'center', color: AMBER, weight: 700 });
+    say(ctx, showRight ? String(r.right) : '?', F.x(w * 0.86), F.y(y), size, { align: 'center', color: showRight ? AMBER : DIM, weight: 700 });
   });
 }
 
-registerFixture('eqledger', { paint: paintLedger });
+registerFixture('eqledger', { paint: paintLedger, run: runLedger });
 
 /** The tally: two dials the player sets to the number of atoms of one element they count before and after. */
-export function tallyFixture(id, at, { element = 'O', name = 'Oxygen', w = 56 } = {}) {
+export function tallyFixture(id, at, { element = 'O', name = 'Oxygen', w = 68 } = {}) {
   const dials = {
     before: { min: 0, max: 6, step: 1, value: 0, label: `${name} before _` },
     after: { min: 0, max: 6, step: 1, value: 0, label: `${name} after _` }
   };
-  return { id, kind: 'eqtally', label: 'Tally', at: { ...at }, size: { w, h: R1(contentTop(2) + 3) }, dials, noRun: true, props: { element } };
+  return {
+    id, kind: 'eqtally', label: 'Tally', at: { ...at }, size: { w, h: 25 }, dials, noRun: true,
+    props: { element, rowPitch: 8.6, grab: { before: 3.6, after: 3.6 }, tickLabels: true }
+  };
 }
 
 registerFixture('eqtally', { paint: () => {} });
@@ -351,6 +376,7 @@ registerFixture('eqformula', {
 
 const TILE_RECT = Object.freeze({ hw: 8, hh: 5.5 });
 export const TILE_NAME = { s: 'solid', l: 'liquid', g: 'gas', aq: 'in water' };
+const TILE_CUE = { s: 'rows', l: 'jumbled', g: 'far apart', aq: 'in water' };
 
 /** A state tile: `state` is `s`, `l`, `g` or `aq`. */
 export const stateTile = (id, state, at, extra = {}) => ({ id, kind: 'statetile', label: `(${state}) ${TILE_NAME[state]}`, at, props: { state }, ...extra });
@@ -359,8 +385,9 @@ registerPiece('statetile', {
   kind: { r: 7, rect: TILE_RECT, nojoin: true },
   paint(ctx, p, state, o) {
     const box = slab(ctx, o, TILE_RECT, '#2a2620');
-    say(ctx, `(${p.props.state})`, o.x, box.y0 + box.h * 0.38, Math.max(7, 3.2 * o.sc), { align: 'center', weight: 700, color: AMBER, maxW: box.w - 2 });
-    say(ctx, TILE_NAME[p.props.state], o.x, box.y0 + box.h * 0.76, Math.max(6, 1.8 * o.sc), { align: 'center', color: DUST, maxW: box.w - 2 });
+    say(ctx, `(${p.props.state})`, o.x, box.y0 + box.h * 0.34, Math.max(7.2, 3.0 * o.sc), { align: 'center', weight: 700, color: AMBER, maxW: box.w - 1.6 });
+    const desc = p.props.state === 'aq' ? TILE_NAME.aq : `${TILE_NAME[p.props.state]} · ${TILE_CUE[p.props.state]}`;
+    say(ctx, desc, o.x, box.y0 + box.h * 0.74, Math.max(6.2, 1.85 * o.sc), { align: 'center', color: DUST, maxW: box.w - 1.6 });
   },
   faceKey: p => `statetile|${p.props.state}`,
   printed: p => `(${p.props.state})`
@@ -379,17 +406,18 @@ export function eqBench({ eq, dialed = 'all', start = {}, sub = null, states = f
   const all = [...base.lhs, ...base.rhs];
   const slotIds = states ? all.map((_, i) => `bd.s${i}`) : null;
   const board = boardFixture('bd', { x: 39, y: 20 }, { eq, dialed, start, sub, states: slotIds, sealed, lex, title: boardTitle, coefMax });
-  board.at.y = R1(3 + board.size.h / 2);
-  const win = windowFixture('win', { x: 113, y: 18 }, pot ? { pot, rings, phases } : { board: 'bd', phases, rings });
+  board.at.y = R1(2.5 + board.size.h / 2);
+  const winH = ledger ? 32 : 44;
+  const win = windowFixture('win', { x: 113, y: R1(2.5 + winH / 2) }, pot ? { pot, rings, phases, h: winH } : { board: 'bd', phases, rings, h: winH });
   const fixtures = [board, win];
   if (ledger) {
     const rows = ledger === 'groups' ? groups.length : atomLedger(base).rows.length;
-    const led = ledgerFixture('led', { x: 113, y: 0 }, { board: 'bd', groups: ledger === 'groups' ? groups : null, rows, lex });
-    led.at.y = R1(33.5 + led.size.h / 2);
+    const led = ledgerFixture('led', { x: 113, y: 0 }, { board: 'bd', groups: ledger === 'groups' ? groups : null, rows, lex, checkMode: ledger === 'check' });
+    led.at.y = R1(36 + led.size.h / 2);
     fixtures.push(led);
   }
   const slots = states
-    ? all.map((s, i) => ({ id: slotIds[i], label: pretty(s.f), at: { x: 12 + i * 19, y: R1(board.at.y + board.size.h / 2 + 11) }, size: { w: 17, h: 11 } }))
+    ? all.map((s, i) => ({ id: slotIds[i], label: pretty(s.f), at: { x: 11 + i * 19.5, y: R1(board.at.y + board.size.h / 2 + 11) }, size: { w: 18, h: 12.5 } }))
     : [];
   return { board, fixtures, slots, boardId: 'bd', winId: 'win', ledId: 'led' };
 }
@@ -400,7 +428,7 @@ export function eqBench({ eq, dialed = 'all', start = {}, sub = null, states = f
 
 const BOARD_TEXT = f => (Object.keys(f.dials).length
   ? 'Turn the dials to set the numbers in the equation.'
-  : 'Shows the equation for the reaction in the pot.');
+  : 'Shows the equation for the reaction in the vessel.');
 
 addTourText({
   'pot:eqboard': { title: 'Board', dials: false, text: BOARD_TEXT },

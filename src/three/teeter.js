@@ -136,7 +136,7 @@ export class TeeterWorld {
     };
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
     // THE GROUND: the pans' crust for grain; the vertex colours say what it is (clay dike, crust, stair stone, hill rock).
-    M.ground = buildMaterial(panCrust({ size: texSize(512), seed: 31 }), { repeat: 1, roughness: 1.0 });
+    M.ground = buildMaterial(panCrust({ size: texSize(512), seed: 31 }), { repeat: 4, roughness: 1.0 });
     M.ground.vertexColors = true;
     M.ground.normalScale.set(1.1, 1.1);
     M.ground.envMapIntensity = 0.6;

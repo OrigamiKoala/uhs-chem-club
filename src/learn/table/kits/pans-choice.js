@@ -18,12 +18,12 @@ const DUST = PLATE_COLORS.dust;
 const DIM = PLATE_COLORS.dim;
 const AMBER = PLATE_COLORS.amber;
 
-export function choiceFixture(id, label, at, { options, start, w = 46, same = null, plates = null } = {}) {
+export function choiceFixture(id, label, at, { options, start, w = 46, same = null, plates = null, placeholder = 'tap a vessel' } = {}) {
   return {
     id, kind: 'choice', label, at: { ...at }, size: { w, h: 9 }, noRun: true,
     dials: { value: { min: 1, max: options.length, step: 1, value: start ?? options.length, label: 'Chosen', labels: options } },
     props: {
-      options, hidden: ['value'], ...(same ? { pick: { fixture: id, dial: 'value', value: same } } : {}),
+      options, hidden: ['value'], placeholder, ...(same ? { pick: { fixture: id, dial: 'value', value: same } } : {}),
       // Plates for answers that are not a thing on the table ("both", "neither"): the readout splits into tappable halves.
       ...(plates ? { plates, taps: plates.map((v, i) => ({ x0: (w / plates.length) * i, x1: (w / plates.length) * (i + 1), y0: 0, y1: 9, dial: 'value', value: v })) } : {})
     }
@@ -35,14 +35,14 @@ function paintChoice(ctx, f, state, b) {
   const i = Math.round(f.dials.value.value) - 1;
   const text = (f.props.options[i] ?? '').trim();
   const sz = F.size(2.6, 6.4);
-  say(ctx, f.label, F.x(2), F.y(3), F.size(2.2, 5.8), { color: DIM, maxW: F.len(f.size.w - 4) });
-  if (!f.props.plates) say(ctx, text || 'tap to choose', F.x(2), F.y(f.size.h - 2.6), sz, { color: text ? AMBER : DIM, weight: 700, maxW: F.len(f.size.w - 4) });
+  say(ctx, f.label, F.x(2), F.y(3), F.size(2.2, 5.8), { color: DUST, maxW: F.len(f.size.w - 4) });
+  if (!f.props.plates) say(ctx, text || f.props.placeholder || 'tap to choose', F.x(2), F.y(f.size.h - 2.6), sz, { color: text ? AMBER : DUST, weight: 700, maxW: F.len(f.size.w - 4) });
   if (f.props.plates) {
     const n = f.props.plates.length; const cw = f.size.w / n;
     f.props.plates.forEach((v, k) => {
       ctx.strokeStyle = i + 1 === v ? AMBER : DUST;
       ctx.strokeRect(Math.round(F.x(k * cw + 0.5)) + 0.5, Math.round(F.y(5)) + 0.5, Math.round(F.len(cw - 1)), Math.round(F.len(4)));
-      say(ctx, f.props.options[v - 1], F.x(k * cw + cw / 2), F.y(7), F.size(2.1, 5.4), { align: 'center', color: i + 1 === v ? AMBER : DIM, maxW: F.len(cw - 1.4) });
+      say(ctx, f.props.options[v - 1], F.x(k * cw + cw / 2), F.y(7), F.size(2.1, 5.4), { align: 'center', color: i + 1 === v ? AMBER : DUST, weight: 700, maxW: F.len(cw - 1.4) });
     });
     return;
   }

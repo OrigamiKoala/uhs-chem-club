@@ -10,7 +10,7 @@
 import { Q4, kOfNet, fmtK, netOfCards, netSides } from '../learn/engine/eqdata.js';
 import { C, text, ground, win, ease } from './story-kit.js';
 
-const INK = ['#c0652b', '#6f8fb0', '#8a9a5b'];
+const INK = ['#c0652b', '#4c9be8', '#8a9a5b'];
 const fs = h => Math.max(13, h * 0.042);
 const coef = n => (n === 1 ? '' : `${n} `);
 const side = l => l.map(([n, s]) => `${coef(n)}${s}`).join(' + ');
@@ -59,7 +59,7 @@ function kRewrite(ctx, w, h, t) {
     text(ctx, `K ${fmtK(k)}`, w * 0.68, y + h * 0.075, { size: fs(h) * 1.3, color: C.amber, weight: 700 });
     ctx.globalAlpha = 1;
   });
-  text(ctx, 'K read from the bars', w * 0.5, h * 0.07, { size: fs(h), color: C.dust });
+  text(ctx, chain ? 'B cancels out — multiply K₁ × K₂' : 'Same settled vessel — new equation, new K', w * 0.5, h * 0.07, { size: fs(h), color: C.dust });
 }
 
 export const TEETER_Q4_SCENES = { 'k-rewrite': kRewrite };

@@ -46,17 +46,17 @@ const WEAK = 'Weakest acid';
 const STRONG = 'Strongest acid';
 
 /** The cards of each stage: [acid id, structure facts]. Facts are structure only. */
-const S2 = [['hf', ['bond 92 pm', '565 kJ/mol']], ['hcl', ['bond 127 pm', '431 kJ/mol']], ['hbr', ['bond 141 pm', '366 kJ/mol']]];
+const S2 = [['hf', ['smallest atom (F)', 'tightest H–F bond']], ['hcl', ['middle atom (Cl)', 'medium H–Cl bond']], ['hbr', ['largest atom (Br)', 'loosest H–Br bond']]];
 const S3 = [['ch4', ['on carbon', 'electroneg. 2.55']], ['nh3', ['on nitrogen', 'electroneg. 3.04']], ['h2o', ['on oxygen', 'electroneg. 3.44']], ['hf', ['on fluorine', 'electroneg. 3.98']]];
-const S4 = [['hclo', ['H–O–Cl', '0 extra O']], ['hclo2', ['H–O–Cl', '1 extra O']], ['hclo3', ['H–O–Cl', '2 extra O']], ['hclo4', ['H–O–Cl', '3 extra O']]];
-const S5 = [['ethanol', ['CH₃CH₂–OH', 'no C=O']], ['acetic', ['CH₃C(=O)–OH', 'has C=O']], ['formic', ['HC(=O)–OH', 'has C=O']]];
+const S4 = [['hclo', ['H–O–Cl', 'extra O: 0']], ['hclo2', ['H–O–Cl', 'extra O: 1']], ['hclo3', ['H–O–Cl', 'extra O: 2']], ['hclo4', ['H–O–Cl', 'extra O: 3']]];
+const S5 = [['ethanol', ['1 O holds charge', 'no C=O']], ['acetic', ['2 O share charge', 'has C=O']], ['formic', ['2 O share charge', 'smaller H–C=O']]];
 const S6 = [['hcl', 'left by HCl'], ['hf', 'left by HF'], ['hclo', 'left by HClO'], ['h2o', 'left by H₂O']];
 const S7 = [
-  { id: 'x1', label: 'A', acid: 'acetic', rows: ['CH₃C(=O)–OH'] },
+  { id: 'x1', label: 'A', acid: 'acetic', rows: ['CH₃C(=O)–OH', '2 O share charge'] },
   { id: 'x2', label: 'B', acid: 'nh3', rows: ['H–NH₂', 'electroneg. 3.04'] },
-  { id: 'x3', label: 'C', acid: 'hbr', rows: ['H–Br', 'bond 141 pm'] },
-  { id: 'x4', label: 'D', acid: 'hclo3', rows: ['H–O–Cl', '2 extra O'] },
-  { id: 'x5', label: 'E', acid: 'hclo', rows: ['H–O–Cl', '0 extra O'] }
+  { id: 'x3', label: 'C', acid: 'hbr', rows: ['H–Br', 'largest Br atom'] },
+  { id: 'x4', label: 'D', acid: 'hclo3', rows: ['H–O–Cl', 'extra O: 2'] },
+  { id: 'x5', label: 'E', acid: 'hclo', rows: ['H–O–Cl', 'extra O: 0'] }
 ];
 
 /** The rank each stage wants: ids of cards, weakest acid first (stages 2-5, 7); weakest base first (stage 6). */
@@ -94,16 +94,16 @@ function rankMiss(t, order, rank) {
   const k = order.findIndex((id, i) => i > 0 && rank(order[i - 1]) > rank(id));
   const a = t.pieces[order[k - 1]]; const b = t.pieces[order[k]];
   const sits = `${a.label} sits left of ${b.label}.`;
-  if (!t.fixtures?.[RF]) return { ok: false, msg: `${sits} Look again at the structure and charge drawing on each card.` };
+  if (!t.fixtures?.[RF]) return { ok: false, msg: `${sits} Compare their structure facts and shaded base drawings to reorder them.` };
   if (t.pieces[order[0]].props.face === 'base') {
     const ref = Object.values(t.pieces).find(p => p.id === 'ref');
     const says = c => { const l = raceRead({ fixtures: t.fixtures, pieces: t.pieces, recorder: t.recorder }, RF).log.find(x => x.a === ref.id && x.b === c.id); return l ? `${nameAcid(ref)} with ${c.label}: ${l.n} of 100 protons ended on the base` : null; };
     const sa = says(a); const sb = says(b);
     if (sa && sb) return { ok: false, msg: `${sits} Races: ${sa}; ${sb}.` };
-    return { ok: false, msg: `${sits} No race has been run for ${sa ? b.label : a.label} yet.` };
+    return { ok: false, msg: `${sits} Race acetic acid against ${sa ? b.label : a.label} first.` };
   }
   const l = loggedPair(t, a.id, b.id);
-  if (!l) return { ok: false, msg: `${sits} No race has put the two against each other yet.` };
+  if (!l) return { ok: false, msg: `${sits} Race ${a.label} against ${b.label}’s base to see which gives its proton away.` };
   const x = t.pieces[l.a]; const y = t.pieces[l.b];
   return { ok: false, msg: `${sits} In the race of ${nameAcid(x)} with ${nameBase(y)}, ${l.n} of 100 protons ended on the base.` };
 }
@@ -120,7 +120,7 @@ function rankCheck(stage) {
   };
 }
 
-const RACE_HINT1 = 'Put an acid card in the first place and another card in the second, press "Race", then drag the cards back to the rail.';
+const RACE_HINT1 = 'Put an acid card in the left slot and a second card in the right slot, press "Race", then drag them back to the rail.';
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -128,16 +128,16 @@ export const STAGES = [
     id: 's1-predict',
     title: 'Which Is Strongest?',
     predict: true,
-    prompt: 'Which of HF, HCl and HBr is the weakest acid and which the strongest?',
+    prompt: 'Order the three hydrogen halides HF, HCl and HBr from weakest acid to strongest.',
     widget,
     table: phTable({
-      pieces: [['hf', 'HF'], ['hcl', 'HCl'], ['hbr', 'HBr']].map(([id], i) => acidCard(id, id, { x: 40 + i * 45, y: 14 }, { conj: false })),
-      zones: { rail: { at: { x: 85, y: 46 }, size: { w: 130, h: 14 }, first: WEAK, last: STRONG, items: [], start: [] } }
-    }, { w: 170, h: 66 }),
+      pieces: [['hf', 'HF'], ['hcl', 'HCl'], ['hbr', 'HBr']].map(([id], i) => acidCard(id, id, { x: 40 + i * 45, y: 14 }, { conj: true })),
+      zones: { rail: { at: { x: 85, y: 48 }, size: { w: 144, h: 16 }, first: WEAK, last: STRONG, items: [], start: [] } }
+    }, { w: 170, h: 68 }),
     hints: [
       'Drag each card onto the rail and arrange them from weakest on the left to strongest on the right.',
       'Think about what it means for an acid to donate a proton, and which bond breaks more easily.',
-      'Ask what would make the atom left behind keep the extra charge better.'
+      'Think about what helps the atom left behind hold onto the negative charge.'
     ],
     check(state) {
       if (state.table.zones.rail.order.length < 3) return { ok: false, notYet: true, msg: 'Put all 3 cards on the rail.' };
@@ -147,15 +147,19 @@ export const STAGES = [
       const last = state.table.zones.rail.order.at(-1);
       if (last) remember(QUEST_KEY, last);
     },
-    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Your ranking is locked in. Next, the three acids are raced against each other to test it.' }
+    get reward() {
+      const g = recall(QUEST_KEY);
+      const picked = g && GUESS[g] ? `You predicted ${GUESS[g]}. ` : '';
+      return { log: 'Prediction locked in.', title: 'Prediction', body: `${picked}Next, the three acids are raced against each other to test it.` };
+    }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     id: 's2-halides',
     title: 'Racing the Halides',
-    briefing: 'In a race two acids compete to donate their protons to a base; the stronger acid ends with fewer protons. Each card also draws the conjugate base left behind.',
-    get prompt() { return guessLine('Which of the three acids is weakest and which strongest?', recall(QUEST_KEY)); },
+    briefing: 'In a race, two acids compete to donate protons; the stronger acid gives up more protons. Each card also shows the conjugate base left behind.',
+    get prompt() { return guessLine('Order HF, HCl and HBr from weakest acid to strongest.', recall(QUEST_KEY)); },
     widget,
     table: raceTable(cardsOf(S2), ['hcl', 'hf', 'hbr']),
     hints: [
@@ -169,8 +173,8 @@ export const STAGES = [
       const verdict = g === 'hf' ? 'You put HF strongest; it came last. ' : g === 'hbr' ? 'You put HBr strongest, and it was. ' : g === 'hcl' ? 'You put HCl strongest; HBr beat it. ' : '';
       return {
         log: 'HBr gave up protons most readily, then HCl, then HF.',
-        title: 'Down the Group',
-        body: `${verdict}HF is the weakest. Bromide is the largest ion and spreads its negative charge over the most space, so HBr donates its proton most easily. The base left behind is the conjugate base.`
+        title: 'Halogen Size',
+        body: `${verdict}HBr gave up protons most easily (96 of 100), then HCl, then HF (0 of 100). The bigger the halogen, the better its conjugate base spreads charge and the stronger the acid.`
       };
     }
   },
@@ -180,7 +184,7 @@ export const STAGES = [
     id: 's3-period',
     title: 'Across a Row',
     briefing: 'Electronegativity measures how strongly an atom pulls on the electrons it shares.',
-    prompt: 'Which of CH₄, NH₃, H₂O and HF is the weakest acid and which the strongest?',
+    prompt: 'Order CH₄, NH₃, H₂O and HF from weakest acid to strongest.',
     widget,
     table: raceTable(cardsOf(S3, 20), ['nh3', 'hf', 'ch4', 'h2o']),
     hints: [
@@ -191,8 +195,8 @@ export const STAGES = [
     check: rankCheck(3),
     reward: {
       log: 'Across a row, the more electronegative atom made the stronger acid.',
-      title: 'Across a Period',
-      body: 'From CH₄ to HF the atom holding the hydrogen is more electronegative each time, and the acid is stronger each time. A more electronegative atom holds the charge of the conjugate base better.'
+      title: 'Electronegativity',
+      body: 'From CH₄ to HF the atom holding hydrogen pulls harder on electrons each time, making the stronger acid.'
     }
   },
 
@@ -200,7 +204,7 @@ export const STAGES = [
   {
     id: 's4-oxygens',
     title: 'Extra Oxygens',
-    prompt: 'Which of the four chlorine acids is weakest and which strongest?',
+    prompt: 'Order these four acids of chlorine (with 1, 2, 3 or 4 oxygen atoms) from weakest to strongest.',
     widget,
     table: raceTable(cardsOf(S4, 20), ['hclo3', 'hclo', 'hclo4', 'hclo2']),
     hints: [
@@ -226,14 +230,14 @@ export const STAGES = [
     table: raceTable(cardsOf(S5, 30), ['acetic', 'ethanol', 'formic']),
     hints: [
       RACE_HINT1,
-      'Compare the races with whether each card has a C=O beside its O–H.',
+      'Compare the races with whether two oxygens share the charge on each card.',
       'Race neighbouring pairs and order the cards by which side of each race kept the protons.'
     ],
     check: rankCheck(5),
     reward: {
-      log: 'Both carboxylic acids beat ethanol.',
+      log: 'Both two-oxygen acids beat ethanol.',
       title: 'Resonance',
-      body: 'When acetic acid or formic acid donates its proton, the charge of the conjugate base is shared over two oxygens by resonance. Ethoxide keeps it on one oxygen, so ethanol is by far the weakest.'
+      body: 'When acetic or formic acid donates its proton, two oxygens share the charge by resonance. Ethanol keeps it on one oxygen, so it is by far the weakest.'
     }
   },
 
@@ -245,7 +249,7 @@ export const STAGES = [
     return {
       id: 's6-bases',
       title: 'Bases from Acids',
-      prompt: 'Which base accepts the fewest protons from acetic acid and which the most?',
+      prompt: 'Order these four conjugate bases from weakest (fewest protons taken) to strongest (most).',
       widget,
       table: raceTable([ref, ...bases], ['h2o', 'hcl', 'hclo', 'hf'], 'Takes the fewest', 'Takes the most'),
       hints: [
@@ -271,7 +275,7 @@ export const STAGES = [
     title: 'Five Unlabelled Acids',
     briefing: {
       speaker: 'Vess',
-      body: 'Resonance across two oxygens stabilizes a conjugate base strongly, and an electronegative chlorine atom pulls charge away to stabilize it further. Without resonance or chlorine, an OH group holds its proton tightest.'
+      body: 'Rank these five acids using the four structure patterns from the last six stages.'
     },
     prompt: 'Order these five acids from weakest to strongest.',
     widget,
@@ -282,13 +286,13 @@ export const STAGES = [
     hints: [
       'Compare the structure facts and the shaded base drawing on each card.',
       'Look at the atom holding the hydrogen, any extra oxygens, and whether the charge spreads over two oxygens.',
-      'Drag the five cards onto the rail with the weakest acid on the left and the strongest on the right.'
+      'Combine all four clues: atom size, electronegativity, extra oxygens, and resonance.'
     ],
     check: rankCheck(7),
     reward: {
       log: 'Bond size, electronegativity, extra oxygen and resonance each changed how strong the acid is.',
       title: 'What Sets Strength',
-      body: 'An acid is strong when its conjugate base holds the charge well: by a larger atom, a more electronegative atom, electron-pulling neighbours or resonance. Each factor you raced works through the conjugate base.'
+      body: 'An acid is strong when its conjugate base holds the charge well: by a larger atom, higher electronegativity, extra oxygens or resonance. Each factor you ranked works through the conjugate base.'
     }
   }
 ];

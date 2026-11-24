@@ -135,12 +135,12 @@ export const STAGES = [
     }),
     hints: [
       'Use the five cards and the slot.',
-      'Think about what the numbers in the equation count, and what a hydrogen molecule and a water molecule each have as mass.',
+      'Think about what the coefficients count, and compare the mass of a water molecule to a hydrogen molecule.',
       'Commit to the mass of water you expect, then run the vessel to see what the balance reads.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the prediction slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -176,9 +176,9 @@ export const STAGES = [
         zones: { slots: [...r.slots, b.slot] }
       }),
       hints: [
-        'Use the reaction vessel, its "Hydrogen fed" dial, the catch jar and the balance.',
-        'Compare the grams of hydrogen fed with the grams of water the balance reads, at each setting of the dial.',
-        'Each extra gram of hydrogen makes the same extra mass of water, so the readings grow in step.'
+        'Use the reaction vessel, its "Hydrogen fed" dial, the catch jar, and the balance.',
+        'Compare the grams of hydrogen fed with the grams of water on the balance at each dial setting.',
+        'The mass of water grows steadily with the hydrogen fed in, so see how much water each gram of hydrogen makes.'
       ],
       check(state) {
         const t = state.table;
@@ -186,19 +186,19 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the mass of water in grams.' };
         if (within(v, waterFrom(H2_ASKED), 0.6)) return { ok: true };
         const runs = runsOf(t, 'pot');
-        if (!runs.length) return { ok: false, msg: 'The vessel has not been run yet.' };
+        if (!runs.length) return { ok: false, msg: 'Run the vessel first to measure a trial.' };
         const rows = runs.map(x => `${fixed(x.fed * molarMass('H2'), 1)} g of hydrogen made ${fixed(x.out * molarMass('H2O'), 1)} g`).join(', ');
-        return { ok: false, msg: `${fixed(v, 1)} g does not carry on from what the vessel made: ${rows}.` };
+        return { ok: false, msg: `${fixed(v, 1)} g does not match the pattern from your trials: ${rows}.` };
       },
       get reward() {
         const g = recall(QUEST_KEY);
         const verdict = g && GUESS_VALUE[g] != null
-          ? (GUESS_VALUE[g] === waterFrom(PREDICT_ASKED) ? 'The balance agreed with your guess. ' : 'The balance did not agree with your guess, which is how a guess gets better. ')
+          ? (GUESS_VALUE[g] === waterFrom(PREDICT_ASKED) ? 'The balance agreed with your guess. ' : 'The balance disagreed with your guess. ')
           : '';
         return {
           log: '4.0 g of hydrogen made 36 g of water.',
           title: 'Grams Follow the Amount Fed',
-          body: `${verdict}Every gram of hydrogen made 9 g of water. The amounts are in a fixed ratio, set by the equation.`
+          body: `${verdict}Every gram of hydrogen made 9 g of water. The amounts stay in a fixed ratio set by the equation.`
         };
       }
     };
@@ -226,7 +226,7 @@ export const STAGES = [
       hints: [
         'Use the reaction vessel, its "Hydrogen fed" dial and the "Run" key.',
         'Compare the circles of hydrogen before the reaction with the circles of ammonia after it, at each setting.',
-        'Every 3 mol of hydrogen makes the same number of moles of ammonia, so scale that up to the amount asked.'
+        'Compare the moles of hydrogen fed with the moles of ammonia made, then scale that ratio up to 12 mol.'
       ],
       check(state) {
         const t = state.table;
@@ -234,14 +234,14 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the moles of ammonia.' };
         if (within(v, NH3_ASKED, 0.05)) return { ok: true };
         const runs = runsOf(t, 'pot');
-        if (!runs.length) return { ok: false, msg: 'The vessel has not been run yet.' };
+        if (!runs.length) return { ok: false, msg: 'Run the vessel first to observe a trial.' };
         const rows = runs.map(x => `${fixed(x.fed, 0)} mol of hydrogen made ${fixed(x.out, 0)} mol of ammonia`).join(', ');
-        return { ok: false, msg: `${fixed(v, 1)} mol does not carry on from what the vessel made: ${rows}.` };
+        return { ok: false, msg: `${fixed(v, 1)} mol does not match the pattern from your trials: ${rows}.` };
       },
       reward: {
         log: '12 mol of hydrogen makes 8 mol of ammonia.',
         title: 'The Mole Ratio',
-        body: 'Every 3 mol of hydrogen made 2 mol of ammonia: the coefficients in the equation. That is the mole ratio.'
+        body: 'Every 3 mol of hydrogen made 2 mol of ammonia, matching the equation\'s coefficients. That is the mole ratio.'
       }
     };
   })(),
@@ -255,7 +255,7 @@ export const STAGES = [
       title: 'Grams to Grams',
       briefing: {
         title: 'Grams Go Through Moles',
-        body: 'A balance reads grams, while molar mass (g/mol) tells how many grams one mole weighs. Convert grams to moles first, then use the equation.\n\n4.0 g H₂ ÷ 2.0 g/mol = 2.0 mol H₂\n2 H₂ makes 2 H₂O: 2.0 mol H₂O\n2.0 mol × 18.0 g/mol = 36 g'
+        body: 'A balance measures grams, while molar mass (g/mol) gives the mass of one mole. Convert grams to moles first, apply the equation\'s mole ratio, then convert back to grams.\n\n4.0 g H₂ ÷ 2.0 g/mol = 2.0 mol H₂\n2 H₂ makes 2 H₂O: 2.0 mol H₂O\n2.0 mol × 18.0 g/mol = 36 g'
       },
       prompt: `How many grams of salt does ${CL2_ASKED.toFixed(1)} g of chlorine make?`,
       entry: { id: 'g', label: 'Salt made', unit: 'g' },
@@ -283,7 +283,7 @@ export const STAGES = [
         if (within(v, NACL_ASKED, 0.6)) return { ok: true };
         const w = weighed(t, 'bal');
         const trial = w != null && w > 0 ? ` The vessel made ${fixed(w, 1)} g of salt from ${CL2_TRIAL.toFixed(1)} g of chlorine.` : ' Run the vessel and weigh the catch jar.';
-        return { ok: false, msg: `${fixed(v, 1)} g does not follow from the trial.${trial}` };
+        return { ok: false, msg: `${fixed(v, 1)} g does not match the trial.${trial}` };
       },
       reward: {
         log: '21.3 g of chlorine makes 35.1 g of salt.',
@@ -330,14 +330,14 @@ export const STAGES = [
       const left = { H: t.zones.containers['heap-h'].capacity, O: t.zones.containers['heap-o'].capacity };
       const want = limitOf(left, WATER_NEED);
       const tally = tallyOf(t, 'tally');
-      if (tally === 0) return { ok: false, notYet: true, msg: 'The tally is on zero. Set it to the number of molecules the supplies make.' };
-      if (tally !== want.made) return { ok: false, msg: 'The tally does not match what the supplies can make. Build molecules until one supply empties, then count what was built.' };
+      if (tally === 0) return { ok: false, notYet: true, msg: 'Set the tally dial to the number of molecules built.' };
+      if (tally !== want.made) return { ok: false, msg: 'That count does not match what the supplies can make. Keep building until one supply runs out, then count.' };
       return { ok: true };
     },
     reward: {
       log: 'The hydrogen supply ran out at 9 water molecules.',
       title: 'The Limiting Reactant',
-      body: 'The hydrogen ran out first and stopped the count. The reactant that runs out is the limiting reactant; what is left of the other is the excess reactant.'
+      body: 'Hydrogen ran out first and stopped the reaction. The reactant that runs out first is the limiting reactant; what is left of the other is the excess reactant.'
     }
   },
 
@@ -379,12 +379,12 @@ export const STAGES = [
         if (within(v, H2_LEFT, 0.06)) return { ok: true };
         const w = weighed(t, 'bal');
         const trial = w != null && w > 0 ? ` The vessel made ${fixed(w, 1)} g of water from ${S6.H2.toFixed(1)} g of hydrogen and ${S6.O2.toFixed(1)} g of oxygen.` : ' Run the vessel and weigh the catch jar.';
-        return { ok: false, msg: `${fixed(v, 1)} g of hydrogen left does not match the table.${trial}` };
+        return { ok: false, msg: `${fixed(v, 1)} g of hydrogen left does not match your balance reading.${trial}` };
       },
       reward: {
         log: 'Oxygen ran out; 4.0 g of hydrogen was left.',
         title: 'Excess in Grams',
-        body: 'The oxygen was the limiting reactant. 4.0 mol of the 6.0 mol of hydrogen reacted, leaving 2.0 mol: 4.0 g.'
+        body: 'Oxygen was the limiting reactant. 4.0 mol of the 6.0 mol of hydrogen reacted, leaving 2.0 mol (4.0 g).'
       }
     };
   })(),
@@ -419,8 +419,8 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the volume in litres.' };
         if (within(v, CO2_ASKED, 0.2)) return { ok: true };
         const runs = runsOf(t, 'pot');
-        if (!runs.length) return { ok: false, msg: 'The vessel has not been heated yet.' };
-        return { ok: false, msg: `${fixed(v, 1)} L does not follow from the syringe, which read ${fixed(litresFrom(LIME_TRIAL), 2)} L for ${LIME_TRIAL.toFixed(1)} g.` };
+        if (!runs.length) return { ok: false, msg: 'Heat the limestone in the vessel first.' };
+        return { ok: false, msg: `${fixed(v, 1)} L does not match the syringe, which read ${fixed(litresFrom(LIME_TRIAL), 2)} L for ${LIME_TRIAL.toFixed(1)} g.` };
       },
       reward: {
         log: '50.0 g of limestone gives 12.2 L of carbon dioxide.',
@@ -439,7 +439,7 @@ export const STAGES = [
       title: 'What the Furnace Keeps',
       briefing: {
         title: 'Theoretical and Percent Yield',
-        body: 'The most product an equation allows is the theoretical yield. Percent yield is the mass actually made divided by it, times 100.\n\n3.0 g made of 4.0 g allowed = 75 %'
+        body: 'The most product a balanced equation allows is the theoretical yield. Percent yield compares what you actually made to that theoretical yield.\n\n(3.0 g actual ÷ 4.0 g theoretical) × 100% = 75%'
       },
       prompt: 'What is the percent yield of iron from this furnace?',
       entry: { id: 'pct', label: 'Percent made', unit: '%' },
@@ -467,12 +467,12 @@ export const STAGES = [
         if (within(v, YIELD_PCT, 1)) return { ok: true };
         const w = weighed(t, 'bal');
         const trial = w != null && w > 0 ? ` The balance read ${fixed(w, 1)} g of iron.` : ' Run the furnace and weigh the catch jar.';
-        return { ok: false, msg: `${fixed(v, 1)} % does not follow from the table.${trial}` };
+        return { ok: false, msg: `${fixed(v, 1)}% does not match the furnace reading.${trial}` };
       },
       reward: {
-        log: '34.6 g of the 55.8 g possible: 62 %.',
+        log: '34.6 g of the 55.8 g possible: 62%.',
         title: 'Percent Yield',
-        body: 'The equation allows 55.8 g (the theoretical yield) and the furnace made 34.6 g: a 62 % yield.'
+        body: 'The equation allows 55.8 g (the theoretical yield) and the furnace made 34.6 g, giving a 62% yield.'
       }
     };
   })(),
@@ -522,14 +522,14 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the card you choose into the slot.'],
-  2: ['Drag the catch jar under the vessel, run it, then weigh the jar.'],
+  1: ['Drag your chosen card into the slot.'],
+  2: ['Put the catch jar under the vessel, run it, then weigh the jar.'],
   3: ['Turn the dial, press Run, then type your answer.'],
-  4: ['Seat the jars, run the vessel, weigh the catch jar.'],
+  4: ['Put jars in the vessel, run, weigh the catch jar.'],
   5: ['Join water, put it in the dock,', 'Make Molecule until empty, set tally.'],
-  6: ['Seat the jars, run the vessel, weigh the catch jar.'],
+  6: ['Put jars in the vessel, run, weigh the catch jar.'],
   7: ['Drag the jar into the vessel, press Heat, then type your answer.'],
-  8: ['Seat the jar, run the furnace, weigh the catch jar.'],
+  8: ['Put the jar in the furnace, run it, then weigh the catch jar.'],
   9: ['Use the molar masses on the plate, then type the percent purity.']
 };
 applyNotes(STAGES, NOTES);
@@ -542,7 +542,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'An equation counts moles, so grams reach grams through the mole ratio. The reactant that runs out sets the theoretical yield, and a real furnace makes a percent of it.'
+      body: 'A balanced equation works in moles, so convert grams to moles to use the mole ratio. The limiting reactant sets the theoretical yield, and percent yield measures how much of it the furnace actually makes.'
     }
   ]
 };

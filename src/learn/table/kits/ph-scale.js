@@ -75,18 +75,20 @@ function speciesOfScale(f) {
 
 const RECT_METER = { hw: 9.5, hh: 5.4 };
 const seatFlask = (p, state) => {
-  const m = /^slot:(.+)\.seat$/.exec(p.zone || '');
+  const m = /^slot:(.+)\.seat2?$/.exec(p.zone || '');
   return m && state.fixtures[m[1]]?.kind === 'phscale' ? state.fixtures[m[1]] : null;
 };
 const valueOf = (meter, fl) => { const s = solOf(fl); return meter.props.scale === 'pOH' ? s.pOH : s.pH; };
-const nameOf = meter => (meter.props.scale === 'pOH' ? 'pOH meter' : 'pH meter');
+const nameOf = meter => (meter.props.scale === 'pOH' ? 'pOH (OH⁻)' : 'pH meter');
 
-/** The meter laid in a scale flask's seat and what it reads. */
+/** The meter laid in a scale flask's seat (or both seats if `twoMeters`) and what it reads. */
 export function scaleMeterRead(state, fid) {
   const f = state.fixtures[fid];
-  const m = f.props.seat ? pieceIn(state, f.props.seat) : null;
-  const meter = m && m.kind === 'phmeter2' ? m : null;
-  return { meter, value: meter ? valueOf(meter, f) : null, scale: meter?.props.scale ?? null };
+  const m1 = f.props.seat ? pieceIn(state, f.props.seat) : null;
+  const m2 = f.props.seat2 ? pieceIn(state, f.props.seat2) : null;
+  const meters = [m1, m2].filter(m => m && m.kind === 'phmeter2');
+  const meter = meters[0] || null;
+  return { meter, meters, value: meter ? valueOf(meter, f) : null, scale: meter?.props.scale ?? null };
 }
 
 function paintMeter(ctx, p, state, o) {
@@ -94,10 +96,10 @@ function paintMeter(ctx, p, state, o) {
   const x0 = o.x - RECT_METER.hw * sc; const y0 = o.y - RECT_METER.hh * sc; const w = RECT_METER.hw * 2 * sc; const h = RECT_METER.hh * 2 * sc;
   ctx.fillStyle = '#2a2620'; ctx.fillRect(x0, y0, w, h);
   ctx.strokeStyle = o.lit ? AMBER : DUST; ctx.lineWidth = o.lit ? 2 : 1; ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h - 1); ctx.lineWidth = 1;
-  put(ctx, nameOf(p), o.x, y0 + 2.1 * sc, Math.max(6.4, 1.9 * sc), { color: DUST, weight: 700, maxW: w - 1.6 * sc });
+  put(ctx, nameOf(p), o.x, y0 + 2.1 * sc, Math.max(6.8, 2.0 * sc), { color: DUST, weight: 700, maxW: w - 1.6 * sc });
   const fl = seatFlask(p, state);
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(x0 + 1.2 * sc, y0 + 3.9 * sc, w - 2.4 * sc, h - 5.1 * sc);
-  put(ctx, fl ? fmt(valueOf(p, fl), 2) : '—', o.x, y0 + 7.4 * sc, Math.max(9, 3.8 * sc), { color: fl ? AMBER : DIM, weight: 700, maxW: w - 3.4 * sc });
+  ctx.fillStyle = '#181612'; ctx.fillRect(x0 + 1.2 * sc, y0 + 3.9 * sc, w - 2.4 * sc, h - 5.1 * sc);
+  put(ctx, fl ? fmt(valueOf(p, fl), 2) : 'Drag to flask', o.x, y0 + 7.4 * sc, fl ? Math.max(9, 3.8 * sc) : Math.max(7, 2.0 * sc), { color: fl ? AMBER : DUST, weight: 700, maxW: w - 2.8 * sc });
 }
 
 function pieceMeter3d(p, state, c) {
@@ -117,7 +119,7 @@ function pieceMeter3d(p, state, c) {
 }
 
 registerPiece('phmeter2', {
-  kind: { r: 8, rect: RECT_METER, nojoin: true },
+  kind: { r: 8.4, rect: RECT_METER, nojoin: true },
   paint: paintMeter,
   faceKey: (p, state) => { const fl = seatFlask(p, state); return `phmeter2|${p.props.scale}|${fl ? fmt(valueOf(p, fl), 2) : '-'}`; },
   piece3d: pieceMeter3d,
@@ -145,7 +147,7 @@ export function sampleCount(f) {
 function paintSample(ctx, F, f, x, y, w, clock) {
   const n = sampleCount(f);
   const hh = 12;
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(hh));
+  ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(hh));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(hh)));
   ctx.fillStyle = H_INK;
   const cols = 50; const rows = SAMPLE_DOTS / cols;
@@ -156,18 +158,26 @@ function paintSample(ctx, F, f, x, y, w, clock) {
     const gx = x + 0.5 + ((site % cols) + 0.5 + m.wx) * ((w - 1) / cols); const gy = y + 0.5 + ((Math.floor(site / cols) + 0.5 + m.wy) * ((hh - 1) / rows));
     dot(ctx, F.x(gx), F.y(gy), Math.max(0.7, F.len(0.28)), H_INK);
   }
-  put(ctx, `H₃O⁺ in a fixed sample: ${n}`, F.x(x), F.y(y + hh + 2.4), F.size(1.9, 5.8), { align: 'left', color: DUST, weight: 700 });
+  put(ctx, `H₃O⁺ in a fixed sample: ${n}`, F.x(x), F.y(y + hh + 2.6), F.size(2.3, 6.8), { align: 'left', color: TEXT, weight: 700 });
 }
 
 function paintScale(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
   const w = f.size.w;
-  put(ctx, p.sealed ? 'concentration hidden' : strengthText(liveSolute(f).c ?? 0), F.x(2), F.y(8.2), F.size(p.solute.id === 'water' ? 2.3 : 2.5, 6.4), { align: 'left', color: p.sealed ? DIM : TEXT, weight: 700, maxW: F.len(w - 4) });
+  const cVal = liveSolute(f).c ?? 0;
+  const cStr = p.sealed ? 'concentration hidden'
+    : p.solute.id === 'water' ? 'pure water'
+    : p.forceSci ? `${sci(cVal, 2)} M`
+    : strengthText(cVal);
+  put(ctx, cStr, F.x(2), F.y(8.2), F.size(2.6, 7.0), { align: 'left', color: p.sealed ? DIM : TEXT, weight: 700, maxW: F.len(w - 4) });
   const win = scaleWindow(f);
   const sp = speciesOfScale(f);
+  if (sp.n > 1 && !p.sealed) {
+    put(ctx, `${sp.n} OH⁻ per ${ionText(sp.whole.name)}`, F.x(w - 2), F.y(8.2), F.size(2.1, 6.4), { align: 'right', color: AMBER, weight: 700 });
+  }
   const x = 2; const y = WIN_TOP; const ww = w - 4; const wh = p.wh;
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(ww), F.len(wh));
+  ctx.fillStyle = '#1c1a16'; ctx.fillRect(F.x(x), F.y(y), F.len(ww), F.len(wh));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));
   const cells = cellGrid(win.units, p.cols, x + 0.6, y + 0.6, ww - 1.2, wh - 1.2);
   const seed = 17 + Math.round((p.solute.c ?? 1) * 1000);
@@ -190,7 +200,7 @@ function paintScale(ctx, f, state, b) {
   if (p.legend) {
     const items = win.ionized > 0 ? [sp.parts[0], sp.parts[1]] : [];
     if (win.whole > 0) items.push(sp.whole);
-    const size = F.size(1.9, 5.8); const sw = F.len(1.7); const u = F.len(1);
+    const size = F.size(2.25, 6.6); const sw = F.len(1.7); const u = F.len(1);
     let cx = 2; let cy = ly;
     for (const it of items) {
       const name = ionText(it.name);
@@ -205,16 +215,27 @@ function paintScale(ctx, f, state, b) {
   }
   if (p.dilute) ly += SAMPLE_H;
   if (p.lens) {
-    const s = win.sol;
-    put(ctx, `H₃O⁺ ${sci(s.h, 2)} M`, F.x(2), F.y(ly + 1.5), F.size(2.2, 6), { align: 'left', color: AMBER, weight: 700, maxW: F.len(ww) });
-    put(ctx, `OH⁻ ${sci(s.oh, 2)} M`, F.x(2), F.y(ly + 5), F.size(2.2, 6), { align: 'left', color: AMBER, weight: 700, maxW: F.len(ww) });
+    const m = scaleMeterRead(state, f.id);
+    const showLens = !p.lensOnMeter || m.meter || (p.noted && Object.keys(p.noted).length > 0) || (p.temps && f.dials.T?.value > 1);
+    if (showLens) {
+      const s = win.sol;
+      put(ctx, `H₃O⁺ ${sci(s.h, 2)} M`, F.x(2), F.y(ly + 1.5), F.size(2.2, 6.4), { align: 'left', color: AMBER, weight: 700, maxW: F.len(ww) });
+      put(ctx, `OH⁻ ${sci(s.oh, 2)} M`, F.x(2), F.y(ly + 5), F.size(2.2, 6.4), { align: 'left', color: AMBER, weight: 700, maxW: F.len(ww) });
+      put(ctx, 'ion counter', F.x(w - 2), F.y(ly + 1.5), F.size(1.8, 5.6), { align: 'right', color: DIM });
+    } else {
+      put(ctx, 'Put pH meter on flask to read ion counter', F.x(2), F.y(ly + 3), F.size(2.1, 6.2), { align: 'left', color: DIM, maxW: F.len(ww) });
+    }
   }
   if (p.seat) {
     const m = scaleMeterRead(state, f.id);
     if (!m.meter) {
       const n = p.noted || {};
       const lines = ['pH', 'pOH'].filter(k => n[k] != null);
-      lines.forEach((k, i) => put(ctx, `${k} ${fmt(n[k], 2)}`, F.x(p.seatRel.x), F.y(p.seatRel.y + (i - (lines.length - 1) / 2) * 3.8), F.size(2.8, 6.8), { color: DUST, weight: 700 }));
+      if (lines.length) {
+        lines.forEach((k, i) => put(ctx, `${k} ${fmt(n[k], 2)}`, F.x(p.seatRel.x), F.y(p.seatRel.y + (i - (lines.length - 1) / 2) * 3.8), F.size(2.8, 6.8), { color: DUST, weight: 700 }));
+      } else {
+        put(ctx, 'Meter', F.x(p.seatRel.x), F.y(p.seatRel.y), F.size(2.1, 6.2), { color: DIM, weight: 700 });
+      }
     }
   }
 }
@@ -223,7 +244,9 @@ function settle(state) {
   for (const f of Object.values(state.fixtures)) {
     if (f.kind !== 'phscale' || !f.props.seat) continue;
     const m = scaleMeterRead(state, f.id);
-    if (m.meter) f.props.noted = { ...(f.props.noted || {}), [m.scale]: Math.round(m.value * 100) / 100 };
+    for (const mt of m.meters) {
+      f.props.noted = { ...(f.props.noted || {}), [mt.props.scale]: Math.round(valueOf(mt, f) * 100) / 100 };
+    }
   }
 }
 
@@ -232,7 +255,7 @@ function run(state, fid) {
   const f = state.fixtures[fid];
   if (!f.props.dilute) return null;
   const n = Math.round(f.dials.steps.value);
-  if (n >= f.dials.steps.max) return { noop: 'No more water can be added.' };
+  if (n >= f.dials.steps.max) return { noop: `Limit of bench reached (${strengthText(liveSolute(f).c)}).` };
   const next = { ...f, dials: { ...f.dials, steps: { ...f.dials.steps, value: n + 1 } } };
   return { x: n + 1, y: Math.round(scaleSolution(liveSolute(next)).pH * 100) / 100, label: fid, dials: { [fid]: { steps: n + 1 } } };
 }
@@ -264,26 +287,30 @@ function dressScale(f, state, c) {
  * `legend: false`, `temps: [25, 50]` (a temperature dial of those settings), `lens` (print the measured H₃O⁺ and OH⁻), `sealed` (name and
  * strength not printed). Returns `{ fixture, slot, size }`.
  */
-export function scaleFlask(id, at, { solute, label, w = 44, window = 16, meter = true, legend = true, temps = null, lens = false, sealed = false, dilute = 0, units = UNITS, cols = 20 } = {}) {
+export function scaleFlask(id, at, { solute, label, w = 44, window = 16, meter = true, twoMeters = false, legend = true, temps = null, lens = false, lensOnMeter = false, forceSci = false, sealed = false, dilute = 0, units = UNITS, cols = 20 } = {}) {
   const wh = window;
-  const legendRows = legend ? (w >= 40 ? 3.6 : 6.6) : 0;
-  const lensRows = (lens ? 8.6 : 0) + (dilute ? SAMPLE_H : 0);
+  const legendRows = legend ? (w >= 40 ? 4.2 : 7.4) : 0;
+  const lensRows = (lens ? 8.8 : 0) + (dilute ? SAMPLE_H : 0);
   const dialTop = temps ? WIN_TOP + wh + 3 + legendRows + lensRows + 6 : null;
   const seatH = meter ? 12.5 : 0;
-  const belowDial = temps ? dialTop + 3 : WIN_TOP + wh + 3 + legendRows + lensRows;
-  const h = Math.round((belowDial + (meter ? 2 + seatH : 1.5)) * 10) / 10;
+  const belowDial = temps ? dialTop + 5 : WIN_TOP + wh + 3 + legendRows + lensRows;
+  const h = Math.round((belowDial + (meter ? 3 + seatH : 1.5)) * 10) / 10;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
-  const seatRel = { x: w / 2, y: h - 1 - seatH / 2, w: Math.min(22, w - 4), h: seatH };
+  // When Dilute key sits at bottom-right, shift meter seat left so it never covers the Dilute key.
+  const seatW = twoMeters ? Math.min(20, (w - 6) / 2) : Math.min(22, dilute ? w - 18 : w - 4);
+  const seatRel = { x: twoMeters ? 2 + seatW / 2 : (dilute ? 2 + seatW / 2 : w / 2), y: h - 1.2 - seatH / 2, w: seatW, h: seatH };
   const slot = meter ? { id: `${id}.seat`, label: ' ', at: { x: x0 + seatRel.x, y: y0 + seatRel.y }, size: { w: seatRel.w, h: seatRel.h } } : null;
+  const slot2 = meter && twoMeters ? { id: `${id}.seat2`, label: ' ', at: { x: x0 + w - 2 - seatW / 2, y: y0 + seatRel.y }, size: { w: seatW, h: seatH } } : null;
   const dials = temps
     ? { T: { min: 1, max: temps.length, step: 1, value: 1, label: 'Temperature', labels: temps.map(t => `${t} °C`) } }
     : dilute ? { steps: { min: 0, max: dilute, step: 1, value: 0, label: 'Dilutions' } } : { x: { min: 0, max: 1, step: 1, value: 0, label: 'Flask' } };
   return {
     fixture: {
       id, kind: 'phscale', label: sealed ? 'Sealed flask' : (label ?? solute.id), at: { ...at }, size: { w, h }, ...(dilute ? { runLabel: 'Dilute' } : { noRun: true }), dials,
-      props: { ...(temps ? { top: dialTop } : { hidden: [dilute ? 'steps' : 'x'] }), dilute: dilute || 0, backdrop: true, solute: { ...solute }, units, cols, wh, legend, lens, sealed, temps, seat: slot ? slot.id : null, seatRel, noted: null }
+      props: { ...(temps ? { top: dialTop } : { hidden: [dilute ? 'steps' : 'x'] }), dilute: dilute || 0, backdrop: true, solute: { ...solute }, units, cols, wh, legend, lens, lensOnMeter, forceSci, sealed, temps, seat: slot ? slot.id : null, seat2: slot2 ? slot2.id : null, seatRel, noted: null }
     },
     slot,
+    ...(slot2 ? { slot2, slots: [slot, slot2] } : {}),
     size: { w, h }
   };
 }

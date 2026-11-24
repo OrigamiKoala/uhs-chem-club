@@ -4,8 +4,8 @@ import { addTourText } from '../tour.js';
 addTourText({
   'ph:phscale': {
     title: 'Flask with a window', dials: false,
-    text: 'Lay a meter on the seat. Dilute adds water.'
+    text: 'Drag the meter onto the flask to read it. Dilute adds water.'
   }
 }, {
-  phmeter2: ['Meters', 'Drag it onto a flask to read it.']
+  phmeter2: ['Meters', 'Drag a meter onto a flask to read it.']
 });

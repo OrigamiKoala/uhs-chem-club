@@ -1326,6 +1326,21 @@
 
 .story-anim-tx .transmission-card {
   min-height: 7.2rem;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.story-anim-tx .transmission-text {
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.story-anim-filed .story-anim-canvas {
+  display: none;
+}
+
+.story-anim-filed .story-anim-side {
+  width: min(680px, 100%);
 }
 
 .story-anim-filed .story-anim-tx .transmission-card {
@@ -1334,12 +1349,12 @@
 
 .story-anim-ask {
   margin: 0;
-  padding: 0.45rem 0.7rem;
+  padding: 0.55rem 0.8rem;
   border-left: 2px solid var(--accent-bronze);
   background: var(--plate-100);
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  line-height: 1.4;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .story-anim-ask.hidden { display: none; }

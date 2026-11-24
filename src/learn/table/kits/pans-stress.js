@@ -158,10 +158,10 @@ function paintWindow(ctx, F, r, x, y, w, h, clock = 0) {
     }
   }
   const sz = F.size(2.2, 5.8);
-  say(ctx, `spheres ${total}`, F.x(x), F.y(y + h + 2.4), sz, { color: DUST, maxW: F.len(w + 3) });
+  say(ctx, `particles ${total}`, F.x(x), F.y(y + h + 2.4), sz, { color: DUST, weight: 700, maxW: F.len(w + 3) });
   if (p.cap2 === 'pressure') say(ctx, `pressure ${Math.round(r.now.P)} atm`, F.x(x), F.y(y + h + 5.3), sz, { color: DUST, maxW: F.len(w + 3) });
   else {
-    say(ctx, `before ${spheres(r).before}`, F.x(x), F.y(y + h + 5.3), sz, { color: DIM, maxW: F.len(w + 3) });
+    say(ctx, `before ${spheres(r).before}`, F.x(x), F.y(y + h + 5.3), sz, { color: DUST, maxW: F.len(w + 3) });
   }
 }
 
@@ -331,20 +331,20 @@ function paintTouch(ctx, F, f, r, state) {
     // The piston's grip, at the top of the window, so there is something to take hold of.
     const frac = Math.min(1, (gliding(f, 'vol') ?? r.res.post.V) / p.Vmax);
     const gy = WIN.y + WIN.h * (1 - frac);
-    ctx.fillStyle = DUST; ctx.fillRect(F.x(WIN.x + WIN.w / 2 - 3), F.y(gy - 1.2), F.len(6), F.len(1.2));
-    say(ctx, `${amt(f.dials.vol.value)} L`, F.x(WIN.x + WIN.w - 0.8), F.y(WIN.y + WIN.h - 1.6), F.size(2, 5.4), { align: 'right', color: DUST });
+    ctx.fillStyle = AMBER; ctx.fillRect(F.x(WIN.x + WIN.w / 2 - 5), F.y(gy - 1.8), F.len(10), F.len(1.8));
+    say(ctx, `${amt(f.dials.vol.value)} L`, F.x(WIN.x + WIN.w - 0.8), F.y(WIN.y + WIN.h - 1.6), F.size(2.2, 5.8), { align: 'right', color: AMBER, weight: 700 });
   }
   if (p.answer) {
     const Y = graphScale(r); const yb = Y(r.base.n[p.answer.watch]);
     const px = p.window !== false ? 31 : 3.5;
     const x0 = px + 1; const x1 = f.size.w - 19;
-    ctx.strokeStyle = DIM; ctx.setLineDash([1, 3]);
+    ctx.strokeStyle = DUST; ctx.setLineDash([1, 3]);
     for (const y of [yb - BAND, yb + BAND]) { ctx.beginPath(); ctx.moveTo(F.x(x1 - 22), F.y(y)); ctx.lineTo(F.x(x1), F.y(y)); ctx.stroke(); }
     ctx.setLineDash([]);
-    const tz = F.size(1.9, 5.2);
-    say(ctx, 'higher', F.x(x1 - 1), F.y(Math.max(PLOT_Y + 2, yb - BAND - 1.6)), tz, { align: 'right', color: DIM });
-    say(ctx, 'same', F.x(x1 - 1), F.y(yb), tz, { align: 'right', color: DIM });
-    say(ctx, 'lower', F.x(x1 - 1), F.y(Math.min(PLOT_Y + PLOT_H - 1.8, yb + BAND + 1.6)), tz, { align: 'right', color: DIM });
+    const tz = F.size(2.2, 5.8);
+    say(ctx, 'higher', F.x(x1 - 1), F.y(Math.max(PLOT_Y + 2, yb - BAND - 1.6)), tz, { align: 'right', color: DUST, weight: 700 });
+    say(ctx, 'same', F.x(x1 - 1), F.y(yb), tz, { align: 'right', color: DUST, weight: 700 });
+    say(ctx, 'lower', F.x(x1 - 1), F.y(Math.min(PLOT_Y + PLOT_H - 1.8, yb + BAND + 1.6)), tz, { align: 'right', color: DUST, weight: 700 });
     void x0;
   }
   void state;

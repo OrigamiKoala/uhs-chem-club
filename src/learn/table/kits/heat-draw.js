@@ -252,9 +252,9 @@ function paintStmt(ctx, p, state, o) {
   const marked = Boolean(p.props.flipped);
   const box = slab(ctx, o, RECTS.stmt, marked ? '#33290f' : '#2a2620');
   if (marked) { ctx.strokeStyle = AMBER; ctx.lineWidth = 2; ctx.strokeRect(box.x0 + 1.5, box.y0 + 1.5, box.w - 3, box.h - 3); ctx.lineWidth = 1; }
-  const size = Math.max(6.2, 2.1 * o.sc);
   const lines = wrap(p.label, STMT_CAP);
-  lines.forEach((ln, i) => say(ctx, ln, o.x, o.y + (i - (lines.length - 1) / 2) * size * 1.2, size, { align: 'center', weight: 600, maxW: box.w - 3 * o.sc, color: marked ? AMBER : PLATE_COLORS.text }));
+  const size = Math.max(7.2, (lines.length === 1 ? 2.9 : 2.55) * o.sc);
+  lines.forEach((ln, i) => say(ctx, ln, o.x, o.y + (i - (lines.length - 1) / 2) * size * 1.2, size, { align: 'center', weight: 600, maxW: box.w - 2.6 * o.sc, color: marked ? AMBER : PLATE_COLORS.text }));
 }
 
 /**
@@ -304,9 +304,10 @@ function paintTag(ctx, p, state, o) {
   const marked = Boolean(p.props.flipped);
   const box = slab(ctx, o, RECTS.tag, marked ? '#33290f' : '#2a2620');
   if (marked) { ctx.strokeStyle = AMBER; ctx.lineWidth = 2; ctx.strokeRect(box.x0 + 1.5, box.y0 + 1.5, box.w - 3, box.h - 3); ctx.lineWidth = 1; }
-  const size = Math.max(5.8, 1.85 * o.sc);
   const lines = wrap(p.label, 17);
-  lines.forEach((ln, i) => say(ctx, ln, o.x, o.y + (i - (lines.length - 1) / 2) * size * 1.2, size, { align: 'center', weight: 600, maxW: box.w - 2 * o.sc, color: marked ? AMBER : PLATE_COLORS.text }));
+  const short = lines.length === 1 && p.label.length <= 10;
+  const size = Math.max(7.4, (short ? 3.5 : lines.length === 1 ? 2.75 : 2.35) * o.sc);
+  lines.forEach((ln, i) => say(ctx, ln, o.x, o.y + (i - (lines.length - 1) / 2) * size * 1.2, size, { align: 'center', weight: 700, maxW: box.w - 2 * o.sc, color: marked ? AMBER : PLATE_COLORS.text }));
 }
 
 /** A note card's lines and their size in table units: as large as the card takes (24 to a line at 2.5 units) where the words
@@ -377,7 +378,8 @@ function paintNum(ctx, p, state, o) {
 
 function paintChip(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.chip, '#1d1a16');
-  say(ctx, p.label, o.x, o.y, Math.max(6.5, 2.1 * o.sc), { align: 'center', weight: 700, maxW: box.w - 2 * o.sc });
+  const short = String(p.label).length <= 5;
+  say(ctx, p.label, o.x, o.y, Math.max(7.6, (short ? 3.8 : 2.75) * o.sc), { align: 'center', weight: 700, maxW: box.w - 1.6 * o.sc });
 }
 
 function paintParticle(ctx, p, state, o) {
@@ -890,16 +892,24 @@ function paintSelector(ctx, f, state, b) {
   const F = frameOf(b);
   const i = Math.round(f.dials.value.value) - 1;
   if (f.props.list) {
-    // Every option stands on the card; the one the dial points at is lit.
+    // Every option stands on the card in a clean vertical column; the one the dial points at is lit.
+    const noDial = f.props?.hidden?.includes('value');
+    const y0 = noDial ? 8.8 : 15.0;
+    const step = 3.9;
+    const fontSize = Math.min(F.size(2.75, 8), Math.max(7, F.len(step * 0.78)));
     let row = 0;
     f.props.options.forEach((o, k) => {
       if (!o.trim()) return;
-      say(ctx, o, F.x(3), F.y(14.2 + row * 3.5), F.size(3, 8), { align: 'left', weight: k === i ? 700 : 400, color: k === i ? AMBER : DIM, maxW: F.len(f.size.w - 6) });
+      const prefix = k === i ? '▸ ' : '  ';
+      say(ctx, prefix + o, F.x(2.4), F.y(y0 + row * step), fontSize, { align: 'left', weight: k === i ? 700 : 500, color: k === i ? AMBER : '#c8c0b4', maxW: F.len(f.size.w - 4.8) });
       row++;
     });
     return;
   }
-  say(ctx, f.props.options[i] ?? '', F.x(f.size.w - 3), F.y(f.size.h - 3.4), F.size(3.4, 8), { align: 'right', weight: 700, color: AMBER, maxW: F.len(f.size.w - 6) });
+  // When `table2d.js` already renders the dial's labels as ticks (and `Set to <shown>` above the track),
+  // avoid painting a duplicate oversized amber label on top of the ticks.
+  if (f.dials?.value?.labels?.some(l => String(l ?? '').trim())) return;
+  say(ctx, f.props.options[i] ?? '', F.x(f.size.w - 3), F.y(f.size.h - 3.4), F.size(2.8, 7.5), { align: 'right', weight: 700, color: AMBER, maxW: F.len(f.size.w - 6) });
 }
 
 export function paintFixture(ctx, f, state, b) {

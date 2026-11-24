@@ -6,6 +6,6 @@ import { addTourText } from '../tour.js';
 addTourText({
   'ph:phcurve': {
     title: 'Curve', dials: false,
-    text: 'Each pour adds a point: pH against mL.'
+    text: 'Each pour plots a point: pH against volume added (mL).'
   }
 }, {});

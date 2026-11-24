@@ -490,12 +490,15 @@ export function runMixture(sys, amounts) {
   return { Q, K: sys.K, dir: direction(Q, sys.K, 1e-6), after: settleAmounts(sys, amounts) };
 }
 
-/** A number as printed to `sf` significant figures: plain between 0.001 and 100 000, else "m × 10^e". */
+const SUP_DIG = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const toSup = n => (n < 0 ? '⁻' : '') + String(Math.abs(n)).replace(/\d/g, d => SUP_DIG[+d]);
+
+/** A number as printed to `sf` significant figures: plain between 0.001 and 100 000, else "m × 10ᵉ" with real superscripts. */
 export function fmtNum(v, sf = 3) {
   if (!Number.isFinite(v)) return '—';
   if (v === 0) return '0';
   const a = Math.abs(v) * (1 + 1e-12);
-  if (a >= 1e5 || a < 1e-3) { const s = sciParts(v, sf); return `${s.m} × 10^${s.e < 0 ? '−' : ''}${Math.abs(s.e)}`; }
+  if (a >= 1e5 || a < 1e-3) { const s = sciParts(v, sf); return `${s.m} × 10${toSup(s.e)}`; }
   const dec = Math.max(0, sf - 1 - Math.floor(Math.log10(a)));
   return (v * (1 + (v > 0 ? 1e-12 : -1e-12))).toFixed(dec);
 }

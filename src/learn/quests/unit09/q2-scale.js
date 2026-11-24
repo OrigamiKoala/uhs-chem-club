@@ -44,7 +44,7 @@ const GUESS = {
   seven: 'The pH is exactly 7.00',
   above: 'The pH is above 7',
   below: 'The pH is below 7',
-  zero: 'The pH is 0'
+  zero: 'The pH depends on the container'
 };
 const guessLine = (sentence, g) => (g && GUESS[g] ? `You predicted "${GUESS[g]}". ${sentence}` : sentence);
 const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
@@ -77,7 +77,7 @@ const S1_CARDS = {
 };
 const S6_CARDS = {
   past7: 'It keeps rising steadily',
-  near7: 'It levels off at one value',
+  near7: 'It stops near a number',
   near14: 'It drops back down'
 };
 
@@ -97,7 +97,7 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'The pH meter reads how much H₃O⁺ a solution holds. The lower the pH, the more H₃O⁺.'
     },
-    prompt: 'What does a tenfold dilution do to the pH of an acid?',
+    prompt: 'As you dilute the acid one tenfold step at a time, what happens to the pH meter reading?',
     widget,
     table: (() => {
       const f = flaskAt('f1', 30, 1, { solute: S1[0], label: 'Hydrochloric acid', w: 54, dilute: 3 });
@@ -105,16 +105,16 @@ export const STAGES = [
         pieces: [
           scaleMeter('meter', { x: 74, y: 48 }, 'pH'),
           note('rises1', S1_CARDS.rises1, { x: 118, y: 12 }),
-          note('falls1', S1_CARDS.falls1, { x: 162, y: 12 }),
+          note('falls1', S1_CARDS.falls1, { x: 168, y: 12 }),
           note('halves', S1_CARDS.halves, { x: 118, y: 32 }),
-          note('rises10', S1_CARDS.rises10, { x: 162, y: 32 })
+          note('rises10', S1_CARDS.rises10, { x: 168, y: 32 })
         ],
         fixtures: [f.fixture],
-        zones: { slots: [f.slot, { id: 'ans', label: 'My answer', at: { x: 140, y: 56 }, size: { w: 40, h: 14 } }] }
-      }, { w: 192, h: 76 });
+        zones: { slots: [f.slot, { id: 'ans', label: 'My answer', at: { x: 143, y: 58 }, size: { w: 46, h: 18 } }] }
+      }, { w: 198, h: 78 });
     })(),
     hints: [
-      'Lay the pH meter on the flask, press "Dilute" twice, then place a card in the slot.',
+      'Put the pH meter on the flask, press "Dilute" twice, then place a card in the slot.',
       'Compare the pH reading after each tenfold dilution.',
       'Watch how much the pH changes each time the H₃O⁺ drops by a factor of ten.'
     ],
@@ -124,8 +124,7 @@ export const STAGES = [
       const card = pieceIn(state.table, 'ans');
       if (!card) return { ok: false, notYet: true, msg: 'Lay an answer card in the slot.' };
       if (card.id === 'rises1') return { ok: true };
-      const now = ph({ ...S1[0], c: S1[0].c * Math.pow(0.1, n) });
-      return { ok: false, msg: `After ${n} dilutions the flask reads ${fmt(now, 2)}, up from 1.00.` };
+      return { ok: false, msg: 'The pH went from 1.00 to 2.00 to 3.00. How much did it change per dilution?' };
     },
     reward: {
       log: 'Each tenfold dilution raised the pH by 1.',
@@ -140,18 +139,18 @@ export const STAGES = [
     title: 'Powers of Ten',
     prompt: 'What is the pH of 1.0 × 10⁻⁵ mol/L hydrochloric acid?',
     widget,
-    entry: { id: 'ph', label: 'pH', unit: '' },
+    entry: { id: 'ph', label: 'pH (decimals ok)', unit: '' },
     table: (() => {
-      const ref = S2_POW.map((s, i) => flaskAt(`f${i + 1}`, FLASK_X[i], 1, { solute: s, label: 'Hydrochloric acid' }));
-      const ask = flaskAt('f3', FLASK_X[2], 1, { solute: S2_POW_ASK, label: 'Hydrochloric acid', meter: false });
+      const ref = S2_POW.map((s, i) => flaskAt(`f${i + 1}`, FLASK_X[i], 1, { solute: s, label: 'Hydrochloric acid', forceSci: true }));
+      const ask = flaskAt('f3', FLASK_X[2], 1, { solute: S2_POW_ASK, label: 'Hydrochloric acid', meter: false, forceSci: true });
       return phTable({
         pieces: [scaleMeter('meter', { x: 160, y: 9 }, 'pH')],
         fixtures: [...ref.map(x => x.fixture), ask.fixture],
         zones: { slots: ref.map(x => x.slot) }
-      }, { w: 184, h: 52 });
+      }, { w: 184, h: 56 });
     })(),
     hints: [
-      'Lay the pH meter on the two flasks with seats, then type the third flask’s pH.',
+      'Put the pH meter on the two flasks with seats, then type the third flask’s pH.',
       'Compare the exponent of each concentration with the pH reading on that flask.',
       'Each tenfold step lowers the concentration by one power of ten and raises the pH by 1.'
     ],
@@ -160,15 +159,13 @@ export const STAGES = [
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
       const x = ph(S2_POW_ASK);
       if (near(v, x, 0.02)) return { ok: true };
-      const [hi, lo] = [ph(S2_POW[0]), ph(S2_POW[1])];
-      if (v < 0) return { ok: false, msg: `The other two flasks read ${fmt(hi, 2)} and ${fmt(lo, 2)}, both above zero.` };
-      if (v <= lo) return { ok: false, msg: `1.0 × 10⁻⁵ mol/L holds less hydronium than 1.0 × 10⁻³ mol/L (pH ${fmt(lo, 2)}), so its pH is higher.` };
-      return { ok: false, msg: `Compare 1.0 × 10⁻⁵ mol/L with 1.0 × 10⁻² mol/L (pH ${fmt(hi, 2)}) and 1.0 × 10⁻³ mol/L (pH ${fmt(lo, 2)}).` };
+      if (v < 0) return { ok: false, msg: 'Read each flask with the meter first; the pH values are positive.' };
+      return { ok: false, msg: 'Read each flask with the meter and see how the pH moves.' };
     },
     reward: {
-      log: 'For a power of ten, the pH is the exponent with its sign dropped.',
+      log: 'For a power of ten, the pH is the number after the minus sign.',
       title: 'Powers of Ten',
-      body: '5.00. Hydrochloric acid donates all its protons to water, so its H₃O⁺ concentration is its own concentration, and the pH is the power of ten with its sign dropped.'
+      body: '5.00. The pH is the number after the minus sign: 1.0 × 10⁻⁵ M HCl gives pH 5.'
     }
   },
 
@@ -178,29 +175,24 @@ export const STAGES = [
     title: 'Between the Flasks',
     briefing: {
       speaker: 'Vess',
-      body: 'For a concentration between two powers of ten, the logarithm gives the place between: pH = −log[H₃O⁺]. The log key on the calculator works it out.',
-      worked: [
-        '[H₃O⁺] = 2.0 × 10⁻³ mol/L',
-        'log(2.0 × 10⁻³) = −2.70',
-        'pH = 2.70'
-      ]
+      body: 'For a concentration between two powers of ten, the log key on the calculator gives pH = −log[H₃O⁺].'
     },
-    prompt: 'What is the pH of 3.2 × 10⁻⁴ M hydrochloric acid, to two decimal places?',
+    prompt: 'What is the pH of 3.2 × 10⁻⁴ M hydrochloric acid (to two decimal places)?',
     widget,
     entry: { id: 'ph', label: 'pH', unit: '' },
     table: (() => {
-      const ref = S3_REF.map((s, i) => flaskAt(`f${i + 1}`, FLASK_X[i], 1, { solute: s, label: 'Hydrochloric acid' }));
-      const ask = flaskAt('f3', FLASK_X[2], 1, { solute: S3_ASK, label: 'Hydrochloric acid', meter: false });
+      const ref = S3_REF.map((s, i) => flaskAt(`f${i + 1}`, FLASK_X[i], 1, { solute: s, label: 'Hydrochloric acid', forceSci: true }));
+      const ask = flaskAt('f3', FLASK_X[2], 1, { solute: S3_ASK, label: 'Hydrochloric acid', meter: false, forceSci: true });
       return phTable({
         pieces: [scaleMeter('meter', { x: 160, y: 9 }, 'pH')],
         fixtures: [...ref.map(x => x.fixture), ask.fixture],
         zones: { slots: ref.map(x => x.slot) }
-      }, { w: 184, h: 52 });
+      }, { w: 184, h: 56 });
     })(),
     hints: [
-      'Lay the pH meter on the two flasks with seats, then use Calc to find the third flask’s pH.',
+      'Put the pH meter on the two flasks with seats, then use Calc to find the third flask’s pH.',
       'Compare 3.2 × 10⁻⁴ M with the 1.0 × 10⁻³ M and 1.0 × 10⁻⁴ M flasks.',
-      'Use pH = −log[H₃O⁺] as shown in the worked example.'
+      'Use pH = −log[H₃O⁺] with the log key in Calc.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ph');
@@ -211,14 +203,14 @@ export const STAGES = [
       if (v < 0) return { ok: false, msg: `The meter reads ${fmt(hi, 2)} and ${fmt(lo, 2)} on the flasks beside this one, both above zero.` };
       if (near(v, lo, 0.03)) return { ok: false, msg: `The 1.0 × 10⁻⁴ M flask reads ${fmt(lo, 2)}; this flask holds more hydronium than that one.` };
       if (v < hi || v > lo) return { ok: false, msg: `The meter reads ${fmt(hi, 2)} on the 1.0 × 10⁻³ M flask and ${fmt(lo, 2)} on the 1.0 × 10⁻⁴ M flask; this flask is between them.` };
-      return { ok: false, msg: `A pH of ${fmt(v, 2)} stands for ${sci(10 ** -v, 2)} mol/L of hydronium; this flask holds ${sci(S3_ASK.c, 2)} M of acid, all of it ionized in the window.` };
+      return { ok: false, msg: `pH ${fmt(v, 2)} would mean ${v < x ? 'more' : 'less'} acid than this flask holds.` };
     },
     get reward() {
       const s = scaleSolution(S3_ASK);
       return {
         log: 'A concentration between the flasks gave a pH between their readings.',
         title: 'Reading a Concentration',
-        body: `${fmt(s.pH, 2)}, between the readings ${fmt(ph(S3_REF[0]), 2)} and ${fmt(ph(S3_REF[1]), 2)} of the flasks on either side. The logarithm places every concentration on the pH scale.`
+        body: `${fmt(s.pH, 2)}, between the readings ${fmt(ph(S3_REF[0]), 2)} and ${fmt(ph(S3_REF[1]), 2)} of the flasks on either side.`
       };
     }
   },
@@ -235,22 +227,23 @@ export const STAGES = [
     widget,
     entry: { id: 'sum', label: 'pH + pOH', unit: '' },
     table: (() => {
-      const f = S4.map((s, i) => flaskAt(`f${i + 1}`, FLASK_X[i], 1, { solute: s, label: 'Sodium hydroxide' }));
+      const xs = [24, 72, 120];
+      const f = S4.map((s, i) => flaskAt(`f${i + 1}`, xs[i], 1, { solute: s, label: 'Sodium hydroxide', w: 46, twoMeters: true }));
       return phTable({
-        pieces: [scaleMeter('meter', { x: 154, y: 9 }, 'pH'), scaleMeter('meterOH', { x: 154, y: 36 }, 'pOH')],
+        pieces: [scaleMeter('meter', { x: 162, y: 12 }, 'pH', { caption: '' }), scaleMeter('meterOH', { x: 162, y: 38 }, 'pOH', { caption: '' })],
         fixtures: f.map(x => x.fixture),
-        zones: { slots: f.map(x => x.slot) }
-      }, { w: 184, h: 66 });
+        zones: { slots: f.flatMap(x => x.slots) }
+      }, { w: 186, h: 66 });
     })(),
     hints: [
-      'Lay each meter on a flask, then type the sum.',
+      'Put both meters on the same flask to read pH and pOH side by side, then type their sum.',
       'Add the pH and pOH readings on one flask, then check the other two flasks.',
       'Compare the three sums with each other.'
     ],
     check(state) {
       const t = state.table;
       const sampled = ['f1', 'f2', 'f3'].filter(id => t.fixtures[id]?.props?.noted != null).length;
-      if (sampled < 2) return { ok: false, notYet: true, msg: 'Sample at least two flasks with the meters first.' };
+      if (sampled < 2) return { ok: false, notYet: true, msg: 'Read pH and pOH on two flasks and add each pair.' };
       const v = entryNumber(t, 'sum');
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
       if (near(v, 14, 0.05)) return { ok: true };
@@ -262,7 +255,7 @@ export const STAGES = [
       return {
         log: 'pH and pOH added to 14 in every flask.',
         title: 'pOH',
-        body: `${fmt(s.pH + s.pOH, 0)}. In every flask at 25 °C, pH + pOH = 14.`
+        body: `${fmt(s.pH + s.pOH, 0)}. In every flask at 25 °C, pH + pOH = 14 (from Kw = 10⁻¹⁴).`
       };
     }
   },
@@ -271,22 +264,22 @@ export const STAGES = [
   {
     id: 's4-typed',
     title: 'Two Hydroxides Each',
-    prompt: 'What is the pH of 0.025 M barium hydroxide, to two decimal places?',
+    prompt: 'What is the pH of 0.025 M barium hydroxide, Ba(OH)₂, to two decimal places?',
     widget,
     entry: { id: 'ph', label: 'pH', unit: '' },
     table: (() => {
       const ref = S5_REF.map((s, i) => flaskAt(`f${i + 1}`, FLASK_X[i], 1, { solute: s, label: 'Sodium hydroxide' }));
-      const ask = flaskAt('f3', FLASK_X[2], 1, { solute: S5_ASK, label: 'Barium hydroxide', meter: false });
+      const ask = flaskAt('f3', FLASK_X[2], 1, { solute: S5_ASK, label: 'Barium hydroxide, Ba(OH)₂', meter: false });
       return phTable({
         pieces: [scaleMeter('meter', { x: 160, y: 9 }, 'pH')],
         fixtures: [...ref.map(x => x.fixture), ask.fixture],
         zones: { slots: ref.map(x => x.slot) }
-      }, { w: 184, h: 52 });
+      }, { w: 184, h: 56 });
     })(),
     hints: [
-      'Lay the pH meter on the two flasks with seats, then type the third flask’s pH.',
+      'Put the pH meter on the two flasks with seats, then type the third flask’s pH.',
       'Compare the window of barium hydroxide with the windows of the sodium hydroxide flasks.',
-      'The pH follows from the OH⁻ actually in the water, which is not the concentration on the label.'
+      'Each Ba(OH)₂ releases two OH⁻ ions, so [OH⁻] is twice the concentration on the label.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ph');
@@ -295,7 +288,7 @@ export const STAGES = [
       if (near(v, s.pH, 0.03)) return { ok: true };
       const once = scaleSolution({ id: 'naoh', c: S5_ASK.c });
       if (near(v, s.pOH, 0.05)) return { ok: false, msg: `A pH of ${fmt(v, 2)} would be an acid; the flasks beside this one read ${fmt(ph(S5_REF[1]), 2)} and ${fmt(ph(S5_REF[0]), 2)}.` };
-      if (near(v, once.pH, 0.05)) return { ok: false, msg: 'The window shows two OH⁻ for each Ba(OH)₂ formula unit; that figure counts one.' };
+      if (near(v, once.pH, 0.05)) return { ok: false, msg: 'The window shows two OH⁻ for each Ba(OH)₂; that figure counts one.' };
       return { ok: false, msg: `The meter reads ${fmt(ph(S5_REF[1]), 2)} on the 0.010 M sodium hydroxide flask and ${fmt(ph(S5_REF[0]), 2)} on the 0.10 M one, and ${fmt(v, 2)} does not fit this flask's window.` };
     },
     get reward() {
@@ -312,7 +305,7 @@ export const STAGES = [
   {
     id: 's5-chain',
     title: 'Diluting Again and Again',
-    prompt: 'What happens to the pH of hydrochloric acid as it is diluted again and again?',
+    prompt: 'What happens to the pH of hydrochloric acid as you keep diluting it?',
     widget,
     table: (() => {
       const f = flaskAt('f1', 30, 1, { solute: S6[0], label: 'Hydrochloric acid', w: 54, dilute: 3 });
@@ -320,17 +313,17 @@ export const STAGES = [
         pieces: [
           scaleMeter('meter', { x: 74, y: 48 }, 'pH'),
           note('past7', S6_CARDS.past7, { x: 118, y: 12 }),
-          note('near7', S6_CARDS.near7, { x: 162, y: 12 }),
+          note('near7', S6_CARDS.near7, { x: 168, y: 12 }),
           note('near14', S6_CARDS.near14, { x: 118, y: 32 })
         ],
         fixtures: [f.fixture],
-        zones: { slots: [f.slot, { id: 'ans', label: 'My answer', at: { x: 140, y: 56 }, size: { w: 40, h: 14 } }] }
-      }, { w: 192, h: 76 });
+        zones: { slots: [f.slot, { id: 'ans', label: 'My answer', at: { x: 143, y: 58 }, size: { w: 46, h: 18 } }] }
+      }, { w: 198, h: 78 });
     })(),
     hints: [
-      'Lay the pH meter on the flask, press "Dilute" three times, then place a card in the slot.',
+      'Put the pH meter on the flask, press "Dilute" three times, then place a card in the slot.',
       'Watch how the pH step shrinks at each tenfold dilution.',
-      'Ask where the H₃O⁺ in the flask comes from when almost no acid is left.'
+      'When almost no acid remains, think about where the rest of the H₃O⁺ comes from.'
     ],
     check(state) {
       const k = Math.round(dialValue(state.table, 'f1', 'steps'));
@@ -342,9 +335,9 @@ export const STAGES = [
     },
     get reward() {
       return {
-        log: 'The pH of diluted acid levelled off at 7.',
-        title: 'Strong Acids and the Floor',
-        body: `Water supplies ${sci(waterIons({}).h, 2)} mol/L of H₃O⁺ of its own, so the ${sci(S6[3].c, 2)} M flask reads ${fmt(ph(S6[3]), 2)}, not 9.00.`
+        log: 'The pH of diluted acid stopped at 7.',
+        title: 'Water’s Own H₃O⁺',
+        body: `Pure water supplies ${sci(waterIons({}).h, 2)} mol/L of H₃O⁺ (pH 7), so ${sci(S6[3].c, 2)} M HCl reads ${fmt(ph(S6[3]), 2)}, not 9.00.`
       };
     }
   },
@@ -358,15 +351,15 @@ export const STAGES = [
     widget,
     table: phTable({
       pieces: [
-        note('seven', GUESS.seven, { x: 30, y: 9 }),
-        note('above', GUESS.above, { x: 80, y: 9 }),
-        note('below', GUESS.below, { x: 30, y: 30 }),
-        note('zero', GUESS.zero, { x: 80, y: 30 })
+        note('seven', GUESS.seven, { x: 26, y: 10 }),
+        note('above', GUESS.above, { x: 76, y: 10 }),
+        note('below', GUESS.below, { x: 26, y: 30 }),
+        note('zero', GUESS.zero, { x: 76, y: 30 })
       ],
       // The lead-in: pure water at 25 °C, a few units handing a proton over and taking it back, with no control.
-      fixtures: [flaskAt('clip', 60, 44, { solute: WATER, label: 'Pure water, 25 °C', w: 60, window: 12, meter: false, legend: true }).fixture],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 20 }, size: { w: 36, h: 14 } }] }
-    }, { h: 90 }),
+      fixtures: [flaskAt('clip', 60, 48, { solute: WATER, label: 'Pure water, 25 °C', w: 60, window: 12, meter: false, legend: true }).fixture],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 138, y: 20 }, size: { w: 46, h: 18 } }] }
+    }, { w: 170, h: 94 }),
     leadIn: true,
     hints: [
       'Place one of the four prediction cards in the slot.',
@@ -392,15 +385,15 @@ export const STAGES = [
     get prompt() { return guessLine('Is pure water at 50 °C acidic, neutral or basic?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
-      const f = flaskAt('f1', 32, 1, { solute: WATER, label: 'Pure water', w: 52, window: 16, temps: TEMPS, lens: true });
+      const f = flaskAt('f1', 32, 1, { solute: WATER, label: 'Pure water', w: 54, window: 16, temps: TEMPS, lens: true, lensOnMeter: true });
       return phTable({
-        pieces: [scaleMeter('meter', { x: 100, y: 10 }, 'pH')],
-        fixtures: [f.fixture, selectorFixture('pick', 'The warm water is', { x: 124, y: 46 }, { options: ['Acidic', 'Neutral', 'Basic', ' '], start: 4, w: 56 })],
+        pieces: [scaleMeter('meter', { x: 102, y: 12 }, 'pH')],
+        fixtures: [f.fixture, selectorFixture('pick', 'Neutral = equal H₃O⁺ & OH⁻', { x: 126, y: 48 }, { options: ['Acidic', 'Neutral', 'Basic', ' '], start: 4, w: 60 })],
         zones: { slots: [f.slot] }
-      }, { w: 160, h: 72 });
+      }, { w: 164, h: 78 });
     })(),
     hints: [
-      'Set the "Temperature" dial to 50 °C, lay the pH meter on the flask, then set the answer dial.',
+      'Set the "Temperature" dial to 50 °C, put the pH meter on the flask, then set the answer dial.',
       'Compare the amounts of H₃O⁺ and OH⁻ that the counter shows at 25 °C and 50 °C.',
       'Neutral means equal H₃O⁺ and OH⁻, whatever the pH number reads.'
     ],
@@ -409,7 +402,7 @@ export const STAGES = [
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 2) return { ok: true };
       const w = waterIons({ T: 50 });
-      return { ok: false, msg: `At 50 °C the counter counts ${sci(w.h, 2)} mol/L of H₃O⁺ and ${sci(w.oh, 2)} mol/L of OH⁻.` };
+      return { ok: false, msg: `At 50 °C the ion counter counts ${sci(w.h, 2)} mol/L of H₃O⁺ and ${sci(w.oh, 2)} mol/L of OH⁻.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
@@ -429,23 +422,18 @@ export const STAGES = [
     title: 'Sealed Flask',
     briefing: {
       speaker: 'Vess',
-      body: 'To go from a pH back to a concentration, undo the logarithm with a power of ten: [H₃O⁺] = 10^(−pH).',
-      worked: [
-        'pH = 3.30',
-        '[H₃O⁺] = 10^(−3.30)',
-        '= 5.0 × 10⁻⁴ mol/L'
-      ]
+      body: 'To go from a pH back to a concentration, undo the logarithm with a power of ten: [H₃O⁺] = 10^(−pH).'
     },
-    prompt: 'What is the concentration of H₃O⁺ in the sealed flask, in mol/L?',
+    prompt: 'What is the H₃O⁺ concentration (in mol/L) in the sealed flask?',
     widget,
-    entry: { id: 'h', label: 'H₃O⁺ in mol/L (like 5.0e-4)', unit: 'M' },
+    entry: { id: 'h', label: 'H₃O⁺ (e.g. 2.0e-3)', unit: 'M' },
     table: (() => {
       const f = flaskAt('f1', 30, 1, { solute: S9, w: 44, sealed: true });
       return phTable({
         pieces: [scaleMeter('meter', { x: 92, y: 12 }, 'pH')],
         fixtures: [f.fixture],
         zones: { slots: [f.slot] }
-      }, { w: 124, h: 52 });
+      }, { w: 124, h: 56 });
     })(),
     hints: [
       'Lay the pH meter on the flask, then use Calc to find [H₃O⁺].',
@@ -485,7 +473,7 @@ export const SOLUTIONS = [
   [put('meter', seat(1)), { run: 'f1' }, { run: 'f1' }, put('rises1', 'slot:ans')],
   [put('meter', seat(1)), typed('ph', '5.00')],
   [put('meter', seat(1)), typed('ph', '3.49')],
-  [put('meter', seat(1)), put('meterOH', seat(1)), put('meter', seat(2)), put('meterOH', seat(2)), typed('sum', '14')],
+  [put('meter', seat(1)), put('meterOH', 'slot:f1.seat2'), put('meter', seat(2)), put('meterOH', 'slot:f2.seat2'), typed('sum', '14')],
   [put('meter', seat(1)), typed('ph', '12.70')],
   [put('meter', seat(1)), { run: 'f1' }, { run: 'f1' }, { run: 'f1' }, put('near7', 'slot:ans')],
   [put('below', 'slot:guess')],

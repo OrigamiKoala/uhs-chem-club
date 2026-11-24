@@ -102,55 +102,41 @@ function sealedPot(ctx, w, h, t) {
     if (p > 0.97) text(ctx, `after ${after.toFixed(1)}`, w * 0.88, h * 0.8, { size: size * 0.9, color: C.dim, align: 'right' });
   };
 
-  if (t < 0.27) {
-    const p = ease(win(t, 0.04, 0.22));
+  if (t <= 0.32) {
+    const p = ease(win(t, 0.04, 0.26));
     drawPot(ctx, R, false);
     const held = paint(ctx, R, ironOpen(R, p, h), r);
-    text(ctx, 'open pot, iron burning', cx, h * 0.22, { size, color: C.dust });
+    text(ctx, 'open pot: oxygen from air enters', cx, h * 0.22, { size, color: C.dust });
     read(sumOf(held));
     ends(sums.ironIn, sums.ironOut, p);
     return;
   }
-  if (t < 0.52) {
-    const p = win(t, 0.3, 0.5);
+  if (t <= 0.64) {
+    const p = win(t, 0.34, 0.58);
     drawPot(ctx, R, false);
     const held = paint(ctx, R, gasesOut(R, p, h), r * 0.9);
-    text(ctx, 'open pot, the gases a burn made', cx, h * 0.22, { size, color: C.dust });
+    text(ctx, 'open pot: gases leave', cx, h * 0.22, { size, color: C.dust });
     read(sumOf(held));
     ends(sums.gasIn, sums.gasOut, p);
     return;
   }
-  if (t < 0.77) {
-    const p = ease(win(t, 0.55, 0.72));
-    drawPot(ctx, R, true);
-    const held = paint(ctx, R, sealedAtoms(R, p), r);
-    text(ctx, 'sealed pot, iron burning', cx, h * 0.22, { size, color: C.dust });
-    read(sumOf(held));
-    ends(sums.sealIn, sums.sealOut, p);
-    return;
+  const p = ease(win(t, 0.66, 0.88));
+  drawPot(ctx, R, true);
+  const atoms = sealedAtoms(R, p);
+  // Draw bonds forming as iron and oxygen atoms rearrange into iron oxide under the sealed lid.
+  if (p > 0.35) {
+    ctx.globalAlpha = Math.min(1, (p - 0.35) / 0.45);
+    const fe = atoms.slice(0, 4);
+    const ox = atoms.slice(4);
+    [[0, 0], [0, 3], [1, 1], [1, 4], [2, 3], [2, 5], [3, 4], [3, 5]].forEach(([i, j]) => {
+      line(ctx, fe[i].x, fe[i].y, ox[j].x, ox[j].y, C.amber, 2.5);
+    });
+    ctx.globalAlpha = 1;
   }
-  // The three changes in the sum, each the difference of the two sums counted above.
-  const p = ease(win(t, 0.79, 0.93));
-  const rows = [
-    ['open, iron burns', sums.ironOut - sums.ironIn],
-    ['open, gases leave', sums.gasOut - sums.gasIn],
-    ['sealed, iron burns', sums.sealOut - sums.sealIn]
-  ];
-  const mid = w * 0.58;
-  const scale = (w * 0.26) / Math.max(...rows.map(x => Math.abs(x[1])), 1);
-  line(ctx, mid, h * 0.24, mid, h * 0.8, C.steel, 2);
-  text(ctx, 'change in the balance', w * 0.5, h * 0.14, { size, color: C.dust });
-  rows.forEach(([name, d], i) => {
-    const y = h * (0.36 + i * 0.18);
-    text(ctx, name, w * 0.05, y, { size, color: C.dust, align: 'left' });
-    ctx.fillStyle = d > 0 ? C.green : d < 0 ? C.danger : C.steel;
-    const len = d * scale * p;
-    ctx.fillRect(Math.min(mid, mid + len), y - h * 0.025, Math.max(2, Math.abs(len)), h * 0.05);
-    if (p > 0.8) {
-      const label = d === 0 ? '0.0' : `${d > 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}`;
-      text(ctx, label, d >= 0 ? mid + Math.max(len, 0) + 14 : mid + len - 14, y, { size, color: C.pale, align: d >= 0 ? 'left' : 'right', weight: 700 });
-    }
-  });
+  const held = paint(ctx, R, atoms, r);
+  text(ctx, 'sealed pot: atoms rearrange, none cross the lid', cx, h * 0.22, { size, color: C.dust });
+  read(sumOf(held));
+  ends(sums.sealIn, sums.sealOut, p);
 }
 
 export const Q3_SCENES = {

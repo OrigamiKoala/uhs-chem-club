@@ -29,13 +29,14 @@ export const PRIMERS = {
   log: {
     title: 'Powers of ten and the logarithm',
     html: `<p>A logarithm (log) answers: "10 to what power gives this number?" Slide the power and the first digit.</p>
-      ${slider('lg-p', 'Power of ten', -8, 3, 1, -4)}${slider('lg-m', 'First digit', 1, 9, 1, 3)}
+      ${slider('lg-p', 'Power of ten', -8, 3, 1, -4)}${slider('lg-m', 'First digit', 1, 9.9, 0.1, 3.0)}
       <p id="lg-n"></p><p id="lg-l"></p>`,
     wire(root) {
       bind(root, ['lg-p', 'lg-m'], (v, set) => {
         const p = v('lg-p'); const m = v('lg-m'); const x = m * 10 ** p;
-        set('lg-n', `Number: ${m} × 10<sup>${p}</sup> = ${x.toFixed(Math.max(0, -p + 0))}`);
-        set('lg-l', `log of it = ${p} + log ${m} = ${p} + ${Math.log10(m).toFixed(2)} = <strong>${(p + Math.log10(m)).toFixed(2)}</strong>`);
+        const mStr = Number.isInteger(m) ? String(m) : m.toFixed(1);
+        set('lg-n', `Number: ${mStr} × 10<sup>${p}</sup> = ${x.toFixed(Math.max(0, -p + 1))}`);
+        set('lg-l', `log of it = ${p} + log ${mStr} = ${p} + ${Math.log10(m).toFixed(2)} = <strong>${(p + Math.log10(m)).toFixed(2)}</strong>`);
       });
     }
   },
