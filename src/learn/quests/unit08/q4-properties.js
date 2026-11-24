@@ -32,7 +32,7 @@ const QUEST_KEY = 'unit08/q4-properties';
 const GUESS = {
   doubles: 'K doubles',
   same: 'K stays the same',
-  squares: 'K is multiplied by itself',
+  squares: 'K is squared (K × K)',
   halves: 'K is halved'
 };
 const TALL = { h: 74 };
@@ -80,6 +80,10 @@ export const STAGES = [
     return {
       id: 's1-reverse',
       title: 'The Same Vessel, Written Backwards',
+      briefing: {
+        speaker: 'Vess',
+        body: 'The vessel shows K = 0.15 for N₂O₄ ⇌ 2 NO₂. Use the ratio board to find K for the same reaction written backwards.'
+      },
       prompt: 'What is K for 2 NO₂ ⇌ N₂O₄ in this same settled vessel?',
       widget,
       table: pansTable({
@@ -96,22 +100,22 @@ export const STAGES = [
         zones: { slots: [...rig.slots, answerSlot('K of 2 NO₂ ⇌ N₂O₄')] }
       }, { h: 86 }),
       hints: [
-        'Place the particle cards on the ratio board for 2 NO₂ ⇌ N₂O₄, then lay the matching K card in the slot.',
-        'For 2 NO₂ ⇌ N₂O₄, N₂O₄ is the product and NO₂ is the reactant.',
-        'Compare the ratio board reading for N₂O₄ ÷ NO₂² with the reading for NO₂² ÷ N₂O₄.'
+        'Build the ratio for 2 NO₂ ⇌ N₂O₄ on the ratio board, then place the matching K card in the answer slot.',
+        'In 2 NO₂ ⇌ N₂O₄, N₂O₄ is the product (top) and NO₂ is the reactant (bottom).',
+        'Compare N₂O₄ ÷ NO₂² on the board with the printed K = 0.15 for the reverse direction.'
       ],
       check(state) {
         return tileCheck(state, T1.right, t => {
           const r = rigRead(t, 'rig');
           return r.laid
-            ? `The ratio board reads ${fmtK(r.readings[0])} for that arrangement; N₂O₄ ÷ NO₂² gives K for 2 NO₂ ⇌ N₂O₄.`
-            : 'Place N₂O₄ and NO₂² on the ratio board to read the reversed K.';
+            ? `The ratio board reads ${fmtK(r.readings[0])} for that layout; put N₂O₄ on top and NO₂² on the bottom for 2 NO₂ ⇌ N₂O₄.`
+            : 'Place N₂O₄ and NO₂² on the ratio board first to read the reversed K.';
         });
       },
       reward: {
         log: 'The reversed reaction had K = 1 ÷ 0.15 = 6.7.',
         title: 'K of the Reverse Reaction',
-        body: 'The vessel is the same; only the ratio is written the other way up, so the new K is 1 ÷ 0.15 = 6.7.'
+        body: 'The vessel did not change—only the fraction flipped upside down, so the reversed K is 1 ÷ 0.15 = 6.7.'
       }
     };
   })(),
@@ -129,12 +133,12 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
-      'Drag one of the four prediction cards into the slot.',
-      'Think about what doubling every coefficient does to the powers in K.',
-      'K is a ratio of powers; decide what doubling every power does to that ratio.'
+      'Drag one prediction card into the slot.',
+      'Think about what doubling every coefficient does to the exponents in K.',
+      'K is a fraction of powers; decide what doubling every exponent does to the whole fraction.'
     ],
     check(state) {
-      if (!pieceIn(state.table, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!pieceIn(state.table, 'guess')) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -154,11 +158,11 @@ export const STAGES = [
     title: 'Every Coefficient Doubled',
     briefing: {
       speaker: 'Vess',
-      body: 'Use the K reader on H₂ + I₂ ⇌ 2 HI with "Larger" to see what doubling coefficients does to K, then apply that rule to 2 SO₂ + O₂ ⇌ 2 SO₃.'
+      body: 'Place H₂ + I₂ ⇌ 2 HI on the K reader, press "Larger" to double it, and see how K changes. Then apply that rule to 2 SO₂ + O₂ ⇌ 2 SO₃.'
     },
     get prompt() {
       const g = guessLine();
-      const q = 'What is K for 4 SO₂ + 2 O₂ ⇌ 4 SO₃ when K is 280 for 2 SO₂ + O₂ ⇌ 2 SO₃?';
+      const q = 'What is K for 4 SO₂ + 2 O₂ ⇌ 4 SO₃ if K = 280 for 2 SO₂ + O₂ ⇌ 2 SO₃?';
       return g ? `You predicted "${GUESS[g]}". ${q}` : q;
     },
     widget,
@@ -172,24 +176,24 @@ export const STAGES = [
       zones: { trays: [CHK_TRAY], slots: [answerSlot('K of 4 SO₂ + 2 O₂ ⇌ 4 SO₃')] }
     }, TALL),
     hints: [
-      'Lay H₂ + I₂ ⇌ 2 HI on the K reader, press "Larger" while holding it, and press "Read K".',
-      'Compare the K the reader gives for H₂ + I₂ ⇌ 2 HI with the K for 2 H₂ + 2 I₂ ⇌ 4 HI.',
-      'See how 54 changed when doubled, then apply that same change to 280.'
+      'Place H₂ + I₂ ⇌ 2 HI on the K reader, press "Larger" while holding it, then press "Read K".',
+      'Compare K for H₂ + I₂ ⇌ 2 HI (54) with K for 2 H₂ + 2 I₂ ⇌ 4 HI.',
+      'See how 54 changed when doubled, then do the same operation to 280.'
     ],
     check(state) {
       return tileCheck(state, T3.right, t => {
         const eq = eqOf(Q4.hi, { scale: 2 });
         const k = readOf(t, eq);
-        return k ? `The K reader gave ${k} for ${eq} (from 54); that card does not apply the same change to 280.` : 'The K reader has not read a doubled card yet.';
+        return k ? `The K reader gave ${k} for ${eq} (up from 54); apply that same rule to 280.` : 'Place H₂ + I₂ ⇌ 2 HI on the K reader, double it with "Larger", and press "Read K" first.';
       });
     },
     get reward() {
       const g = guessLine();
-      const said = !g ? '' : g === 'squares' ? 'You predicted K would be multiplied by itself, and the reader agreed. ' : g === 'doubles' ? 'You predicted K would double; the reader gave 54 × 54 instead. ' : 'The reader did not agree with your prediction, which is how a guess gets better. ';
+      const said = !g ? '' : g === 'squares' ? 'Your prediction matched. ' : g === 'doubles' ? 'You predicted K would double, but the reader gave 54 × 54 instead. ' : 'Your prediction did not match. ';
       return {
         log: 'Doubling every coefficient squared K.',
         title: 'K to a Power',
-        body: `${said}Doubling every coefficient doubles every power in the ratio, so K is squared: 280 × 280 = 78,400. The mixture itself is no different.`
+        body: `${said}Doubling every coefficient doubles every exponent, which squares K: 280² = 78,400. The actual mixture stays the same.`
       };
     }
   },
@@ -200,9 +204,9 @@ export const STAGES = [
     title: 'Two Reactions in a Row',
     briefing: {
       speaker: 'Vess',
-      body: 'Test how two reactions combine on the K reader using the nitrogen pair, then apply the same rule to the two carbon reactions that add up to C(s) + 2 H₂O ⇌ CO₂ + 2 H₂.'
+      body: 'Put both nitrogen reaction cards on the K reader to see how their K values combine, then apply that rule to the two carbon reactions.'
     },
-    prompt: 'What is K for C(s) + 2 H₂O ⇌ CO₂ + 2 H₂?',
+    prompt: 'What is K for the combined reaction C(s) + 2 H₂O ⇌ CO₂ + 2 H₂?',
     widget,
     table: pansTable({
       pieces: [
@@ -216,20 +220,20 @@ export const STAGES = [
       zones: { trays: [{ ...CHK_TRAY, at: { x: 82, y: 19 }, size: { w: 58, h: 24 } }], slots: [answerSlot('K of combined reaction')] }
     }, TALL),
     hints: [
-      'Lay both N₂ + O₂ ⇌ 2 NO and 2 NO + O₂ ⇌ 2 NO₂ on the K reader and press "Read K".',
-      'Compare the K of the pair (1.00) with the two printed K values (4.00 and 0.250).',
-      'Combine 2.50 and 1.40 the same way the K reader combined 4.00 and 0.250.'
+      'Place both N₂ + O₂ ⇌ 2 NO and 2 NO + O₂ ⇌ 2 NO₂ on the K reader, then press "Read K".',
+      'Compare the combined K (1.00) with the two individual K values (4.00 and 0.250).',
+      'Combine 2.50 and 1.40 the same way 4.00 and 0.250 combined to give 1.00.'
     ],
     check(state) {
       return tileCheck(state, T4.right, t => {
         const k = readOf(t, 'N₂ + 2 O₂ ⇌ 2 NO₂');
-        return k ? `The K reader gave ${k} for the pair (4.00 and 0.250); that card does not combine 2.50 and 1.40 the same way.` : 'The K reader has not read the two cards together yet.';
+        return k ? `The K reader gave ${k} from 4.00 and 0.250; combine 2.50 and 1.40 the same way.` : 'Place both nitrogen cards on the K reader and press "Read K" first.';
       });
     },
     reward: {
       log: 'Two added reactions multiplied their K values.',
       title: 'Adding Reactions',
-      body: 'Add two reactions and multiply their K values: K = K₁ × K₂. Here CO made by the first step is used by the second, so it cancels out.'
+      body: 'When two reactions add together, their K values multiply: K = K₁ × K₂. Here CO cancels out because step 1 makes it and step 2 uses it.'
     }
   }
 ];

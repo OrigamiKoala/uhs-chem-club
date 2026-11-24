@@ -128,9 +128,9 @@ export const STAGES = [
       intent: 'The Tipper rocks three vessels on its beam, each on a run of changes of its own.'
     },
     hints: [
-      'Use the "Run" key on each vessel, then tap the vessel you choose.',
-      'Compare each vessel\'s graph with the two counts under it.',
-      'Look at both the graph and the two change counts on each vessel.'
+      'Press "Run" on each vessel to see what happens, then tap your choice.',
+      'Compare each vessel\'s graph lines with its two change counts underneath.',
+      'At equilibrium, the lines are flat and both forward and reverse counts keep rising.'
     ],
     check(state) {
       const t = state.table;
@@ -139,15 +139,15 @@ export const STAGES = [
       if (v === P1_PICK) return { ok: true };
       if (v === 1) {
         const r = panRead(t, 'p1');
-        return { ok: false, msg: `Vessel 1's "Isobutane to Butane" count reads ${r.rev}, and its blue line has reached the top of the graph.` };
+        return { ok: false, msg: `Vessel 1's "Isobutane to Butane" count reads ${r.rev} and all butane ran out—it is one-way, not equilibrium.` };
       }
       const r = panRead(t, 'p3');
-      return { ok: false, msg: `Vessel 3's orange line is still falling at ${r.t} s, and its blue line is still rising.` };
+      return { ok: false, msg: `Vessel 3 is still changing at ${r.t} s—its orange line is still falling and its blue line is still rising.` };
     },
     reward: {
       log: 'Vessel 2 held steady with changes counted both ways.',
       title: 'Level, Not Finished',
-      body: 'Vessel 2 held steady at about three times as much isobutane as butane while both counts kept running, which is equilibrium. Vessel 1 had stopped because nothing turned back, and Vessel 3 had not settled.'
+      body: 'Vessel 2 held steady with both change counts rising—that is equilibrium. Vessel 1 was one-way (nothing turned back), and Vessel 3 was still settling.'
     }
   },
 
@@ -155,7 +155,7 @@ export const STAGES = [
   {
     id: 'p2-burner',
     title: 'Phase 2 · The Burner',
-    prompt: 'What is K for this vessel, to two significant figures?',
+    prompt: 'What is K for this vessel, rounded to two significant figures?',
     widget,
     entry: { id: 'k', label: 'K', unit: '' },
     table: pansTable({
@@ -168,25 +168,25 @@ export const STAGES = [
       intent: 'The Tipper feeds a burner with sulfur dioxide and oxygen, and the burner has settled.'
     },
     hints: [
-      'Read the settled bars and the equation printed on the vessel, then type K in the field.',
-      'Read the amount of each substance from the bars and take the reaction from the equation printed beside them.',
-      'Use the coefficients from the equation as powers in the products-over-reactants ratio.'
+      'Read the settled bars and equation on the vessel, then type K in the box.',
+      'Put product (SO₃) on top and reactants (SO₂, O₂) on the bottom.',
+      'Raise each substance to its equation coefficient: K = [SO₃]² ÷ ([SO₂]² × [O₂]).'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number for K.' };
       const pan = vslRead(state.table, 'pans').pans[0];
       if (within(v, pan.K, P2_TOL)) return { ok: true };
       const sl = kSlips(SO, pan.eq);
       const bars = `SO₂ at ${fmtNum(pan.eq.SO2, 3)}, O₂ at ${fmtNum(pan.eq.O2, 3)} and SO₃ at ${fmtNum(pan.eq.SO3, 3)} mol/L`;
-      if (within(v, sl.inverted, 0.05)) return { ok: false, msg: `That figure is below 1, and on this vessel (${bars}) the SO₃ bar stands tallest.` };
-      if (within(v, sl.noPower, 0.05)) return { ok: false, msg: 'That figure counts each substance once; the equation printed on the vessel has a 2 in front of SO₂ and SO₃.' };
-      return { ok: false, msg: `With ${bars}, that is not the figure the ratio of this vessel comes to.` };
+      if (within(v, sl.inverted, 0.05)) return { ok: false, msg: `That figure is below 1, yet the SO₃ bar is tallest (${bars})—put product SO₃ on top and reactants below.` };
+      if (within(v, sl.noPower, 0.05)) return { ok: false, msg: 'That counts each substance once—the 2 in front of SO₂ and SO₃ squares both.' };
+      return { ok: false, msg: `Check your math with ${bars}, using [SO₃]² ÷ ([SO₂]² × [O₂]).` };
     },
     reward: {
       log: 'K for 2 SO₂ + O₂ ⇌ 2 SO₃ came from the bars.',
       title: 'K From a Vessel',
-      body: `The 2 in front of SO₂ and SO₃ became powers: SO₃² over SO₂² times O₂ came to ${fmtNum(SO.K, 2)} at 1000 K. Any vessel of this reaction at this temperature settles to the same figure.`
+      body: `Squaring SO₃ and SO₂ gave K = ${fmtNum(SO.K, 2)} at 1000 K. Every vessel of this reaction at this temperature settles to the same K.`
     }
   },
 
@@ -194,7 +194,7 @@ export const STAGES = [
   {
     id: 'p3-draw',
     title: 'Phase 3 · The Draw',
-    prompt: 'Which mixture will make more butane when left alone?',
+    prompt: 'Which mixture will make more butane?',
     widget,
     table: pansTable({
       pieces: P3_MIX.map((c, i) => mixCard(c.id, c.label, cardAt(i), 'butane', c.amounts)),
@@ -208,13 +208,13 @@ export const STAGES = [
       intent: 'The Tipper draws a mixture from each of three vessels into its test vessel.'
     },
     hints: [
-      'Lay each mixture card in the test vessel to read its Q against K.',
-      'Compare the Q marker with the K line for each mixture.',
-      'Compare Q with K for each mixture to see which way it runs.'
+      'Place each mixture card in the test vessel to check its Q against K.',
+      'Compare where the Q marker sits relative to the K line for each mixture.',
+      'To make more reactant (butane), Q must start above K.'
     ],
     check(state) {
       const seat = pieceIn(state.table, 'tv.seat');
-      if (!seat) return { ok: false, notYet: true, msg: 'Lay a mixture card in the vessel.' };
+      if (!seat) return { ok: false, notYet: true, msg: 'Place a mixture card in the vessel.' };
       const c = P3_MIX.find(x => x.id === seat.id);
       if (wayOf(c) === P3_WAY) return { ok: true };
       const q = systemRatio(BUTANE, c.amounts);
@@ -223,7 +223,7 @@ export const STAGES = [
     reward: {
       log: 'The mixture with Q above K made more butane.',
       title: 'Q Above K Moves Back',
-      body: `Mixture 1 had Q = ${fmtNum(systemRatio(BUTANE, P3_MIX[0].amounts), 2)} against K = ${fmtNum(BUTANE.K, 2)}, so it made more butane. Mixture 2 held equal amounts (Q = 1.0), below K, so it made isobutane instead.`
+      body: `Mixture 1 had Q = ${fmtNum(systemRatio(BUTANE, P3_MIX[0].amounts), 2)} above K = ${fmtNum(BUTANE.K, 2)}, so it made more butane. Mixture 2 had Q = 1.0 (below K), making isobutane instead.`
     }
   },
 
@@ -231,7 +231,7 @@ export const STAGES = [
   {
     id: 'p4-squeeze',
     title: 'Phase 4 · The Squeeze',
-    prompt: 'After the vessel is compressed, where does the amount of NO₂ settle?',
+    prompt: 'After compressing the vessel, what happens to the amount of NO₂?',
     widget,
     table: pansTable({
       fixtures: [
@@ -246,24 +246,24 @@ export const STAGES = [
       intent: 'The Tipper presses on a sealed vessel of brown gas.'
     },
     hints: [
-      'Drag the piston down, then tap the graph where the NO₂ amount will settle.',
-      'Watch the NO₂ line against its level from before the compression, and the Q marker against the K line.',
-      'Follow Q against K just after the compression and see which side has fewer gas molecules.'
+      'Drag the amber piston down, then choose on the graph or answer box where NO₂ will settle.',
+      'Compare the NO₂ line with its dashed level from before, and watch Q against K.',
+      'Compressing shifts the gas toward the side with fewer molecules (N₂O₄).'
     ],
     check(state) {
       const t = state.table;
       const v = Math.round(dialValue(t, 'ans'));
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap the graph or answer box where the NO₂ amount will settle.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Choose on the graph or answer box where NO₂ will settle.' };
       const r = vesselRead(t, 'v');
-      if (!r.changed) return { ok: false, msg: 'The piston has not moved: drag the amber piston down to compress the vessel first.' };
+      if (!r.changed) return { ok: false, msg: 'The piston has not moved yet: drag the amber piston down to compress the vessel first.' };
       if (v === P4_ANSWER) return { ok: true };
-      if (r.t === 0) return { ok: false, msg: 'No time has passed since the piston moved.' };
-      return { ok: false, msg: `With the piston at ${r.res.post.V} L, the NO₂ line reads ${r.now.n.NO2.toFixed(4)} mol now and stood at ${r.base.n.NO2.toFixed(4)} mol before.` };
+      if (r.t === 0) return { ok: false, msg: 'Press "Run" to let the compressed vessel settle.' };
+      return { ok: false, msg: `At ${r.res.post.V} L, the NO₂ line reads ${r.now.n.NO2.toFixed(4)} mol now and stood at ${r.base.n.NO2.toFixed(4)} mol before.` };
     },
     reward: {
       log: 'Compressing the vessel left less NO₂.',
       title: 'Which Side Has Fewer Molecules',
-      body: 'Compressing the vessel raised the pressure of both gases and put Q above K, so the vessel moved toward N₂O₄, which has fewer molecules than the NO₂ it comes from. The NO₂ amount fell.'
+      body: 'Compressing raised both pressures and put Q above K, so the vessel shifted toward N₂O₄ (fewer gas molecules) and NO₂ fell.'
     }
   },
 
@@ -271,7 +271,7 @@ export const STAGES = [
   {
     id: 'p5-feed',
     title: 'Phase 5 · The Feed',
-    prompt: 'What is the concentration of HI when this vessel has settled, in mol/L?',
+    prompt: 'What is the equilibrium concentration of HI, in mol/L?',
     widget,
     entry: { id: 'hi', label: 'HI at equilibrium', unit: 'M' },
     table: pansTable({
@@ -287,24 +287,24 @@ export const STAGES = [
       intent: 'The Tipper feeds a vessel with equal amounts of H₂ and I₂.'
     },
     hints: [
-      'Press "Settle" on the vessel and type the concentration in the field.',
-      'Compare the settled bars with the dashed start marks, and read K on the plate.',
-      'Write the equilibrium amounts from the ICE table into K = [HI]² ÷ ([H₂] × [I₂]), then solve for x.'
+      'Press "Settle" on the vessel, then type [HI] in the box.',
+      'Compare the settled bars with the dashed start marks, and read K = 54 on the plate.',
+      'Use K = (2x)² ÷ (0.80 − x)² = 54, take the square root of both sides, then double x for [HI].'
     ],
     check(state) {
       const v = entryNumber(state.table, 'hi');
-      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in the field.' };
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in the box.' };
       const want = P5_ICE.amounts.HI;
       if (within(v, want, P5_TOL)) return { ok: true };
-      if (within(v, P5_ICE.x, 0.03)) return { ok: false, msg: `The settled HI bar stands at twice ${sig3(v)}.` };
-      if (within(v, 2 * Math.min(...Object.values(P5_START)), 0.02)) return { ok: false, msg: `${sig3(v)} counts all the H₂ as used up, and the settled H₂ bar still stands above zero.` };
+      if (within(v, P5_ICE.x, 0.03)) return { ok: false, msg: `${sig3(v)} M is x, and the settled HI bar stands at twice ${sig3(v)} (2x).` };
+      if (within(v, 2 * Math.min(...Object.values(P5_START)), 0.02)) return { ok: false, msg: `${sig3(v)} M counts all the H₂ as used up, yet the settled H₂ bar stays above zero.` };
       return { ok: false, msg: v > want ? `The HI bar settles lower than ${sig3(v)}.` : `The HI bar settles higher than ${sig3(v)}.` };
     },
     get reward() {
       return {
         log: 'Equal starts gave a square-root equation that matched the bars.',
         title: 'Equal Starts',
-        body: `With equal 0.80 M starts, both sides are squares: 2x ÷ (0.80 − x) = √54, giving x = ${sig3(P5_ICE.x)} M and [HI] = ${sig3(P5_ICE.amounts.HI)} M.`
+        body: `With equal 0.80 M starts, taking the square root gives 2x ÷ (0.80 − x) = √54, so x = ${sig3(P5_ICE.x)} M and [HI] = ${sig3(P5_ICE.amounts.HI)} M.`
       };
     }
   }

@@ -104,7 +104,7 @@ export const STAGES = [
     title: 'Where the Hydrogen Goes',
     briefing: {
       speaker: 'Vess',
-      body: 'A hydrogen atom without its electron is a single proton, written H⁺. Watch the white hydrogen when the HCl is poured.'
+      body: 'A hydrogen atom without its electron is a single proton, written H⁺. Watch where the white hydrogen goes when HCl is poured.'
     },
     prompt: 'When HCl is poured into water, which particle holds the proton (H⁺) afterwards?',
     widget,
@@ -121,16 +121,16 @@ export const STAGES = [
     hints: [
       'Press "Pour HCl into water" and watch the white hydrogen, then drag a proton on the proton bench.',
       'Look at which particle holds the white hydrogen after the pour.',
-      'Ask which particle in the window gained the white hydrogen.'
+      'Check which particle in the window gained the white hydrogen.'
     ],
     check(state) {
       const m = benchMove(state);
       if (m.none) return { ok: false, notYet: true, msg: 'Drag a proton onto a molecule.' };
-      if (m.many) return { ok: false, msg: 'One proton moves in this pour; put the other back.' };
+      if (m.many) return { ok: false, msg: 'Only one proton moves in this reaction; put the other back.' };
       if (m.right) return { ok: true };
       const n = pourRead(state.table, 'win').moved;
-      if (m.from === m.to) return { ok: false, msg: 'The proton came from HCl. Which other particle could be holding it now?' };
-      return { ok: false, msg: `In the window, the white hydrogens leave chlorine in ${n} of 8 cells. Move a proton onto the particle that gained it.` };
+      if (m.from === m.to) return { ok: false, msg: 'That proton starts on HCl. Drag it to the particle that ends up holding it.' };
+      return { ok: false, msg: `In the window, the white hydrogens leave chlorine in ${n} of 8 pairs. Move a proton onto the particle that gained it.` };
     },
     reward: {
       log: 'Each HCl donated a proton to a water molecule.',
@@ -166,14 +166,14 @@ export const STAGES = [
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = pieceIn(state.table, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Next, ammonia is poured into water and its atoms are followed.' }
+    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Next, pour ammonia into water and watch where the hydrogens go.' }
   },
 
   /* ---------------------------------------------------------------- 3 */
@@ -192,22 +192,22 @@ export const STAGES = [
       }, { w: 184, h: 76 });
     })(),
     hints: [
-      'Press "Pour NH₃" and watch which way the white water hydrogens move, then drag that proton to the other particle.',
-      'Follow the white hydrogens of the water and see which particle holds them afterwards.',
+      'Press "Pour NH₃" and watch where water’s white hydrogens go, then move a proton on the bench.',
+      'Follow the white hydrogens from water and see which particle holds them afterwards.',
       'Count the hydrogens on ammonia before and after the pour to see which way the proton moved.'
     ],
     check(state) {
       const m = benchMove(state);
-      if (m.none) return { ok: false, notYet: true, msg: 'Drag a proton onto the molecule that holds it.' };
-      if (m.many) return { ok: false, msg: 'One proton moves in this pour; put the other back.' };
+      if (m.none) return { ok: false, notYet: true, msg: 'Drag a proton onto the molecule that gains it.' };
+      if (m.many) return { ok: false, msg: 'Only one proton moves in this reaction; put the other back.' };
       if (m.right) return { ok: true };
       const n = pourRead(state.table, 'win').moved;
-      if (m.from === m.to) return { ok: false, msg: 'That proton already belongs to that particle. Move a proton from one particle to the other.' };
-      return { ok: false, msg: `In the window, ${n} of 8 ammonia molecules gained a proton from water; move the proton the right way.` };
+      if (m.from === m.to) return { ok: false, msg: 'That proton already belongs to that particle. Drag a proton from one particle to the other.' };
+      return { ok: false, msg: `In the window, ${n} of 8 ammonia molecules gained a proton from water. Move the proton the other way.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
-      const verdict = g === 'take' ? 'The prediction held: ' : g ? 'Not what you predicted: ' : '';
+      const verdict = g === 'take' ? 'Your prediction was right: ' : g ? 'Not what you predicted: ' : '';
       return {
         log: 'Ammonia accepted a proton from water.',
         title: 'A Base Accepts a Proton',
@@ -222,12 +222,12 @@ export const STAGES = [
     title: 'What Is Left',
     briefing: {
       speaker: 'Vess',
-      body: 'What is left of an acid after it donates a proton is its conjugate base. The two differ by one proton.'
+      body: 'What is left of an acid after it donates a proton is its conjugate base. The two differ by one proton (H⁺).'
     },
     prompt: 'Match each acid to its conjugate base (what remains after it donates one proton).',
     widget,
     table: (() => {
-      const slots = S4_ACIDS.map((a, i) => ({ id: `p${i}`, label: 'Leftover base', at: { x: 68, y: 12 + i * 20 }, size: { w: 22, h: 12 } }));
+      const slots = S4_ACIDS.map((a, i) => ({ id: `p${i}`, label: 'Conjugate base', at: { x: 68, y: 12 + i * 20 }, size: { w: 22, h: 12 } }));
       return phTable({
         pieces: [
           ...S4_ACIDS.map((a, i) => formulaChip(`a-${i}`, a, { x: 26, y: 12 + i * 20 }, { fixed: true })),
@@ -239,7 +239,7 @@ export const STAGES = [
     hints: [
       'Drag a formula card from the right into the slot beside each acid.',
       'Compare the hydrogens and charge of each acid with each formula card.',
-      'A conjugate base is the acid after one H⁺ has left.'
+      'A conjugate base has one fewer hydrogen and a charge 1 lower than its acid.'
     ],
     check(state) {
       const bad = [];
@@ -247,9 +247,9 @@ export const STAGES = [
       S4_ACIDS.forEach((a, i) => {
         const c = pieceIn(state.table, `p${i}`);
         if (!c) { empty++; return; }
-        if (!isConjugate(a, c.label)) bad.push(`${describe(c.label)}, while ${describe(a)}. A conjugate base has exactly one hydrogen fewer.`);
+        if (!isConjugate(a, c.label)) bad.push(`${describe(c.label)}, while ${describe(a)}. A conjugate base has one fewer hydrogen and a charge 1 lower.`);
       });
-      if (empty === S4_ACIDS.length) return { ok: false, notYet: true, msg: 'Lay a formula card beside an acid.' };
+      if (empty === S4_ACIDS.length) return { ok: false, notYet: true, msg: 'Place a formula card beside each acid.' };
       if (bad.length) return { ok: false, msg: bad[0] };
       if (empty) return { ok: false, notYet: true, msg: 'Pair every acid.' };
       return { ok: true };
@@ -264,7 +264,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-both',
-    title: 'Two Ways Round',
+    title: 'Acting Both Ways',
     prompt: 'Which substance acts as an acid in one window and as a base in the other?',
     widget,
     table: (() => {
@@ -278,12 +278,12 @@ export const STAGES = [
     })(),
     hints: [
       'Press "Pour" on both windows, then drag a formula card into the slot.',
-      'The water hydrogens are marked white: follow them in each window.',
+      'Water’s hydrogens are marked white—watch whether water gains or loses one in each window.',
       'Check which substance gained a proton in one window and lost one in the other.'
     ],
     check(state) {
       const c = pieceIn(state.table, 'both');
-      if (!c) return { ok: false, notYet: true, msg: 'Lay a formula card in the slot.' };
+      if (!c) return { ok: false, notYet: true, msg: 'Place a formula card in the slot.' };
       if (c.label === 'H₂O') return { ok: true };
       const msg = {
         'HNO₃': 'HNO₃ is in the first window only, and there it lost its hydrogen.',
@@ -328,9 +328,9 @@ export const STAGES = [
     ],
     check(state) {
       const r = rigRead(state.table, 'rig');
-      if (!r.laid) return { ok: false, notYet: true, msg: 'Lay a card on the board.' };
+      if (!r.laid) return { ok: false, notYet: true, msg: 'Place a card on the expression board.' };
       if (steady(r.readings) && Math.abs(r.readings[0] - 1) > 0.02) return { ok: true };
-      return { ok: false, msg: `The board reads ${readingsText(r.readings)} on the three columns.` };
+      return { ok: false, msg: `The board reads ${readingsText(r.readings)} across the three solutions—those numbers are not equal yet.` };
     },
     get reward() {
       const v = waterIons({});
@@ -368,7 +368,7 @@ export const STAGES = [
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 2) return { ok: true };
       if (v === 1) return { ok: false, msg: 'In the window every hydrogen of NH₃ is still on the nitrogen after the pour.' };
-      return { ok: false, msg: `In the window all ${pourRead(state.table, 'win').moved} of 8 cells changed: each BF₃ is now joined to an NH₃.` };
+      return { ok: false, msg: `In the window all ${pourRead(state.table, 'win').moved} of 8 pairs changed: each BF₃ is now joined to an NH₃.` };
     },
     reward: {
       log: 'BF₃ accepted a lone pair from NH₃; no proton moved.',

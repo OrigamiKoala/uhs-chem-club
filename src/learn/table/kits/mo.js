@@ -29,7 +29,7 @@ import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import { rowsMO, readMO, fillMO, boxKeyMO, DIATOMICS } from '../../engine/mo.js';
 import { rectOf, SIZES } from '../snap.js';
 import { LIGAR_SKIN, buildEnamelTile, ligarDeck } from '../../engine/ligar-props.js';
-import { dressOverlap } from './mo-3d.js';
+import { dressOverlap, dressMagnet } from './mo-3d.js';
 
 export const MO_KIT_ID = 'mo';
 
@@ -160,12 +160,17 @@ function run(state, fixtureId) {
     return { dials: { [f.id]: { merged: 1 } } };
   }
   if (f.kind === 'magnet') {
+    const nextPulse = ((f.dials?.pulse?.value || 0) % 98) + 1;
     if (f.props.slot) {
       const piece = Object.values(state.pieces).find(p => !p.hidden && p.zone === `slot:${f.props.slot}`);
       if (!piece) return { noop: 'Put a gas in the slot to test it.' };
-      return { stamp: { [piece.id]: { pull: DIATOMICS[piece.props.mol].unpaired } } };
+      const pull = DIATOMICS[piece.props.mol].unpaired;
+      return {
+        stamp: { [piece.id]: { pull } },
+        dials: { [f.id]: { pull: 1 + pull, ...(f.dials?.pulse ? { pulse: nextPulse } : {}) } }
+      };
     }
-    return { dials: { [f.id]: { pull: 1 + DIATOMICS[f.props.mol].unpaired } } };
+    return { dials: { [f.id]: { pull: 1 + DIATOMICS[f.props.mol].unpaired, ...(f.dials?.pulse ? { pulse: nextPulse } : {}) } } };
   }
   if (f.kind === 'bondtest') return { dials: { [f.id]: { read: 1 } } };
   return null;
@@ -212,14 +217,14 @@ function spinArrow(ctx, x, y, len, up, color) {
   ctx.lineWidth = 1;
 }
 
-/** One supply's pile: the dots of the loose electrons (`heap.js` `pileSlots`, the slots shared with the built table). */
+/** One supply's pile: crisp glowing electron spheres (`heap.js` `pileSlots`, shared with the built table). */
 export function pileOf(c) {
   if (!isSupply(c)) return null;
   const total = Math.round(c.contents.electron || 0);
   const r = rectOf(c, SIZES.container);
   const cap = Math.max(c.capacity || 0, c.props.start || 0, total, 1);
   const { slots, r: dot } = pileSlots(cap, r.w, r.h);
-  return { n: Math.min(slots.length, total), cap: slots.length, slots, r: dot, colour: PHOS, molecule: false, rect: r };
+  return { n: Math.min(slots.length, total), cap: slots.length, slots, r: Math.min(dot, 2.3), colour: '#7dd3fc', electron: true, molecule: false, rect: r };
 }
 
 /** A box takes no slab of fill in the built table: its electrons are the arrows on its face. */
@@ -328,6 +333,15 @@ function paintRack(ctx, f, state, b) {
         ctx.strokeRect(x0 + 0.5, y0 + 0.5, box.w * sc - 1, box.h * sc - 1);
         const tag = f.props.tags?.[r.row.id];
         if (tag) fitted(ctx, tag, X(box.x), Y(box.y), box.w * sc * 0.8, { size: size * 1.3, weight: 700, color: AMBER });
+        // Draw any electrons placed in this box's container right on top of the box background.
+        const cid = boxId(f.props.rack, r.row.id, box.idx);
+        const n = Math.round(state.zones.containers[cid]?.contents?.electron || 0);
+        if (n > 0) {
+          const len = Math.max(8, Math.min(box.h * sc * 0.78, box.w * sc * 0.42));
+          const cy = Y(box.y);
+          if (n >= 1) spinArrow(ctx, n >= 2 ? X(box.x) - box.w * sc * 0.2 : X(box.x), cy, len, true, '#7dd3fc');
+          if (n >= 2) spinArrow(ctx, X(box.x) + box.w * sc * 0.2, cy, len, false, '#7dd3fc');
+        }
       }
     }
     // A plain rack still says which way is up the energy ladder.
@@ -356,25 +370,26 @@ function paintMagnet(ctx, f, state, b) {
   const cx = b.x0 + w / 2;
   const top = b.y0 + 5.5 * sc;
   const r = Math.min(w * 0.2, 6 * sc);
-  ctx.strokeStyle = PLATE_COLORS.steel;
-  ctx.lineWidth = Math.max(2, 1.4 * sc);
-  ctx.beginPath();
-  ctx.moveTo(cx - r, top + r * 1.6);
-  ctx.lineTo(cx - r, top + r);
-  ctx.arc(cx, top + r, r, Math.PI, 0);
-  ctx.lineTo(cx + r, top + r * 1.6);
-  ctx.stroke();
-  // The two poles, told apart by a bar, never by colour.
-  ctx.fillStyle = PLATE_COLORS.dust;
-  ctx.fillRect(cx - r - sc, top + r * 1.6, 2 * sc, 1.4 * sc);
-  ctx.fillRect(cx + r - sc, top + r * 1.6, 2 * sc, 1.4 * sc);
-  ctx.lineWidth = 1;
-  const read = f.props.slot ? null : magnetRead(state, f.id);
-  let l1 = f.props.slot ? 'TEST THE GAS IN THE SLOT' : 'NOT TESTED';
-  let l2 = '';
-  if (read?.tested) l1 = read.pull > 0 ? 'ATTRACTED' : 'NOT ATTRACTED';
-  fitted(ctx, l1, cx, top + r * 3.2, w - 4, { size: size * 0.95, weight: 700, color: read?.tested ? AMBER : PLATE_COLORS.dim });
-  if (l2) fitted(ctx, l2, cx, top + r * 3.2 + size * 1.5, w - 4, { size: size * 0.95, weight: 700, color: AMBER });
+  if (!b.bodies) {
+    ctx.strokeStyle = PLATE_COLORS.steel;
+    ctx.lineWidth = Math.max(2, 1.4 * sc);
+    ctx.beginPath();
+    ctx.moveTo(cx - r, top + r * 1.6);
+    ctx.lineTo(cx - r, top + r);
+    ctx.arc(cx, top + r, r, Math.PI, 0);
+    ctx.lineTo(cx + r, top + r * 1.6);
+    ctx.stroke();
+    // The two poles, told apart by a bar, never by colour.
+    ctx.fillStyle = PLATE_COLORS.dust;
+    ctx.fillRect(cx - r - sc, top + r * 1.6, 2 * sc, 1.4 * sc);
+    ctx.fillRect(cx + r - sc, top + r * 1.6, 2 * sc, 1.4 * sc);
+    ctx.lineWidth = 1;
+  }
+  const slotted = f.props.slot ? Object.values(state.pieces).find(p => !p.hidden && p.zone === `slot:${f.props.slot}`) : null;
+  const pullVal = f.props.slot ? (slotted ? cardPull(slotted) : null) : (magnetRead(state, f.id).tested ? magnetRead(state, f.id).pull : null);
+  const tested = pullVal !== null;
+  let l1 = f.props.slot ? (slotted ? (tested ? (pullVal > 0 ? 'ATTRACTED' : 'REPELLED') : `READY: ${slotted.label}`) : 'PUT GAS IN SLOT') : (tested ? (pullVal > 0 ? 'ATTRACTED' : 'REPELLED') : 'NOT TESTED');
+  fitted(ctx, l1, cx, b.y1 - 9.2 * sc, w - 4, { size: size * 0.9, weight: 700, color: tested ? (pullVal > 0 ? AMBER : '#7dd3fc') : PLATE_COLORS.dim });
 }
 
 /** The bond tester: the listed bond energy of each molecule it was given, once it has been run. */
@@ -418,11 +433,24 @@ function orbitalAt(type, x, y, z = 0) {
 }
 
 /**
+ * Normalization and outward polarization for bonding (sign > 0) vs antibonding (sign < 0) orbitals:
+ * divides by sqrt(1 + sign * S) so an antibonding MO swells outward away from the central nodal plane
+ * toward each outer end as the nuclei approach instead of shrinking.
+ */
+function blendNorm(type, gap, sign) {
+  const S = Math.min(0.84, Math.exp(-(gap - 48) / (type === 'p' ? 78 : 88)));
+  return 1 / Math.sqrt(Math.max(0.14, 1 + sign * S));
+}
+
+/**
  * The combined orbital at a point (pm from the midpoint of the two nuclei) when the second atom's orbital is multiplied by
  * `sign` (+1 like signs, −1 unlike; the 3D cloud passes through the values between while the Signs dial turns it over).
  */
 export function blendAt(type, gap, sign, x, y, z = 0) {
-  return orbitalAt(type, x + gap / 2, y, z) + sign * orbitalAt(type, x - gap / 2, y, z);
+  const norm = blendNorm(type, gap, sign);
+  // Slight outward shift for antibonding density so the two lobes visibly push away from the center
+  const push = sign < 0 ? (-sign) * 26 * Math.exp(-(gap - 70) / 110) : 0;
+  return norm * (orbitalAt(type, x + gap / 2 + push, y, z) + sign * orbitalAt(type, x - gap / 2 - push, y, z));
 }
 
 /**
@@ -430,7 +458,9 @@ export function blendAt(type, gap, sign, x, y, z = 0) {
  * varying fastest, then y, then z. The same sum as `blendAt`, with what each row shares worked out once.
  */
 export function blendGrid(type, gap, sign, gx, gy, gz, out) {
-  const h = gap / 2;
+  const push = sign < 0 ? (-sign) * 26 * Math.exp(-(gap - 70) / 110) : 0;
+  const h = gap / 2 + push;
+  const norm = blendNorm(type, gap, sign);
   const p = type === 'p';
   const decay = p ? 1 / (REACH * 0.85) : 1 / REACH;
   const nx = gx.length;
@@ -443,7 +473,7 @@ export function blendGrid(type, gap, sign, gx, gy, gz, out) {
     for (let j = 0; j < gy.length; j++) {
       const y = gy[j];
       const w = y * y + z2;
-      const amp = p ? 2.4 * (y / REACH) : 1;
+      const amp = norm * (p ? 2.4 * (y / REACH) : 1);
       for (let i = 0; i < nx; i++, q++) {
         out[q] = amp * (Math.exp(-Math.sqrt(dxA[i] + w) * decay) + sign * Math.exp(-Math.sqrt(dxB[i] + w) * decay));
       }
@@ -631,9 +661,11 @@ function piece3d(p, state, c) {
   return p.kind === 'mocard' ? buildEnamelTile(c, { lip: true }) : null;
 }
 
-/** The overlap track's combined orbital stands up over its plate at `3D On` (`mo-3d.js`); the other fixtures are the flat picture. */
+/** The overlap track's combined orbital and the magnet's 3D horseshoe + gas capsule stand up at `3D On` (`mo-3d.js`). */
 function dress3d(f, state, c) {
-  return f.kind === 'overlap' ? dressOverlap(f, state, c) : null;
+  if (f.kind === 'overlap') return dressOverlap(f, state, c);
+  if (f.kind === 'magnet') return dressMagnet(f, state, c);
+  return null;
 }
 
 export const MO_KIT = {
@@ -706,8 +738,11 @@ export function moSupply(id, label, at, n, size = { w: 28, h: 22 }) {
 export function magnet(id, at, { mol = null, slot = null, size = { w: 28, h: 30 }, label = 'Magnet', runLabel = 'Test Sample' } = {}) {
   return {
     id, kind: 'magnet', label, at, size, runLabel,
-    dials: { pull: { min: 0, max: 9, step: 1, value: 0 } },
-    props: { hidden: ['pull'], ...(mol ? { mol } : {}), ...(slot ? { slot } : {}) }
+    dials: {
+      pull: { min: 0, max: 9, step: 1, value: 0 },
+      pulse: { min: 0, max: 99, step: 1, value: 0 }
+    },
+    props: { hidden: ['pull', 'pulse'], ...(mol ? { mol } : {}), ...(slot ? { slot } : {}) }
   };
 }
 
@@ -737,7 +772,7 @@ export function overlapTrack(id, at, { type = 's', flip = false, opposite = fals
 
 /** An answer dial that chooses one of a few short phrases; its first setting is no answer. */
 export function chooser(id, label, at, options, size = { w: 38, h: 16 }) {
-  return { id, kind: 'marker', label: 'Your answer', at, size, noRun: true, dials: { n: { min: 0, max: options.length, step: 1, value: 0, label, labels: ['?', ...options] } }, props: {} };
+  return { id, kind: 'marker', label: 'Your answer', at, size, noRun: true, dials: { n: { min: 0, max: options.length, step: 1, value: 0, label, labels: ['?', ...options] } }, props: { noTickLabels: true } };
 }
 
 /** A plain dial a player sets to a number they have read off the rack (the bond order). */

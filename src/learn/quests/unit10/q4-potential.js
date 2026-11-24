@@ -94,8 +94,8 @@ export const STAGES = [
   {
     id: 's1-reference',
     title: 'Against a Reference',
-    briefing: { speaker: SPEAKER, body: 'Voltage measures how strongly a half-reaction pulls electrons. Each metal is measured against a hydrogen reference (0 V); that reading is its standard reduction potential, E°.' },
-    prompt: 'Drag each metal into the board seat to read it, then order all four on the rail from lowest reading to highest.',
+    briefing: { speaker: SPEAKER, body: 'Voltage measures how strongly a half-reaction pulls electrons. Each metal is measured against a hydrogen reference (0 V) to get its standard reduction potential, E°.' },
+    prompt: 'Drag each metal into the board seat to read its E°, then order all four on the rail from lowest to highest.',
     widget,
     table: boardTable(
       S1_METALS.map((m, i) => electrodePiece(`e-${m}`, m, { x: 112 + (i % 2) * 34, y: 10 + Math.floor(i / 2) * 20 })),
@@ -112,21 +112,21 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < S1_METALS.length) return { ok: false, notYet: true, msg: `Put all ${S1_METALS.length} electrodes on the rail.` };
+      if (order.length < S1_METALS.length) return { ok: false, notYet: true, msg: `Place all ${S1_METALS.length} electrodes on the rail first.` };
       const want = S1_WANT.map(m => `e-${m}`);
       if (order.join() === want.join()) return { ok: true };
       const k = order.findIndex((id, i) => i > 0 && E(id.slice(2)) < E(order[i - 1].slice(2)));
       const a = t.pieces[order[k - 1]]; const b = t.pieces[order[k]];
       const ra = readOf(t, METALS[a.id.slice(2)].symbol); const rb = readOf(t, METALS[b.id.slice(2)].symbol);
-      if (ra == null || rb == null) return { ok: false, msg: `${a.label} sits left of ${b.label}, and the strip has no reading for ${ra == null ? a.label : b.label} yet.` };
-      return { ok: false, msg: `${a.label} sits left of ${b.label}, but the strip reads ${voltText(ra)} V for ${a.label} and ${voltText(rb)} V for ${b.label}.` };
+      if (ra == null || rb == null) return { ok: false, msg: `${a.label} is left of ${b.label}, but you have not measured ${ra == null ? a.label : b.label} on the board yet.` };
+      return { ok: false, msg: `${a.label} is left of ${b.label}, but the board read ${voltText(ra)} V for ${a.label} and ${voltText(rb)} V for ${b.label}.` };
     },
     get reward() {
       const r = S1_WANT.map(m => `${METALS[m].name} ${fmt(E(m), 2)} V`);
       return {
         log: 'Each metal read its own voltage against the hydrogen reference.',
         title: 'Standard Reduction Potential',
-        body: `${r.join(', ')}. The lower the E° reading, the more readily the metal gives electrons away—the same left-to-right order as the activity series.`
+        body: `${r.join(', ')}. Lower E° means the metal gives up electrons more easily—the same order as the activity series.`
       };
     }
   },
@@ -147,23 +147,23 @@ export const STAGES = [
     ],
     check(state) {
       const v = entryNumber(state.table, 'e');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       const want = cellE0('ag', 'mg');
       if (Math.abs(v - want) <= TOL_V) return { ok: true };
       const lo = E('mg'); const hi = E('ag');
       const near = x => Math.abs(v - x) <= 0.03;
-      if (near(hi + lo)) return { ok: false, msg: `${fmt(hi + lo, 2)} is the two readings added together, ${voltText(lo)} and ${voltText(hi)}.` };
-      if (near(-want)) return { ok: false, msg: 'That is the difference taken the other way round.' };
-      if (near(hi) || near(lo) || near(-lo)) return { ok: false, msg: 'That is one electrode\'s reading by itself; subtract the lower reading from the higher one to find the gap.' };
-      if (near(2 * want)) return { ok: false, msg: 'That is twice the gap between the two readings.' };
-      return { ok: false, msg: `The board read ${voltText(lo)} V for magnesium and ${voltText(hi)} V for silver; that does not make ${fmt(v, 2)} V.` };
+      if (near(hi + lo)) return { ok: false, msg: `${fmt(hi + lo, 2)} adds ${voltText(lo)} and ${voltText(hi)} instead of subtracting the lower reading from the higher one.` };
+      if (near(-want)) return { ok: false, msg: 'You subtracted in the wrong order—subtract the lower reading from the higher one.' };
+      if (near(hi) || near(lo) || near(-lo)) return { ok: false, msg: 'That is just one electrode\'s reading; subtract the lower reading from the higher one.' };
+      if (near(2 * want)) return { ok: false, msg: 'That is double the gap between the two readings.' };
+      return { ok: false, msg: `The board read ${voltText(lo)} V for magnesium and ${voltText(hi)} V for silver, which does not give ${fmt(v, 2)} V.` };
     },
     get reward() {
       const want = cellE0('ag', 'mg');
       return {
         log: 'The cell voltage came from the gap between two readings.',
         title: 'Cell Voltage',
-        body: `E°cell = ${fmt(E('ag'), 2)} − (${fmt(E('mg'), 2)}) = ${fmt(want, 2)} V: the metal with the higher reading is the cathode and the lower one the anode.`
+        body: `E°cell = ${fmt(E('ag'), 2)} − (${fmt(E('mg'), 2)}) = ${fmt(want, 2)} V. The higher reading is the cathode and the lower one is the anode.`
       };
     }
   },
@@ -188,13 +188,13 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const marked = id => Math.round(t.fixtures[id].dials.mark.value) === 1;
-      if (!S3_CELLS.some(([id]) => marked(id)) && !S3_CELLS.every(([id]) => rigRead({ fixtures: t.fixtures }, id).now)) return { ok: false, notYet: true, msg: 'Run every cell, then tap the lamps that light.' };
+      if (!S3_CELLS.some(([id]) => marked(id)) && !S3_CELLS.every(([id]) => rigRead({ fixtures: t.fixtures }, id).now)) return { ok: false, notYet: true, msg: 'Run all four cells, then tap the lamps that light.' };
       for (const [id, l, r, name] of S3_CELLS) {
         const lit = cellE0(r, l) > 1e-9;
         if (marked(id) === lit) continue;
         const read = rigRead({ fixtures: t.fixtures }, id);
-        if (!read.now) return { ok: false, msg: `${name} has not been run yet.` };
-        return { ok: false, msg: `${name} read ${voltText(read.now.V)} V and its lamp ${read.now.lit ? 'lit' : 'stayed dark'}.` };
+        if (!read.now) return { ok: false, msg: `Press Run on ${name} first.` };
+        return { ok: false, msg: `${name} read ${voltText(read.now.V)} V, so its lamp ${read.now.lit ? 'lit up' : 'stayed dark'}.` };
       }
       return { ok: true };
     },
@@ -203,7 +203,7 @@ export const STAGES = [
       return {
         log: 'The cells that lit the lamp read above zero.',
         title: 'A Positive Voltage',
-        body: `${rows.join(', ')}. A positive standard voltage runs by itself; reversed, the sign flips and it does not.`
+        body: `${rows.join(', ')}. A positive voltage runs on its own; flip the cell and the sign reverses, so it will not run.`
       };
     }
   },
@@ -214,7 +214,7 @@ export const STAGES = [
     title: 'Twice Over',
     // A PREDICT STAGE: no cell is on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'When a 1.10 V zinc–copper cell reacts twice as much metal, what does it read?',
+    prompt: 'If a 1.10 V zinc–copper cell reacts twice as much metal, what voltage does it read?',
     widget,
     table: cellTable({
       pieces: [
@@ -234,7 +234,7 @@ export const STAGES = [
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Drop a prediction card in the slot first.' };
       return { ok: true };
     },
     onClear(state) {
@@ -242,9 +242,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Prediction',
-      body: 'Next, the zinc–copper cell is run with its equation written once and with every coefficient doubled.'
+      log: 'Prediction saved.',
+      title: 'Prediction Saved',
+      body: 'Prediction saved. Next, run the zinc–copper cell at 1× and 2× scale to compare voltage and energy.'
     }
   },
 
@@ -252,7 +252,7 @@ export const STAGES = [
   {
     id: 's5-scale',
     title: 'Doubling the Equation',
-    get prompt() { return guessLine('What changes when twice as much zinc reacts: the voltage, the energy released, or both?', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('When twice as much zinc reacts, what changes: voltage, energy released, or both?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const r = rigFixture('rig', { x: 40, y: 49 }, { left: 'zn', right: 'cu', energy: true, equation: true, scalable: true, w: 76 });
@@ -272,21 +272,21 @@ export const STAGES = [
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 5) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 5) return { ok: false, notYet: true, msg: 'Choose an answer on the dial first.' };
       if (v === 1) return { ok: true };
       const r = rigRead({ fixtures: state.table.fixtures }, 'rig');
-      if (r.rows.length < 2) return { ok: false, msg: `The cell has been run at ${r.rows.length ? 'one' : 'no'} setting${r.rows.length ? '' : 's'}; the two lines let you compare.` };
+      if (r.rows.length < 2) return { ok: false, msg: 'Run the cell at both 1× and 2× settings so you can compare them.' };
       const [a, b] = r.rows;
-      return { ok: false, msg: `The cell read ${voltText(a.V)} V and released ${fmt(a.kJ, 0)} kJ written once, and read ${voltText(b.V)} V and released ${fmt(b.kJ, 0)} kJ with every coefficient doubled.` };
+      return { ok: false, msg: `At 1× the cell read ${voltText(a.V)} V and released ${fmt(a.kJ, 0)} kJ; at 2× it read ${voltText(b.V)} V and released ${fmt(b.kJ, 0)} kJ.` };
     },
     get reward() {
       const a = rigAtZnCu(1); const b = rigAtZnCu(2);
       const g = recall(QUEST_KEY);
-      const verdict = g === 'same' ? `The voltage did stay at ${voltText(a.V)} V, as you predicted. ` : g ? `The voltage stayed at ${voltText(a.V)} V, not what you predicted. ` : '';
+      const verdict = g === 'same' ? 'As you predicted, the' : g ? 'Unlike your prediction, the' : 'The';
       return {
-        log: 'The voltage stayed put while the energy doubled.',
+        log: 'The voltage stayed the same while the energy doubled.',
         title: 'Volts Are Per Electron',
-        body: `${verdict}With every coefficient doubled, the cell still read ${voltText(b.V)} V but released ${fmt(b.kJ, 0)} kJ instead of ${fmt(a.kJ, 0)} kJ, since voltage is energy per electron.`
+        body: `${verdict} voltage stayed at ${voltText(b.V)} V while the energy doubled from ${fmt(a.kJ, 0)} kJ to ${fmt(b.kJ, 0)} kJ. Voltage is energy per electron, so scaling the reaction does not change it.`
       };
     }
   },
@@ -297,16 +297,16 @@ export const STAGES = [
     title: 'The Energy Released',
     briefing: {
       speaker: SPEAKER,
-      body: 'Three steps to energy: (1) find total charge in coulombs using the Faraday constant F = 96,485 C per mole of electrons; (2) multiply by volts (1 V = 1 J/C) to get joules; (3) divide by 1000 for kJ. In symbols: ΔG° = −nFE°.',
+      body: 'Three steps to energy: (1) multiply moles of electrons (n) by the Faraday constant (F = 96,485 C/mol) to get charge in coulombs; (2) multiply by volts (1 V = 1 J/C) for joules; (3) divide by 1000 for kJ. In symbols: ΔG° = −nFE°.',
       worked: ['1) Charge: 1 mol e⁻ × 96,485 C/mol = 96,485 C', '2) Energy: 96,485 C × 0.80 V = 77,188 J', '3) In kJ: 77,188 ÷ 1000 ≈ 77 kJ']
     },
-    prompt: 'After running the cell (n = 2 electrons per Mg), how much energy, in kJ, is released per mole?',
+    prompt: 'Run the cell (n = 2 electrons per Mg) and find how much energy, in kJ, is released per mole.',
     widget,
     entry: { id: 'kj', label: 'Energy released', unit: 'kJ' },
     table: cellTable({
       fixtures: [
         rigFixture('rig', { x: 48, y: 42 }, { left: S6.anode, right: S6.cathode, equation: true, w: 70, title: 'Magnesium with copper' }),
-        plaqueFixture('plate', 'For reference', { x: 126, y: 42 }, ['1 mol of electrons carries 96,485 C', '1 V is 1 J of energy for each C'], { w: 52 })
+        plaqueFixture('plate', 'For reference', { x: 126, y: 42 }, ['1 mol e⁻ carries 96,485 C', '1 V = 1 J per coulomb'], { w: 52 })
       ]
     }, { w: 164, h: 84 }),
     hints: [
@@ -316,24 +316,24 @@ export const STAGES = [
     ],
     check(state) {
       const v = entryNumber(state.table, 'kj');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       const E0 = cellE0(S6.cathode, S6.anode); const n = electronsMoved(S6.cathode, S6.anode);
       const want = -deltaG0(E0, n);
       if (Math.abs(v - want) <= 0.01 * want + 1e-9) return { ok: true };
       const near = x => Math.abs(v - x) <= 0.02 * Math.abs(x);
-      if (near(want / n)) return { ok: false, msg: 'That is the energy for one mole of electrons; the board shows the electrons each magnesium atom loses.' };
-      if (near(want * 1000)) return { ok: false, msg: 'That figure is in joules; the field is in kJ.' };
-      if (near(-want)) return { ok: false, msg: 'The cell releases energy, so the figure is a size, not a negative number.' };
+      if (near(want / n)) return { ok: false, msg: 'That is the energy for one mole of electrons, but each magnesium atom loses 2 electrons (n = 2).' };
+      if (near(want * 1000)) return { ok: false, msg: 'That number is in joules—divide by 1000 to convert to kJ.' };
+      if (near(-want)) return { ok: false, msg: 'The cell releases energy, so enter its size as a positive number.' };
       const znCu = -deltaG0(cellE0('cu', 'zn'), 2);
-      if (near(znCu)) return { ok: false, msg: 'That is the energy of the zinc–copper cell; this cell uses magnesium.' };
-      return { ok: false, msg: `The cell reads ${voltText(cellE0(S6.cathode, S6.anode))} V and its equation moves ${electronsMoved(S6.cathode, S6.anode)} electrons; that does not give ${fmt(v, 0)} kJ.` };
+      if (near(znCu)) return { ok: false, msg: 'That is for zinc–copper; use the voltage from this magnesium–copper cell.' };
+      return { ok: false, msg: `This cell reads ${voltText(cellE0(S6.cathode, S6.anode))} V and moves ${electronsMoved(S6.cathode, S6.anode)} electrons, which does not give ${fmt(v, 0)} kJ.` };
     },
     get reward() {
       const E0 = cellE0(S6.cathode, S6.anode); const n = electronsMoved(S6.cathode, S6.anode);
       return {
         log: 'The energy released followed the electrons moved and the voltage.',
         title: 'Free Energy from a Voltage',
-        body: `${n} × ${FARADAY_ROUND.toLocaleString('en-US')} × ${fmt(E0, 2)} = ${fmt(-deltaG0(E0, n), 0)} kJ released, using the Faraday constant F: ΔG° = −nFE° = ${fmt(deltaG0(E0, n), 0)} kJ.`
+        body: `${n} × ${FARADAY_ROUND.toLocaleString('en-US')} × ${fmt(E0, 2)} ÷ 1000 = ${fmt(-deltaG0(E0, n), 0)} kJ released. Using the Faraday constant F, ΔG° = −nFE° = ${fmt(deltaG0(E0, n), 0)} kJ.`
       };
     }
   },
@@ -344,10 +344,10 @@ export const STAGES = [
     title: 'How Far It Goes',
     briefing: {
       speaker: SPEAKER,
-      body: 'A cell runs until it reaches equilibrium, where forward and reverse reactions balance and the equilibrium constant K measures products over reactants. The larger E° is, the larger K is.',
+      body: 'A cell runs until it reaches equilibrium, where the equilibrium constant K compares products to reactants. A larger E° means a much larger K.',
       worked: ['Zn + Cu²⁺ → Zn²⁺ + Cu (n = 2 e⁻, E° = 1.10 V)', '2 × 1.10 ÷ 0.0592 = 37.2', 'K is about 10³⁷']
     },
-    prompt: 'What is log K, to the nearest whole number, for zinc reacting with silver ions?',
+    prompt: 'Run the cell, then find log K (to the nearest whole number) for zinc reacting with silver ions.',
     widget,
     entry: { id: 'logk', label: 'log K', unit: '' },
     table: cellTable({
@@ -363,21 +363,21 @@ export const STAGES = [
     ],
     check(state) {
       const v = entryNumber(state.table, 'logk');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       const E0 = cellE0(S7.cathode, S7.anode); const n = electronsMoved(S7.cathode, S7.anode);
       const want = logK(E0, n);
       if (Math.abs(v - want) <= 0.8 + 1e-9) return { ok: true };
       const near = x => Math.abs(v - x) <= 0.03 * Math.abs(x);
-      if (near(logK(E0, 1))) return { ok: false, msg: 'That counts one electron; the balanced equation has zinc losing two.' };
-      if (near(lnKof(E0, n))) return { ok: false, msg: 'That is the natural log; the plate divides by 0.0592 to give the base-ten log.' };
-      return { ok: false, msg: `The cell reads ${voltText(cellE0(S7.cathode, S7.anode))} V and its equation moves ${electronsMoved(S7.cathode, S7.anode)} electrons; that does not give a log K of ${fmt(v, 0)}.` };
+      if (near(logK(E0, 1))) return { ok: false, msg: 'That counts one electron, but each zinc atom loses 2 electrons (n = 2).' };
+      if (near(lnKof(E0, n))) return { ok: false, msg: 'That is the natural log (ln K); dividing by 0.0592 gives base-10 log K.' };
+      return { ok: false, msg: `This cell reads ${voltText(cellE0(S7.cathode, S7.anode))} V with n = ${electronsMoved(S7.cathode, S7.anode)}, which does not give log K = ${fmt(v, 0)}.` };
     },
     get reward() {
       const E0 = cellE0(S7.cathode, S7.anode); const n = electronsMoved(S7.cathode, S7.anode);
       return {
         log: 'A large cell voltage means the reaction goes almost to completion.',
         title: 'Voltage and K',
-        body: `For Zn + 2 Ag⁺ the cell gives n = ${n} electrons and E° = ${fmt(E0, 2)} V, so log K = ${fmt(logK(E0, n), 1)}, a K near 10⁵³.`
+        body: `With n = ${n} electrons and E° = ${fmt(E0, 2)} V, log K = ${fmt(logK(E0, n), 1)} (K ≈ 10⁵³). A large voltage means the reaction runs nearly to completion.`
       };
     }
   }
@@ -395,7 +395,7 @@ const lnKof = (E0, n) => logK(E0, n) * Math.LN10;
 
 export const DEBRIEF = {
   title: 'Cell Potential',
-  body: 'A voltage is energy for each electron, so it comes from the two metals and not from the amount that reacts. The cell\'s voltage fixes the energy released and how far the reaction goes.'
+  body: 'Voltage is energy per electron, so it depends on the two metals, not how much metal reacts. A cell\'s voltage sets both the energy released (ΔG°) and how far the reaction goes (K).'
 };
 
 export const SOLUTIONS = [

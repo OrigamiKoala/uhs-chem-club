@@ -10,11 +10,11 @@ const hasSquared = t => Object.values(t.pieces || {}).some(p => p.kind === 'rtil
 addTourText({
   'pans:vsl': {
     title: 'Vessels', dials: false,
-    text: f => `Each vessel is a vessel with a bar for every substance in it, all drawn to one scale, with the amount printed over the bar. ${f.noRun ? 'The pans open already at equilibrium.' : `Press "${f.runLabel}" to let every pan reach equilibrium.`} A line across a bar then marks where that amount began, so you can see which way it moved.`
+    text: f => `Each vessel shows a bar for every substance in it, drawn to one scale with the amount printed on top. ${f.noRun ? 'The vessels open already at equilibrium.' : `Press "${f.runLabel}" to let every vessel reach equilibrium.`} A line across each bar marks where it started.`
   },
   'pans:rig': {
-    title: 'Ratio ratio board', dials: false,
-    text: (f, t) => `The ratio board has places above a line and places below it. Lay cards in the places. For each vessel, the ratio board multiplies the amounts of the cards above the line, divides by the amounts of the cards below, and prints the answer under that vessel once the vessels have settled.${hasSquared(t) ? ' A tile with a small 2 on it counts its amount multiplied by itself.' : ''} It reads whatever is laid on it; it does not say which arrangement is the one to look for.`
+    title: 'Ratio board', dials: false,
+    text: (f, t) => `The ratio board has slots above and below a fraction line. Place particle cards in the slots. For each settled vessel, the board multiplies the top cards, divides by the bottom cards, and prints the result under that vessel.${hasSquared(t) ? ' A card with a small 2 squares that amount.' : ''}`
   },
   'pans:qk': {
     title: 'Test vessel and gauge', dials: false,

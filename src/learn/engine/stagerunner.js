@@ -194,8 +194,11 @@ export function createRunner(container, ctx, cfg) {
     renderWidget();
     syncTabletop(stage);
 
-    // Tour only opens when the student presses the Tour button (never unprompted on stage arrival).
-    const brief = () => {};
+    // Stage briefings always trigger (including on replay); the generic tabletop Tour only auto-opens on first run.
+    const brief = () => {
+      if (frame.disposed || index !== i) return;
+      if (stage.briefing || (stage.widget?.type === 'table' && !ctx.isComplete && cleared <= i)) frame.showBriefing();
+    };
     // A quest opens on its question (`story/quest-story.js` `mystery`), once each time it is opened at stage 1, before
     // any briefing; the debrief answers it.
     // A scene in the world that has just asked it (`three/mystery/director.js`) counts as asking.

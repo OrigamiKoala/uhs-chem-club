@@ -37,16 +37,42 @@ const SUP = { sp: 'sp', sp2: 'sp²', sp3: 'sp³', sp3d: 'sp³d', sp3d2: 'sp³d²
 
 export const orbIn = (state, zone) => Object.values(state.pieces).filter(p => p.kind === 'orb' && live(p) && p.zone === zone);
 
+const heldKeyOf = held => held.map(p => p.id).sort().join(',');
+
 /** What a bowl fixture holds and what comes out of it. */
 export function bowlRead(state, fid) {
   const f = state.fixtures[fid];
   const held = orbIn(state, `container:${f.props.zone}`);
+  const heldKey = heldKeyOf(held);
   const count = t => held.filter(p => p.props.type === t).length;
   const s = count('s');
   const p = count('p');
   const d = count('d');
   const blend = planBlend(s, p, d);
-  return { id: fid, held, s, p, d, blend, lobes: blend.lobes, hybrid: blend.hybrid, leftoverP: blend.leftoverP };
+  const mixSeq = f.dials?.mixed?.value || 0;
+  const mixed = mixSeq > 0 && f.props.mixedKey === heldKey && held.length > 0;
+  return { id: fid, held, s, p, d, blend, lobes: blend.lobes, hybrid: blend.hybrid, leftoverP: blend.leftoverP, mixed, mixSeq };
+}
+
+/** Press "Mix" on a mixbowl: lock in the current tray contents and trigger the mixing animation. */
+export function runMixbowl(state, f) {
+  const held = orbIn(state, `container:${f.props.zone}`);
+  if (!held.length) return { noop: 'Drag orbitals into the tray first.' };
+  f.props.mixedKey = heldKeyOf(held);
+  const next = ((f.dials?.mixed?.value || 0) % 98) + 1;
+  return { dials: { [f.id]: { mixed: next } } };
+}
+
+/** If orbitals in a mixbowl changed since the last Mix press, clear the mixed flag until Mix is pressed again. */
+export function settleMixbowls(s) {
+  for (const f of Object.values(s.fixtures)) {
+    if (f.kind !== 'mixbowl' || !f.dials?.mixed) continue;
+    const heldKey = heldKeyOf(orbIn(s, `container:${f.props.zone}`));
+    if (f.dials.mixed.value > 0 && f.props.mixedKey && f.props.mixedKey !== heldKey) {
+      f.dials.mixed.value = 0;
+      f.props.mixedKey = '';
+    }
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -290,10 +316,11 @@ function paintBowl(ctx, f, state, b) {
   const L = spot ? spot.L * b.sc : Math.min((r.x1 - (bowl.at.x + bowl.size.w / 2)) * b.sc * 0.36, (r.y1 - r.y0) * b.sc * 0.3);
   const size = Math.max(7, Math.round(2.2 * b.sc));
   const x = b.x1 - 1.5 * b.sc;
-  plateText(ctx, read.blend.blends ? `LOBES ${read.lobes}` : 'LOBES', x, b.y0 + 3.6 * b.sc, { size, weight: 700, align: 'right', base: 'middle', color: read.blend.blends ? PLATE_COLORS.phosphor : PLATE_COLORS.dim });
-  plateText(ctx, read.blend.blends ? `LEFT OVER ${read.leftoverP}` : 'LEFT OVER', x, b.y0 + 6.5 * b.sc, { size, weight: 700, align: 'right', base: 'middle', color: read.blend.blends ? PLATE_COLORS.dust : PLATE_COLORS.dim });
+  const ready = read.mixed && read.blend.blends;
+  plateText(ctx, ready ? `LOBES ${read.lobes}` : 'LOBES', x, b.y0 + 3.6 * b.sc, { size, weight: 700, align: 'right', base: 'middle', color: ready ? PLATE_COLORS.phosphor : PLATE_COLORS.dim });
+  plateText(ctx, ready ? `LEFT OVER ${read.leftoverP}` : 'LEFT OVER', x, b.y0 + 6.5 * b.sc, { size, weight: 700, align: 'right', base: 'middle', color: ready ? PLATE_COLORS.dust : PLATE_COLORS.dim });
   if (b?.screens) {
-    if (read.blend.blends) {
+    if (ready) {
       ctx.strokeStyle = PLATE_COLORS.steel;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -304,6 +331,10 @@ function paintBowl(ctx, f, state, b) {
   }
   if (!read.held.length) {
     plateText(ctx, 'NOTHING MIXED', out.x, out.y + L * 0.5, { size, align: 'center', base: 'middle', color: PLATE_COLORS.dim });
+    return;
+  }
+  if (!read.mixed) {
+    plateText(ctx, 'PRESS MIX', out.x, out.y + L * 0.5, { size, weight: 700, align: 'center', base: 'middle', color: AMBER });
     return;
   }
   if (!read.blend.blends) {
@@ -386,13 +417,17 @@ export const orbital = (id, type, atom, at, { e = 0, axis = null, to = null, dir
   props: { type, atom, e, ...(axis ? { axis } : {}), ...(to ? { to } : {}), ...(dir != null ? { dir } : {}), ...(atomLabel ? { atomLabel } : {}), ...(seat ? { seat } : {}), ...(apart ? { apart } : {}), ...(nucleus ? { nucleus } : {}) }
 });
 
-/** A mixing bowl: the container the orbitals are dropped in, and the fixture that draws what comes out of it. */
+/** A mixing bowl: the container the orbitals are dropped in, and the fixture with a Mix button that blends them. */
 export function mixbowl(id, at, { size = { w: 92, h: 42 }, hub = 'C', label = 'Mixer', bowlH = 26, cell = 13, dy = 4, out = null } = {}) {
   const bowlW = 48;
   const bowl = { id: `${id}-bowl`, label: '', at: { x: at.x - size.w / 2 + bowlW / 2 + 3, y: at.y + dy }, size: { w: bowlW, h: bowlH }, cell, props: { still: true } };
   return {
     bowl,
-    fixture: { id, kind: 'mixbowl', label, at, size, noRun: true, dials: {}, props: { zone: bowl.id, hub, backdrop: true, ...(out ? { out } : {}) } }
+    fixture: {
+      id, kind: 'mixbowl', label, at, size, runLabel: 'Mix',
+      dials: { mixed: { min: 0, max: 99, step: 1, value: 0, label: 'Mix' } },
+      props: { hidden: ['mixed'], zone: bowl.id, hub, backdrop: true, ...(out ? { out } : {}) }
+    }
   };
 }
 

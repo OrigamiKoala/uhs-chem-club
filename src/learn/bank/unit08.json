@@ -27,12 +27,12 @@
       }
      ],
      "answer": "b",
-     "explanation": "A flask that looks unchanged is in dynamic equilibrium: both changes keep going, so the amounts stay the same."
+     "explanation": "A flask that looks unchanged is at dynamic equilibrium: forward and reverse reactions continue at the same rate, so totals stay constant."
     },
     {
      "id": "q1-both#b2",
      "quest": "q1-both",
-     "question": "One flask starts with only reactant and another starts with only product, under the same conditions. Both are left until nothing seems to change. What do they show?",
+     "question": "One flask starts with only reactant and an identical flask starts with only product (same total atoms and temperature). Once both settle, what do they hold?",
      "options": [
       {
        "id": "a",
@@ -344,7 +344,7 @@
       "explain": "ΔG° fell from +4.8 to −4.33 kJ/mol, so K went from below 1 to above 1 and the vessel holds more product."
      }
     ],
-    "finish": "TΔS° and ΔH° give ΔG°, and ΔG° in joules over RT, with its sign flipped, is the power of e that gives K."
+    "finish": "Use ΔG° = ΔH° − TΔS° (converted to J/mol), then compute K = e^(−ΔG°/RT)."
    }
   },
   "q4-properties": {
@@ -462,7 +462,7 @@
       "explain": "1 divided by 0.50 is 2.0."
      }
     ],
-    "finish": "Flipping takes 1 over K, writing larger takes a power, and adding reactions multiplies their K values."
+    "finish": "Flipping a reaction inverts K (1/K), multiplying coefficients raises K to that power, and adding reactions multiplies their K values."
    }
   },
   "q5-ice": {
@@ -773,7 +773,7 @@
        }
       ],
       "answer": "b",
-      "hint": "A large K means the reaction goes nearly to completion.",
+      "hint": "A large K means products strongly outnumber reactants.",
       "explain": "A large K means products are strongly favoured, so very little reactant remains."
      }
     ],
@@ -805,7 +805,7 @@
       }
      ],
      "answer": "b",
-     "explanation": "Below K the mixture has too little product for equilibrium, so the forward change wins until Q rises to K."
+     "explanation": "When Q < K, the mixture has less product than equilibrium requires, so it shifts forward to make more product until Q = K."
     },
     {
      "id": "q3-q#b2",
@@ -1065,7 +1065,7 @@
       "explain": "Q = 62.5 is below K = 280, so the mixture makes more SO₃ until Q rises to K."
      }
     ],
-    "finish": "Work out Q the way K is written, then set it against K to see which way the mixture goes."
+    "finish": "Calculate Q using the same expression as K, then compare Q to K: Q < K shifts forward, Q > K shifts backward."
    }
   }
  }

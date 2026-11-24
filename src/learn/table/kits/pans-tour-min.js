@@ -30,13 +30,13 @@ addTourText({
   }),
   'pans:rig': T('Ratio board', (f, t) =>
     hasSquared(t)
-      ? 'Place tiles above or below the line; ² squares that amount.'
-      : 'Place tiles above or below the line; leave bottom empty if unneeded.'
+      ? 'Place cards above or below the line; ² squares that amount.'
+      : 'Place cards above or below the line; leave bottom empty if unneeded.'
   ),
   'pans:qk': T('Test vessel', f =>
     f?.noRun
-      ? 'Lay a mixture card in the slot to compare Q against K.'
-      : 'Lay a mixture card in the slot, then press "Run".'
+      ? 'Place a mixture card in the slot to compare Q against K.'
+      : 'Place a mixture card in the slot, then press "Run".'
   ),
   'pans:vessel': T('Vessel', f => {
     const p = f?.props || {};
@@ -56,12 +56,12 @@ addTourText({
       : 'Press "Settle". Each bar glides from its dashed starting line to equilibrium.'
   ),
   'pans:clip': T('Demonstration', 'Watch how the particles move as the clip plays.'),
-  'pans:kcheck': T('K reader', 'Lay a reaction card on the tray, then press "Read K".'),
+  'pans:kcheck': T('K reader', 'Place a reaction card on the tray, then press "Read K".'),
   'pans:kstack': T('Stack', 'Drag reaction cards onto the stack. Shared substances on opposite sides cancel out.'),
   'pans:stack': T('Stack', 'Drag reaction cards onto the stack. Shared substances on opposite sides cancel out.'),
   'pans:pgas': T('Gas box', 'More particles in the same box give higher pressure.'),
   'pans:beaker': T('Beaker', f => {
-    if (f?.runLabel) return `Press "${f.runLabel}" to add scoops until extra solid stays on the floor.`;
+    if (f?.runLabel) return `Press "${f.runLabel}" to add scoops until extra solid stays on the bottom.`;
     if (f?.dials?.c) return 'Drag or tap the "Sulfate added" dial at the bottom to add sulfate.';
     if (f?.props?.showDissolved) return 'Compare the dissolved salt amounts on each beaker, then tap your choice.';
     return 'Read the ion readings on each beaker and compare with the plate.';
@@ -82,23 +82,23 @@ addTourText({
   'pans:tag': ['Cards', 'Read these cards; they give the starting amounts.'],
   'pans:dgm': ['Diagram', 'A frozen vessel. Drag it to the slot.'],
   'pans:arw': ['Reaction arrow', 'Drag the arrow card that matches each vessel into its slot.'],
-  'pans:rtile': ['Particle tile', 'Drag or tap to place it above or below the line on the ratio board.'],
+  'pans:rtile': ['Particle card', 'Drag or tap to place it above or below the ratio line.'],
   'pans:mixc': ['Mixture card', (p, t) =>
     hasFixtureKind(t, 'qk')
-      ? 'Lay a mixture card in the test vessel to check its Q against K.'
+      ? 'Place a mixture card in the test vessel to compare Q against K.'
       : hasFixtureKind(t, 'clip')
         ? 'Read the mixture amounts and K to make your prediction.'
         : 'Calculate Q from the amounts on each card, then sort it into a bin.'
   ],
   'pans:rxn': ['Reaction card', (p, t) =>
     (t?.tools || []).includes('scale')
-      ? 'Select a card and use Flip or Larger, then lay it on the K reader.'
-      : 'Lay reaction cards on the K reader to test their combined K.'
+      ? 'Select a card, use Flip or Larger, then place it on the K reader.'
+      : 'Place reaction cards on the K reader to test their combined K.'
   ],
   'pans:ktile': ['K card', 'Drag the matching K value into the answer slot.'],
-  'pans:ichip': ['Change tile', (p, t) =>
+  'pans:ichip': ['Change card', (p, t) =>
     hasEmptyIceSlot(t)
-      ? 'Drag a change tile into each column of the Change row.'
+      ? 'Drag a change card into each column of the Change row.'
       : 'The Change row is already filled; read the Equilibrium row at the bottom.'
   ],
   'pans:chip': ['Change card', 'Drag each change card into the bin for the direction it shifts the vessel.'],

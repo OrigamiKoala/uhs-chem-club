@@ -94,9 +94,9 @@ export const STAGES = [
     title: 'Adding H₂',
     briefing: {
       speaker: 'Vess',
-      body: 'Le Chatelier\'s principle: when a settled vessel is disturbed, it shifts to reduce the disturbance. Tap the H₂ supply, pick higher/same/lower on the graph or answer box, then press "Run".'
+      body: 'When a settled vessel is disturbed, it shifts to counter the disturbance. Tap the H₂ supply, predict higher/same/lower on the graph or answer box, then press "Run".'
     },
-    prompt: 'After H₂ is added to the settled vessel, where does the amount of N₂ settle?',
+    prompt: 'After H₂ is added to the settled vessel, what happens to the amount of N₂?',
     widget,
     table: pansTable({
       fixtures: [
@@ -105,24 +105,24 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Tap the H₂ supply and tap the graph where the N₂ amount will settle, then press "Run".',
-      'Watch the Q marker against the K line just after H₂ goes in, and press "Run" to check the N₂ line.',
-      'Compare Q with K just after the H₂ goes in and again once the lines are flat.'
+      'Tap the H₂ supply, predict where N₂ will settle on the graph or answer box, then press "Run".',
+      'Watch where Q jumps relative to K after H₂ goes in, then press "Run" to follow the N₂ line.',
+      'Compare the N₂ line after it flattens again with its dashed starting level.'
     ],
     check(state) {
       const t = state.table;
       const v = dialNo(t, 'ans');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap the graph where the N₂ amount will settle.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Predict on the graph or answer box where N₂ will settle.' };
       if (v === 2) return { ok: true };
       const r = vesselRead(t, 'v');
-      if (!r.changed) return { ok: false, msg: 'No H₂ has been added to the vessel yet.' };
-      if (r.t === 0) return { ok: false, msg: 'No time has passed since the H₂ went in.' };
-      return { ok: false, msg: `With ${t.fixtures.v.dials.add.value} mol of H₂ added, the N₂ line reads ${amt(r.now.n.N2)} mol now and stood at ${amt(r.base.n.N2)} mol before.` };
+      if (!r.changed) return { ok: false, msg: 'Tap the H₂ supply to add H₂ first.' };
+      if (r.t === 0) return { ok: false, msg: 'Press "Run" to let the vessel react after adding H₂.' };
+      return { ok: false, msg: `With ${t.fixtures.v.dials.add.value} mol of H₂ added, N₂ settled at ${amt(r.now.n.N2)} mol, down from ${amt(r.base.n.N2)} mol.` };
     },
     reward: {
       log: 'Adding H₂ made the N₂ amount fall.',
       title: 'More of One Reactant',
-      body: 'The added H₂ put Q below K. The vessel made more NH₃, using up N₂ as well, until Q was back on K.'
+      body: 'Adding H₂ dropped Q below K, so the vessel made more NH₃—using up N₂—until Q returned to K.'
     }
   },
 
@@ -130,7 +130,7 @@ export const STAGES = [
   {
     id: 's2-squeeze',
     title: 'Compressing the Vessel',
-    prompt: 'After the vessel is compressed and settles again, does it hold more, fewer or the same gas molecules?',
+    prompt: 'After compressing the vessel and letting it settle, does it hold more, fewer, or the same gas molecules?',
     widget,
     table: pansTable({
       fixtures: [
@@ -139,25 +139,25 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Drag the amber piston down, set the answer dial, then press "Run".',
-      'Compare the particle count now with the count printed for before the compression.',
-      'Follow Q against K just after the compression and see which side has fewer gas molecules.'
+      'Drag the amber piston down, choose your prediction on the dial, then press "Run".',
+      'Compare the total particle count after settling with the count before compression.',
+      'Watch Q against K after compressing, and check which side of N₂ + 3 H₂ ⇌ 2 NH₃ has fewer gas molecules.'
     ],
     check(state) {
       const t = state.table;
       const v = dialNo(t, 'ans');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Choose an answer on the dial.' };
       if (v === 2) return { ok: true };
       const r = vesselRead(t, 'v');
-      if (!r.changed) return { ok: false, msg: 'The piston has not moved: the vessel is still 1 L.' };
-      if (r.t === 0) return { ok: false, msg: 'No time has passed since the piston moved.' };
+      if (!r.changed) return { ok: false, msg: 'Drag the amber piston down to compress the vessel first.' };
+      if (r.t === 0) return { ok: false, msg: 'Press "Run" to let the compressed vessel settle.' };
       const s = spheres(r);
-      return { ok: false, msg: `The window shows ${s.total} particles now and ${s.before} before the compression.` };
+      return { ok: false, msg: `The vessel now holds ${s.total} gas molecules, compared with ${s.before} before compression.` };
     },
     reward: {
       log: 'Compressing the vessel left fewer gas molecules.',
       title: 'Less Volume',
-      body: 'Halving the volume put Q below K, so the vessel made NH₃: four molecules become two, and the count fell.'
+      body: 'Halving the volume dropped Q below K, so the vessel made more NH₃: four gas molecules became two, lowering the total count.'
     }
   },
 
@@ -167,7 +167,7 @@ export const STAGES = [
     title: 'Argon in the Vessel',
     // A PREDICT STAGE: the vessel is not on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'Argon, which does not react, is added at fixed volume: what happens to the amount of NH₃?',
+    prompt: 'If argon (an unreactive gas) is added at fixed volume, what happens to the amount of NH₃?',
     widget,
     table: pansTable({
       pieces: [note('more', GUESS.more, { x: 26, y: 16 }), note('less', GUESS.less, { x: 76, y: 16 }), note('same', GUESS.same, { x: 126, y: 16 })],
@@ -175,13 +175,13 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 76, y: 44 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
-      'Lay one of the three cards in the slot.',
-      'Think about what the argon does to the pressure of N₂, H₂ and NH₃ themselves.',
-      'Decide whether the argon changes the volume or the pressure of each reacting gas.'
+      'Drag one prediction card into the slot.',
+      'Think about whether adding argon changes the individual pressures of N₂, H₂, or NH₃.',
+      'Decide if an unreactive gas at fixed volume changes the concentrations of the reacting gases.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess' && !p.hidden);
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -191,7 +191,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, argon goes into a settled vessel and the amounts are read.'
+      body: 'Next, we add argon to a settled vessel and watch what happens.'
     }
   },
 
@@ -201,7 +201,7 @@ export const STAGES = [
     title: 'Argon Added',
     get prompt() {
       const g = recall(QUEST_KEY);
-      return g && SHORT[g] ? `You predicted ${SHORT[g]}. After argon is added, where does the amount of NH₃ settle?` : 'After argon is added, where does the amount of NH₃ settle?';
+      return g && SHORT[g] ? `You predicted ${SHORT[g]}. After argon is added, what happens to the amount of NH₃?` : 'After argon is added, what happens to the amount of NH₃?';
     },
     widget,
     table: pansTable({
@@ -211,27 +211,27 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Tap the argon supply, then tap the graph where the NH₃ amount will settle.',
-      'Compare the pressure and the NH₃ line with their readings before the argon went in, and watch the Q marker.',
-      'Ask whether the argon changed the volume or pressure of each of N₂, H₂ and NH₃.'
+      'Tap the argon supply, then predict on the graph or answer box where NH₃ will settle.',
+      'Compare total pressure, the Q marker, and the NH₃ line before and after adding argon.',
+      'Check whether adding argon moved the Q marker off the K line.'
     ],
     check(state) {
       const t = state.table;
       const v = dialNo(t, 'ans');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap the graph where the NH₃ amount will settle.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Predict on the graph or answer box where NH₃ will settle.' };
       if (v === 3) return { ok: true };
       const r = vesselRead(t, 'v');
-      if (!r.changed) return { ok: false, msg: 'No argon has been added to the vessel yet.' };
-      if (r.t === 0) return { ok: false, msg: 'No time has passed since the argon went in.' };
-      return { ok: false, msg: `The pressure reads ${Math.round(r.now.P)} atm, up from ${Math.round(leanTotalP(r.rxn, r.base.n, r.base.V, r.base.T))} atm, and the NH₃ line reads ${amt(r.now.n.NH3)} mol against ${amt(r.base.n.NH3)} mol before the argon.` };
+      if (!r.changed) return { ok: false, msg: 'Tap the argon supply to add argon first.' };
+      if (r.t === 0) return { ok: false, msg: 'Press "Run" after adding argon.' };
+      return { ok: false, msg: `Total pressure rose from ${Math.round(leanTotalP(r.rxn, r.base.n, r.base.V, r.base.T))} to ${Math.round(r.now.P)} atm, yet NH₃ stayed at ${amt(r.now.n.NH3)} mol (same as ${amt(r.base.n.NH3)} mol before).` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
-      const verdict = !g || !SHORT[g] ? '' : g === 'same' ? 'You predicted no change, and the vessel agreed. ' : 'The vessel did not agree with your prediction, which is how a guess gets better. ';
+      const verdict = !g || !SHORT[g] ? '' : g === 'same' ? 'Your prediction matched. ' : 'Your prediction did not match. ';
       return {
         log: 'Argon left the NH₃ amount where it was.',
         title: 'A Gas That Does Not React',
-        body: `${verdict}Argon raised the total pressure but left the pressures of N₂, H₂ and NH₃ as they were. Q stayed on K and nothing shifted.`
+        body: `${verdict}Argon raised total pressure, but the partial pressures of N₂, H₂, and NH₃ did not change—so Q stayed on K and nothing shifted.`
       };
     }
   },
@@ -240,20 +240,20 @@ export const STAGES = [
   {
     id: 's5-heat',
     title: 'Heating Two Vessels',
-    briefing: 'Heating a settled vessel moves it in the direction that takes heat in.',
-    prompt: 'Which reaction takes in heat as it makes its product?',
+    briefing: 'Heating a settled vessel shifts it in the direction that absorbs heat.',
+    prompt: 'Which reaction absorbs heat as it makes product?',
     widget,
     table: pansTable({
       fixtures: [
         pickable(vesselFixture('v1', { x: 38, y: 29 }, { ...HABER, window: false, w: 70, title: 'Vessel 1: N₂ + 3 H₂ ⇌ 2 NH₃', touch: true, dials: { temp: { min: 673, max: 773, step: 25 } } }), 1, 'ans'),
         pickable(vesselFixture('v2', { x: 112, y: 29 }, { ...NO2, window: false, w: 70, touch: true, dials: { temp: { min: 298, max: 398, step: 25 } } }), 2, 'ans'),
-        choiceFixture('ans', 'Takes in heat making product', { x: 75, y: 73 }, { options: ['Vessel 1', 'Vessel 2', 'Both vessels', 'Neither vessel', ' '], start: 5, w: 86, plates: [1, 2, 3, 4] })
+        choiceFixture('ans', 'Absorbs heat making product', { x: 75, y: 73 }, { options: ['Vessel 1', 'Vessel 2', 'Both vessels', 'Neither vessel', ' '], start: 5, w: 86, plates: [1, 2, 3, 4] })
       ]
     }, { h: 90 }),
     hints: [
-      'Tap "heat" on each vessel, press "Run", then tap your answer.',
-      'Compare the K printed under each graph with the faint mark where it stood before heating.',
-      'Check whether K rises or falls when each vessel is heated.'
+      'Tap "heat" on both vessels, press "Run", then tap your answer.',
+      'Compare the new K under each graph with the faint mark showing its value before heating.',
+      'A reaction that absorbs heat makes more product when heated, so its K rises.'
     ],
     check(state) {
       const t = state.table;
@@ -261,14 +261,14 @@ export const STAGES = [
       if (v === 5) return { ok: false, notYet: true, msg: 'Tap an answer.' };
       if (v === 2) return { ok: true };
       const a = vesselRead(t, 'v1'); const b = vesselRead(t, 'v2');
-      if (!a.changed && !b.changed) return { ok: false, msg: 'Neither vessel has been heated yet.' };
-      const one = (name, r) => (r.changed ? `${name}\'s K reads ${fmtQ(r.K0)} at ${r.base.T} K and ${fmtQ(r.res.post.K)} at ${r.res.post.T} K.` : `${name} has not been heated: its K reads ${fmtQ(r.K0)}.`);
+      if (!a.changed && !b.changed) return { ok: false, msg: 'Heat both vessels first.' };
+      const one = (name, r) => (r.changed ? `${name}\'s K changed from ${fmtQ(r.K0)} (${r.base.T} K) to ${fmtQ(r.res.post.K)} (${r.res.post.T} K).` : `${name} has not been heated yet (K = ${fmtQ(r.K0)}).`);
       return { ok: false, msg: `${one('Vessel 1', a)} ${one('Vessel 2', b)}` };
     },
     reward: {
       log: 'Heating lowered K in one vessel and raised it in the other.',
       title: 'Only Temperature Changes K',
-      body: 'Only temperature changes K. Heating raised K for N₂O₄ ⇌ 2 NO₂ (takes heat in) and lowered K for NH₃ (gives heat out).'
+      body: 'Only temperature changes K. Heating raised K for N₂O₄ ⇌ 2 NO₂ (absorbs heat) and lowered K for NH₃ (releases heat).'
     }
   },
 
@@ -276,7 +276,7 @@ export const STAGES = [
   {
     id: 's6-powder',
     title: 'Iron Powder',
-    prompt: 'What does the iron powder change?',
+    prompt: 'What does adding iron powder change?',
     widget,
     table: pansTable({
       fixtures: [
@@ -286,26 +286,26 @@ export const STAGES = [
       ]
     }, { h: 90 }),
     hints: [
-      'Run both vessels, then set the answer dial.',
-      'Compare where each NH₃ line ends and how many seconds each vessel takes to settle.',
-      'Run each vessel until its lines are flat, then compare the final NH₃ amount and settling time.'
+      'Run both vessels until they settle, then set the answer dial.',
+      'Compare the final NH₃ amounts and how many seconds each vessel took to settle.',
+      'See whether the iron powder changed where the lines ended or only how fast they got there.'
     ],
     check(state) {
       const t = state.table;
       const v = dialNo(t, 'ans');
-      if (v === 5) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 5) return { ok: false, notYet: true, msg: 'Choose an answer on the dial.' };
       if (v === 2) return { ok: true };
       const a = vesselRead(t, 'v1'); const b = vesselRead(t, 'v2');
-      if (a.t === 0 && b.t === 0) return { ok: false, msg: 'Neither vessel has been run yet.' };
-      if (a.t === 0 || b.t === 0) return { ok: false, msg: `Vessel ${a.t === 0 ? 1 : 2} has not been run yet.` };
+      if (a.t === 0 && b.t === 0) return { ok: false, msg: 'Run both vessels first.' };
+      if (a.t === 0 || b.t === 0) return { ok: false, msg: `Run Vessel ${a.t === 0 ? 1 : 2} as well.` };
       if (!a.settled || !b.settled) return { ok: false, msg: 'Keep pressing "Run" until both vessels finish settling so you can compare their final amounts.' };
-      const one = (name, r) => `${name} holds ${amt(r.now.n.NH3)} mol of NH₃ (settled in ${r.tick} s).`;
+      const one = (name, r) => `${name} settled at ${amt(r.now.n.NH3)} mol NH₃ in ${r.tick} s.`;
       return { ok: false, msg: `${one('Vessel 1', a)} ${one('Vessel 2', b)}` };
     },
     reward: {
       log: 'The iron powder gave the same amounts, sooner.',
       title: 'A Catalyst',
-      body: 'Both vessels settled at the same amounts. Iron powder is a catalyst: it speeds the reaction both ways equally, so the vessel settles sooner, not somewhere else.'
+      body: 'Both vessels settled at the exact same amounts. Iron powder is a catalyst: it speeds forward and reverse reactions equally, settling faster without changing K.'
     }
   },
 
@@ -313,7 +313,7 @@ export const STAGES = [
   {
     id: 's7-take',
     title: 'Taking NH₃ Out',
-    prompt: 'After some NH₃ is taken out, where does the amount of NH₃ settle compared with before?',
+    prompt: 'After removing some NH₃, how does the new settled amount of NH₃ compare with before?',
     widget,
     table: pansTable({
       fixtures: [
@@ -322,24 +322,24 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Tap "take out NH₃", then tap the graph or answer box where NH₃ will settle.',
-      'Watch the NH₃ line against its dashed level from before, and the Q marker against the K line.',
-      'Compare the final NH₃ amount with its amount before any came out.'
+      'Tap "take out NH₃", then choose on the graph or answer box where NH₃ will settle.',
+      'Compare the settled NH₃ line against its dashed level from before, and watch Q against K.',
+      'Notice whether the vessel replaces all the removed NH₃ or only part of it.'
     ],
     check(state) {
       const t = state.table;
       const v = dialNo(t, 'ans');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap the graph or answer box where the NH₃ amount will settle.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Choose on the graph or answer box where NH₃ will settle.' };
       if (v === 2) return { ok: true };
       const r = vesselRead(t, 'v');
-      if (!r.changed) return { ok: false, msg: 'No NH₃ has been taken out of the vessel yet.' };
-      if (r.t === 0) return { ok: false, msg: 'No time has passed since the NH₃ came out.' };
-      return { ok: false, msg: `With ${t.fixtures.v.dials.take.value} mol of NH₃ taken out, compare the settled NH₃ line with its dashed level from before.` };
+      if (!r.changed) return { ok: false, msg: 'Tap "take out NH₃" first.' };
+      if (r.t === 0) return { ok: false, msg: 'Press "Run" after removing NH₃.' };
+      return { ok: false, msg: `After removing ${t.fixtures.v.dials.take.value} mol of NH₃, compare the final NH₃ line with its dashed starting level.` };
     },
     reward: {
       log: 'Taking NH₃ out left the vessel settling with less NH₃ than before.',
       title: 'Taking a Product Out',
-      body: 'Taking out NH₃ lowered Q below K, so the vessel made NH₃ again, though not all that was taken. Removing product keeps a vessel making more.'
+      body: 'Removing NH₃ dropped Q below K, so the vessel made more NH₃—though less than was removed. Continuously draining product keeps a reaction making more.'
     }
   },
 
@@ -347,7 +347,7 @@ export const STAGES = [
   {
     id: 's8-shift',
     title: 'Which Way Will It Shift?',
-    prompt: 'Which way does the settled vessel shift after each change?',
+    prompt: 'Sort each change by how it shifts the settled vessel.',
     widget,
     table: pansTable({
       pieces: [
@@ -368,24 +368,24 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Sort all four change cards into the three trays.',
-      'For each change, ask whether it puts Q below K, above K, or leaves Q on K.',
-      'Use the balanced equation N₂ + 3 H₂ ⇌ 2 NH₃ to decide which way Q moves.'
+      'Drag all four change cards into the three trays.',
+      'For each change, check whether Q drops below K, rises above K, or stays equal to K.',
+      'Use N₂ + 3 H₂ ⇌ 2 NH₃ (4 gas molecules → 2) to see which way each change shifts Q.'
     ],
     check(state) {
       const t = state.table;
-      if (PICKS.some(p => !['more', 'same', 'less'].includes(whereIs(t, p.id)))) return { ok: false, notYet: true, msg: 'Every change needs a tray.' };
+      if (PICKS.some(p => !['more', 'same', 'less'].includes(whereIs(t, p.id)))) return { ok: false, notYet: true, msg: 'Place every change card in a tray.' };
       const f = t.fixtures.q;
       const wrong = PICKS.find((_, idx) => whereIs(t, PICKS[idx].id) !== pickKind(f, idx).kind);
       if (!wrong) return { ok: true };
       const idx = PICKS.indexOf(wrong);
       const { res } = pickKind(f, idx);
-      return { ok: false, msg: `After "${wrong.label}", Q is ${fmtQ(res.post.Q)} against K = ${fmtQ(res.post.K)}, so the vessel shifts ${res.post.Q < res.post.K * 0.99 ? 'toward NH₃' : res.post.Q > res.post.K * 1.01 ? 'away from NH₃' : 'neither way'}.` };
+      return { ok: false, msg: `After "${wrong.label}", Q is ${fmtQ(res.post.Q)} vs K = ${fmtQ(res.post.K)}, so the vessel shifts ${res.post.Q < res.post.K * 0.99 ? 'toward NH₃' : res.post.Q > res.post.K * 1.01 ? 'away from NH₃' : 'neither way'}.` };
     },
     reward: {
       log: 'The four changes were sorted by which way the vessel shifts.',
       title: "Le Chatelier's Principle",
-      body: 'Each change that moved Q off K was followed by a shift that brought it back. This is Le Chatelier\'s principle: a vessel disturbed from equilibrium shifts to reduce the disturbance.'
+      body: 'Whenever a disturbance moves Q off K, the reaction shifts to bring Q back. That is Le Chatelier\'s principle: a system at equilibrium shifts to counter a disturbance.'
     }
   }
 ];

@@ -103,7 +103,7 @@ const seat = (metals, id) => `slot:dip.${bid(metals, id)}`;
 function dipLine(t, metals, stripId, ionId) {
   const res = triedIn({ fixtures: t.fixtures, pieces: t.pieces }, 'dip', bid(metals, ionId), stripId);
   if (!res) return `The ${nm(stripId)} strip has not been dipped in the ${METALS[ionId].ion} solution yet.`;
-  return res.coats.length ? `The ${nm(stripId)} strip took a ${dipWords(res)} coating in the ${METALS[ionId].ion} solution.` : `The ${nm(stripId)} strip stayed clean in the ${METALS[ionId].ion} solution.`;
+  return res.coats.length ? `The ${nm(stripId)} strip got a ${dipWords(res)} coating in the ${METALS[ionId].ion} solution.` : `The ${nm(stripId)} strip stayed clean in the ${METALS[ionId].ion} solution.`;
 }
 
 /** A typed plating figure that is a known slip answers with a reading the table shows; otherwise null. */
@@ -124,7 +124,7 @@ export const STAGES = [
   {
     id: 'p1-rank',
     title: 'Phase 1 · The Dip Rack',
-    prompt: 'Rank iron, nickel, tin and silver from the metal that gives electrons most readily to the one that gives least.',
+    prompt: 'Dip the strips to rank iron, nickel, tin, and silver from most ready to give electrons to least.',
     widget,
     table: (() => {
       const d = dipFixture('dip', { x: 64, y: 33 }, { beakers: P1_METALS.map((ion, i) => ({ id: `b${i}`, ion })) });
@@ -145,13 +145,13 @@ export const STAGES = [
     },
     hints: [
       'Dip the strips in the beakers, then drag the four strips onto the rail.',
-      'Each beaker keeps a mark for every strip dipped in it; compare which strips were coated in which solutions.',
-      'A strip that is coated has given electrons to the ions in the solution, so rank the metals by how many of the other solutions each one coated in.'
+      'Each beaker remembers every strip dipped in it, so compare which strips got coated in which solutions.',
+      'A strip gets coated when it gives electrons to the solution, so rank the metals by how many solutions coated them.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < P1_METALS.length) return { ok: false, notYet: true, msg: `Put all ${P1_METALS.length} strips on the rail.` };
+      if (order.length < P1_METALS.length) return { ok: false, notYet: true, msg: `Place all ${P1_METALS.length} strips on the rail first.` };
       if (order.join() === P1_WANT.map(m => `s-${m}`).join()) return { ok: true };
       const E = id => METALS[id.slice(2)].E0;
       const k = order.findIndex((id, i) => i > 0 && E(id) < E(order[i - 1]));
@@ -163,11 +163,11 @@ export const STAGES = [
     get reward() {
       const o = P1_WANT;
       const gave = m => o.slice(o.indexOf(m) + 1);
-      const parts = o.slice(0, -1).map(m => `${nm(m)} coated in the ${list(gave(m).map(g => METALS[g].ion))} ${gave(m).length > 1 ? 'solutions' : 'solution'}`);
+      const parts = o.slice(0, -1).map(m => `${nm(m)} in ${list(gave(m).map(g => METALS[g].ion))}`);
       return {
         log: 'The four strips fell into an order of their own.',
         title: 'A New Order',
-        body: `${Nm(o[0])} ${parts[0].slice(nm(o[0]).length + 1)}, ${parts.slice(1).join(', ')}; ${nm(o[o.length - 1])} coated in none. The more solutions a metal coats in, the more readily it gives electrons.`
+        body: `Coatings formed on ${parts.join('; ')}; ${nm(o[o.length - 1])} stayed clean. More coatings mean a metal gives electrons more readily.`
       };
     }
   },
@@ -176,7 +176,7 @@ export const STAGES = [
   {
     id: 'p2-anode',
     title: 'Phase 2 · The Open Cell',
-    prompt: 'Press Run, then tap which strip on the Model is the anode of the magnesium and silver cell.',
+    prompt: 'Press Run, then tap the strip on the Model that is the anode of this magnesium–silver cell.',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 46 }, { left: P2.left, right: P2.right, link: 'fixed', ammeter: true });
@@ -201,20 +201,20 @@ export const STAGES = [
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a strip.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a strip on the Model first.' };
       const want = P2_ANODE === P2.left ? 1 : 2;
       if (v === want) return { ok: true };
       const r = galvRead(state.table, 'rig');
-      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter reads zero.' };
+      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; press Run to read the ammeter.' };
       return { ok: false, msg: `The ammeter pointed ${r.I > 0 ? 'right' : 'left'} and read ${fmt(Math.abs(r.I), 2)} A.` };
     },
     get reward() {
       const to = electronsToward(P2.left, P2.right);
       const toMetal = to === 'left' ? P2.left : P2.right;
       return {
-        log: 'The electrons left through the magnesium.',
+        log: 'Electrons left through magnesium.',
         title: 'Where Electrons Leave',
-        body: `The electrons moved toward the ${nm(toMetal)} beaker, so they left through ${nm(P2_ANODE)}. The ${nm(P2_ANODE)} strip is the anode: its atoms give up electrons.`
+        body: `Electrons moved toward the ${nm(toMetal)} beaker, so they left through ${nm(P2_ANODE)}. The ${nm(P2_ANODE)} strip is the anode: its atoms give up electrons.`
       };
     }
   },
@@ -223,7 +223,7 @@ export const STAGES = [
   {
     id: 'p3-volts',
     title: 'Phase 3 · The Potential Board',
-    prompt: 'Find the voltage, in volts, of a cell made from iron and silver.',
+    prompt: 'Measure iron and silver on the board, then type the voltage (in V) of an iron–silver cell.',
     widget,
     entry: { id: 'e', label: 'Cell voltage', unit: 'V' },
     table: (() => {
@@ -247,22 +247,22 @@ export const STAGES = [
     ],
     check(state) {
       const v = entryNumber(state.table, 'e');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       if (Math.abs(v - P3_WANT) <= TOL_V) return { ok: true };
       const lo = METALS[P3.a].E0; const hi = METALS[P3.b].E0;
       const near = x => Math.abs(v - x) <= 0.03;
-      if (near(hi + lo)) return { ok: false, msg: `${fmt(hi + lo, 2)} is the two readings added together, ${voltText(lo)} and ${voltText(hi)}.` };
+      if (near(hi + lo)) return { ok: false, msg: `${fmt(hi + lo, 2)} is the two readings added together (${voltText(lo)} and ${voltText(hi)}).` };
       if (near(-P3_WANT)) return { ok: false, msg: 'That is the difference taken the other way round.' };
-      if (near(2 * hi - lo)) return { ok: false, msg: `The board read ${voltText(hi)} V for silver; that figure counts the silver reading twice.` };
-      if (near(hi) || near(lo) || near(-lo)) return { ok: false, msg: 'That is one electrode\'s reading by itself; the cell uses both.' };
+      if (near(2 * hi - lo)) return { ok: false, msg: `The board read ${voltText(hi)} V for silver; that counts the silver reading twice.` };
+      if (near(hi) || near(lo) || near(-lo)) return { ok: false, msg: 'That is just one electrode\'s reading; subtract the lower reading from the higher one.' };
       if (near(2 * P3_WANT)) return { ok: false, msg: 'That is twice the gap between the two readings.' };
-      return { ok: false, msg: `The board read ${voltText(lo)} V for iron and ${voltText(hi)} V for silver; that does not make ${fmt(v, 2)} V.` };
+      return { ok: false, msg: `The board read ${voltText(lo)} V for iron and ${voltText(hi)} V for silver, which does not give ${fmt(v, 2)} V.` };
     },
     get reward() {
       return {
         log: 'The cell voltage came from the gap between two readings.',
         title: 'A Gap Again',
-        body: `Silver read ${voltText(METALS.ag.E0)} V and iron ${voltText(METALS.fe.E0)} V, so E°cell is ${voltText(METALS.ag.E0)} − (${voltText(METALS.fe.E0)}) = ${fmt(P3_WANT, 2)} V. Silver took the electrons and iron gave them.`
+        body: `Silver read ${voltText(METALS.ag.E0)} V and iron ${voltText(METALS.fe.E0)} V, so E°cell = ${voltText(METALS.ag.E0)} − (${voltText(METALS.fe.E0)}) = ${fmt(P3_WANT, 2)} V. Silver took the electrons and iron gave them.`
       };
     }
   },
@@ -271,7 +271,7 @@ export const STAGES = [
   {
     id: 'p4-bar',
     title: 'Phase 4 · The Zinc Beakers',
-    prompt: 'Press Run, then tap which electrode electrons leave in this zinc cell (one concentrated 1.0 M beaker and one dilute 0.010 M beaker).',
+    prompt: 'Press Run, then tap the electrode electrons leave in this zinc cell (0.010 M vs 1.0 M).',
     widget,
     table: cellTable({
       fixtures: [
@@ -288,23 +288,23 @@ export const STAGES = [
     hints: [
       'Press "Run", read the ammeter, then tap the electrode you choose.',
       'Compare the side the ammeter pointer swings toward with the concentration printed under each beaker.',
-      'Find the electrode the electrons move away from, and say whether it stands on the left or the right.'
+      'The ammeter needle points toward the beaker receiving electrons, so they leave the other electrode.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode on the Model first.' };
       const want = concCellRead(P4.metal, P4.cLeft, P4.cRight).leaves === 'left' ? 1 : 2;
       if (v === want) return { ok: true };
       const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
-      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter needle is at rest.' };
-      return { ok: false, msg: `The voltmeter read ${fmt(r.V, 3)} V, right electrode against left, and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} electrode.` };
+      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; press Run to read the ammeter.' };
+      return { ok: false, msg: `The meter read ${fmt(r.V, 3)} V and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} electrode.` };
     },
     get reward() {
       const c = concCellRead(P4.metal, P4.cLeft, P4.cRight);
       return {
-        log: 'The electrons left the electrode in the dilute beaker.',
+        log: 'Electrons left the electrode in the dilute beaker.',
         title: 'The Dilute Side Loses',
-        body: `The cell read ${fmt(c.E, 3)} V and the electrons left the ${c.leaves} electrode, which stood in the ${concLabel(Math.min(P4.cLeft, P4.cRight))} beaker. The dilute side is the anode, where zinc dissolves, and the cell runs until the two concentrations match.`
+        body: `The cell read ${fmt(c.E, 3)} V and electrons left the ${c.leaves} electrode (${concLabel(Math.min(P4.cLeft, P4.cRight))}). The dilute side is the anode, and the cell runs until both concentrations match.`
       };
     }
   },
@@ -313,7 +313,7 @@ export const STAGES = [
   {
     id: 'p5-plate',
     title: 'Phase 5 · The Plating Run',
-    prompt: 'What mass of copper, in grams, does the Clamp plate from Brinewire\'s pool at 1.50 A for 20.0 minutes?',
+    prompt: 'How many grams of copper does the Clamp plate from Brinewire\'s pool at 1.50 A for 20.0 minutes?',
     widget,
     entry: { id: 'g', label: 'Copper plated', unit: 'g' },
     table: (() => {
@@ -335,30 +335,30 @@ export const STAGES = [
     ],
     check(state) {
       const v = entryNumber(state.table, 'g');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       const t = P5.minutes * 60;
       const want = faradayMass(P5.I, t, P5.metal);
       if (Math.abs(v - want) <= TOL_G) return { ok: true };
       const wrongM = id => want * METALS[id].M / METALS[P5.metal].M;
       const hit = slipOf(v, [
-        [faradayMass(P5.I, P5.minutes, P5.metal), 'That treats 20.0 minutes as 20.0 s; the time in the question is in minutes.'],
-        [want * 2, 'You used one electron per copper atom; the line Cu²⁺ + 2 e⁻ → Cu shows two.'],
-        [wrongM('zn'), 'That uses 65.4 g/mol, the molar mass of zinc; this pool holds copper.'],
-        [wrongM('ag'), 'That uses 107.9 g/mol, the molar mass of silver; this pool holds copper.'],
-        [wrongM('ni'), 'That uses 58.7 g/mol, the molar mass of nickel; this pool holds copper.'],
-        [charge(P5.I, t), 'That figure is a charge in coulombs; the field is in grams.']
+        [faradayMass(P5.I, P5.minutes, P5.metal), 'That treats 20.0 minutes as 20.0 s; convert 20.0 minutes to 1200 seconds.'],
+        [want * 2, 'You used 1 electron per copper atom, but Cu²⁺ + 2 e⁻ → Cu takes 2 electrons.'],
+        [wrongM('zn'), 'That uses zinc\'s molar mass (65.4 g/mol); this pool holds copper (63.5 g/mol).'],
+        [wrongM('ag'), 'That uses silver\'s molar mass (107.9 g/mol); this pool holds copper (63.5 g/mol).'],
+        [wrongM('ni'), 'That uses nickel\'s molar mass (58.7 g/mol); this pool holds copper (63.5 g/mol).'],
+        [charge(P5.I, t), 'That is the charge in coulombs; convert it to grams of copper.']
       ], want);
       if (hit) return hit;
-      if (v < 0) return { ok: false, msg: 'A mass plated is a size, not a negative number.' };
+      if (v < 0) return { ok: false, msg: 'Enter a positive mass in grams.' };
       const r = supplyRead(state.table, 'sup').rows.find(x => x.I === 2 && x.t === 60);
-      return { ok: false, msg: r ? `The bench plated ${fmt(r.g * 1000, 1)} mg of copper in a 60 s run at 2.00 A; that does not lead to ${fmt(v, 2)} g for 20.0 minutes.` : 'Run the bench at 2.00 A to see what a short run plates.' };
+      return { ok: false, msg: r ? `The bench plated ${fmt(r.g * 1000, 1)} mg of copper in a 60 s run at 2.00 A, which does not match ${fmt(v, 2)} g for 20.0 minutes.` : 'Run the bench at 2.00 A to see what a short run plates.' };
     },
     get reward() {
       const t = P5.minutes * 60; const q = charge(P5.I, t); const mol = molesElectrons(q);
       return {
         log: 'The plated copper mass followed the charge, the electrons per atom, and copper\'s molar mass.',
         title: 'The Mass Follows the Charge',
-        body: `${fmt(P5.I, 2)} A × ${t} s = ${fmt(q, 0)} C, which is ${fmt(mol, 4)} mol of electrons, and two electrons plate each copper atom: ${fmt(mol / 2, 4)} mol × 63.5 g/mol = ${fmt(faradayMass(P5.I, t, 'cu'), 2)} g of pure copper.`
+        body: `${fmt(P5.I, 2)} A × ${t} s = ${fmt(q, 0)} C (${fmt(mol, 4)} mol e⁻). At 2 e⁻ per copper atom, that plates ${fmt(mol / 2, 4)} mol × 63.5 g/mol = ${fmt(faradayMass(P5.I, t, 'cu'), 2)} g of pure copper.`
       };
     }
   }

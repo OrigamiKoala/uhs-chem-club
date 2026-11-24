@@ -103,15 +103,17 @@ export const STAGES = [
     },
     widget: { type: 'table', label: 'The bench' },
     table: moTable({
-      pieces: GASES.map(([id, label, mol], i) => moCard(id, label, { x: 20 + i * 26, y: 52 }, { mol })),
+      bounds: { w: 150, h: 68 },
+      recorder: { at: { x: 147.4, y: 65.6 }, size: { w: 5, h: 3.4 } },
+      pieces: GASES.map(([id, label, mol], i) => moCard(id, label, { x: 20 + i * 26, y: 58 }, { mol })),
       zones: {
-        slots: [{ id: 'test', label: 'Gas to test', at: { x: 30, y: 21 }, size: { w: 32, h: 20 } }],
+        slots: [{ id: 'test', label: 'Gas to test', at: { x: 24, y: 24 }, size: { w: 28, h: 18 } }],
         trays: [
-          { id: 'pulled', label: 'Attracted', at: { x: 118, y: 13 }, size: { w: 48, h: 14 }, cell: 22 },
-          { id: 'ignored', label: 'Not attracted', at: { x: 118, y: 36 }, size: { w: 48, h: 14 }, cell: 22 }
+          { id: 'pulled', label: 'Attracted', at: { x: 120, y: 14 }, size: { w: 50, h: 18 }, cell: 22 },
+          { id: 'ignored', label: 'Not attracted', at: { x: 120, y: 38 }, size: { w: 50, h: 18 }, cell: 22 }
         ]
       },
-      fixtures: [magnet('magnet', { x: 76, y: 22 }, { slot: 'test', size: { w: 34, h: 30 }, label: 'Magnet' })]
+      fixtures: [magnet('magnet', { x: 64, y: 24 }, { slot: 'test', size: { w: 38, h: 34 }, label: 'Magnet' })]
     }),
     hints: [
       'Drag a gas card into the "Gas to test" slot and press "Test Sample"; the card records how the magnet reacted.',

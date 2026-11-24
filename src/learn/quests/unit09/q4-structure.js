@@ -105,7 +105,7 @@ function rankMiss(t, order, rank) {
   const l = loggedPair(t, a.id, b.id);
   if (!l) return { ok: false, msg: `${sits} Race ${a.label} against ${b.label}’s base to see which gives its proton away.` };
   const x = t.pieces[l.a]; const y = t.pieces[l.b];
-  return { ok: false, msg: `${sits} In the race of ${nameAcid(x)} with ${nameBase(y)}, ${l.n} of 100 protons ended on the base.` };
+  return { ok: false, msg: `${sits} In the race of ${nameAcid(x)} against ${nameBase(y)}, ${l.n} of 100 protons moved to the base.` };
 }
 
 function rankCheck(stage) {
@@ -150,7 +150,7 @@ export const STAGES = [
     get reward() {
       const g = recall(QUEST_KEY);
       const picked = g && GUESS[g] ? `You predicted ${GUESS[g]}. ` : '';
-      return { log: 'Prediction locked in.', title: 'Prediction', body: `${picked}Next, the three acids are raced against each other to test it.` };
+      return { log: 'Prediction locked in.', title: 'Prediction', body: `${picked}Next, race the three acids against each other to test it.` };
     }
   },
 
@@ -164,8 +164,8 @@ export const STAGES = [
     table: raceTable(cardsOf(S2), ['hcl', 'hf', 'hbr']),
     hints: [
       RACE_HINT1,
-      'Compare how many of the 100 protons ended on the base in each race you ran.',
-      'Each race compares two acids, so run neighbouring pairs until every pair on the rail has been compared.'
+      'Compare how many of the 100 protons moved to the base in each race you ran.',
+      'Race neighbouring pairs so you know which acid is stronger in each pair.'
     ],
     check: rankCheck(2),
     get reward() {
@@ -196,7 +196,7 @@ export const STAGES = [
     reward: {
       log: 'Across a row, the more electronegative atom made the stronger acid.',
       title: 'Electronegativity',
-      body: 'From CH₄ to HF the atom holding hydrogen pulls harder on electrons each time, making the stronger acid.'
+      body: 'From CH₄ to HF, the atom holding hydrogen is more electronegative, so its conjugate base holds negative charge better and the acid is stronger.'
     }
   },
 
@@ -225,7 +225,7 @@ export const STAGES = [
     id: 's5-resonance',
     title: 'Sharing the Charge',
     briefing: 'Sharing negative charge over two oxygens (resonance) spreads out the charge on the conjugate base.',
-    prompt: 'Which of ethanol, acetic acid and formic acid is the weakest acid and which the strongest?',
+    prompt: 'Order ethanol, acetic acid, and formic acid from weakest acid to strongest.',
     widget,
     table: raceTable(cardsOf(S5, 30), ['acetic', 'ethanol', 'formic']),
     hints: [
@@ -253,9 +253,9 @@ export const STAGES = [
       widget,
       table: raceTable([ref, ...bases], ['h2o', 'hcl', 'hclo', 'hf'], 'Takes the fewest', 'Takes the most'),
       hints: [
-        'Put a base card in the second place, press "Race", then drag it back to the rail.',
-        'Compare how many of the 100 protons each base took from the same acid.',
-        'Race each base against acetic acid in turn and order the cards by the counts.'
+        'Put a base card in the right slot, press "Race", then drag it back to the rail.',
+        'Compare how many of the 100 protons each base took from acetic acid.',
+        'Race each base against acetic acid and order them from fewest protons taken to most.'
       ],
       check: rankCheck(6),
       get reward() {
@@ -275,7 +275,7 @@ export const STAGES = [
     title: 'Five Unlabelled Acids',
     briefing: {
       speaker: 'Vess',
-      body: 'Rank these five acids using the four structure patterns from the last six stages.'
+      body: 'Rank these five acids using the four structure patterns you just found.'
     },
     prompt: 'Order these five acids from weakest to strongest.',
     widget,
@@ -292,7 +292,7 @@ export const STAGES = [
     reward: {
       log: 'Bond size, electronegativity, extra oxygen and resonance each changed how strong the acid is.',
       title: 'What Sets Strength',
-      body: 'An acid is strong when its conjugate base holds the charge well: by a larger atom, higher electronegativity, extra oxygens or resonance. Each factor you ranked works through the conjugate base.'
+      body: 'An acid is stronger when its conjugate base stabilizes negative charge better—through a larger atom, higher electronegativity, extra oxygens, or resonance.'
     }
   }
 ];

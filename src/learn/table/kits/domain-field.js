@@ -240,8 +240,8 @@ function paintCard(ctx, p, state, o) {
     const syms = [...new Set([read.hub, ...read.arms.filter(x => x.kind === 'atom').map(x => x.sym)])];
     note(syms.map(y => `${y} ${(EN[y] ?? 0).toFixed(1)}`).join('  '));
   }
-  if (shows.includes('dipole') && BOND_DIPOLE[read.id]) {
-    const b = BOND_DIPOLE[read.id];
+  if (shows.includes('dipole') && BOND_DIPOLE[p.props.mol]) {
+    const b = BOND_DIPOLE[p.props.mol];
     const full = E_DEBYE_PER_ANGSTROM * b.pm / 100;
     const small = Math.max(5, Math.round(h * 0.1));
     note(`MEASURED ${b.mu.toFixed(2)} D`);
@@ -264,21 +264,21 @@ function paintCard(ctx, p, state, o) {
     fitted(ctx, 'TRANSFERRED', bx1, by - small * 0.9, w * 0.45, { size: small, align: 'right', color: PLATE_COLORS.dim });
   }
   if (shows.includes('angles') && read.angles.length) note(`ATOMS ${read.angles.join(' ')}°`);
-  if (arrowsOn(state, p) && !solid) {
+  if (arrowsOn(state, p)) {
     if (read.polar) {
-      // One arrow for the whole molecule, drawn clear of it: from the δ+ end to the δ− end, sideways along the way the net pull points.
+      // One arrow for the whole molecule, drawn directly on the card right beside the molecule: δ+ at tail, δ− at head.
       const net = read.dip.net.map(c => c / read.dip.mag);
       const rot = pose.turned ? [-1, 0, 0] : (p.props.flipped ? turnY(net) : net);
       const pr = project(rot, pose.view.yaw, pose.view.pitch);
       const dir = pr.x >= 0 ? 1 : -1;
-      const ay = y0 + h * 0.72;
-      const half = w * 0.12;
-      const small = Math.max(6, Math.round(h * 0.11));
-      arrow(ctx, o.x - dir * half, ay, o.x + dir * half, ay, 2.2, AMBER, Math.max(4, h * 0.09));
-      fitted(ctx, 'δ+', o.x - dir * (half + 2), ay, w * 0.2, { size: small, weight: 700, align: dir > 0 ? 'right' : 'left', base: 'middle', color: AMBER });
-      fitted(ctx, 'δ−', o.x + dir * (half + 2), ay, w * 0.2, { size: small, weight: 700, align: dir > 0 ? 'left' : 'right', base: 'middle', color: AMBER });
-    } else {
-      // No net pull: the bond arrows that cancel are the evidence.
+      const ay = y0 + h * 0.56;
+      const half = w * 0.16;
+      const small = Math.max(8, Math.round(h * 0.145));
+      arrow(ctx, o.x - dir * half, ay, o.x + dir * half, ay, 2.4, AMBER, Math.max(5, h * 0.1));
+      fitted(ctx, 'δ+', o.x - dir * (half + 3), ay, w * 0.24, { size: small, weight: 800, align: dir > 0 ? 'right' : 'left', base: 'middle', color: '#f2b84b' });
+      fitted(ctx, 'δ−', o.x + dir * (half + 3), ay, w * 0.24, { size: small, weight: 800, align: dir > 0 ? 'left' : 'right', base: 'middle', color: '#f2b84b' });
+    } else if (!solid) {
+      // No net pull: the bond arrows that cancel are the evidence (3D draws them on the 3D bonds).
       read.dip.arrows.forEach((a, k) => {
         const pv = pose.vectors.filter(v => v.kind === 'atom')[k];
         if (!pv || Math.abs(a.d) <= 0.01) return;

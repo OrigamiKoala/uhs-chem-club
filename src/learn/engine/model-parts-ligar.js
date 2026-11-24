@@ -115,17 +115,22 @@ function lobesParts(spec) {
 export function ligarParts(spec) {
   if (spec.type === 'shape') return shapeParts(spec);
   if (spec.type === 'crystal') return crystalParts(spec);
-  if (spec.type === 'lobes') return lobesParts(spec);
+  if (spec.type === 'lobes') {
+    const base = lobesParts(spec);
+    if (spec.kind) base.hybridAnim = { kind: spec.kind };
+    return base;
+  }
   if (spec.type === 'sigma-pi') return { spheres: [{ pos: [-0.75, 0, 0], r: 0.16, color: COLOR.C, kind: 'C' }, { pos: [0.75, 0, 0], r: 0.16, color: COLOR.C, kind: 'C' }], bonds: [], rings: [], electrons: [], radius: 2.8, sigmaPi: { mode: spec.mode || 'sigma' } };
   return null;
 }
 
 /** The words under a Ligar model, or null. */
 export function ligarCaption(spec) {
+  if (spec.caption === '') return null;
   if (spec.caption) return spec.caption;
   if (spec.type === 'shape') return `${RIG_MOLECULES[spec.mol]?.label || spec.mol}, with each arm where the arms settle.`;
   if (spec.type === 'crystal') return `A block of ${spec.cation} and ${spec.anion} ions, alternating in every direction.`;
   if (spec.type === 'lobes') return `${spec.n} lobes pointing as far apart as they can.`;
-  if (spec.type === 'sigma-pi') return 'Two atomic orbitals added together as the nuclei approach.';
+  if (spec.type === 'sigma-pi') return null;
   return null;
 }

@@ -275,7 +275,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null, 
       steps.push({
         flag: `tour_${kit}_predict_slot`,
         name: 'Make a prediction',
-        desc: `Drag the card you think is right into the "${slot.label}" slot. Your prediction is not graded — the next bench tests it.`,
+        desc: `Drag a card into "${slot.label}". Predictions are never graded.`,
         ...(demoOf('predict_slot') ? { demo: demoOf('predict_slot') } : {})
       });
     }

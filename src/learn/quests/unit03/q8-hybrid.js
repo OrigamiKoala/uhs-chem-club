@@ -136,7 +136,7 @@ export const STAGES = [
   {
     title: 'The Puzzle',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'how many bonds can carbon\'s unmixed orbitals form?');
+      return testPrompt(QUEST_KEY, GUESSES, 'drag hydrogen atoms onto carbon\'s unmixed orbitals to see how many bonds form.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
@@ -174,8 +174,8 @@ export const STAGES = [
     const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'C' });
     return {
       title: 'Four Hybrids',
-      briefing: { speaker: SPEAKER, body: 'An atom\'s orbitals can mix into the same number of identical new orbitals, called hybrid orbitals. The mixer shows what any combination of carbon\'s orbitals forms.' },
-      prompt: 'Which of carbon\'s orbitals mix to give methane\'s four identical orbitals?',
+      briefing: { speaker: SPEAKER, body: 'An atom\'s orbitals can mix into the same number of identical new orbitals, called hybrid orbitals. Drag orbitals into the mixer tray and press Mix to combine them.' },
+      prompt: 'Drag carbon\'s orbitals into the mixer and press Mix to make four identical orbitals for CH₄.',
       widget: { type: 'table', label: 'The bench' },
       table: domainTable({
         pieces: [
@@ -187,13 +187,14 @@ export const STAGES = [
         fixtures: [mx.fixture]
       }),
       hints: [
-        'Drag orbitals into the mixer and watch the hybrid orbitals it draws; drag one out to remove it.',
+        'Drag orbitals into the mixer tray and press "Mix" to see the hybrid orbitals form; drag an orbital out to remove it.',
         'Compare the number of orbitals you put in with the number of hybrid orbitals that come out.',
         'Methane has four electron domains, and each needs one hybrid orbital, so decide how many orbitals must go in.'
       ],
       check(state) {
         const r = bowlRead(state.table, 'mx');
         if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the mixer.' };
+        if (!r.mixed) return { ok: false, notYet: true, msg: 'Press "Mix" to combine the orbitals in the tray.' };
         const want = molRead(state.table.pieces.ref).domains;
         if (r.lobes === want) return { ok: true };
         return { ok: false, msg: `The mixer gives ${r.lobes} orbitals, and the methane card has ${want} electron domains to fill.` };
@@ -211,7 +212,7 @@ export const STAGES = [
   {
     title: 'The Second Bond',
     briefing: { speaker: SPEAKER, body: 'Two orbitals overlapping head-on along the line between the nuclei form a sigma bond. Two p orbitals overlapping side-by-side above and below that line form a pi bond.' },
-    prompt: 'Which orbitals make the two bonds between the carbon atoms in ethene, C₂H₄?',
+    prompt: 'Ethene (C₂H₄) has a C=C double bond: drag orbitals from one carbon onto the other to form both bonds.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: ethene(),
@@ -261,7 +262,7 @@ export const STAGES = [
   {
     title: 'Twisting',
     get prompt() {
-      return testPrompt(TWIST_KEY, TWIST_GUESSES, 'which bond lets one end rotate a quarter turn without breaking?');
+      return testPrompt(TWIST_KEY, TWIST_GUESSES, 'Turn both bonds 90 degrees and see what happens.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
@@ -300,7 +301,7 @@ export const STAGES = [
     prompt: 'How many pi bonds are in hydrogen cyanide, H–C≡N?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
-      pieces: [molCard('hcn', 'HCN', { x: 34, y: 34 })],
+      pieces: [molCard('hcn', 'HCN', { x: 34, y: 34 }, { extra: { orbitals: 'hcn-triple' } })],
       fixtures: [marker('pi', { x: 100, y: 32 }, { label: 'Pi bonds', max: 12 })]
     }),
     hints: [
@@ -329,7 +330,7 @@ export const STAGES = [
     const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'B' });
     return {
       title: 'Three Hybrids',
-      prompt: 'Which of boron\'s orbitals mix to give one hybrid orbital for each bond in BF₃?',
+      prompt: 'Drag boron\'s orbitals into the mixer and press Mix to make one hybrid orbital for each bond in BF₃.',
       widget: { type: 'table', label: 'The bench' },
       table: domainTable({
         pieces: [
@@ -341,13 +342,14 @@ export const STAGES = [
         fixtures: [mx.fixture]
       }),
       hints: [
-        'Drag orbitals into the mixer and watch the hybrid orbitals it draws; the card shows BF₃.',
+        'Drag orbitals into the mixer tray and press "Mix" to form the hybrid orbitals; the card shows BF₃.',
         'Compare the number of hybrid orbitals the mixer draws with the number of electron domains on the card.',
         'The mixer outputs as many hybrid orbitals as you put in, while any unmixed orbital stays unchanged.'
       ],
       check(state) {
         const r = bowlRead(state.table, 'mx');
         if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the mixer.' };
+        if (!r.mixed) return { ok: false, notYet: true, msg: 'Press "Mix" to combine the orbitals in the tray.' };
         const want = molRead(state.table.pieces.ref).domains;
         if (r.lobes === want) return { ok: true };
         return { ok: false, msg: `The mixer gives ${r.lobes} orbitals, and the card shows ${want} electron domains on the central atom.` };
@@ -356,7 +358,7 @@ export const STAGES = [
         log: 'An s orbital and two p orbitals make three.',
         title: 'Hybrid Orbitals: sp²',
         body: 'One s and two p orbitals mix into three sp² hybrid orbitals, 120° apart in a flat plane. The leftover p orbital stands perpendicular to that plane.',
-        model: { type: 'lobes', n: 3, caption: 'sp² Hybrid Orbitals' }
+        model: { type: 'lobes', n: 3, kind: 'sp2', caption: 'sp² Hybrid Orbitals' }
       }
     };
   })(),
@@ -366,7 +368,7 @@ export const STAGES = [
     const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'C' });
     return {
       title: 'Two Hybrids',
-      prompt: 'Which of carbon\'s orbitals mix to give one hybrid orbital for each oxygen in CO₂?',
+      prompt: 'Drag carbon\'s orbitals into the mixer and press Mix to make one hybrid orbital for each oxygen in CO₂.',
       widget: { type: 'table', label: 'The bench' },
       table: domainTable({
         pieces: [
@@ -377,13 +379,14 @@ export const STAGES = [
         fixtures: [mx.fixture]
       }),
       hints: [
-        'Drag orbitals into the mixer and watch the hybrid orbitals it draws; the card shows O=C=O.',
+        'Drag orbitals into the mixer tray and press "Mix" to form the hybrid orbitals; the card shows O=C=O.',
         'Compare the number of electron domains on carbon with the number of bonds to each oxygen.',
         'A double bond counts as one electron domain and uses one hybrid orbital for its sigma bond, leaving unmixed p orbitals for its pi bonds.'
       ],
       check(state) {
         const r = bowlRead(state.table, 'mx');
         if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the mixer.' };
+        if (!r.mixed) return { ok: false, notYet: true, msg: 'Press "Mix" to combine the orbitals in the tray.' };
         const want = molRead(state.table.pieces.ref).domains;
         if (r.lobes === want) return { ok: true };
         return { ok: false, msg: `The mixer gives ${r.lobes} orbitals, and the card shows ${want} electron domains on the central atom.` };
@@ -392,7 +395,7 @@ export const STAGES = [
         log: 'An s orbital and one p orbital make two.',
         title: 'Hybrid Orbitals: sp',
         body: 'One s and one p orbital mix into two sp hybrid orbitals, 180° apart. The two leftover p orbitals each form a pi bond with one oxygen.',
-        model: { type: 'lobes', n: 2, caption: 'sp Hybrid Orbitals' },
+        model: { type: 'lobes', n: 2, kind: 'co2', caption: 'CO₂ Orbitals' },
         last: true
       }
     };
@@ -440,26 +443,26 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 export const SOLUTIONS = [
   [guess('two')],
   [bond('h1', 'cpx'), bond('h2', 'cpy')],
-  ['os', 'opx', 'opy', 'opz'].map(id => mix(id, 'mx')),
+  [...['os', 'opx', 'opy', 'opz'].map(id => mix(id, 'mx')), { run: 'mx' }],
   [bond('a1', 'b1'), bond('ap', 'bp')],
   [guess('single')],
   [turn('tw1', 90), turn('tw2', 90)],
   [{ setDial: { fixture: 'pi', dial: 'value', value: 2 } }],
-  ['os', 'opx', 'opy'].map(id => mix(id, 'mx')),
-  ['os', 'opx'].map(id => mix(id, 'mx'))
+  [...['os', 'opx', 'opy'].map(id => mix(id, 'mx')), { run: 'mx' }],
+  [...['os', 'opx'].map(id => mix(id, 'mx')), { run: 'mx' }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
   [bond('h1', 'cpx')],
-  [mix('os', 'mx'), mix('opx', 'mx')],
+  [mix('os', 'mx'), mix('opx', 'mx'), { run: 'mx' }],
   [bond('a1', 'b1')],
   [],
   [turn('tw1', 60), turn('tw2', 90)],
   [{ setDial: { fixture: 'pi', dial: 'value', value: 4 } }],
-  [mix('os', 'mx'), mix('opx', 'mx')],
-  [mix('os', 'mx'), mix('opx', 'mx'), mix('opy', 'mx')]
+  [mix('os', 'mx'), mix('opx', 'mx'), { run: 'mx' }],
+  [mix('os', 'mx'), mix('opx', 'mx'), mix('opy', 'mx'), { run: 'mx' }]
 ];
 
 function blankState() { return {}; }

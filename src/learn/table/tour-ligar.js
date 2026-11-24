@@ -72,7 +72,7 @@ const FIXTURE = {
   },
   'domain:mixbowl': {
     title: 'Mixer',
-    text: () => 'Drag orbitals into the mixer to combine them.',
+    text: () => 'Drag orbitals into the tray, then press "Mix" to combine them into hybrid orbitals.',
     dials: false
   },
   'mo:magnet': {
@@ -112,13 +112,13 @@ const PIECE = {
   'atoms:fcstamp': ['Charge reader', 'Drag onto an atom to read its formal charge.'],
   'atoms:mark': ['Mark', 'Drag onto an atom to mark it as your answer.'],
   'atoms:gauge': ['Length meter', 'Drag onto a bond to measure its length.'],
-  'domain:hub': ['Central atom', 'Drop bonds and lone pairs here; they repel and spread out. Click two attached atoms to measure the angle between them.'],
+  'domain:hub': ['Central atom', 'Drop bonds and lone pairs here; they repel and spread out. Click an outer atom, the central atom, and a second outer atom to measure the bond angle.'],
   'domain:arm': ['Bonds', 'Drag onto the central atom to add a bond; drag off to remove.'],
   'domain:balloon': ['Lone pair', 'Drag onto the central atom as a lone pair.'],
   'domain:protractor': ['Protractor', 'Drag onto two bonds to measure the angle between them.'],
   'domain:dmol': ['Molecule cards', 'Drag into the gap between plates, then press "Switch Field".'],
   'domain:tmol': ['Molecule card', 'Drag between plates, then use "Rotate Molecule" and "Switch Field".'],
-  'domain:mol': null,
+  'domain:mol': ['Molecule card', 'Shows the molecule and its printed data for this stage.'],
   'domain:arrows': ['Dipole arrows', 'Drag onto a molecule card to draw its bond dipoles.'],
   'domain:orb': ['Orbitals', 'Drag into the mixer, or onto another atom\'s orbital to bond.'],
   'mo:mocard': ['Gas cards', 'Drag into the slot and press "Test Sample".']

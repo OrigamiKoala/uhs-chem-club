@@ -77,7 +77,7 @@ const S1_CARDS = {
 };
 const S6_CARDS = {
   past7: 'It keeps rising steadily',
-  near7: 'It stops near a number',
+  near7: 'It levels off near a limit',
   near14: 'It drops back down'
 };
 
@@ -122,7 +122,7 @@ export const STAGES = [
       const n = Math.round(dialValue(state.table, 'f1', 'steps'));
       if (n < 2) return { ok: false, notYet: true, msg: 'Dilute the acid at least twice with the pH meter on it.' };
       const card = pieceIn(state.table, 'ans');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay an answer card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place an answer card in the slot.' };
       if (card.id === 'rises1') return { ok: true };
       return { ok: false, msg: 'The pH went from 1.00 to 2.00 to 3.00. How much did it change per dilution?' };
     },
@@ -150,7 +150,7 @@ export const STAGES = [
       }, { w: 184, h: 56 });
     })(),
     hints: [
-      'Put the pH meter on the two flasks with seats, then type the third flask’s pH.',
+      'Put the pH meter on the first two flasks, then type the third flask’s pH.',
       'Compare the exponent of each concentration with the pH reading on that flask.',
       'Each tenfold step lowers the concentration by one power of ten and raises the pH by 1.'
     ],
@@ -163,9 +163,9 @@ export const STAGES = [
       return { ok: false, msg: 'Read each flask with the meter and see how the pH moves.' };
     },
     reward: {
-      log: 'For a power of ten, the pH is the number after the minus sign.',
+      log: 'For a power of ten, the pH equals the positive exponent.',
       title: 'Powers of Ten',
-      body: '5.00. The pH is the number after the minus sign: 1.0 × 10⁻⁵ M HCl gives pH 5.'
+      body: '5.00. For a pure power of ten (1.0 × 10⁻ⁿ M), the pH is simply n: 1.0 × 10⁻⁵ M HCl has pH 5.00.'
     }
   },
 
@@ -190,7 +190,7 @@ export const STAGES = [
       }, { w: 184, h: 56 });
     })(),
     hints: [
-      'Put the pH meter on the two flasks with seats, then use Calc to find the third flask’s pH.',
+      'Put the pH meter on the first two flasks, then use Calc to find the third flask’s pH.',
       'Compare 3.2 × 10⁻⁴ M with the 1.0 × 10⁻³ M and 1.0 × 10⁻⁴ M flasks.',
       'Use pH = −log[H₃O⁺] with the log key in Calc.'
     ],
@@ -210,7 +210,7 @@ export const STAGES = [
       return {
         log: 'A concentration between the flasks gave a pH between their readings.',
         title: 'Reading a Concentration',
-        body: `${fmt(s.pH, 2)}, between the readings ${fmt(ph(S3_REF[0]), 2)} and ${fmt(ph(S3_REF[1]), 2)} of the flasks on either side.`
+        body: `pH = −log(3.2 × 10⁻⁴) = ${fmt(s.pH, 2)}, right between pH ${fmt(ph(S3_REF[0]), 2)} and ${fmt(ph(S3_REF[1]), 2)}.`
       };
     }
   },
@@ -221,7 +221,7 @@ export const STAGES = [
     title: 'Two Meters',
     briefing: {
       speaker: 'Vess',
-      body: 'The pOH meter counts OH⁻ the way the pH meter counts H₃O⁺.'
+      body: 'The pOH meter measures OH⁻ the same way the pH meter measures H₃O⁺.'
     },
     prompt: 'What do the pH and the pOH of a solution add up to?',
     widget,
@@ -277,7 +277,7 @@ export const STAGES = [
       }, { w: 184, h: 56 });
     })(),
     hints: [
-      'Put the pH meter on the two flasks with seats, then type the third flask’s pH.',
+      'Put the pH meter on the first two flasks, then type the third flask’s pH.',
       'Compare the window of barium hydroxide with the windows of the sodium hydroxide flasks.',
       'Each Ba(OH)₂ releases two OH⁻ ions, so [OH⁻] is twice the concentration on the label.'
     ],
@@ -287,9 +287,9 @@ export const STAGES = [
       const s = scaleSolution(S5_ASK);
       if (near(v, s.pH, 0.03)) return { ok: true };
       const once = scaleSolution({ id: 'naoh', c: S5_ASK.c });
-      if (near(v, s.pOH, 0.05)) return { ok: false, msg: `A pH of ${fmt(v, 2)} would be an acid; the flasks beside this one read ${fmt(ph(S5_REF[1]), 2)} and ${fmt(ph(S5_REF[0]), 2)}.` };
-      if (near(v, once.pH, 0.05)) return { ok: false, msg: 'The window shows two OH⁻ for each Ba(OH)₂; that figure counts one.' };
-      return { ok: false, msg: `The meter reads ${fmt(ph(S5_REF[1]), 2)} on the 0.010 M sodium hydroxide flask and ${fmt(ph(S5_REF[0]), 2)} on the 0.10 M one, and ${fmt(v, 2)} does not fit this flask's window.` };
+      if (near(v, s.pOH, 0.05)) return { ok: false, msg: `pH ${fmt(v, 2)} would be acidic, not basic. Subtract pOH from 14 to get pH.` };
+      if (near(v, once.pH, 0.05)) return { ok: false, msg: 'Each Ba(OH)₂ releases two OH⁻ ions, not one—check [OH⁻] again.' };
+      return { ok: false, msg: `The 0.010 M and 0.10 M NaOH flasks read ${fmt(ph(S5_REF[1]), 2)} and ${fmt(ph(S5_REF[0]), 2)}; pH ${fmt(v, 2)} does not match this flask’s OH⁻ concentration.` };
     },
     get reward() {
       const s = scaleSolution(S5_ASK);
@@ -329,7 +329,7 @@ export const STAGES = [
       const k = Math.round(dialValue(state.table, 'f1', 'steps'));
       if (k < 2) return { ok: false, notYet: true, msg: 'Dilute the acid below 10⁻⁷ M first.' };
       const card = pieceIn(state.table, 'ans');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay an answer card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place an answer card in the slot.' };
       if (card.id === 'near7') return { ok: true };
       return { ok: false, msg: `After three dilutions the ${sci(S6[3].c, 2)} M flask reads ${fmt(ph(S6[3]), 2)}, not 9.00.` };
     },
@@ -368,14 +368,14 @@ export const STAGES = [
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = pieceIn(state.table, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Next, the pure water is warmed and read.' }
+    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Next, warm the pure water and measure its pH.' }
   },
 
   /* ---------------------------------------------------------------- 8 */
@@ -402,16 +402,16 @@ export const STAGES = [
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 2) return { ok: true };
       const w = waterIons({ T: 50 });
-      return { ok: false, msg: `At 50 °C the ion counter counts ${sci(w.h, 2)} mol/L of H₃O⁺ and ${sci(w.oh, 2)} mol/L of OH⁻.` };
+      return { ok: false, msg: `At 50 °C the counter shows ${sci(w.h, 2)} mol/L of H₃O⁺ and ${sci(w.oh, 2)} mol/L of OH⁻.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
       const s = scaleSolution({ id: 'water', T: 50 });
-      const verdict = g === 'below' ? 'The prediction held. ' : g ? 'Not what you predicted. ' : '';
+      const verdict = g === 'below' ? 'Your prediction was right. ' : g ? 'Not what you predicted. ' : '';
       return {
         log: 'Warm water is neutral at a pH below 7.',
         title: 'Neutral Is Not Always 7',
-        body: `${verdict}At 50 °C pure water reads ${fmt(s.pH, 2)} yet holds equal H₃O⁺ and OH⁻, ${sci(s.h, 2)} mol/L each, so it is neutral. Kw grows with temperature, so neutral is a pH of 7 only at 25 °C.`
+        body: `${verdict}At 50 °C pure water reads ${fmt(s.pH, 2)} yet still has equal H₃O⁺ and OH⁻, so it is neutral. Kw rises with temperature, so neutral equals pH 7 only at 25 °C.`
       };
     }
   },
@@ -436,19 +436,19 @@ export const STAGES = [
       }, { w: 124, h: 56 });
     })(),
     hints: [
-      'Lay the pH meter on the flask, then use Calc to find [H₃O⁺].',
+      'Put the pH meter on the flask, then use Calc to find [H₃O⁺].',
       'Compare the meter reading with the powers of ten on earlier flasks.',
-      'Use [H₃O⁺] = 10^(−pH) as shown in the worked example.'
+      'Use [H₃O⁺] = 10^(−pH) with the meter reading.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'h');
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
       const s = scaleSolution(S9);
       if (v > 0 && Math.abs(v / s.h - 1) <= 0.05) return { ok: true };
-      if (near(v, s.pH, 0.05)) return { ok: false, msg: `${fmt(s.pH, 2)} is the number the meter shows; the question asks for mol/L of hydronium.` };
-      if (v >= 1) return { ok: false, msg: 'That is more hydronium than any flask on this bench holds; the strongest is 0.10 M.' };
-      if (v <= 0) return { ok: false, msg: 'A concentration is above zero.' };
-      return { ok: false, msg: `${sci(v, 2)} mol/L of hydronium would read a pH of ${fmt(pOf(v), 2)}, and the meter reads ${fmt(s.pH, 2)}.` };
+      if (near(v, s.pH, 0.05)) return { ok: false, msg: `${fmt(s.pH, 2)} is the number the meter shows; find [H₃O⁺] in mol/L.` };
+      if (v >= 1) return { ok: false, msg: 'At 1 M or higher, pH would be 0 or negative.' };
+      if (v <= 0) return { ok: false, msg: 'Concentration must be greater than zero.' };
+      return { ok: false, msg: `A concentration of ${sci(v, 2)} M would give pH ${fmt(pOf(v), 2)}, but the meter reads ${fmt(s.pH, 2)}.` };
     },
     get reward() {
       const s = scaleSolution(S9);

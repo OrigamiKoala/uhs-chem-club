@@ -65,43 +65,64 @@ export function tiltOf(state, hub) {
   return d.value * 24 * RAD;
 }
 
-/** The angle between the two arms clicked directly on the hub (atom -> center -> atom or atom -> atom), or null. */
+/** The angle between three clicked atoms (outer -> central hub -> outer), or null. */
 export function pickedAngle(state, hubId) {
   const hub = state.pieces[hubId];
-  const picked = (hub?.props?.picked || []).filter(id => {
-    const p = state.pieces[id];
-    return live(p) && p.joinedTo?.includes(hubId);
-  });
-  if (picked.length < 2) return null;
+  const raw = hub?.props?.picked || [];
+  if (raw.length < 3 || raw[1] !== hubId) return null;
+  const a = state.pieces[raw[0]];
+  const b = state.pieces[raw[2]];
+  if (!live(a) || !live(b) || a.id === b.id) return null;
+  if (!a.joinedTo?.includes(hubId) || !b.joinedTo?.includes(hubId)) return null;
   const r = hubRead(state, hubId);
-  const ia = r.index(picked[0]);
-  const ib = r.index(picked[1]);
+  const ia = r.index(a.id);
+  const ib = r.index(b.id);
   if (ia < 0 || ib < 0) return null;
   const angle = angleBetween(r.plan, ia, ib);
-  return angle == null ? null : { hub: hubId, a: picked[0], b: picked[1], angle };
+  return angle == null ? null : { hub: hubId, a: a.id, b: b.id, angle };
 }
 
-/** Handle clicking an attached arm (or central hub) to measure bond angles directly without a protractor. */
+/** Validated current 3-atom selection sequence on a hub: [] | [armA] | [armA, hubId] | [armA, hubId, armB]. */
+export function pickedSequence(state, hubId) {
+  const hub = state.pieces[hubId];
+  const raw = hub?.props?.picked || [];
+  if (!raw.length) return [];
+  const a = state.pieces[raw[0]];
+  if (!live(a) || !a.joinedTo?.includes(hubId)) return [];
+  if (raw.length === 1) return [a.id];
+  if (raw[1] !== hubId) return [a.id];
+  if (raw.length === 2) return [a.id, hubId];
+  const b = state.pieces[raw[2]];
+  if (!live(b) || b.id === a.id || !b.joinedTo?.includes(hubId)) return [a.id, hubId];
+  return [a.id, hubId, b.id];
+}
+
+/** Handle clicking three atoms (outer -> central hub -> outer) to measure bond angles directly. */
 export function flipHubPiece(s, p) {
   if (p.kind === 'hub') {
-    p.props.hubClicked = true;
-    return { picked: p.props.picked || [] };
+    const prev = pickedSequence(s, p.id);
+    let next;
+    if (prev.length === 1) next = [prev[0], p.id];
+    else if (prev.length === 2) next = [prev[0]];
+    else next = [];
+    p.props.picked = next;
+    return { picked: next };
   }
   if (!isArm(p)) return null;
   const hubId = p.joinedTo?.find(id => s.pieces[id]?.kind === 'hub');
   if (!hubId) return null;
   const hub = s.pieces[hubId];
-  const prev = (hub.props.picked || []).filter(id => s.pieces[id]?.joinedTo?.includes(hubId));
+  const prev = pickedSequence(s, hubId);
   let next;
-  if (prev.length >= 2) {
+  if (prev.length === 0 || prev.length >= 3) {
     next = [p.id];
-  } else if (prev.includes(p.id)) {
-    next = prev.filter(id => id !== p.id);
+  } else if (prev.length === 1) {
+    next = prev[0] === p.id ? [] : [p.id];
   } else {
-    next = [...prev, p.id];
+    // prev is [armA, hubId]
+    next = prev[0] === p.id ? [] : [prev[0], hubId, p.id];
   }
   hub.props.picked = next;
-  hub.props.hubClicked = false;
   return { picked: next };
 }
 
@@ -390,29 +411,33 @@ function paintHubPlate(ctx, f, state, b) {
   const line = (text, color = PLATE_COLORS.dust) => { plateText(ctx, text, x, row, { size, weight: 700, align: 'right', base: 'middle', color }); row += 2.9 * b.sc; };
   line(`DOMAINS ${r ? r.n : 0}`, PLATE_COLORS.phosphor);
   const read = pickedAngle(state, f.props.hub) || protractorReadings(state).find(q => q.hub === f.props.hub);
-  const pickedCount = (hub?.props?.picked || []).filter(id => state.pieces[id]?.joinedTo?.includes(f.props.hub)).length;
+  const seq = pickedSequence(state, f.props.hub);
   if (read) {
-    line(`ANGLE ${read.angle}°`, AMBER);
-    // Draw a crisp amber angle arc between the two selected arms on the plate.
-    const pa = state.pieces[read.a];
-    const pb = state.pieces[read.b];
-    if (hub && pa && pb) {
-      const hx = b.X(hub.at.x); const hy = b.Y(hub.at.y);
-      const a1 = Math.atan2(b.Y(pa.at.y) - hy, b.X(pa.at.x) - hx);
-      const a2 = Math.atan2(b.Y(pb.at.y) - hy, b.X(pb.at.x) - hx);
-      let diff = a2 - a1;
-      while (diff > Math.PI) diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-      ctx.strokeStyle = AMBER;
-      ctx.lineWidth = Math.max(1.8, 0.28 * b.sc);
-      ctx.beginPath();
-      ctx.arc(hx, hy, 9.5 * b.sc, a1, a1 + diff, diff < 0);
-      ctx.stroke();
+    if (!b.bodies) {
+      line(`ANGLE ${read.angle}°`, AMBER);
+      // In 2D mode, draw a crisp amber angle arc between the two selected arms on the plate.
+      const pa = state.pieces[read.a];
+      const pb = state.pieces[read.b];
+      if (hub && pa && pb) {
+        const hx = b.X(hub.at.x); const hy = b.Y(hub.at.y);
+        const a1 = Math.atan2(b.Y(pa.at.y) - hy, b.X(pa.at.x) - hx);
+        const a2 = Math.atan2(b.Y(pb.at.y) - hy, b.X(pb.at.x) - hx);
+        let diff = a2 - a1;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        ctx.strokeStyle = AMBER;
+        ctx.lineWidth = Math.max(1.8, 0.28 * b.sc);
+        ctx.beginPath();
+        ctx.arc(hx, hy, 9.5 * b.sc, a1, a1 + diff, diff < 0);
+        ctx.stroke();
+      }
     }
-  } else if (pickedCount === 1) {
-    line('CLICK 2ND ATOM', AMBER);
+  } else if (seq.length === 1) {
+    line('CLICK CENTER ATOM', AMBER);
+  } else if (seq.length === 2) {
+    line('CLICK 3RD ATOM', AMBER);
   } else {
-    line(r && r.n >= 2 ? 'CLICK 2 ATOMS' : 'ANGLE', PLATE_COLORS.dim);
+    line(r && r.n >= 2 ? 'CLICK 3 ATOMS' : 'ANGLE', PLATE_COLORS.dim);
   }
   if (f.props.gauge === 'thick' && r) line(`DEPTH ${r.thick.toFixed(2)}`, r.thick > 0.01 ? AMBER : PLATE_COLORS.dim);
   else if (f.props.gauge && r) line(r.height == null ? 'HEIGHT' : `HEIGHT ${r.height.toFixed(2)}`, r.height ? AMBER : PLATE_COLORS.dim);

@@ -706,12 +706,10 @@ export class LearnFrame {
     strip.className = 'lq-tstrip';
     strip.setAttribute('role', 'region');
     strip.setAttribute('aria-label', 'Stage');
-    const tmsg = document.createElement('div');
-    tmsg.className = 'lq-tmsg';
-    strip.appendChild(tmsg);
     const dock = document.createElement('div');
     dock.className = 'lq-tdock';
     dock.innerHTML = `
+      <div class="lq-tmsg"></div>
       <div class="lq-tdock-row">
         <div class="lq-tdock-left">
           <span class="lq-carry" hidden></span>
@@ -722,7 +720,7 @@ export class LearnFrame {
     const q = sel => dock.querySelector(sel);
     this.el.tableStrip = strip;
     this.el.tableDock = dock;
-    this.el.tableMsg = tmsg;
+    this.el.tableMsg = q('.lq-tmsg');
     this.el.tableKeys = q('.lq-tkeys');
     this.el.stand = null;
     this.el.carry = q('.lq-carry');
@@ -1169,7 +1167,7 @@ export class LearnFrame {
     this.rung++;
     soundscape.playCrtTick?.();
     this.el.hints.insertAdjacentHTML('beforeend',
-      `<p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span>${esc(hints[this.rung - 1])}${this.hintTermButton(hints[this.rung - 1])}</p>`);
+      `<p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span><span class="lq-hint-text">${esc(hints[this.rung - 1])}</span>${this.hintTermButton(hints[this.rung - 1])}</p>`);
     this.reveal(this.el.hints.lastElementChild);
   }
 

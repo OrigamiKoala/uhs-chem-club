@@ -138,22 +138,22 @@ export const STAGES = [
     },
     hints: [
       'Use the pH meter on each flask and the answer dial.',
-      'Compare the amounts of H₃O⁺ and OH⁻ that each flask\'s counter counts with each other.',
-      'Look at what each flask\'s counter shows for H₃O⁺ and OH⁻ beside its pH reading.'
+      'Compare each flask’s H₃O⁺ and OH⁻ concentrations on the ion counter.',
+      'Neutral means [H₃O⁺] equals [OH⁻], even when temperature shifts pH away from 7.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === P1_PICK) return { ok: true };
       const f = P1_FLASKS[v - 1]; const s = p1Sol(f);
-      return { ok: false, msg: `The ${f.name} flask reads ${fmt(s.pH, 2)}, and its counter counts ${sci(s.h, 2)} M of H₃O⁺ against ${sci(s.oh, 2)} M of OH⁻.` };
+      return { ok: false, msg: `The ${f.name} flask reads ${fmt(s.pH, 2)}, with ${sci(s.h, 2)} M H₃O⁺ and ${sci(s.oh, 2)} M OH⁻.` };
     },
     get reward() {
       const w = p1Sol(P1_FLASKS[1]); const a = p1Sol(P1_FLASKS[0]); const b = p1Sol(P1_FLASKS[2]);
       return {
         log: 'Only the warm water held equal H₃O⁺ and OH⁻.',
         title: 'Neutral Is Equal Amounts',
-        body: `The warm water read ${fmt(w.pH, 2)} and held equal H₃O⁺ and OH⁻, so it is neutral. The acid also read ${fmt(a.pH, 2)} and the base read ${fmt(b.pH, 2)}, but neither held equal amounts.`
+        body: `Warm water read ${fmt(w.pH, 2)} with equal H₃O⁺ and OH⁻, so it is neutral. The acid (${fmt(a.pH, 2)}) and base (${fmt(b.pH, 2)}) did not have equal amounts.`
       };
     }
   },
@@ -162,7 +162,7 @@ export const STAGES = [
   {
     id: 'p2-acids',
     title: 'Phase 2 · The Three Acids',
-    prompt: 'Which acid solution has the lowest pH and which the highest?',
+    prompt: 'Order these three acid solutions from lowest pH to highest pH.',
     widget,
     table: (() => {
       const f = P2_FLASKS.map((x, i) => flaskAt(flaskFixture, `f${i + 1}`, 24 + i * 46, 1, { solute: x.solute, label: x.name, w: 44, window: 16, meter: x.meter }));
@@ -182,9 +182,9 @@ export const STAGES = [
       intent: 'The Leach draws three acids from three vats, each at a concentration of its own.'
     },
     hints: [
-      'Use the pH meter on the one flask with a seat, then drag the three cards onto the rail.',
-      'Compare the concentration on each flask with how many of its units have ionized.',
-      'Use the concentration and percent ionized in each window to compare the flasks against the metered one.'
+      'Put the pH meter on the first flask, compare all three windows, then drag the cards onto the rail.',
+      'Compare both the concentration and the fraction ionized in each flask.',
+      'Lower pH means higher [H₃O⁺], which depends on concentration times fraction ionized.'
     ],
     check(state) {
       const order = state.table.zones.rail.order.map(id => id.slice(2));
@@ -193,15 +193,15 @@ export const STAGES = [
       const rank = k => P2_WANT.indexOf(k);
       const k = order.findIndex((id, i) => i > 0 && rank(order[i - 1]) > rank(id));
       const f = key => P2_FLASKS.find(x => x.key === key);
-      const say = key => { const x = f(key); const w = windowOf({ solute: x.solute }); return `${x.name.toLowerCase()} shows ${w.ionized} of ${w.units} units handed over at ${concText(x.solute.c)}`; };
-      return { ok: false, msg: `${f(order[k - 1]).name} sits left of ${f(order[k]).name.toLowerCase()}; the window of ${say(order[k - 1])}, and the window of ${say(order[k])}.` };
+      const say = key => { const x = f(key); const w = windowOf({ solute: x.solute }); return `${x.name.toLowerCase()} has ${w.ionized} of ${w.units} ionized at ${concText(x.solute.c)}`; };
+      return { ok: false, msg: `${f(order[k - 1]).name} sits left of ${f(order[k]).name.toLowerCase()}: ${say(order[k - 1])}, while ${say(order[k])}.` };
     },
     get reward() {
       const p = Object.fromEntries(P2_FLASKS.map(x => [x.key, fmt(p2PH(x), 2)]));
       return {
-        log: 'The most dilute acid was the one with the largest share ionized and not the lowest pH.',
-        title: 'Concentration Is Not Share',
-        body: `Formic acid read ${p.formic}, acetic acid ${p.acetic} and hydrofluoric acid ${p.hf}. Hydrofluoric acid had the largest share ionized, but it was the most dilute flask, so its H₃O⁺ in mol/L was the smallest.`
+        log: 'The most dilute acid had the highest percent ionized, not the lowest pH.',
+        title: 'Concentration vs. Percent Ionized',
+        body: `Formic acid is pH ${p.formic}, acetic acid ${p.acetic}, and hydrofluoric acid ${p.hf}. HF had the highest percent ionized, but it was the most dilute, so its [H₃O⁺] was lowest.`
       };
     }
   },
@@ -246,13 +246,13 @@ export const STAGES = [
     },
     get reward() {
       const p = Object.fromEntries(P3_SALTS.map(s => [s.key, fmt(p3PH(s), 2)]));
-      return {
-        log: 'Ammonium nitrate read acidic and sodium carbonate read basic.',
-        title: 'Salts of Weak Parents',
-        body: `Ammonium nitrate read ${p.nh4no3}, sodium carbonate ${p.na2co3} and potassium chloride ${p.kcl}. An ion that comes from a weak parent reacts with water, and an ion from a strong acid or a strong base leaves the pH alone.`
-      };
-    }
-  },
+        return {
+          log: 'Ammonium nitrate read acidic and sodium carbonate read basic.',
+          title: 'Salts of Weak Parents',
+          body: `Ammonium nitrate is acidic (${p.nh4no3}), sodium carbonate is basic (${p.na2co3}), and potassium chloride is neutral (${p.kcl}). Only ions from weak parents react with water.`
+        };
+      }
+    },
 
   /* ---------------------------------------------------------------- 4 */
   {
@@ -276,13 +276,13 @@ export const STAGES = [
       intent: 'The Leach doses a vat of ammonia from a tube of acid.'
     },
     hints: [
-      'Use "Pour size" and "Pour" and watch the four tubes, then lay a card in the slot.',
-      'Compare the volume at which each tube changes colour with the volume the flask needs.',
-      'Work out the volume that uses up the ammonia, then look for the tube that is still unchanged just before it and changed just after.'
+      'Pour HCl while watching the four indicator tubes, then place a card in the slot.',
+      'Compare the volume where each indicator changes colour with the equivalence volume.',
+      'Look for the indicator that changes colour right across the steep pH drop at equivalence.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'dye');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       const id = card.id.slice(2);
       if (P4_RIGHT.includes(id)) return { ok: true };
       const w = indicatorWindowML(P4_SPEC, INDICATORS[id]);
@@ -294,7 +294,7 @@ export const STAGES = [
       return {
         log: 'Methyl red turned over at the steep fall.',
         title: 'An Indicator for a Base',
-        body: `Ammonia needed ${mL1(eq)} mL of acid and the pH there was ${fmt(pH, 2)}. Methyl red changes colour at about that pH, so it is the indicator for this titration.`
+        body: `Ammonia reached equivalence at ${mL1(eq)} mL and pH ${fmt(pH, 2)}. Methyl red changes colour right through that pH, making it the right indicator.`
       };
     }
   },
@@ -320,17 +320,17 @@ export const STAGES = [
       intent: 'The Leach mixes acid and salt in a flask and wants it held at one pH.'
     },
     hints: [
-      'Type the ratio in the field; the plate gives the pKa and the target.',
-      'Compare the target with the readings of the two flasks, and with the pKa.',
-      'Find how far the target lies above the pKa and turn that distance back into a ratio with a power of ten.'
+      'Use the pKa and target pH on the plate, then type the decimal ratio.',
+      'Compare the target pH with the pKa to see whether you need more acetate or more acetic acid.',
+      'Subtract pKa from the target pH, then raise 10 to that power to get the ratio.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ratio');
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
-      if (!(v > 0)) return { ok: false, msg: 'A flask cannot hold zero or a negative number of spheres.' };
+      if (!(v > 0)) return { ok: false, msg: 'A ratio of concentrations must be greater than zero.' };
       const got = p5PH(100, 100 * v);
       if (within(got, P5_TARGET, P5_TOL + 1e-9)) return { ok: true };
-      return { ok: false, msg: `A flask with ${v} acetate spheres for each acetic acid sphere reads ${fmt(got, 2)}, and the target is ${fmt(P5_TARGET, 2)}.` };
+      return { ok: false, msg: `A flask with ratio ${v} (acetate ÷ acetic acid) reads ${fmt(got, 2)}, and the target is ${fmt(P5_TARGET, 2)}.` };
     },
     get reward() {
       const r = ratioForPH(P5_PKA, P5_TARGET);

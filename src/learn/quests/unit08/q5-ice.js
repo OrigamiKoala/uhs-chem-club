@@ -94,9 +94,9 @@ export const STAGES = [
       title: 'Change in Each Column',
       briefing: {
         speaker: 'Vess',
-        body: 'An ICE table has three rows for each substance: the Initial amount, the Change, and the amount at Equilibrium.'
+        body: 'An ICE table tracks three rows for each substance: Initial amount, Change, and Equilibrium amount.'
       },
-      prompt: 'How does each substance change while the vessel settles?',
+      prompt: 'How does each substance change as the vessel settles?',
       widget,
       table: pansTable({
         pieces: [
@@ -107,30 +107,30 @@ export const STAGES = [
         zones: { slots: b.slots }
       }, TALL),
       hints: [
-        'Press "Settle" on the vessel, then lay a change card in each column.',
-        'Compare how far the HI bar moved with how far the H₂ and I₂ bars moved.',
-        'Watch which bars fell and which rose, and compare their distances with the equation.'
+        'Press "Settle" on the vessel, then place a change card in each column.',
+        'Compare how much the HI bar rose with how much the H₂ and I₂ bars fell.',
+        'Match each column\'s sign (− for falling, + for rising) and size to its equation coefficient.'
       ],
       check(state) {
         const t = state.table;
         const r = boardRead(t, 'board');
-        if (!r.full) return { ok: false, notYet: true, msg: 'Lay a card in every column.' };
+        if (!r.full) return { ok: false, notYet: true, msg: 'Place a change card in every column.' };
         if (r.right) return { ok: true };
         const bars = barsRead(t, 'bars');
-        if (!bars.settled) return { ok: false, msg: 'The vessel has not settled, so the cards have nothing to be compared with.' };
+        if (!bars.settled) return { ok: false, msg: 'Press "Settle" on the vessel first so you can see how the bars change.' };
         const w = r.wrong[0];
         const name = w.s.name;
         const d = bars.amounts[name] - bars.init[name];
-        if (Math.sign(d) !== Math.sign(w.chip.props.nu)) return { ok: false, msg: `The ${name} bar ${d < 0 ? 'fell' : 'rose'} when the vessel settled, and the card on ${name} says the opposite.` };
+        if (Math.sign(d) !== Math.sign(w.chip.props.nu)) return { ok: false, msg: `The ${name} bar ${d < 0 ? 'fell' : 'rose'} when settled, so its change card should be ${d < 0 ? 'negative' : 'positive'}.` };
         const other = S1_COLS.find(c => c.name !== name);
         const od = Math.abs(bars.amounts[other.name] - bars.init[other.name]);
         const rel = Math.abs(Math.abs(d) - od) < 1e-6 ? 'the same distance as' : Math.abs(d) > od ? 'further than' : 'less far than';
-        return { ok: false, msg: `The ${name} bar moved ${rel} the ${other.name} bar, and the cards on the board do not show that.` };
+        return { ok: false, msg: `The ${name} bar moved ${rel} the ${other.name} bar—adjust the change cards to match.` };
       },
       reward: {
         log: 'Each substance changed by x times its coefficient.',
         title: 'The ICE Table',
-        body: 'H₂ and I₂ each fell by x and HI rose by 2x, as the coefficients say.'
+        body: 'H₂ and I₂ each fell by x while HI rose by 2x, matching the coefficients in the equation.'
       }
     };
   })(),
@@ -143,13 +143,13 @@ export const STAGES = [
       title: 'Solving for x',
       briefing: {
         speaker: 'Vess',
-        body: 'K turns the bottom row of the ICE table into one equation for x. When both sides are squares, take the square root of both sides.',
+        body: 'K turns the bottom row of the ICE table into an equation for x. When both sides are perfect squares, take the square root of both sides.',
         worked: [
           'For 2.0 M H₂ and 2.0 M I₂ with K = 64:',
           '(2x)² ÷ (2.0 − x)² = 64  →  2x ÷ (2.0 − x) = 8  →  x = 1.6, HI = 3.2 M'
         ]
       },
-      prompt: 'What is the concentration of HI when this vessel has settled, in mol/L?',
+      prompt: 'What is the equilibrium concentration of HI, in mol/L?',
       entry: { id: 'hi', label: 'HI at equilibrium', unit: 'M' },
       widget,
       table: pansTable({
@@ -158,27 +158,27 @@ export const STAGES = [
         zones: { slots: b.slots }
       }, TALL),
       hints: [
-        'Press "Settle" on the vessel and read the bottom row of the ICE table.',
-        'Write K = (2x)² ÷ (1.0 − x)² = 54, and take the square root of both sides.',
-        'Follow the worked example in the briefing to find x, then double x for HI.'
+        'Press "Settle" on the vessel and read the Equilibrium row of the ICE table.',
+        'Set up K = (2x)² ÷ (1.0 − x)² = 54, then take the square root of both sides.',
+        'Follow the briefing example to solve for x, then multiply x by 2 for HI.'
       ],
       check(state) {
         const v = gradedTyped(state.table, 'hi');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in the field.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in the box.' };
         const want = HI_ICE.amounts.HI;
         if (within(v, want, 0.02)) return { ok: true };
-        if (within(v, HI_ICE.x, 0.03)) return { ok: false, msg: `${sig3(v)} is the x on the board; the HI column holds 2x.` };
+        if (within(v, HI_ICE.x, 0.03)) return { ok: false, msg: `${sig3(v)} M is x, not [HI]—the HI column is 2x.` };
         if (v < 2) {
           const x = v / 2;
           const q = (v * v) / Math.pow(1 - x, 2);
-          return { ok: false, msg: `With HI = ${sig3(v)} M, Q would be ${sig3(q)} instead of K = 54.` };
+          return { ok: false, msg: `If [HI] = ${sig3(v)} M, then Q = ${sig3(q)} instead of K = 54.` };
         }
         return { ok: false, msg: aboveBelow(v, want, 'HI') };
       },
       reward: {
         log: 'Taking the square root of both sides solved for x.',
         title: 'Square-Root Case',
-        body: 'Because both reactants started equal, both sides are squares: taking the square root gives x = 0.786 M, so HI = 1.57 M at equilibrium.'
+        body: 'Since both reactants started equal, both sides are squares: taking the square root gives x = 0.786 M, so [HI] = 1.57 M.'
       }
     };
   })(),
@@ -188,7 +188,7 @@ export const STAGES = [
     id: 's3-predict',
     title: 'How Much Changes?',
     predict: true,
-    prompt: 'How much of 1.0 M N₂O₄ turns into NO₂ when K for N₂O₄ ⇌ 2 NO₂ is 0.0059?',
+    prompt: 'How much of 1.0 M N₂O₄ turns into NO₂ when K = 0.0059 for N₂O₄ ⇌ 2 NO₂?',
     widget,
     table: pansTable({
       pieces: [note('half', GUESS.half, { x: 30, y: 14 }), note('few', GUESS.few, { x: 78, y: 14 }), note('most', GUESS.most, { x: 30, y: 36 }), note('none', GUESS.none, { x: 78, y: 36 })],
@@ -196,12 +196,12 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
-      'Drag one of the four prediction cards into the slot.',
+      'Drag one prediction card into the slot.',
       'Compare K = 0.0059 with 1.',
-      'A K far below 1 means the product stays much smaller than the reactant.'
+      'A K far below 1 means very little reactant turns into product.'
     ],
     check(state) {
-      if (!pieceIn(state.table, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!pieceIn(state.table, 'guess')) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -211,7 +211,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, the vessel settles and the bars show how much N₂O₄ changes.'
+      body: 'Next, we settle the vessel to see how much N₂O₄ actually reacts.'
     }
   },
 
@@ -224,11 +224,11 @@ export const STAGES = [
       title: 'A Small K',
       briefing: {
         speaker: 'Vess',
-        body: 'When K is very small, x is tiny beside the starting amount, so 1.0 − x can be treated as 1.0. This small-x approximation is fair when less than 5% reacts.'
+        body: 'When K is very small, x is tiny compared with the starting amount, so 1.0 − x ≈ 1.0. This small-x approximation is fair when under 5% reacts.'
       },
       get prompt() {
         const g = guessKey();
-        return g ? `You predicted "${GUESS[g]}". What is the concentration of NO₂ when this vessel has settled, in mol/L?` : 'What is the concentration of NO₂ when this vessel has settled, in mol/L?';
+        return g ? `You predicted "${GUESS[g]}". What is the equilibrium concentration of NO₂, in mol/L?` : 'What is the equilibrium concentration of NO₂, in mol/L?';
       },
       entry: { id: 'no2', label: 'NO₂ at equilibrium', unit: 'M' },
       widget,
@@ -238,25 +238,25 @@ export const STAGES = [
         zones: { slots: b.slots }
       }, TALL),
       hints: [
-        'Press "Settle" on the vessel and read the bottom row of the ICE table.',
-        'Compare the settled N₂O₄ bar with its dashed starting line.',
-        'With 1.0 − x taken as 1.0, solve (2x)² ÷ 1.0 = 0.0059 for x, then double x for NO₂.'
+        'Press "Settle" on the vessel and read the Equilibrium row of the ICE table.',
+        'Notice how close the settled N₂O₄ bar stays to its dashed starting line.',
+        'Approximate 1.0 − x as 1.0, solve (2x)² ÷ 1.0 = 0.0059 for x, then double x for NO₂.'
       ],
       check(state) {
         const v = gradedTyped(state.table, 'no2');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in the field.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in the box.' };
         const want = N2_ICE.amounts['NO₂'];
         if (within(v, want, 0.05)) return { ok: true };
-        if (within(v, N2_ICE.x, 0.05)) return { ok: false, msg: `${sig3(v)} is the x on the board; the NO₂ column holds 2x.` };
+        if (within(v, N2_ICE.x, 0.05)) return { ok: false, msg: `${sig3(v)} M is x, not [NO₂]—the NO₂ column is 2x.` };
         return { ok: false, msg: aboveBelow(v, want, 'NO₂') };
       },
       get reward() {
         const g = guessKey();
-        const said = !g ? '' : g === 'few' ? `You predicted only a few percent, and about ${N2_PCT}% turned over. ` : `You predicted "${GUESS[g].toLowerCase()}", and about ${N2_PCT}% turned over. `;
+        const said = !g ? '' : g === 'few' ? `Your prediction matched—about ${N2_PCT}% reacted. ` : `You predicted "${GUESS[g].toLowerCase()}", and about ${N2_PCT}% reacted. `;
         return {
           log: 'A small K left the reactant almost as it began.',
           title: 'The Small-x Approximation',
-          body: `${said}With 1.0 − x taken as 1.0, (2x)² = 0.0059, so NO₂ is 0.077 M.`
+          body: `${said}Approximating 1.0 − x as 1.0 gives (2x)² = 0.0059, so [NO₂] = 0.077 M.`
         };
       }
     };
@@ -279,19 +279,19 @@ export const STAGES = [
     }, { h: 70 }),
     hints: [
       'Press "Settle" on each vessel, then tap the vessel you choose.',
-      'Compare where the solid Reactant bar ends against its dashed starting line.',
-      'The small-x approximation is fair only where less than 5% of the Reactant reacts.'
+      'Compare where each Reactant bar ends against its 5% dashed mark.',
+      'The small-x approximation is fair only when less than 5% of the Reactant reacts.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === FAIR) return { ok: true };
-      return { ok: false, msg: `Vessel ${v}'s Reactant bar falls past the 5% line, so the small-x approximation is not fair.` };
+      return { ok: false, msg: `In Vessel ${v}, more than 5% of the Reactant reacted, so the small-x approximation is not fair.` };
     },
     reward: {
       log: 'The approximation held where under 5% reacted.',
       title: 'When Small-x Is Fair',
-      body: 'The small-x approximation is fair only where the reactant stays within 5% of its start. Where more reacts, the full equation is needed.'
+      body: 'The small-x approximation is fair only when under 5% of the reactant reacts. When more reacts, you need the full equation.'
     }
   },
 
@@ -302,7 +302,7 @@ export const STAGES = [
     return {
       id: 's6-partial',
       title: 'K From One Reading',
-      prompt: 'What is K for this reaction, from the amount of HI in the settled vessel?',
+      prompt: 'Using the settled HI concentration, what is K for this reaction?',
       entry: { id: 'k', label: 'K', unit: '' },
       widget,
       table: pansTable({
@@ -312,22 +312,22 @@ export const STAGES = [
       }, TALL),
       hints: [
         'Press "Settle" on the vessel and read the settled HI concentration.',
-        'Set the settled HI equal to 2x on the ICE table to find x.',
-        'The table ties every amount to the one that was measured: find H₂ and I₂ from x, then work out K.'
+        'Set the settled [HI] equal to 2x on the ICE table to find x.',
+        'Use x to find equilibrium [H₂] and [I₂], then plug all three into K = [HI]² ÷ ([H₂][I₂]).'
       ],
       check(state) {
         const v = gradedTyped(state.table, 'k');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type K in the field.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type K in the box.' };
         if (within(v, K_PARTIAL.K, 0.03)) return { ok: true };
         const a = K_PARTIAL.amounts;
-        if (within(v, a.HI / (a['H₂'] * a['I₂']), 0.03)) return { ok: false, msg: `${sig3(v)} is HI divided by H₂ and I₂ with no power on HI.` };
-        if (within(v, a.HI / a['H₂'], 0.03)) return { ok: false, msg: `${sig3(v)} is HI divided by H₂ alone; the reaction on the plate has I₂ as well.` };
-        return { ok: false, msg: `${sig3(v)} is not the ratio of the amounts left in the vessel.` };
+        if (within(v, a.HI / (a['H₂'] * a['I₂']), 0.03)) return { ok: false, msg: `${sig3(v)} divides [HI] by [H₂][I₂] without squaring [HI].` };
+        if (within(v, a.HI / a['H₂'], 0.03)) return { ok: false, msg: `${sig3(v)} only divides [HI] by [H₂]; include [I₂] and square [HI].` };
+        return { ok: false, msg: `${sig3(v)} does not match [HI]² ÷ ([H₂][I₂]) for this settled vessel.` };
       },
       reward: {
         log: 'One settled amount gave x, then every amount, then K.',
         title: 'K From a Settled Vessel',
-        body: 'One measured amount gives x, x gives every amount, and those give K = 54.'
+        body: 'One measured amount gives x, x gives every other equilibrium concentration, and those give K = 54.'
       }
     };
   })()

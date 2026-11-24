@@ -88,7 +88,7 @@ export const STAGES = [
     title: 'A Wire Between Beakers',
     // A PREDICT STAGE: no cell is on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'With zinc and copper strips in their solutions joined by a wire, what happens to the current?',
+    prompt: 'When zinc and copper strips in their own solutions are joined only by a wire, what happens to the current?',
     widget,
     table: cellTable({
       pieces: [
@@ -109,7 +109,7 @@ export const STAGES = [
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Drop a prediction card in the slot first.' };
       return { ok: true };
     },
     onClear(state) {
@@ -117,9 +117,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Prediction',
-      body: 'Next, the zinc–copper cell is run with different parts between its beakers.'
+      log: 'Prediction saved.',
+      title: 'Prediction Saved',
+      body: 'Prediction saved. Next, test different connectors between the two beakers to see what keeps current flowing.'
     }
   },
 
@@ -139,26 +139,26 @@ export const STAGES = [
       }, { w: 176, h: 116 });
     })(),
     hints: [
-      'Drag a piece into the seat between the beakers, press "Run", and read the plot.',
+      'Drag a piece between the beakers, press "Run", and read the current plot.',
       'Compare the current plot for each piece and check which one stays above zero.',
       'Test one piece at a time; only a path that carries ions between beakers keeps the circuit going.'
     ],
     check(state) {
       const r = galvRead(state.table, 'rig');
-      if (!r.ran) return { ok: false, notYet: true, msg: 'Press "Run" to run the cell.' };
+      if (!r.ran) return { ok: false, notYet: true, msg: 'Press "Run" to test the cell first.' };
       const end = r.trace[r.trace.length - 1];
       if (end && end.I > 1e-9) return { ok: true };
       const last = r.past[r.past.length - 1];
       const with_ = last.link === 'rod' ? ' with the glass rod between the beakers' : last.w2 ? ' with the second wire in place' : '';
-      return { ok: false, msg: `The current fell to zero at ${r.stop} s${with_}; the last run ended at ${fmt(end ? end.I : 0, 2)} A.` };
+      return { ok: false, msg: `The current dropped to zero at ${r.stop} s${with_}, ending at ${fmt(end ? end.I : 0, 2)} A.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
-      const verdict = g === 'brief' ? 'Without a bridge, the current died away as you predicted. ' : g ? 'Without a bridge, the current died away—unlike a steady wire-only current. ' : '';
+      const verdict = g === 'brief' ? 'As you predicted, the' : g ? 'Without a bridge, the' : 'The';
       return {
         log: 'Only the tube of salt solution kept the current going.',
         title: 'Salt Bridge',
-        body: `${verdict}Only the salt tube kept current flowing: its ions move into the beakers to complete the circuit. It is called a salt bridge.`
+        body: `${verdict} current died quickly until you added the salt tube. Its ions flow into the beakers to balance charge and complete the circuit—that is a salt bridge.`
       };
     }
   },
@@ -167,7 +167,7 @@ export const STAGES = [
   {
     id: 's3-direction',
     title: 'Which Way the Electrons Go',
-    prompt: 'Toward which beaker do the electrons move in each cell?',
+    prompt: 'Which beaker do electrons move toward in each cell?',
     widget,
     table: (() => {
       const rigs = S3_CELLS.map(([id, l, r, name], i) => galvFixture(id, { x: 31 + i * 61, y: 48 }, { left: l, right: r, compact: true, says: true, title: name }));
@@ -181,12 +181,12 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const vals = S3_CELLS.map(([id]) => dialValue(t, id, 'says'));
-      if (vals.some(v => v === 3)) return { ok: false, notYet: true, msg: 'Set the dial on every cell.' };
+      if (vals.some(v => v === 3)) return { ok: false, notYet: true, msg: 'Set the dial on every cell first.' };
       for (const [id, l, r, name] of S3_CELLS) {
         const want = electronsToward(l, r) === 'left' ? 1 : 2;
         if (dialValue(t, id, 'says') === want) continue;
         const read = galvRead(t, id);
-        if (!read.ran) return { ok: false, msg: `${name} has not been run yet.` };
+        if (!read.ran) return { ok: false, msg: `Press Run on ${name} first.` };
         return { ok: false, msg: `${name}'s needle swung to the ${read.I > 0 ? 'right' : 'left'}.` };
       }
       return { ok: true };
@@ -196,7 +196,7 @@ export const STAGES = [
       return {
         log: 'The electrons went to the same metal whichever side it stood on.',
         title: 'The Metals Decide',
-        body: `In the three cells the electrons moved toward ${to.join(', ')}. The metals decide the direction, wherever the beakers stand; the left and right of the table do not.`
+        body: `Electrons moved toward ${to.join(', ')}. The metals decide which way electrons flow, not which side of the table they sit on.`
       };
     }
   },
@@ -205,8 +205,8 @@ export const STAGES = [
   {
     id: 's4-roles',
     title: 'Atoms Leave, Atoms Join',
-    briefing: { speaker: SPEAKER, body: 'Each metal strip in a cell is an electrode. The electrode where oxidation happens (atoms leave as ions) is the anode; the electrode where reduction happens (ions join as atoms) is the cathode.' },
-    prompt: 'Press Run, then tap each strip on the Model to mark whether atoms leave (anode) or join (cathode).',
+    briefing: { speaker: SPEAKER, body: 'Each metal strip in a cell is an electrode. Oxidation happens at the anode (atoms leave as ions), and reduction happens at the cathode (ions join as atoms).' },
+    prompt: 'Press Run, then tap each strip on the Model to mark the anode (atoms leave) and cathode (atoms join).',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 52 }, { ...S4, link: 'fixed', ammeter: false, windows: 'metal' });
@@ -223,16 +223,16 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const a = Math.round(t.fixtures.scene.dials.m0.value); const b = Math.round(t.fixtures.scene.dials.m1.value);
-      if (!a || !b) return { ok: false, notYet: true, msg: 'Tap each strip.' };
+      if (!a || !b) return { ok: false, notYet: true, msg: 'Tap each strip on the Model to mark it.' };
       const roles = sides(S4.left, S4.right);
       const want = { left: roles.left === 'anode' ? 1 : 2, right: roles.right === 'anode' ? 1 : 2 };
       if (a === want.left && b === want.right) return { ok: true };
       const r = galvRead(t, 'rig');
-      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet.' };
+      if (!r.ran) return { ok: false, msg: 'Press Run first.' };
       const c = windowCounts(S4.left, S4.right, { ran: true });
       const bad = a !== want.left ? 'left' : 'right';
       const m = METALS[bad === 'left' ? S4.left : S4.right];
-      return { ok: false, msg: `After the run the ${bad} beaker held ${c[bad].metal} ${m.ion} ions, against ${START_IONS} at the start, and its strip held ${c[bad].atoms} atoms, against ${START_ATOMS}.` };
+      return { ok: false, msg: `After the run, the ${bad} beaker had ${c[bad].metal} ${m.ion} ions (started at ${START_IONS}) and its strip had ${c[bad].atoms} atoms (started at ${START_ATOMS}).` };
     },
     get reward() {
       const d = cellDirection(S4.left, S4.right);
@@ -240,7 +240,7 @@ export const STAGES = [
       return {
         log: 'Atoms left one strip as ions and ions joined the other as atoms.',
         title: 'Anode and Cathode',
-        body: `${A.name[0].toUpperCase()}${A.name.slice(1)} atoms left as ${A.ion} ions at the anode, and ${C.ion} ions became atoms at the cathode. A cell that runs by itself like this is a galvanic cell.`
+        body: `${A.name[0].toUpperCase()}${A.name.slice(1)} atoms left as ${A.ion} ions at the anode, while ${C.ion} ions plated as atoms at the cathode. A cell that runs on its own like this is a galvanic cell.`
       };
     }
   },
@@ -262,16 +262,16 @@ export const STAGES = [
       }, { w: 176, h: 108 });
     })(),
     hints: [
-      'Press "Run", look at the beakers and the glass tube, then tap the beaker the negative ions move toward.',
+      'Press "Run", watch the beakers and salt bridge, then tap the beaker that negative ions move toward.',
       'Watch the ion counts in each beaker and which way the bridge ions drift during the run.',
       'Check which beaker gains positive ions from its strip—negative ions move there to keep charge balanced.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a beaker.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a beaker on the Model first.' };
       if (v === 1) return { ok: true };
       const r = galvRead(state.table, 'rig');
-      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet.' };
+      if (!r.ran) return { ok: false, msg: 'Press Run first.' };
       const c = windowCounts(S5.left, S5.right, { ran: true });
       const d = cellDirection(S5.left, S5.right);
       const side = sideName(S5.left, S5.right, d.anode);
@@ -284,7 +284,7 @@ export const STAGES = [
       return {
         log: 'Negative ions moved toward the beaker that was gaining positive ions.',
         title: 'Ions Close the Circuit',
-        body: `${ion(d.anode)} rose to ${c[aSide].metal} at the anode and ${ion(d.cathode)} fell to ${c[cSide].metal} at the cathode, while bridge ions kept each beaker balanced.`
+        body: `${ion(d.anode)} rose to ${c[aSide].metal} at the anode and ${ion(d.cathode)} fell to ${c[cSide].metal} at the cathode. Negative ions from the salt bridge moved to the anode to keep charge balanced.`
       };
     }
   },
@@ -318,21 +318,21 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const v = dialValue(t, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a strip.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a strip on the Model first.' };
       if (v === 2) return { ok: true };
       const name = `${METALS[S6.left].symbol} strip`;
       const w = weighed(t, 'bal', name);
       if (!w) return { ok: false, msg: `The ${name} has not been weighed yet.` };
-      if (w.count < 2) return { ok: false, msg: `The ${name} has been weighed once, at ${w.first.toFixed(2)} g; weigh it again after the run.` };
+      if (w.count < 2) return { ok: false, msg: `You weighed the ${name} once (${w.first.toFixed(2)} g); weigh it again after running the cell.` };
       return { ok: false, msg: `The ${name} read ${w.first.toFixed(2)} g and then ${w.last.toFixed(2)} g.` };
     },
     get reward() {
       const dl = stripChange(S6.left, S6.right, S6.left, WEIGH_RUN_SECONDS);
       const dr = stripChange(S6.left, S6.right, S6.right, WEIGH_RUN_SECONDS);
       return {
-        log: 'The strip that lost ions lost mass and the strip that gained atoms gained it.',
+        log: 'The anode lost mass and the cathode gained mass.',
         title: 'Mass Follows the Atoms',
-        body: `The ${METALS[S6.right].symbol} strip gained ${fmt(dr, 2)} g and the ${METALS[S6.left].symbol} strip lost ${fmt(-dl, 2)} g. Atoms leave the anode as ions and join the cathode as atoms, so the anode loses mass and the cathode gains it.`
+        body: `The ${METALS[S6.right].symbol} strip gained ${fmt(dr, 2)} g and the ${METALS[S6.left].symbol} strip lost ${fmt(-dl, 2)} g. Atoms leave the anode and plate onto the cathode, so the cathode gains mass.`
       };
     }
   },
@@ -341,8 +341,8 @@ export const STAGES = [
   {
     id: 's7-notation',
     title: 'Shorthand',
-    briefing: { speaker: SPEAKER, body: 'Cell notation lists a cell from anode to cathode. A single bar separates a solid from its solution and a double bar stands for the salt bridge.' },
-    prompt: 'How is the zinc–copper cell written in cell notation?',
+    briefing: { speaker: SPEAKER, body: 'Cell notation writes a cell from anode (left) to cathode (right). Use one bar (|) between a solid and its ions, and two bars (||) for the salt bridge.' },
+    prompt: 'Arrange the symbols on the rail to write the zinc–copper cell in cell notation.',
     widget,
     table: (() => {
       const chips = notationChips('zn', 'cu');
@@ -363,17 +363,17 @@ export const STAGES = [
       const t = state.table;
       const order = t.zones.rail.order;
       const want = notationChips('zn', 'cu');
-      if (order.length < want.length) return { ok: false, notYet: true, msg: `Put all ${want.length} symbols on the strip.` };
+      if (order.length < want.length) return { ok: false, notYet: true, msg: `Place all ${want.length} symbols on the rail first.` };
       const got = order.map(id => t.pieces[id].label);
       if (got.join('\u0000') === want.join('\u0000')) return { ok: true };
       const k = got.findIndex((g, i) => g !== want[i]);
-      return { ok: false, msg: `The strip reads ${got.join(' ')}, and place ${k + 1} does not match the cell on the plaque.` };
+      return { ok: false, msg: `Your rail reads ${got.join(' ')}, and slot ${k + 1} does not match the cell.` };
     },
     get reward() {
       return {
         log: 'The cell was written in cell notation.',
         title: 'Cell Notation',
-        body: `${notationText('zn', 'cu')} is cell notation: anode half on the left, cathode half on the right, and a double bar for the salt bridge.`
+        body: `${notationText('zn', 'cu')} is cell notation: anode half on the left, cathode half on the right, and a double bar (||) for the salt bridge.`
       };
     }
   },
@@ -382,7 +382,7 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'The Sealed Cell',
-    prompt: 'Which strip is the anode of the sealed cell?',
+    prompt: 'Weigh and run the sealed cell to find which strip is the anode.',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 52 }, { left: S8.left, right: S8.right, link: 'fixed', ammeter: true, strips: true, sealed: true, minutes: true });
@@ -399,18 +399,18 @@ export const STAGES = [
       }, { w: 184, h: 122 });
     })(),
     hints: [
-      'Seat each strip in its beaker, press "Run", weigh the strips, and lay a card in the slot.',
+      'Put each strip in its beaker, press "Run", weigh the strips, and drop your answer card in the slot.',
       'Compare which way the ammeter pointer swings with how each strip\'s mass changed.',
       'The ammeter shows which beaker receives the electrons, and the balance shows which strip lost atoms.'
     ],
     check(state) {
       const t = state.table;
       const card = pieceIn(t, 'ans');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Drop an answer card in the slot first.' };
       const anode = cellDirection(S8.left, S8.right).anode === S8.left ? 'ansA' : 'ansB';
       if (card.id === anode) return { ok: true };
       const r = galvRead(t, 'rig');
-      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet.' };
+      if (!r.ran) return { ok: false, msg: 'Press Run first.' };
       const wa = weighed(t, 'bal', 'Strip A'); const wb = weighed(t, 'bal', 'Strip B');
       const tail = (n, w) => (w && w.count > 1 ? ` Strip ${n} read ${w.first.toFixed(2)} g and then ${w.last.toFixed(2)} g.` : '');
       return { ok: false, msg: `The needle swung to the ${r.I > 0 ? 'right' : 'left'}.${tail('A', wa)}${tail('B', wb)}` };
@@ -420,9 +420,9 @@ export const STAGES = [
       const to = electronsToward(S8.left, S8.right);
       const anodeLetter = d.anode === S8.left ? 'A' : 'B';
       return {
-        log: 'The electrons left through the anode.',
+        log: 'Electrons left through the anode.',
         title: 'Sealed Cell',
-        body: `The electrons moved toward the ${to} beaker, so they left through Strip ${anodeLetter}: it is the anode. Strip A was ${METALS[S8.left].name} and Strip B was ${METALS[S8.right].name}.`
+        body: `Electrons flowed toward the ${to} beaker, so they left through Strip ${anodeLetter} (the anode). Strip A was ${METALS[S8.left].name} and Strip B was ${METALS[S8.right].name}.`
       };
     }
   }
@@ -447,7 +447,7 @@ attachScenes(STAGES, {
 
 export const DEBRIEF = {
   title: 'Galvanic Cells',
-  body: 'A galvanic cell needs a wire for the electrons and a salt bridge for the ions. Atoms leave the anode as ions, the electrons travel through the wire to the cathode, and the ions in the bridge keep each beaker balanced.'
+  body: 'A galvanic cell needs a wire for electrons and a salt bridge for ions. Atoms dissolve at the anode, electrons flow through the wire to the cathode, and bridge ions keep each beaker balanced.'
 };
 
 const seat = (id, to) => put(id, to);

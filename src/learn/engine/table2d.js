@@ -327,7 +327,9 @@ export function drawTable(ctx, w, h, state, view = {}) {
         const n = Math.round((dial.max - dial.min) / dial.step);
         if (n > 0 && n <= 12) {
           const curIdx = Math.round((dial.value - dial.min) / dial.step);
-          const showTicks = !f.props?.list && ((f.props?.tickLabels && n <= 8) || (dial.labels && n <= 6 && dial.labels.some(l => String(l ?? '').trim())));
+          const totalChars = dial.labels ? dial.labels.reduce((a, l) => a + String(l ?? '').split(',')[0].trim().length, 0) : 0;
+          const labelsFit = !dial.labels || totalChars * 1.15 <= (d.x1 - d.x0);
+          const showTicks = !f.props?.list && !f.props?.noTickLabels && ((f.props?.tickLabels && n <= 8) || (dial.labels && n <= 6 && labelsFit && dial.labels.some(l => String(l ?? '').trim())));
           ctx.strokeStyle = mat ? PLATE_COLORS.dust : PLATE_COLORS.steel;
           ctx.lineWidth = Math.max(1.2, sc * 0.2);
           for (let i = 0; i <= n; i++) {

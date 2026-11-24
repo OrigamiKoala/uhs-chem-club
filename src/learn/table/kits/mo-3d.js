@@ -18,7 +18,7 @@
 
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes.js';
 import { PLATE_COLORS } from '../../engine/plates.js';
-import { blendGrid, overlapRead, overlapFrame } from './mo.js';
+import { blendGrid, overlapRead, overlapFrame, cardPull, magnetRead } from './mo.js';
 
 /** The cloud is drawn at this share of the flat picture's scale, so it does not hide the Distance dial behind it from the bench camera. */
 const VIEW = 0.45;
@@ -164,4 +164,164 @@ export function dressOverlap(f, state, c) {
     cut();
   };
   return group;
+}
+
+const GAS_COLOR = { O2: 0xc9423a, N2: 0x4b7ec8, F2: 0x86c96c, B2: 0xc27a46 };
+
+/**
+ * 3D realistic horseshoe magnet + suspended diatomic gas sample capsule (`mo` kit `magnet` fixture).
+ * When "Test Sample" is pressed, paramagnetic gases (O₂, B₂) visibly pull closer into the magnet poles
+ * while diamagnetic gases (N₂, F₂) visibly push farther away from the magnet.
+ */
+export function dressMagnet(f, state, c) {
+  const { THREE, scale: s, toPlate, ground } = c;
+  const root = new THREE.Group();
+  root.name = 'mo-magnet-3d';
+  const center = toPlate({ x: f.at.x, y: f.at.y - 3.2 });
+  root.position.set(center.x, ground, center.z);
+
+  // Horseshoe magnet lying horizontally, poles facing toward +Z (toward the player / sample in front)
+  const magGroup = new THREE.Group();
+  magGroup.position.set(0, 3.6 * s, -3.5 * s);
+  root.add(magGroup);
+
+  const armR = 5.4 * s;
+  const armLen = 5.2 * s;
+  const tubeR = 1.65 * s;
+
+  const uPts = [];
+  uPts.push(new THREE.Vector3(-armR, 0, armLen));
+  uPts.push(new THREE.Vector3(-armR, 0, 0));
+  for (let i = 0; i <= 14; i++) {
+    const a = Math.PI + (i / 14) * Math.PI;
+    uPts.push(new THREE.Vector3(Math.cos(a) * armR, 0, Math.sin(a) * armR));
+  }
+  uPts.push(new THREE.Vector3(armR, 0, 0));
+  uPts.push(new THREE.Vector3(armR, 0, armLen));
+
+  const bodyMat = c.own(new THREE.MeshStandardMaterial({ color: 0x8c2420, roughness: 0.36, metalness: 0.55 }));
+  const uMesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(uPts), 36, tubeR, 14, false), bodyMat);
+  uMesh.castShadow = true;
+  magGroup.add(uMesh);
+
+  // Polished steel pole tips
+  const tipMat = c.own(new THREE.MeshStandardMaterial({ color: 0xc8c4bc, roughness: 0.24, metalness: 0.85 }));
+  const tipGeo = new THREE.CylinderGeometry(tubeR * 1.04, tubeR * 1.04, 2.2 * s, 14);
+  for (const sx of [-1, 1]) {
+    const tip = new THREE.Mesh(tipGeo, tipMat);
+    tip.rotation.x = Math.PI / 2;
+    tip.position.set(sx * armR, 0, armLen + 0.8 * s);
+    tip.castShadow = true;
+    magGroup.add(tip);
+  }
+
+  // Shimmering magnetic field lines between the poles (visible during/after test)
+  const fieldMat = c.own(new THREE.MeshBasicMaterial({ color: 0xf2a629, transparent: true, opacity: 0.0 }));
+  const fieldArcs = [];
+  for (const archZ of [1.2, 3.0, 4.8]) {
+    const fc = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-armR, 0, armLen + 1.4 * s),
+      new THREE.Vector3(0, 0.4 * s, armLen + (1.4 + archZ) * s),
+      new THREE.Vector3(armR, 0, armLen + 1.4 * s)
+    ]);
+    const fm = new THREE.Mesh(new THREE.TubeGeometry(fc, 16, 0.22 * s, 6, false), fieldMat);
+    magGroup.add(fm);
+    fieldArcs.push(fm);
+  }
+
+  // Suspended gas sample vial + diatomic molecule sitting right in front of the magnet poles
+  const restZ = 6.2 * s;
+  const sampleGroup = new THREE.Group();
+  sampleGroup.position.set(0, 3.8 * s, restZ);
+  root.add(sampleGroup);
+
+  const glassMat = c.own(new THREE.MeshPhysicalMaterial({
+    color: 0xd8e8f0, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.28, depthWrite: false
+  }));
+  const vial = new THREE.Mesh(new THREE.CapsuleGeometry(2.5 * s, 3.2 * s, 8, 16), glassMat);
+  vial.rotation.z = Math.PI / 2;
+  sampleGroup.add(vial);
+
+  const atomMat = c.own(new THREE.MeshStandardMaterial({ color: 0xc9423a, roughness: 0.32, metalness: 0.15 }));
+  const atomGeo = new THREE.SphereGeometry(1.35 * s, 18, 14);
+  const a1 = new THREE.Mesh(atomGeo, atomMat);
+  a1.position.x = -1.25 * s;
+  const a2 = new THREE.Mesh(atomGeo, atomMat);
+  a2.position.x = 1.25 * s;
+  const bondMat = c.own(new THREE.MeshStandardMaterial({ color: 0x9a948a, roughness: 0.4, metalness: 0.5 }));
+  const bond = new THREE.Mesh(new THREE.CylinderGeometry(0.32 * s, 0.32 * s, 2.5 * s, 10), bondMat);
+  bond.rotation.z = Math.PI / 2;
+  sampleGroup.add(a1, a2, bond);
+
+  // Animation state
+  let currentZ = restZ;
+  let targetZ = restZ;
+  let fieldTarget = 0;
+  let fieldAlpha = 0;
+  let animClock = 0;
+  let lastPulse = f.dials?.pulse?.value || 0;
+  let lastTestedState = null;
+
+  function sync(fx, st) {
+    const slotted = fx.props.slot
+      ? Object.values(st.pieces).find(p => !p.hidden && p.zone === `slot:${fx.props.slot}`)
+      : null;
+    const mol = fx.props.slot ? slotted?.props?.mol : fx.props.mol;
+    const hasSample = Boolean(mol);
+    sampleGroup.visible = hasSample;
+
+    if (hasSample) {
+      atomMat.color.setHex(GAS_COLOR[mol] || 0xc8c0b4);
+    }
+
+    const pulse = fx.dials?.pulse?.value || 0;
+    const pullVal = fx.props.slot
+      ? (slotted ? cardPull(slotted) : null)
+      : (magnetRead(st, fx.id).tested ? magnetRead(st, fx.id).pull : null);
+    const tested = pullVal !== null;
+
+    if (!hasSample || !tested) {
+      targetZ = restZ;
+      fieldTarget = 0;
+      if (!hasSample) currentZ = restZ;
+    } else if (pullVal > 0) {
+      // Attracted: pull visibly closer into the magnet poles
+      targetZ = restZ - 4.4 * s;
+      fieldTarget = 0.65;
+    } else {
+      // Not attracted / repelled: push visibly farther away from the magnet poles
+      targetZ = restZ + 3.6 * s;
+      fieldTarget = 0.35;
+    }
+
+    const key = `${mol || ''}:${tested ? pullVal : '-'}:${pulse}`;
+    if (pulse !== lastPulse || key !== lastTestedState) {
+      if (pulse !== lastPulse) currentZ = restZ; // replay crisp motion on every Test Sample press
+      lastPulse = pulse;
+      lastTestedState = key;
+    }
+  }
+
+  sync(f, state);
+  sampleGroup.position.z = targetZ;
+  currentZ = targetZ;
+
+  root.userData.update = (fx, st) => sync(fx, st);
+  root.userData.tick = (dt, still) => {
+    animClock += dt;
+    if (still) {
+      currentZ = targetZ;
+      fieldAlpha = fieldTarget;
+    } else {
+      const k = 1 - Math.exp(-Math.min(dt, 0.1) * 7.5);
+      currentZ += (targetZ - currentZ) * k;
+      fieldAlpha += (fieldTarget - fieldAlpha) * k;
+    }
+    const bob = still ? 0 : Math.sin(animClock * 3.2) * 0.22 * s;
+    sampleGroup.position.set(0, 3.8 * s + bob, currentZ);
+    if (!still) sampleGroup.rotation.y = Math.sin(animClock * 1.4) * 0.25;
+    fieldMat.opacity = fieldAlpha * (still ? 1 : 0.78 + 0.22 * Math.sin(animClock * 8));
+  };
+
+  return root;
 }

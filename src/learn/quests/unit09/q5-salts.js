@@ -83,24 +83,24 @@ function pourStage({ id, title, spec, prompt, hints, wantKind, reward }) {
     // The graded answer is the flask itself: poured to the first pour at which the window shows none of the analyte left.
     check(state) {
       const k = Math.round(dialValue(state.table, 'mix', 'poured'));
-      if (k === 0) return { ok: false, notYet: true, msg: 'Pour first.' };
+      if (k === 0) return { ok: false, notYet: true, msg: 'Press "Pour" to add reagent first.' };
       if (k === EQUAL_K) return { ok: true };
       const now = mixAfter(spec, k);
-      if (k < EQUAL_K) return { ok: false, msg: `After ${now.mL} mL the window still shows ${now.left} ${what} units that are not used up.` };
-      return { ok: false, msg: `The window already showed no ${what} left at ${eq.mL} mL; the extra ${now.mL - eq.mL} mL is more ${spec.reagent} than the ${what} needs.` };
+      if (k < EQUAL_K) return { ok: false, msg: `After ${now.mL} mL, ${now.left} ${what} units are still left in the flask.` };
+      return { ok: false, msg: `All the ${what} was already used up at ${eq.mL} mL; you added ${now.mL - eq.mL} mL of extra ${spec.reagent}.` };
     },
     ...(reward ? { reward } : {})
   };
 }
 
-const POUR_HINT = 'Use "Pour" and the pH meter on its seat.';
+const POUR_HINT = 'Put the pH meter on the flask and press "Pour".';
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   pourStage({
     id: 's1-strong', title: 'Acid Used Up', spec: S1, wantKind: 1,
-    prompt: 'What is the pH when the hydrochloric acid is completely neutralized by sodium hydroxide?',
-    hints: [POUR_HINT, 'Compare the window and the meter after each pour.', 'Stop at the first pour where the window shows no acid left.'],
+    prompt: 'Find the exact pour where sodium hydroxide completely neutralizes the hydrochloric acid.',
+    hints: [POUR_HINT, 'Watch the window and the pH meter after each pour.', 'Stop at the first pour where the window shows no acid left.'],
     reward: {
       log: 'The flask read 7.00 with the acid used up.',
       title: 'Strong Acid, Strong Base',
@@ -129,30 +129,30 @@ export const STAGES = [
       }, { w: 170, h: 114 });
     })(),
     hints: [
-      'Use the four cards and the slot.',
-      'Think about what the flask holds once the acid and the base are both used up.',
-      'Ask whether the ions left in the water can do anything to it.'
+      'Place one of the four prediction cards in the slot.',
+      'Think about what the flask holds once the acid and base are both used up.',
+      'Think about whether the ions left behind can react with water.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = pieceIn(state.table, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Your prediction is locked in. Next, sodium hydroxide is poured into acetic acid until none of the acid is left.' }
+    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Next, pour sodium hydroxide into acetic acid until all the acid is used up.' }
   },
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const st = pourStage({
       id: 's3-weak-acid', title: 'Acetic Acid Used Up', spec: S3, wantKind: 2,
-      prompt: 'Pour sodium hydroxide until the acetic acid is all used up, then read the pH meter.',
-      hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no acid left with the 7 you expected.', 'Ask what the acetate left behind by acetic acid does when it meets water.']
+      prompt: 'Find the exact pour where sodium hydroxide completely neutralizes the acetic acid.',
+      hints: [POUR_HINT, 'Check the pH meter when the window shows no acid left—compare it with pH 7.', 'Think about what the acetate ion left behind does in water.']
     });
-    Object.defineProperty(st, 'prompt', { get() { return guessLine('What is the pH when the acetic acid is completely neutralized by sodium hydroxide?', recall(QUEST_KEY)); }, enumerable: true });
+    Object.defineProperty(st, 'prompt', { get() { return guessLine('Find the exact pour where sodium hydroxide completely neutralizes the acetic acid.', recall(QUEST_KEY)); }, enumerable: true });
     Object.defineProperty(st, 'reward', {
       enumerable: true,
       get() {
@@ -171,12 +171,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   pourStage({
     id: 's4-weak-base', title: 'Ammonia Used Up', spec: S4, wantKind: 0,
-    prompt: 'What is the pH when the ammonia is completely neutralized by hydrochloric acid?',
-    hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no base left with 7.', 'Ask what the ammonium made from ammonia does when it meets water.'],
+    prompt: 'Find the exact pour where hydrochloric acid completely neutralizes the ammonia.',
+    hints: [POUR_HINT, 'Check the pH meter when the window shows no base left—compare it with pH 7.', 'Think about what the ammonium ion formed from ammonia does in water.'],
     reward: {
       log: 'The flask read 5.28 with the base used up.',
       title: 'Acidic Salt',
-      get body() { return `Ammonium, made when ammonia takes a proton, gives a proton back to water, so the flask read ${fmt(mixAfter(S4, EQUAL_K).pH, 2)} and is acidic.`; }
+      get body() { return `Ammonium (NH₄⁺) donates a proton back to water, making the solution acidic at pH ${fmt(mixAfter(S4, EQUAL_K).pH, 2)}.`; }
     }
   }),
 
@@ -218,7 +218,7 @@ export const STAGES = [
         return {
           log: 'Sodium fluoride read basic and ammonium chloride read acidic.',
           title: 'Which Ions React',
-          body: `NaCl and KNO₃ read ${p.nacl}; NaF read ${p.naf} and 0.10 M NH₄Cl read ${p.nh4cl} (more concentrated than stage 4). Ions from weak acids or bases react with water.`
+          body: `NaCl and KNO₃ are neutral (${p.nacl}); NaF is basic (${p.naf}) and NH₄Cl is acidic (${p.nh4cl}). Ions from weak acids or bases react with water.`
         };
       }
     };
@@ -230,14 +230,14 @@ export const STAGES = [
     return {
       id: 's6-excess',
       title: 'Acid Left Over',
-      prompt: 'After 20 mL of sodium hydroxide is added to 30 mL of acid, what is the pH?',
+      prompt: 'After 20 mL of 0.10 M NaOH is added to 30 mL of 0.10 M HCl, what is the pH?',
       widget,
       entry: { id: 'ph', label: 'pH', unit: '' },
       table: phTable({ fixtures: [m.fixture] }, { w: 130, h: 68 }),
       hints: [
         'Type the pH in the field; the window shows the flask after the pour.',
-        'Compare the units still grey in the window with the units that were used up.',
-        'Find how much acid is left over, then divide by the total volume of liquid in the flask.'
+        'Compare the acid units still grey in the window with the ones that were used up.',
+        'Find the moles of acid left over, divide by the total volume (50 mL), and take −log[H₃O⁺].'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ph');
@@ -245,16 +245,16 @@ export const STAGES = [
         const r = mixAfter(S6, 1);
         if (Math.abs(v - r.pH) <= TOL_PH) return { ok: true };
         const win = `The window shows ${r.left} of 100 acid units left`;
-        if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: `${win}; a pH of 7.00 would need none left.` };
-        if (Math.abs(v - 1) <= 0.05) return { ok: false, msg: `${win}; a pH of 1.00 is what 0.10 M acid alone reads.` };
-        return { ok: false, msg: `${win}, and that does not give a pH of ${fmt(v, 2)}.` };
+        if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: `${win}; a pH of 7.00 would mean none was left.` };
+        if (Math.abs(v - 1) <= 0.05) return { ok: false, msg: `${win}; pH 1.00 is for undiluted 0.10 M HCl before neutralization.` };
+        return { ok: false, msg: `${win}, which does not give pH ${fmt(v, 2)}.` };
       },
       get reward() {
         const r = mixAfter(S6, 1);
         return {
           log: 'The acid left over decided the pH.',
           title: 'Excess Decides',
-          body: `${r.left} of 100 acid units were left over in 50.0 mL, setting the pH at ${fmt(r.pH, 2)}: whichever is left over decides the pH.`
+          body: `10 mL of 0.10 M HCl is left over in 50.0 mL total (0.020 M H₃O⁺), giving pH ${fmt(r.pH, 2)}. Excess acid or base sets the pH.`
         };
       }
     };
@@ -266,7 +266,7 @@ export const STAGES = [
     const f2 = flaskFixture('f1', { x: 40, y: 1 + f.size.h / 2 }, { solute: ACETATE, label: 'Sodium acetate', w: 64, window: 24, meter: false });
     return {
       id: 's7-acetate',
-      title: 'A Salt Between the Flasks',
+      title: 'Finding a Salt’s pH',
       briefing: {
         intro: 'Use Kb of acetate to find [OH⁻], then pOH, then pH = 14 − pOH.'
       },
@@ -284,16 +284,16 @@ export const STAGES = [
         if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
         const s = flaskSol({ solute: ACETATE });
         if (Math.abs(v - s.pH) <= TOL_PH) return { ok: true };
-        if (Math.abs(v - s.pOH) <= 0.05) return { ok: false, msg: 'That number is the pOH; the question asks for the pH (14 − pOH).' };
-        if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: `The 0.050 M acetate flask read ${fmt(mixAfter(S3, EQUAL_K).pH, 2)} in the pour, not 7.00.` };
-        return { ok: false, msg: `A pH of ${fmt(v, 2)} is not what 0.10 M sodium acetate reads.` };
+        if (Math.abs(v - s.pOH) <= 0.05) return { ok: false, msg: 'That number is the pOH; subtract it from 14 to get pH.' };
+        if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: `Sodium acetate is basic (0.050 M read ${fmt(mixAfter(S3, EQUAL_K).pH, 2)} earlier), not neutral.` };
+        return { ok: false, msg: `pH ${fmt(v, 2)} does not match 0.10 M sodium acetate.` };
       },
       get reward() {
         const s = flaskSol({ solute: ACETATE });
         return {
           log: 'The constant for acetate gave the pH of the salt.',
           title: 'pH of a Salt',
-          body: `Acetate makes hydroxide equal to the acetic acid it forms, ${sci(s.oh, 2)} mol/L here, so the pOH is ${fmt(s.pOH, 2)} and the pH ${fmt(s.pH, 2)}.`
+          body: `Using [OH⁻] = √(Kb × 0.10) gives ${sci(s.oh, 2)} M OH⁻, pOH ${fmt(s.pOH, 2)}, and pH ${fmt(s.pH, 2)}.`
         };
       }
     };
@@ -302,7 +302,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   title: 'Neutralization and Salts',
-  body: 'Used-up acid and base do not always leave pH 7. The ion of a weak parent reacts with water, so the salt reads basic or acidic.'
+  body: 'Neutralizing an acid and base does not always end at pH 7. If either parent is weak, its leftover ion reacts with water to make the salt acidic or basic.'
 };
 
 const put = (piece, to) => ({ place: { piece, to } });

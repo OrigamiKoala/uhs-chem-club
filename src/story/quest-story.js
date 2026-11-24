@@ -347,7 +347,7 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'The Fifth is running cables from the power line into a pool. What is that current making in there?',
     beats: [
-      { to: 0.22, say: 'Pushed at 1.50 V against its own 1.10 V, the zinc-copper cell ran backwards and added 4.1 mg to the zinc strip. Electrolysis drives a cell in reverse.' },
+      { to: 0.22, say: 'Driven at 1.50 V against its own 1.10 V, the zinc–copper cell ran backwards and plated 4.1 mg onto the zinc strip. Electrolysis forces a reaction in reverse.' },
       { to: 0.44, say: 'In molten sodium chloride, 6 sodium ions took 6 electrons at the cathode to form sodium, while chloride ions gave electrons at the anode to form chlorine.' },
       { to: 0.64, say: 'One ampere for 30 s passed 30 C and 2 A for 10 s passed 20 C, while 0.5 A for 100 s passed 50 C and plated the most silver.' },
       { to: 0.80, say: 'Two cells in series split water into hydrogen and oxygen gas; in salty brine, chloride reacts instead of oxygen to make chlorine gas.' },
@@ -374,7 +374,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.26, say: 'In the zinc and copper beaker, zinc went from 0 to +2 and copper from +2 to 0. An atom\'s oxidation number counts the electrons it has lost or gained.' },
       { to: 0.5, say: 'Written as half-reactions, zinc loses 2 electrons in oxidation and copper gains 2 in reduction—together a redox reaction. The electrons lost equal the electrons gained.' },
-      { to: 0.76, say: 'Aluminium gives 3 electrons and copper takes 2, so the halves are written 2 and 3 times: 6 electrons given and 6 taken.' },
+      { to: 0.76, say: 'Aluminium gives 3 electrons and copper takes 2, so the halves are scaled 2 and 3 times: 6 electrons given and 6 taken.' },
       { to: 0.94, say: 'Permanganate in acid takes 5 electrons from 5 iron(II) ions, with charge +17 on each side. A redox reaction is one where some oxidation number changes.' }
     ],
     pin: 'Electrons are moving between the two metals, and that is what corrodes the pylons.'
@@ -396,7 +396,7 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'The grid needs its strongest cells back. Which pair of metals gives the most voltage?',
     beats: [
-      { to: 0.22, say: 'Against one reference, magnesium read −2.37 V, zinc −0.76 V, copper +0.34 V and silver +0.80 V. Each reading is that metal\'s E°.' },
+      { to: 0.22, say: 'Against the hydrogen reference (0 V), magnesium read −2.37 V, zinc −0.76 V, copper +0.34 V, and silver +0.80 V. Each reading is that metal\'s E°.' },
       { to: 0.44, say: 'A cell takes its voltage from the gap between two readings: silver minus magnesium is 3.17 V. A positive gap lights the lamp.' },
       { to: 0.66, say: 'Doubled, the zinc and copper cell moved twice as many electrons and released twice the energy, yet the voltmeter still read 1.10 V.' },
       { to: 0.82, say: 'Energy released follows ΔG° = −nFE°. For zinc with silver (n = 2, E° = 1.56 V), ΔG° = −301 kJ.' },
@@ -410,10 +410,10 @@ export const QUEST_STORY = {
     role: 'Boss Payoff',
     mystery: 'The Fifth has been plating copper out of Brinewire\'s pools. How much has it taken?',
     beats: [
-      { to: 0.2, say: 'Iron coated in 3 of the other 3 solutions, nickel in 2, tin in 1 and silver in none. The more solutions a strip coats in, the more readily it gives electrons.' },
-      { to: 0.4, say: 'The ammeter read 1.44 A and the electrons moved toward the silver beaker, so they left through magnesium. Magnesium is the anode.' },
-      { to: 0.6, say: 'Iron read −0.44 V and silver +0.80 V, and the gap between them is 1.24 V. A voltage is energy for each electron, so balancing the equation does not change it.' },
-      { to: 0.78, say: 'Beakers of 0.010 M and 1.0 M zinc read 0.059 V, and the electrons left the bar in the dilute beaker. The dilute side is the anode.' },
+      { to: 0.2, say: 'Iron got coated in 3 of the other 3 solutions, nickel in 2, tin in 1, and silver in none. More coatings mean a metal gives electrons more readily.' },
+      { to: 0.4, say: 'The ammeter read 1.44 A and electrons moved toward the silver beaker, so they left through magnesium. Magnesium is the anode.' },
+      { to: 0.6, say: 'Iron read −0.44 V and silver +0.80 V, giving a gap of 1.24 V. Voltage is energy per electron, so scaling the equation does not change it.' },
+      { to: 0.78, say: 'Beakers of 0.010 M and 1.0 M zinc read 0.059 V, with electrons leaving the electrode in the dilute beaker—the anode.' },
       { to: 0.94, say: '1.50 A for 1200 s passed 1800 C, or 0.0187 mol of electrons. At two electrons per copper atom, that plated 0.59 g of pure copper from the pool.' }
     ],
     pin: 'Each clamp plates 0.59 g of copper per 20 minutes; they are wiring something huge.'
@@ -425,8 +425,8 @@ export const QUEST_STORY = {
     mystery: 'The acid meters on the marsh tanks read numbers only a few steps apart. How much more acidic is a tank one step lower?',
     beats: [
       { to: 0.26, say: 'Each tenfold dilution of hydrochloric acid raised the pH by 1: 1.00, 2.00, 3.00. Each step down on the pH scale is ten times more acidic.' },
-      { to: 0.52, say: 'On sodium hydroxide, pOH counts hydroxide the way pH counts hydronium. At 25 °C the two always add up to 14.00.' },
-      { to: 0.78, say: 'Starting at 1.0 × 10⁻⁶ M, diluting hydrochloric acid read 6.00, 6.79, 6.98 and 7.00. Water\'s own hydronium ions stop the pH from rising past 7.' },
+      { to: 0.52, say: 'On sodium hydroxide, pOH measures hydroxide the way pH measures hydronium. At 25 °C the two always add up to 14.00.' },
+      { to: 0.78, say: 'Diluting 1.0 × 10⁻⁶ M hydrochloric acid gave pH 6.00, 6.79, 6.98 and 7.00. Water’s own hydronium ions keep the pH from rising past 7.' },
       { to: 0.94, say: 'Water at 50 °C reads 6.63 yet still holds equal H₃O⁺ and OH⁻. Neutral means equal amounts of both ions, which equals pH 7 only at 25 °C.' }
     ],
     pin: 'Each pH step is a tenfold change in acidity.'
@@ -437,9 +437,9 @@ export const QUEST_STORY = {
     mystery: 'The runoff from the Fifth\'s plant is eating through the fort\'s pipes. What is it doing to the water it reaches?',
     beats: [
       { to: 0.26, say: 'When HCl meets water, 8 of 8 hydrogens leave as protons and join water molecules to make hydronium. A proton donor like HCl is a Brønsted-Lowry acid.' },
-      { to: 0.52, say: 'Ammonia has no OH group, yet it took a proton from water in 3 of 8 cells. A proton acceptor is a Brønsted-Lowry base.' },
+      { to: 0.52, say: 'Ammonia has no OH group, yet it took a proton from water in 3 of 8 pairs. A proton acceptor is a Brønsted-Lowry base.' },
       { to: 0.78, say: 'An acid and what it leaves behind differ by one proton, forming a conjugate pair. Water acts as both acid and base, so it is amphoteric.' },
-      { to: 0.94, say: 'Even pure water forms a few ions, 1.0 × 10⁻⁷ mol/L of each. Multiplied together, they give Kw = 1.0 × 10⁻¹⁴ at 25 °C.' }
+      { to: 0.94, say: 'Even pure water forms a few ions—1.0 × 10⁻⁷ mol/L of each. Multiplied together, they give Kw = 1.0 × 10⁻¹⁴ at 25 °C.' }
     ],
     pin: 'The runoff donates protons to the water: it is acid waste.'
   },
@@ -448,10 +448,10 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'The fort\'s water is protected for now. How much more acid can it take before the protection fails?',
     beats: [
-      { to: 0.26, say: 'At pH 3 the strip read 98 acetic acid to 2 acetate, and at pH 6 it read 5 to 95. An acid is mostly protonated below its pKa and mostly deprotonated above it.' },
-      { to: 0.5, say: 'The same pour moved the 0.010 M buffer from 4.75 to 4.27 and the 0.10 M buffer from 4.74 to 4.70. Buffer capacity grows with the amount of each member.' },
-      { to: 0.76, say: 'Flask 1 held 40 spheres of acetate and each pour used 5. After 8 pours 2 were left and the pH had fallen from 4.75 to 3.05.' },
-      { to: 0.94, say: 'Two pours of acid dissolved 10 spheres of magnesium hydroxide, because the acid takes up its hydroxide, and none of the silver chloride. A basic anion makes a salt more soluble as the pH falls.' }
+      { to: 0.26, say: 'At pH 3 the strip showed 98 acetic acid to 2 acetate, and at pH 6 it showed 5 to 95. An acid is mostly protonated below its pKa and deprotonated above it.' },
+      { to: 0.5, say: 'The same pour moved the 0.010 M buffer from 4.75 to 4.27 and the 0.10 M buffer only from 4.74 to 4.70. Buffer capacity grows with concentration.' },
+      { to: 0.76, say: 'Flask 1 held 40 spheres of acetate and each pour used 5. After 8 pours 2 were left and the pH had dropped from 4.75 to 3.05.' },
+      { to: 0.94, say: 'Two pours of acid dissolved 10 spheres of magnesium hydroxide, because acid neutralizes its OH⁻, but none of the silver chloride. Basic anions make salts more soluble in acid.' }
     ],
     pin: 'We measured the buffer\'s capacity, so we know how much runoff the intake can take.'
   },
@@ -460,10 +460,10 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'Acid from the marsh keeps splashing into the fort\'s drinking water. What can we add to keep the water steady?',
     beats: [
-      { to: 0.28, say: 'The same pour of acid took the water from 7.00 to 2.04 and the mixture only from 4.74 to 4.66. A weak acid with its conjugate base is a buffer.' },
-      { to: 0.52, say: 'In the buffer each sphere of acid was caught by an acetate. Acetate fell from 100 spheres to 90 and acetic acid rose from 100 to 110.' },
-      { to: 0.76, say: 'Base is caught the other way: acetic acid fell from 100 to 90 and acetate rose to 110, so the pH rose only from 4.74 to 4.83.' },
-      { to: 0.94, say: 'The pH is pKa plus log(acetate ÷ acetic acid): 100 acetate to 100 acetic acid reads 4.74, 150 to 50 reads 5.22, and 100 acetate to 10 acetic acid reads 5.74.' }
+      { to: 0.28, say: 'The same pour of acid dropped plain water from 7.00 to 2.04, while the mixture moved only from 4.74 to 4.66. A weak acid with its conjugate base is a buffer.' },
+      { to: 0.52, say: 'In the buffer, acetate caught the added acid: acetate fell from 100 spheres to 90 and acetic acid rose from 100 to 110.' },
+      { to: 0.76, say: 'Added base works the other way: acetic acid fell from 100 to 90 and acetate rose to 110, so the pH rose only from 4.74 to 4.83.' },
+      { to: 0.94, say: 'Buffer pH equals pKa + log(acetate ÷ acetic acid): 100 to 100 reads 4.74, 150 to 50 reads 5.22, and 100 to 10 reads 5.74.' }
     ],
     pin: 'A weak acid with its conjugate base holds intake pH steady against acid and base.'
   },
@@ -472,10 +472,10 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'Two waste tanks hold the same amount of acid, yet one eats through steel and the other barely stains it. Why?',
     beats: [
-      { to: 0.26, say: 'At the same concentration, 0.10 M, hydrochloric acid donated every proton while acetic acid donated only a few: pH 1.00 against 2.88.' },
+      { to: 0.26, say: 'At the same 0.10 M concentration, hydrochloric acid donated every proton while acetic acid donated only a few: pH 1.00 against 2.88.' },
       { to: 0.54, say: 'Diluting acetic acid causes a larger fraction of it to ionize: 3 of 200 units at 0.10 M, 8 at 0.010 M and 25 at 0.0010 M.' },
-      { to: 0.76, say: 'H₃O⁺ times CH₃COO⁻ divided by CH₃COOH equals the same constant Ka in every flask, regardless of concentration.' },
-      { to: 0.94, say: 'For any acid and the base it leaves, Ka times Kb equals 1.0 × 10⁻¹⁴, so a larger Ka always means a smaller Kb.' }
+      { to: 0.76, say: '[H₃O⁺][CH₃COO⁻] ÷ [CH₃COOH] equals the same constant Ka in every flask, at every concentration.' },
+      { to: 0.94, say: 'For any conjugate acid–base pair, Ka × Kb = 1.0 × 10⁻¹⁴, so a larger Ka always means a smaller Kb.' }
     ],
     pin: 'The harsh tank holds a strong acid (ionizes completely); weak acids ionize only partly.'
   },
@@ -484,10 +484,10 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'The worst waste tank must be neutralized exactly. How much base does it take?',
     beats: [
-      { to: 0.28, say: 'Poured into 25.0 mL of hydrochloric acid, the base moved the pH slowly, then at 25.0 mL it leapt through 7.00. That steep rise is the equivalence point.' },
-      { to: 0.54, say: 'Acetic acid took the same 25.0 mL of base, yet it read 8.72 there while hydrochloric acid read 7.00. The equivalence point depends on the acid.' },
-      { to: 0.78, say: 'Half way to each equivalence point the pH matched the acid\'s pKa: 4.75 for acetic acid and 3.75 for formic acid. That is the half-equivalence point.' },
-      { to: 0.94, say: 'Sulfurous acid rose steeply twice, at 10.0 mL and 20.0 mL. A polyprotic acid gives up its protons one step at a time.' }
+      { to: 0.28, say: 'Adding base to 25.0 mL of hydrochloric acid raised the pH slowly until it jumped steeply through 7.00 at 25.0 mL. That jump is the equivalence point.' },
+      { to: 0.54, say: 'Acetic acid took the same 25.0 mL of base, yet its equivalence point was pH 8.72 instead of 7.00. Equivalence pH depends on the acid.' },
+      { to: 0.78, say: 'Halfway to equivalence, the pH matched each acid’s pKa: 4.75 for acetic acid and 3.75 for formic acid. That is the half-equivalence point.' },
+      { to: 0.94, say: 'Sulfurous acid jumped steeply twice, at 10.0 mL and 20.0 mL. A polyprotic acid gives up its protons one at a time.' }
     ],
     pin: 'The pH curve pinpointed neutralization: 25.0 mL of 0.100 M base for 25.0 mL acid.'
   },
@@ -496,21 +496,21 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'Why does one tank\'s acid eat through steel faster than another\'s?',
     beats: [
-      { to: 0.28, say: 'Raced against chloride, HF kept all 100 protons while HCl gave all 100 to fluoride. Across a row, electronegativity wins; down a column, atom size wins.' },
-      { to: 0.54, say: 'HBr gave 96 of 100 protons to chloride (HCl gave only 4 to bromide). Down a column the atom is larger and the acid is stronger.' },
-      { to: 0.78, say: 'Each extra oxygen on chlorine pulls charge toward itself, the inductive effect, so the leftover base holds its charge better and the acid is stronger.' },
-      { to: 0.94, say: 'Resonance spreads the charge of acetate over two oxygens, making acetic acid far stronger than ethanol.' }
+      { to: 0.28, say: 'In the proton race, HF kept all 100 protons against chloride, while HCl gave all 100 to fluoride. Across a row, electronegativity wins; down a column, atom size wins.' },
+      { to: 0.54, say: 'HBr gave 96 of 100 protons to chloride (while HCl gave only 4 to bromide). Down a column, the larger atom stabilizes negative charge better, making a stronger acid.' },
+      { to: 0.78, say: 'Each extra oxygen on chlorine pulls electron density through the bonds (the inductive effect), stabilizing the conjugate base and strengthening the acid.' },
+      { to: 0.94, say: 'Resonance spreads acetate’s negative charge across two oxygens, making acetic acid far stronger than ethanol.' }
     ],
-    pin: 'An acid is stronger when the base it leaves spreads or pulls negative charge better.'
+    pin: 'An acid is stronger when its conjugate base stabilizes negative charge better.'
   },
   'unit09/q5-salts': {
     scene: 'salt-reads',
     role: 'Station Fix',
     mystery: 'The worst waste tank has been neutralized. Is its water safe now?',
     beats: [
-      { to: 0.3, say: 'Acid and base used up exactly read 7.00 only when both were strong. Acetic acid with sodium hydroxide read 8.72, and ammonia with hydrochloric acid read 5.28.' },
-      { to: 0.62, say: 'Sodium chloride read 7.00, sodium fluoride 8.09 and ammonium chloride 5.13. An ion from a weak acid or base reacts with water; ions from strong ones do not.' },
-      { to: 0.94, say: 'When acid or base is left over, the excess decides the pH. After 20.0 mL of base met 30.0 mL of acid, 33 of 100 acid units remained and the flask read 1.70.' }
+      { to: 0.3, say: 'Neutralization ended at pH 7.00 only when both acid and base were strong. Acetic acid with NaOH ended at 8.72, and ammonia with HCl ended at 5.28.' },
+      { to: 0.62, say: 'Sodium chloride read 7.00, sodium fluoride 8.09, and ammonium chloride 5.13. Ions from weak acids or bases react with water; ions from strong ones do not.' },
+      { to: 0.94, say: 'When acid or base is left over, the excess sets the pH. After 20.0 mL of base met 30.0 mL of acid, 33 of 100 acid units remained and the flask read 1.70.' }
     ],
     pin: 'Not always: neutralizing the waste tank\'s weak acid still leaves a basic salt behind.'
   },
@@ -520,10 +520,10 @@ export const QUEST_STORY = {
     role: 'Boss Payoff',
     mystery: 'The Fifth\'s acid runoff pours out at a huge rate. What kind of work makes that much acid?',
     beats: [
-      { to: 0.25, say: 'Warm water read 6.51 and held equal H₃O⁺ and OH⁻, so it was neutral. The base that read 7.00 held far more OH⁻ than H₃O⁺.' },
-      { to: 0.5, say: 'Formic acid read 2.54, acetic acid 2.88 and hydrofluoric acid 3.26. The pH depended on [H₃O⁺], not just the fraction ionized.' },
-      { to: 0.76, say: 'Ammonia used up 25.0 mL of acid at a pH of 5.28. Methyl red changed within that volume, and the other dyes did not.' },
-      { to: 0.94, say: '100 acetic acid spheres with 227 acetate spheres read 5.10. Choosing the buffer ratio sets the target pH.' }
+      { to: 0.25, say: 'Warm water read pH 6.51 yet held equal H₃O⁺ and OH⁻, so it was neutral. The warm base that read 7.00 held far more OH⁻ than H₃O⁺.' },
+      { to: 0.5, say: 'Formic acid read 2.54, acetic acid 2.88, and hydrofluoric acid 3.26. The pH depended on total [H₃O⁺], not just the percent ionized.' },
+      { to: 0.76, say: 'Ammonia reached equivalence at 25.0 mL of acid and pH 5.28. Methyl red changed colour right across that jump, while the other indicators did not.' },
+      { to: 0.94, say: '100 acetic acid spheres with 227 acetate spheres read pH 5.10. Choosing the buffer ratio sets the target pH.' }
     ],
     pin: 'The runoff matches heavy ore washing, far beyond ordinary mining.'
   },
@@ -556,9 +556,9 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'Once a vessel settles, how much product does it hold?',
     beats: [
-      { to: 0.32, say: 'A reactant drops by x and a product rises by x times its coefficient, so HI rises twice as far as H₂ falls.' },
+      { to: 0.32, say: 'In an ICE table, each substance changes by x times its coefficient, so HI rises twice as much as H₂ falls.' },
       { to: 0.64, say: 'With a small K, very little reactant turns into product. K is a ratio of equilibrium amounts, not a fixed percentage.' },
-      { to: 0.94, say: 'Starting from a tiny amount uses up a much larger share of reactant, so the small-x shortcut fails and you need the full equation.' }
+      { to: 0.94, say: 'When the starting concentration is very small, a larger fraction reacts, so the small-x shortcut fails (over 5%) and you need the full equation.' }
     ],
     pin: 'Tracking initial, change, and equilibrium amounts shows how much product each settled vessel holds.'
   },
@@ -579,7 +579,7 @@ export const QUEST_STORY = {
     mystery: 'Every pond on the flats has stopped making salt except the one with the pump. Why does that one keep going?',
     beats: [
       { to: 0.25, say: 'Add H₂ to a settled vessel and Q drops below K, so the reaction uses up N₂ and makes more NH₃ until Q returns to K.' },
-      { to: 0.48, say: 'Squeeze the vessel and Q drops below K again, shifting the reaction to make more NH₃ and fewer total gas molecules.' },
+      { to: 0.48, say: 'Compress the vessel and Q drops below K again, shifting the reaction to make more NH₃ and fewer total gas molecules.' },
       { to: 0.68, say: 'Add inert argon and total pressure rises, but the amount of each reacting gas stays the same, so Q stays on K.' },
       { to: 0.88, say: 'Heat the vessel and K itself changes—only temperature changes K. Taking NH₃ out lowers Q below K, so the vessel keeps making more.' }
     ],
@@ -613,8 +613,8 @@ export const QUEST_STORY = {
     mystery: 'Why do some reactions stop with mostly reactants while others make mostly product?',
     beats: [
       { to: 0.26, say: 'Settle three vessels and the more negative ΔG° is, the more product each holds. Even a vessel with positive ΔG° holds a little product.' },
-      { to: 0.52, say: 'Product held against ΔG° is one smooth curve. At ΔG° = 0 the vessel holds equal amounts and K is 1; below zero, K is above 1.' },
-      { to: 0.76, say: 'Salt can dissolve even when it cools the water, because ΔG = ΔH − TΔS turns negative when the spread-out term TΔS beats the heat taken in.' },
+      { to: 0.52, say: 'Graphing product against ΔG° gives one smooth curve: ΔG° = 0 means K = 1 (equal amounts), and negative ΔG° means K > 1.' },
+      { to: 0.76, say: 'A salt can dissolve even while cooling the water: ΔG = ΔH − TΔS turns negative whenever entropy (TΔS) outweighs the heat absorbed (ΔH).' },
       { to: 0.92, say: 'Pair a reaction that cannot run alone with one that can, and their ΔG° values add. When the sum is negative, the coupled pair runs.' }
     ],
     pin: 'Free energy ΔG° sets K; coupling a positive-ΔG° step with a negative one makes it run.'
@@ -624,12 +624,12 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'Mineral scale keeps crusting inside the pond pipes. Can we make it come out of the water before it gets there?',
     beats: [
-      { to: 0.26, say: 'Add solid CaF₂ to water and the ion meters rise, until one more scoop changes nothing. The water is saturated, and extra solid lies on the floor.' },
+      { to: 0.26, say: 'Add solid CaF₂ to water and the ion meters rise, until one more scoop changes nothing. The water is saturated, and extra solid stays on the bottom.' },
       { to: 0.5, say: 'Even then, ions keep leaving the solid and returning at about the same rate. That balance is why Ksp, the product of ion concentrations, stays fixed.' },
-      { to: 0.76, say: 'Ksp alone does not rank salts. Ag₂CrO₄ has the smaller Ksp yet holds more dissolved, 6.5 × 10⁻⁵ mol/L against 1.3 × 10⁻⁵ mol/L for AgCl.' },
-      { to: 0.94, say: 'Put a shared ion in the water first and far less solid stays dissolved—for AgCl, 1.8 × 10⁻⁹ mol/L with 0.10 mol/L chloride instead of 1.3 × 10⁻⁵ mol/L.' }
+      { to: 0.76, say: 'Ksp alone does not rank solubility across different formulas. Ag₂CrO₄ has a smaller Ksp yet dissolves more: 6.5 × 10⁻⁵ mol/L vs 1.3 × 10⁻⁵ mol/L for AgCl.' },
+      { to: 0.94, say: 'Adding a common ion dramatically lowers solubility: with 0.10 mol/L chloride already in the water, only 1.8 × 10⁻⁹ mol/L of AgCl dissolves instead of 1.3 × 10⁻⁵ mol/L.' }
     ],
-    pin: 'Adding a shared ion pushes Q past Ksp, forcing scale out before the pipes.'
+    pin: 'Adding a common ion raises Q above Ksp, forcing scale to precipitate before the pipes.'
   },
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'unit01/q1-grain': {

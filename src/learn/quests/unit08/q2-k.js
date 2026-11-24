@@ -44,10 +44,10 @@ export function toolNoteFor() { return null; }
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit08/q2-k';
 const GUESS = {
-  equal: 'In every vessel, butane and isobutane settle at equal amounts',
-  same: 'All three vessels settle with the same amount of butane and the same of isobutane',
-  diff: 'Every vessel settles somewhere different, with nothing in common',
-  gone: 'In every vessel, all the butane is used up'
+  equal: 'Every vessel settles with equal amounts of butane and isobutane',
+  same: 'All three vessels settle with the exact same amounts of each',
+  diff: 'Every vessel settles differently, with nothing in common',
+  gone: 'Every vessel uses up all its butane'
 };
 
 const BUT = K_SYSTEMS.butane;
@@ -95,10 +95,10 @@ const readingsText = r => {
 /** The check of the three ratio-board stages: settled, something laid, and the three readings agree. */
 function rigCheck(state) {
   const r = rigRead(state.table, 'rig');
-  if (!r.laid) return { ok: false, notYet: true, msg: 'Lay a particle card on the ratio board.' };
-  if (!r.settled) return { ok: false, notYet: true, msg: 'The ratio board prints nothing until the vessels have settled.' };
+  if (!r.laid) return { ok: false, notYet: true, msg: 'Place at least one particle card on the ratio board.' };
+  if (!r.settled) return { ok: false, notYet: true, msg: 'Press "Settle" first so the ratio board can read the settled vessels.' };
   if (readingsAgree(r.readings)) return { ok: true };
-  return { ok: false, msg: `The ratio board reads ${readingsText(r)} on the three vessels.` };
+  return { ok: false, msg: `The ratio board reads ${readingsText(r)}—those three numbers do not match.` };
 }
 
 const guessLine = (sentence, g) => (g && GUESS[g] ? `You predicted "${GUESS[g]}". ${sentence}` : sentence);
@@ -128,13 +128,13 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 57 }, size: { w: 46, h: 16 } }] }
     }, { h: TABLE_H }),
     hints: [
-      'Drag one of the four prediction cards into the slot.',
-      'Picture each vessel from its starting card, and think about what it looks like once settled.',
-      'Compare what the three vessels began with, and ask whether where they end depends on that.'
+      'Drag one prediction card into the slot.',
+      'Read what each vessel starts with, then picture how it will settle.',
+      'Decide whether vessels with different starting amounts end up with the same totals or something else.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -144,7 +144,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, the three vessels are settled and measured.'
+      body: 'Next, we settle and measure all three vessels.'
     }
   },
 
@@ -152,22 +152,26 @@ export const STAGES = [
   {
     id: 's2-ratio',
     title: 'The Ratio Board',
-    get prompt() { return guessLine('Which ratio of amounts comes out the same for all three settled vessels?', recall(QUEST_KEY)); },
+    briefing: {
+      speaker: 'Vess',
+      body: 'Settle the vessels, then place particle cards above and below the line on the ratio board to divide them.'
+    },
+    get prompt() { return guessLine('Which ratio of amounts is the same across all three settled vessels?', recall(QUEST_KEY)); },
     widget,
     table: rigTable('butane', BUT_PANS, [['butane', 1], ['isobutane', 1]]),
     hints: [
-      'Press "Settle", then place the particle cards above and below the line on the ratio board.',
-      'Compare the three numbers the ratio board prints under the vessels for each arrangement you try.',
-      'Try each card alone, then both together, and keep the arrangement whose three numbers match.'
+      'Press "Settle", then place particle cards above and below the line on the ratio board.',
+      'Watch the three numbers the ratio board prints under the vessels as you try each layout.',
+      'Try one card alone, then both together, and keep the layout where all three numbers match.'
     ],
     check: rigCheck,
     get reward() {
       const g = recall(QUEST_KEY);
-      const verdict = g === 'equal' ? 'Vessel 3 began with equal amounts and moved away from them. ' : g === 'same' ? 'The amounts differed from vessel to vessel, but the ratio did not. ' : g === 'gone' ? 'Some butane was left in every vessel. ' : '';
+      const verdict = g === 'equal' ? 'Vessel 3 started equal and moved away. ' : g === 'same' ? 'The amounts differed, but the ratio matched. ' : g === 'gone' ? 'Some butane stayed in every vessel. ' : '';
       return {
         log: 'Isobutane over butane held at the same number on every vessel.',
         title: 'The Equilibrium Constant',
-        body: `${verdict}Isobutane ÷ butane is ${fmtNum(BUT.K, 2)} in every vessel, whatever it began with. Products over reactants at equilibrium is the equilibrium constant, K.`
+        body: `${verdict}Isobutane ÷ butane is ${fmtNum(BUT.K, 2)} in every vessel, no matter how it started. Products over reactants at equilibrium is the equilibrium constant, K.`
       };
     }
   },
@@ -178,21 +182,21 @@ export const STAGES = [
     title: 'Two of the Same',
     briefing: {
       speaker: 'Vess',
-      body: 'When a substance has a coefficient in front of it, try the squared tile (HI² means HI multiplied by itself) on the ratio board.'
+      body: 'Notice the 2 in front of HI. Try the HI² card (HI multiplied by itself) on the ratio board.'
     },
-    prompt: 'Which ratio is the same for all three settled vessels of H₂ + I₂ ⇌ 2 HI?',
+    prompt: 'Which ratio is the same across all three settled vessels of H₂ + I₂ ⇌ 2 HI?',
     widget,
     table: rigTable('hi', HI_PANS, [['H2', 1], ['I2', 1], ['HI', 1], ['HI', 2]], { top: 2, bottom: 2 }),
     hints: [
       'Press "Settle", then place particle cards on the ratio board.',
-      'Compare the three readings for each arrangement; HI² counts the HI concentration squared.',
-      'Look at the coefficient 2 in front of HI in the equation printed on the vessels.'
+      'Compare the three readings for each layout; HI² means the HI concentration squared.',
+      'Use the 2 in front of HI in the equation as a clue for which HI card to place.'
     ],
     check: rigCheck,
     reward: {
       log: 'HI squared over H₂ times I₂ held at one number.',
       title: 'Coefficients Become Powers',
-      body: `HI² ÷ (H₂ × I₂) is ${fmtNum(HI.K, 2)} in every vessel: the 2 in front of HI became a power. With concentrations in mol/L (written in brackets [ ]), K is called Kc.`
+      body: `HI² ÷ (H₂ × I₂) is ${fmtNum(HI.K, 2)} in every vessel: the coefficient 2 became an exponent. With concentrations in mol/L (written [ ]), K is called Kc.`
     }
   },
 
@@ -202,21 +206,21 @@ export const STAGES = [
     title: 'A Vessel With Solids',
     briefing: {
       speaker: 'Vess',
-      body: 'CaCO₃ and CaO are solids (s) and CO₂ is a gas (g), measured in atm. You can leave the bottom of the ratio board empty if only one substance belongs.'
+      body: 'CaCO₃ and CaO are solids (s); CO₂ is a gas (g) measured in atm. You can leave the bottom of the ratio board empty.'
     },
-    prompt: 'Which ratio is the same for all three settled vessels of CaCO₃(s) ⇌ CaO(s) + CO₂(g)?',
+    prompt: 'Which ratio is the same across all three settled vessels of CaCO₃(s) ⇌ CaO(s) + CO₂(g)?',
     widget,
     table: rigTable('caco3', CA_PANS, [['CaCO3', 1], ['CaO', 1], ['CO2', 1]], { top: 2, bottom: 2 }),
     hints: [
       'Press "Settle", then place particle cards on the ratio board.',
-      'Compare the readings when solids are included with when they are left off.',
-      'Test arrangements one card at a time, and keep only what leaves the three numbers matching.'
+      'Compare the three readings with the solids on the board versus with them left off.',
+      'Try each card on its own, and keep only what makes all three readings match.'
     ],
     check: rigCheck,
     reward: {
       log: 'Only the gas stayed the same from vessel to vessel.',
       title: 'Solids Are Left Out',
-      body: 'Only the CO₂ gas pressure matches across vessels: adding more solid does not change how crowded a solid is, so solids are left out of K (written Kp for gas pressures).'
+      body: 'Only the CO₂ gas pressure matches across vessels. Adding more pure solid does not change its density, so solids are left out of K (written Kp for gas pressures).'
     }
   },
 
@@ -226,40 +230,40 @@ export const STAGES = [
     title: 'Find K',
     briefing: {
       speaker: 'Vess',
-      body: 'K is products over reactants, each raised to its coefficient in the equation.',
+      body: 'K is products over reactants, with each substance raised to its equation coefficient. Gas pressures work the same way as concentrations.',
       worked: [
         'For H₂ + I₂ ⇌ 2 HI with H₂ = 0.21 M, I₂ = 0.21 M, HI = 1.54 M:',
         'K = HI² ÷ (H₂ × I₂) = 1.54² ÷ (0.21 × 0.21) = 54'
       ]
     },
-    prompt: 'What is K for this vessel, to two significant figures?',
+    prompt: 'What is K for this vessel, rounded to two significant figures?',
     widget,
     entry: { id: 'k', label: 'K', unit: '' },
     table: pansTable({
       fixtures: [vesselFixture('pans', { x: 38, y: 22 }, { system: 'n2o4', pans: NO_PAN, settled: true, w: 70, titles: ['The vessel at equilibrium'] })]
     }, { h: 46 }),
     hints: [
-      'Read the pressure of each gas from the bars and the equation beside them.',
-      'Put the product pressure on top and the reactant pressure on the bottom, raised to its coefficient.',
-      'Follow the worked example in the briefing: divide N₂O₄ by NO₂ squared, then round to two figures.'
+      'Read the pressure of NO₂ and N₂O₄ from the bars and check the equation beside them.',
+      'Divide the product pressure by the reactant pressure raised to its coefficient.',
+      'Follow the briefing example: divide N₂O₄ by NO₂², then round to two significant figures.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the K box.' };
       const pan = vslRead(state.table, 'pans').pans[0];
       if (Math.abs(v - pan.K) / pan.K <= 0.03) return { ok: true };
       const sl = kSlips(NO, pan.eq);
       const near = x => Math.abs(v - x) / x <= 0.03;
       const eq = `NO₂ at ${fmtNum(pan.eq.NO2, 3)} atm and N₂O₄ at ${fmtNum(pan.eq.N2O4, 3)} atm`;
-      if (near(sl.inverted)) return { ok: false, msg: `That figure is the ratio turned upside down: ${eq} puts N₂O₄ on the products side of the equation.` };
-      if (near(sl.noPower)) return { ok: false, msg: `That figure counts NO₂ once; the equation has a 2 in front of NO₂.` };
-      if (near(sl.multiplied)) return { ok: false, msg: `That figure multiplies the NO₂ pressure by 2; the 2 in the equation does not multiply it.` };
-      return { ok: false, msg: `With ${eq}, that is not the figure the ratio of this vessel comes to.` };
+      if (near(sl.inverted)) return { ok: false, msg: `That ratio is upside down: in 2 NO₂ ⇌ N₂O₄, N₂O₄ is the product (top) and NO₂ is the reactant (bottom).` };
+      if (near(sl.noPower)) return { ok: false, msg: `That counts NO₂ once instead of squaring it—the 2 in front of NO₂ becomes an exponent.` };
+      if (near(sl.multiplied)) return { ok: false, msg: `That multiplies NO₂ by 2 instead of squaring it—coefficients become exponents, not multipliers.` };
+      return { ok: false, msg: `Check your math with ${eq}, putting N₂O₄ on top and NO₂² on the bottom.` };
     },
     reward: {
       log: 'K for 2 NO₂ ⇌ N₂O₄ came from the bars.',
       title: 'K From a Vessel',
-      body: `The settled pressures, with the 2 as a power, give K = ${fmtNum(NO.K, 2)}. Any vessel of this reaction at this temperature gives the same.`
+      body: `Using the settled pressures with 2 as an exponent gives K = ${fmtNum(NO.K, 2)}. Every vessel of this reaction at this temperature settles to the same K.`
     }
   },
 
@@ -267,30 +271,30 @@ export const STAGES = [
   {
     id: 's6-large',
     title: 'Nearly All the Way',
-    prompt: 'Which reaction goes nearly to completion?',
+    prompt: 'Which reaction turns almost all of its reactant into product?',
     widget,
     table: pansTable({
       fixtures: [
         pickColumns(vesselFixture('pans', PANS_AT, { system: 'rp', pans: levelPans(K_BIG), lw: 12, legend: false })),
-        choiceFixture('pick', 'Goes nearly to completion', { x: 62, y: 55 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', 'Vessel 4', ' '], start: 5, w: 60 })
+        choiceFixture('pick', 'Nearly all product', { x: 62, y: 55 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', 'Vessel 4', ' '], start: 5, w: 60 })
       ]
     }, { h: 66 }),
     hints: [
-      'Press "Settle", then tap the vessel you choose.',
-      'Compare how much Reactant is left in each vessel after it settles.',
-      'A reaction that goes nearly to completion leaves almost no Reactant.'
+      'Press "Settle", then tap your choice.',
+      'Compare how much Reactant is left in each vessel after settling.',
+      'A reaction that turns almost all reactant into product leaves almost no Reactant.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 5) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === BIG_PICK) return { ok: true };
       const eq = vslRead(state.table, 'pans').pans[v - 1].eq;
-      return { ok: false, msg: `On Vessel ${v}, ${fmtNum(eq.R, 3)} mol/L of Reactant is still left once it has settled.` };
+      return { ok: false, msg: `Vessel ${v} still has ${fmtNum(eq.R, 3)} mol/L of Reactant left after settling.` };
     },
     reward: {
       log: 'Vessel 2 went nearly to completion.',
       title: 'Large K',
-      body: `Vessel 2 settled with almost no Reactant; its K is ${fmtNum(K_BIG[BIG_PICK - 1], 2)}. A K far above 1 means the vessel settles as nearly all product.`
+      body: `Vessel 2 left almost no Reactant; its K is ${fmtNum(K_BIG[BIG_PICK - 1], 2)}. A K far above 1 means the reaction settles as nearly all product.`
     }
   },
 
@@ -298,7 +302,7 @@ export const STAGES = [
   {
     id: 's7-small',
     title: 'Hardly Started',
-    prompt: 'Which reaction will have made the least product once it settles?',
+    prompt: 'Which vessel will make the least product once it settles?',
     widget,
     table: pansTable({
       fixtures: [
@@ -308,20 +312,20 @@ export const STAGES = [
     }, { h: 66 }),
     hints: [
       'Compare the K printed on each vessel, then tap your choice.',
-      'Look for the K that is smallest compared with 1.',
-      'A large K meant nearly all product; a K far below 1 means the opposite.'
+      'Find the K that is smallest compared with 1.',
+      'A huge K meant almost all product; a tiny K far below 1 means almost all reactant.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 5) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === SMALL_PICK) return { ok: true };
       const eq = vslRead(state.table, 'pans').pans[v - 1].eq;
-      return { ok: false, msg: `Vessel ${v} has K = ${fmtNum(K_SMALL[v - 1], 2)}, which makes ${fmtNum(eq.P, 3)} mol/L of Product—more than the smallest-K vessel.` };
+      return { ok: false, msg: `Vessel ${v} has K = ${fmtNum(K_SMALL[v - 1], 2)}, making ${fmtNum(eq.P, 3)} mol/L of Product—another vessel has an even smaller K.` };
     },
     reward: {
       log: 'Vessel 3 barely started.',
       title: 'Small K',
-      body: `Vessel 3, with K = ${fmtNum(K_SMALL[SMALL_PICK - 1], 2)}, makes almost no product. A K far below 1 means the vessel settles as nearly all reactant.`
+      body: `Vessel 3 (K = ${fmtNum(K_SMALL[SMALL_PICK - 1], 2)}) makes almost no product. A K far below 1 means the reaction settles as nearly all reactant.`
     }
   }
 ];

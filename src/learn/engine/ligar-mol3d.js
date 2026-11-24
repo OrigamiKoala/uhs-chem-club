@@ -32,20 +32,104 @@ const rodBetween = (a, b, r, mat) => {
 /** Turn a planner vector about the vertical by `yaw` (the card's presentation turn). */
 const yawed = (v, yaw) => [v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw), v[1], -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw)];
 
+/** Build a curved fused pi-bond bridge mesh between x0 and x1, arcing out in direction `dir` (0=up, etc.). */
+function piBridgeMesh(x0, x1, y0, z0, dirY, dirZ, arch, rMid, mat) {
+  const mx = (x0 + x1) / 2;
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(x0, y0 + dirY * arch * 0.45, z0 + dirZ * arch * 0.45),
+    new THREE.Vector3(x0 + (x1 - x0) * 0.28, y0 + dirY * arch, z0 + dirZ * arch),
+    new THREE.Vector3(mx, y0 + dirY * arch * 1.08, z0 + dirZ * arch * 1.08),
+    new THREE.Vector3(x0 + (x1 - x0) * 0.72, y0 + dirY * arch, z0 + dirZ * arch),
+    new THREE.Vector3(x1, y0 + dirY * arch * 0.45, z0 + dirZ * arch * 0.45)
+  ]);
+  return new THREE.Mesh(new THREE.TubeGeometry(curve, 18, rMid, 12, false), mat);
+}
+
+/** Build the HCN orbital model: H–C σ bond, C–N central σ bond, and two perpendicular fused π bonds (amber vertical + cyan horizontal). */
+function buildHcnOrbitalModel(c, baseY) {
+  const g = new THREE.Group();
+  const reach = Math.min(c.hw, c.hh) * 0.72;
+  const k = reach;
+  const mat = color => c.own(new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0.1 }));
+
+  const y = baseY + k * 0.72;
+  const z = -c.hh * 0.08;
+  const xH = -k * 0.96;
+  const xC = -k * 0.16;
+  const xN = k * 0.86;
+
+  // Atom nuclei
+  const hBall = new THREE.Mesh(new THREE.SphereGeometry(k * 0.15, 18, 14), mat(MODEL_COLOR.H));
+  hBall.position.set(xH, y, z);
+  const cBall = new THREE.Mesh(new THREE.SphereGeometry(k * 0.21, 20, 16), mat(MODEL_COLOR.C));
+  cBall.position.set(xC, y, z);
+  const nBall = new THREE.Mesh(new THREE.SphereGeometry(k * 0.20, 20, 16), mat(MODEL_COLOR.N));
+  nBall.position.set(xN, y, z);
+  g.add(hBall, cBall, nBall);
+
+  // Sigma bond clouds (head-on overlap along the axis: green-gold)
+  const sigmaMat = c.own(new THREE.MeshStandardMaterial({
+    color: 0x84b93e,
+    emissive: 0x2d4410,
+    emissiveIntensity: 0.35,
+    roughness: 0.28,
+    transparent: true,
+    opacity: 0.84
+  }));
+  const sigmaHC = new THREE.Mesh(new THREE.CapsuleGeometry(k * 0.11, Math.max(0.01, (xC - xH) - k * 0.36), 8, 16), sigmaMat);
+  sigmaHC.rotation.z = Math.PI / 2;
+  sigmaHC.position.set((xH + xC) / 2, y, z);
+  g.add(sigmaHC);
+
+  const sigmaCN = new THREE.Mesh(new THREE.CapsuleGeometry(k * 0.125, Math.max(0.01, (xN - xC) - k * 0.42), 8, 16), sigmaMat);
+  sigmaCN.rotation.z = Math.PI / 2;
+  sigmaCN.position.set((xC + xN) / 2, y, z);
+  g.add(sigmaCN);
+
+  // First pi bond (vertical, top & bottom fused amber clouds)
+  const piMat1 = c.own(new THREE.MeshStandardMaterial({
+    color: 0xe59b24,
+    emissive: 0x5c3606,
+    emissiveIntensity: 0.35,
+    roughness: 0.25,
+    transparent: true,
+    opacity: 0.68,
+    depthWrite: false
+  }));
+  g.add(piBridgeMesh(xC, xN, y, z, 1, 0, k * 0.46, k * 0.115, piMat1));
+  g.add(piBridgeMesh(xC, xN, y, z, -1, 0, k * 0.46, k * 0.115, piMat1));
+
+  // Second pi bond (horizontal, front & back fused cyan clouds, perpendicular to the first pi bond)
+  const piMat2 = c.own(new THREE.MeshStandardMaterial({
+    color: 0x2aa8e0,
+    emissive: 0x0b3a52,
+    emissiveIntensity: 0.35,
+    roughness: 0.25,
+    transparent: true,
+    opacity: 0.64,
+    depthWrite: false
+  }));
+  g.add(piBridgeMesh(xC, xN, y, z, 0, 1, k * 0.46, k * 0.115, piMat2));
+  g.add(piBridgeMesh(xC, xN, y, z, 0, -1, k * 0.46, k * 0.115, piMat2));
+
+  return g;
+}
+
 /**
  * @param {object} c       the `piece3d` context (`hw`, `hh`, `own`)
- * @param {object} o       `{ hub, vectors, yaw, arrows, net }`: `vectors` are the planner's (or the swung) vectors, `arrows` are
+ * @param {object} o       `{ hub, vectors, yaw, arrows, net, orbitals }`: `vectors` are the planner's (or the swung) vectors, `arrows` are
  *                         `[{ sym, d }]` per bond (positive `d`: the atom pulls harder), `net` the unit net pull or null
  * @param {number} baseY   the height of the tile's face
  */
-export function buildMolModel(c, { hub, vectors, yaw = 0, arrows = null, net = null }, baseY) {
+export function buildMolModel(c, { hub, vectors, yaw = 0, arrows = null, net = null, orbitals = null }, baseY) {
+  if (orbitals === 'hcn-triple') return buildHcnOrbitalModel(c, baseY);
   const g = new THREE.Group();
   const reach = Math.min(c.hw, c.hh) * 0.62;
   const k = reach / 1.0;
   const mat = color => c.own(new THREE.MeshStandardMaterial({ color, roughness: 0.46, metalness: 0.08 }));
   const radiusOf = sym => (RADIUS[sym] || 0.3) * k * 0.62;
-  // A molecule with one net arrow stands a little back from the middle so the arrow lies in front of it, clear of every ball and rod.
-  const centre = [0, baseY + reach * 0.62, net ? -c.hh * 0.2 : 0];
+  // A molecule with a net dipole stands slightly back on the card so the painted arrow and δ+/δ− symbols sit cleanly right next to it.
+  const centre = [0, baseY + reach * 0.62, net ? -c.hh * 0.28 : 0];
   const pos = (v, f) => { const w = yawed(v, yaw); return [centre[0] + w[0] * f * k, centre[1] + w[1] * f * k, centre[2] + w[2] * f * k]; };
 
   const hubBall = new THREE.Mesh(new THREE.SphereGeometry(radiusOf(hub), 22, 16), mat(MODEL_COLOR[hub] || MODEL_COLOR.H));
@@ -79,32 +163,10 @@ export function buildMolModel(c, { hub, vectors, yaw = 0, arrows = null, net = n
     g.add(ball);
   }
 
-  // The arrows tool: a short amber arrow along each bond toward the atom that pulls the pair harder, and the sum of them all.
+  // The arrows tool: for nonpolar molecules, draw bond-by-bond arrows along each bond; polar molecules paint their net arrow & δ+/δ− directly on the card face.
   if (arrows) {
+    if (net) return g;
     const amber = mat(AMBER);
-    if (net) {
-      // One arrow for the whole molecule: lying on the card in front of it, tail at the δ+ end, head at the δ− end.
-      const w = yawed(net, yaw);
-      const dir = w[0] >= 0 ? 1 : -1;
-      const half = k * 0.5;
-      const z = c.hh * 0.62;
-      const y = baseY + k * 0.04;
-      const p0 = [-dir * half, y, z];
-      const p1 = [dir * half, y, z];
-      g.add(rodBetween(p0, p1, k * 0.04, amber));
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(k * 0.1, k * 0.2, 12), amber);
-      cone.position.set(...p1);
-      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dir, 0, 0));
-      g.add(cone);
-      if (c.label) {
-        for (const [sign, text] of [[-dir, 'δ+'], [dir, 'δ−']]) {
-          const tag = c.label(text, k * 0.34, k * 0.2, { bg: '#2a2620' });
-          tag.position.set(sign * (half + k * 0.3), y + k * 0.01, z);
-          g.add(tag);
-        }
-      }
-      return g;
-    }
     arrows.forEach((a, i) => {
       const v = atomVectors[i];
       if (!v || Math.abs(a.d) < 0.01) return;

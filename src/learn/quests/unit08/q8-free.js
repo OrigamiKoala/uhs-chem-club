@@ -98,9 +98,9 @@ export const STAGES = [
     predict: true,
     briefing: {
       speaker: 'Vess',
-      body: 'Free energy change ΔG° = ΔH − TΔS combines heat change (ΔH) with how much particles spread out (entropy, TΔS, at temperature T in kelvin). When ΔG° is negative, the reaction favors products.'
+      body: 'Free energy change (ΔG° = ΔH − TΔS) balances heat change (ΔH) against how much particles spread out (entropy, TΔS). Negative ΔG° favors products.'
     },
-    prompt: `Starting from reactant alone in a reaction with ΔG° = +${DG_PREDICT} kJ/mol, what does the vessel hold once settled?`,
+    prompt: `Starting with only reactant and ΔG° = +${DG_PREDICT} kJ/mol, what does the settled vessel hold?`,
     widget,
     table: pansTable({
       pieces: [
@@ -113,13 +113,13 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
-      'Lay one of the four cards in the slot.',
-      'Think about what a positive ΔG° means for how far a reaction runs.',
-      'Commit to the card closest to what you expect the settled vessel to hold.'
+      'Drag one prediction card into the slot.',
+      'Think about what a positive ΔG° means for how much product forms.',
+      'Pick the card that best matches what you expect once the vessel settles.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -129,7 +129,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, three vessels of different reactions are settled, and their ΔG° cards are laid on them.'
+      body: 'Next, we settle three vessels and match each one to its ΔG° card.'
     }
   },
 
@@ -154,27 +154,27 @@ export const STAGES = [
       }
     }, { h: 74 }),
     hints: [
-      'Press "Run" on each vessel, then lay a ΔG° card in each slot.',
-      'Compare how much product each vessel holds with the ΔG° on the cards.',
-      'A more negative ΔG° means more product when settled.'
+      'Press "Run" on all three vessels, then place a ΔG° card under each.',
+      'Compare how much product each vessel holds with the ΔG° values on the cards.',
+      'A more negative ΔG° produces more product at equilibrium.'
     ],
     check(state) {
       const t = state.table;
       const laid = PANS2.map((p, i) => pieceIn(t, `s${i + 1}`));
-      if (laid.some(c => !c)) return { ok: false, notYet: true, msg: 'Lay a card on each vessel.' };
+      if (laid.some(c => !c)) return { ok: false, notYet: true, msg: 'Place a ΔG° card under each vessel.' };
       const bad = PANS2.findIndex((p, i) => laid[i].id !== CARD_OF[p.id]);
       if (bad < 0) return { ok: true };
       const r = read2(PANS2[bad].dG);
-      return { ok: false, msg: `Vessel ${bad + 1} settles with ${amt(r.amounts.B)} mol/L of product and ${amt(r.amounts.A)} mol/L of reactant, and the card on it reads ${CARD_LABEL[laid[bad].id]}.` };
+      return { ok: false, msg: `Vessel ${bad + 1} settles with ${amt(r.amounts.B)} mol/L product and ${amt(r.amounts.A)} mol/L reactant—check whether ${CARD_LABEL[laid[bad].id]} matches that ratio.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
       const r8 = read2(DG_PREDICT);
-      const verdict = !g || !GUESS[g] ? '' : g === 'little' ? `You predicted a little product, and the +${DG_PREDICT} vessel held ${amt(r8.amounts.B)} mol/L. ` : g === 'none' ? `You predicted no product, but the +${DG_PREDICT} vessel held ${amt(r8.amounts.B)} mol/L. ` : `The +${DG_PREDICT} vessel held ${amt(r8.amounts.B)} mol/L of product, which is not what you predicted. `;
+      const verdict = !g || !GUESS[g] ? '' : g === 'little' ? `Your prediction matched: the +${DG_PREDICT} vessel held ${amt(r8.amounts.B)} mol/L product. ` : g === 'none' ? `You predicted no product, yet the +${DG_PREDICT} vessel still made ${amt(r8.amounts.B)} mol/L. ` : `The +${DG_PREDICT} vessel made ${amt(r8.amounts.B)} mol/L product, unlike your prediction. `;
       return {
         log: 'The lower the ΔG°, the more product the vessel held.',
         title: 'ΔG° Sets K',
-        body: `${verdict}The more negative the ΔG°, the more product the vessel holds. A positive ΔG° gives less product than reactant, but never none.`
+        body: `${verdict}More negative ΔG° means more product. Positive ΔG° favors reactant, but still makes some product.`
       };
     }
   },
@@ -185,7 +185,7 @@ export const STAGES = [
     title: 'K From ΔG°',
     briefing: {
       speaker: 'Vess',
-      body: 'ΔG° and K are tied by K = e^(−ΔG° ÷ RT), where R is 8.314 J/(mol·K), T is kelvin (298 K = 25 °C), and ΔG° is in joules. Use exp(x) on the calculator.',
+      body: 'ΔG° and K are linked by K = e^(−ΔG° ÷ RT), where R = 8.314 J/(mol·K), T is in kelvin, and ΔG° is in J/mol. Use exp(x) on the calculator.',
       worked: [
         'For ΔG° = −5.0 kJ/mol at 298 K:',
         '−ΔG° = 5000 J/mol',
@@ -194,7 +194,7 @@ export const STAGES = [
         'K = exp(2.02) = 7.5'
       ]
     },
-    prompt: `What is K for a reaction with ΔG° = ${fmt1(DG_TYPED).replace('+', '')} kJ/mol at ${T_BENCH} K?`,
+    prompt: `What is K when ΔG° = ${fmt1(DG_TYPED).replace('+', '')} kJ/mol at ${T_BENCH} K?`,
     entry: { id: 'k', label: 'K', unit: '' },
     widget,
     table: pansTable({
@@ -205,20 +205,20 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Use the calculator and the answer box.',
-      'Turn −10.0 kJ/mol into joules first to match R = 8.314 J/(mol·K).',
-      'Divide −ΔG° in J/mol by RT, then take exp of that number.'
+      'Use the calculator and type K in the answer box.',
+      'Convert −10.0 kJ/mol to −10,000 J/mol first so the units match R = 8.314 J/(mol·K).',
+      'Divide −ΔG° (in J/mol) by RT, then apply exp() to that result.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');
-      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type K as a number above zero.' };
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type a positive number for K.' };
       if (Math.abs(v - K_TYPED) / K_TYPED <= 0.02) return { ok: true };
-      if (Math.abs(v - 7.5) <= 0.4) return { ok: false, msg: '7.5 is the worked example\'s K for −5.0 kJ/mol; this reaction has ΔG° = −10.0 kJ/mol.' };
+      if (Math.abs(v - 7.5) <= 0.4) return { ok: false, msg: '7.5 is K for the −5.0 kJ/mol example; this reaction has ΔG° = −10.0 kJ/mol.' };
       const ks = K_PANS.map(d => settledAt(MODEL_PAN, d, T_BENCH).K);
-      const reads = `Vessel A at ${fmt1(K_PANS[0])} kJ/mol and Vessel B at ${fmt1(K_PANS[1])} kJ/mol settle with K ${sigK(ks[0])} and ${sigK(ks[1])}.`;
-      if (Math.abs(Math.log(v)) < 0.05) return { ok: false, msg: `A K of ${v} would leave a vessel with about equal amounts of reactant and product, and both vessels on the bench hold far more product than reactant.` };
-      if (v < 1) return { ok: false, msg: `A K of ${v} would leave a vessel with more reactant than product, and both vessels on the bench hold more product than reactant.` };
-      return { ok: false, msg: `${reads} A K of ${v} does not follow the same pattern at ${fmt1(DG_TYPED)} kJ/mol.` };
+      const reads = `Vessel A (${fmt1(K_PANS[0])} kJ/mol) gives K = ${sigK(ks[0])} and Vessel B (${fmt1(K_PANS[1])} kJ/mol) gives K = ${sigK(ks[1])}.`;
+      if (Math.abs(Math.log(v)) < 0.05) return { ok: false, msg: `K ≈ 1 means roughly equal reactant and product, whereas both vessels on the bench hold far more product than reactant.` };
+      if (v < 1) return { ok: false, msg: `K < 1 means mostly reactant, whereas both vessels on the bench hold more product than reactant.` };
+      return { ok: false, msg: `${reads} Check your sign and kJ-to-J conversion for ${fmt1(DG_TYPED)} kJ/mol.` };
     },
     reward: {
       log: 'K came from ΔG° with K = exp(−ΔG° ÷ RT).',
@@ -231,7 +231,7 @@ export const STAGES = [
   {
     id: 's4-salts',
     title: 'Salts in Water',
-    prompt: `Which salt has a negative ΔG = ΔH − TΔS of dissolving at ${T_BENCH} K?`,
+    prompt: `Which salt has a negative ΔG (ΔH − TΔS) when dissolving at ${T_BENCH} K?`,
     widget,
     table: pansTable({
       fixtures: [
@@ -240,23 +240,23 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Compare the ΔH and TΔS bars of each salt, then tap the salt you choose.',
-      'Remember ΔG = ΔH − TΔS.',
-      'Look for the salt whose TΔS bar reaches past its ΔH bar.'
+      'Compare the ΔH and TΔS bars for each salt, then tap your choice.',
+      'Use ΔG = ΔH − TΔS to check which salt gives a negative result.',
+      'Find the salt whose TΔS bar is larger than its ΔH bar.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Tap a salt to choose it.' };
       if (v === SALT_ANSWER) return { ok: true };
       const s = pulls({ ...DISSOLVE[SALT_ORDER[v - 1]], T: T_BENCH });
-      return { ok: false, msg: `Salt ${v} has ΔH ${fmt1(s.dH)} kJ/mol and TΔS ${fmt1(s.TdS)} kJ/mol.` };
+      return { ok: false, msg: `Salt ${v} has ΔH = ${fmt1(s.dH)} kJ/mol and TΔS = ${fmt1(s.TdS)} kJ/mol, so ΔH − TΔS is positive.` };
     },
     get reward() {
       const g = id => pulls({ ...DISSOLVE[id], T: T_BENCH });
       return {
         log: 'Salt 2 had a negative ΔG because TΔS outweighed ΔH.',
         title: 'Dissolving Is a ΔG Question',
-        body: `Salt 2, sodium chloride, takes in heat but its TΔS is larger, so ΔG is ${fmt1(g('nacl').dG)} kJ/mol and it dissolves. For the other two ΔG is large and positive, and very little dissolves.`
+        body: `Sodium chloride (Salt 2) absorbs heat, but its TΔS is larger, giving ΔG = ${fmt1(g('nacl').dG)} kJ/mol so it dissolves. The other two have large positive ΔG and barely dissolve.`
       };
     }
   },
@@ -265,13 +265,13 @@ export const STAGES = [
   {
     id: 's5-cold',
     title: 'A Cold Pack',
-    prompt: 'Why does this salt dissolve although it cools the water?',
+    prompt: 'Why does this salt dissolve even though it cools the water?',
     widget,
     table: pansTable({
       pieces: [
-        note('cw2', 'Dissolving only happens when it gives out heat', { x: 26, y: 60 }),
-        note('cw1', 'TΔS is larger than the heat taken in', { x: 76, y: 60 }),
-        note('cw3', 'The salt dissolved without taking in any heat', { x: 126, y: 60 })
+        note('cw2', 'Dissolving only happens when it releases heat', { x: 26, y: 60 }),
+        note('cw1', 'TΔS is larger than the heat absorbed (ΔH)', { x: 76, y: 60 }),
+        note('cw3', 'The salt dissolved without absorbing any heat', { x: 126, y: 60 })
       ],
       fixtures: [
         pullsFixture('cup', { x: 42, y: 24 }, { title: 'Salt in water', change: { dH: DISSOLVE.nh4cl.dH, dS: DISSOLVE.nh4cl.dS }, range: SALT_RANGE, water: PACK, w: 80, h: 36 })
@@ -279,23 +279,23 @@ export const STAGES = [
       zones: { slots: [{ id: 'why', label: 'What the beaker shows', at: { x: 122, y: 22 }, size: { w: 46, h: 16 } }] }
     }, { h: 72 }),
     hints: [
-      'Press "Run" on the beaker, then lay a card in the slot.',
-      'Compare the ΔH and TΔS bars with what the thermometer and the salt left report.',
-      'The salt only dissolves if ΔH − TΔS is negative, even though heat is taken in.'
+      'Press "Run" on the beaker, then place a card in the slot.',
+      'Compare the ΔH and TΔS bars with the thermometer drop and the remaining salt.',
+      'A salt dissolves when ΔG = ΔH − TΔS is negative, even if ΔH is positive.'
     ],
     check(state) {
       const c = pieceIn(state.table, 'why');
-      if (!c) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!c) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       if (c.id === 'cw1') return { ok: true };
-      const fall = `The water fell from ${PACK_READ.T0.toFixed(1)} °C to ${PACK_READ.T1.toFixed(1)} °C`;
-      if (c.id === 'cw2') return { ok: false, msg: `${fall}, and the salt left is ${PACK_READ.left.toFixed(2)} mol.` };
-      return { ok: false, msg: `The ΔH bar points right at ${fmt1(NH4.dH)} kJ/mol, and ${fall.charAt(0).toLowerCase()}${fall.slice(1)}.` };
+      const fall = `The water cooled from ${PACK_READ.T0.toFixed(1)} °C to ${PACK_READ.T1.toFixed(1)} °C`;
+      if (c.id === 'cw2') return { ok: false, msg: `${fall}, yet all the salt dissolved (${PACK_READ.left.toFixed(2)} mol left).` };
+      return { ok: false, msg: `The ΔH bar is ${fmt1(NH4.dH)} kJ/mol and ${fall.charAt(0).toLowerCase()}${fall.slice(1)}, so it did absorb heat.` };
     },
     get reward() {
       return {
         log: 'The salt dissolved while its water cooled.',
         title: 'Entropy Can Win',
-        body: `The salt took in ${NH4.dH.toFixed(1)} kJ/mol, so the water cooled, but entropy (spread-out-ness, TΔS = ${NH4.TdS.toFixed(1)} kJ/mol) was larger, so ΔG was negative.`
+        body: `The salt absorbed ${NH4.dH.toFixed(1)} kJ/mol (cooling the water), but the entropy gain (TΔS = ${NH4.TdS.toFixed(1)} kJ/mol) was larger, making ΔG negative.`
       };
     }
   },
@@ -304,8 +304,8 @@ export const STAGES = [
   {
     id: 's6-couple',
     title: 'Two Reactions Together',
-    briefing: 'ATP is the molecule cells use to carry energy. Splitting it into ADP and phosphate has a ΔG° of −30.5 kJ/mol.',
-    prompt: 'Which reactions add up to glucose + ATP → glucose-6-phosphate + ADP?',
+    briefing: 'Cells use ATP to drive uphill reactions. Splitting ATP into ADP and phosphate (Pi) has ΔG° = −30.5 kJ/mol.',
+    prompt: 'Which two reactions add up to glucose + ATP → glucose-6-phosphate + ADP?',
     widget,
     table: pansTable({
       pieces: [
@@ -321,14 +321,14 @@ export const STAGES = [
     }, { h: 78 }),
     hints: [
       'Drag two reaction cards into the stack tray.',
-      'Look for a substance that stands on opposite sides of the two cards so it cancels.',
-      'Stack the cards whose remaining reactants and products match glucose + ATP → glucose-6-phosphate + ADP.'
+      'Pick two cards whose shared substances (like Pi and H₂O) sit on opposite sides so they cancel.',
+      'Check that the leftover substances match glucose + ATP → glucose-6-phosphate + ADP.'
     ],
     check(state) {
       const t = state.table;
       const r = stackRead(t, 'wanted');
-      if (r.empty) return { ok: false, notYet: true, msg: 'Stack the cards first.' };
-      if (!r.matches) return { ok: false, msg: 'Those cards do not add up to the target reaction; pick two cards whose shared substances (like Pi and H₂O) sit on opposite sides so they cancel.' };
+      if (r.empty) return { ok: false, notYet: true, msg: 'Place two cards in the stack tray first.' };
+      if (!r.matches) return { ok: false, msg: 'Those cards do not sum to the target reaction—pick two cards whose shared substances (Pi, H₂O) sit on opposite sides to cancel.' };
       return { ok: true };
     },
     get reward() {
@@ -336,7 +336,7 @@ export const STAGES = [
       return {
         log: 'Pairing the two reactions made a net ΔG° below zero.',
         title: 'Coupled Reactions',
-        body: `Adding phosphate to glucose has ΔG° of ${fmt1(COUPLE.g6p.dG)} kJ/mol; added to ATP splitting at ${fmt1(COUPLE.atp.dG)}, the pair nets ${fmt1(pair.dG)} and runs. This is a coupled reaction.`
+        body: `Making glucose-6-phosphate is uphill (${fmt1(COUPLE.g6p.dG)} kJ/mol), but pairing it with ATP (${fmt1(COUPLE.atp.dG)}) nets ${fmt1(pair.dG)} kJ/mol so it runs. That is a coupled reaction.`
       };
     }
   },
@@ -354,21 +354,21 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Compare the ΔH and TΔS bars of each reaction, then tap the reaction you choose.',
-      'Compare both bars together, not ΔH alone.',
-      'ΔG° = ΔH − TΔS decides where a vessel settles.'
+      'Compare the ΔH and TΔS bars on each reaction, then tap your choice.',
+      'Compare both bars together (ΔH − TΔS), not ΔH alone.',
+      'The reaction with the most negative ΔG° = ΔH − TΔS makes the most product.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Tap a reaction to choose it.' };
       if (v === ANSWER8) return { ok: true };
       const a = pulls({ ...REACTIONS8[v - 1], T: T_BENCH });
-      return { ok: false, msg: `Reaction ${v} has ΔG = ΔH − TΔS = ${fmt1(a.dG)} kJ/mol; look for the reaction with the most negative ΔG.` };
+      return { ok: false, msg: `Reaction ${v} has ΔG = ΔH − TΔS = ${fmt1(a.dG)} kJ/mol; find the reaction with an even more negative ΔG.` };
     },
     reward: {
       log: 'The lowest ΔG settled with the most product.',
       title: 'Free Energy Decides',
-      body: 'The reaction with the most negative ΔH − TΔS has the largest K, even though it takes in heat. ΔG° says where a vessel settles, not how fast.'
+      body: 'The reaction with the most negative ΔH − TΔS has the largest K, even though it absorbs heat. ΔG° sets where equilibrium lands, not how fast.'
     }
   }
 ];

@@ -22,6 +22,7 @@ import { mountCuvetteExplainer } from './cuvette-explainer.js';
 import { mountPhotoelectricExplainer } from './photoelectric-explainer.js';
 import { mountRutherfordBeam, mountChargePlates, mountShellFill, mountMgCation, mountAbsorptionLadder } from './tallow-explainers.js';
 import { mountShapeExplainer } from './shape-explainer.js';
+import { mountHybridExplainer } from './hybrid-explainer.js';
 import { mountElectronegativityExplainer } from './electronegativity-explainer.js';
 import { mountBellowsExplainer } from './bellows-explainers.js';
 
@@ -1234,12 +1235,23 @@ export function mountModel(host, spec) {
     };
   }
 
-  // Sigma and pi bonds: two atomic orbitals blending as the nuclei approach
+  // Sigma and pi bonds: clean non-interactive animation of orbital surfaces merging (σ and π labels only)
   if (parts.sigmaPi) {
-    const teardownSigmaPi = mountBondOverlap(view, wrap, parts.sigmaPi, still);
+    const teardownSigmaPi = mountHybridExplainer(view, { kind: 'sigma-pi' }, still);
     return {
       dispose() {
         try { teardownSigmaPi(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // Hybrid orbital animations with labeled lobes (sp² + unmixed p, CO₂ full orbitals)
+  if (parts.hybridAnim) {
+    const teardownHybrid = mountHybridExplainer(view, parts.hybridAnim, still);
+    return {
+      dispose() {
+        try { teardownHybrid(); } catch (err) { /* gone */ }
         wrap.remove();
       }
     };

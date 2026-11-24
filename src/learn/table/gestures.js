@@ -519,10 +519,10 @@ export class TableGestures {
     this.pourFrom = null;
     // A piece that is only MARKED, never carried (`props.markable`: a particle the player tags), is flipped by a tap: one touch, no carrying.
     if (!held && this.state.pieces[id]?.props?.markable) { this.view.dispatch({ flip: id }); return; }
-    // On a VSEPR hub, clicking an attached arm or lone pair selects it to measure the bond angle (dragging still detaches it).
+    // On a VSEPR hub, clicking an attached arm, lone pair, or the central hub selects it to measure the 3-atom bond angle (dragging still detaches arms).
     if (!held && this.state.kit === 'domain') {
       const tp = this.state.pieces[id];
-      if (tp && (tp.kind === 'arm' || tp.kind === 'balloon') && tp.joinedTo?.some(j => this.state.pieces[j]?.kind === 'hub')) {
+      if (tp && (tp.kind === 'hub' || ((tp.kind === 'arm' || tp.kind === 'balloon') && tp.joinedTo?.some(j => this.state.pieces[j]?.kind === 'hub')))) {
         this.view.dispatch({ flip: id });
         return;
       }

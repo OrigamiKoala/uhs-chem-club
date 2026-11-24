@@ -109,7 +109,7 @@ export const STAGES = [
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Drop a prediction card in the slot first.' };
       return { ok: true };
     },
     onClear(state) {
@@ -117,9 +117,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Prediction',
-      body: 'Next, the tin and lead cell is run and its two beakers are watched.'
+      log: 'Prediction saved.',
+      title: 'Prediction Saved',
+      body: 'Prediction saved. Next, run the tin-and-lead cell until it stops and watch the ions in both beakers.'
     }
   },
 
@@ -127,7 +127,7 @@ export const STAGES = [
   {
     id: 's2-run',
     title: 'The Cell Runs Down',
-    get prompt() { return guessLine('Press Run until the voltage reaches zero, then tap each ion (Sn²⁺, Pb²⁺) on the Model that is still present.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Press Run until voltage hits zero, then tap each ion (Sn²⁺, Pb²⁺) still on the Model.', recall(QUEST_KEY)); },
     widget,
     table: cellTable({
       fixtures: [
@@ -142,20 +142,20 @@ export const STAGES = [
     check(state) {
       const d = state.table.fixtures.scene.dials;
       const tin = Math.round(d.t0.value) === 1; const lead = Math.round(d.t1.value) === 1;
-      if (!tin && !lead) return { ok: false, notYet: true, msg: 'Tap each kind of ion that is still there.' };
+      if (!tin && !lead) return { ok: false, notYet: true, msg: 'Tap each ion still present on the Model.' };
       if (tin && lead) return { ok: true };
       const r = loadRead({ fixtures: state.table.fixtures }, 'load');
-      if (!r.ran) return { ok: false, msg: `The cell has not been run yet; the windows hold ${r.now.nAnode} tin and ${r.now.nCathode} lead ions.` };
-      return { ok: false, msg: `At tick ${r.tick} the voltmeter read ${milliText(r.now.E)} V, the tin window held ${r.now.nAnode} ions and the lead window ${r.now.nCathode}.` };
+      if (!r.ran) return { ok: false, msg: `Press Run first; the beakers currently hold ${r.now.nAnode} tin and ${r.now.nCathode} lead ions.` };
+      return { ok: false, msg: `At step ${r.tick}, the voltage is ${milliText(r.now.E)} V; the tin window held ${r.now.nAnode} ions and the lead window held ${r.now.nCathode}.` };
     },
     get reward() {
       const e = END();
       const g = recall(QUEST_KEY);
-      const said = g === 'both' ? 'As you predicted, both kinds of ion were still there. ' : g ? 'Not what you predicted. ' : '';
+      const said = g === 'both' ? 'As you predicted, both' : g ? 'Unlike your prediction, both' : 'Both';
       return {
         log: 'The voltage fell to zero with both ions still in the beakers.',
         title: 'A Dead Cell Is Not Empty',
-        body: `${said}The voltage fell from ${milliText(loadAt(TL.cathode, TL.anode, START, 0).E)} V to ${milliText(e.E)} V, leaving ${e.nAnode} tin and ${e.nCathode} lead ions: the cell stopped without being used up.`
+        body: `${said} ions were still present when the voltage dropped from ${milliText(loadAt(TL.cathode, TL.anode, START, 0).E)} V to ${milliText(e.E)} V (${e.nAnode} tin, ${e.nCathode} lead). A dead cell stops before running empty.`
       };
     }
   },
@@ -164,8 +164,8 @@ export const STAGES = [
   {
     id: 's3-zinc',
     title: 'More Zinc Ions',
-    briefing: { speaker: SPEAKER, body: 'Concentration (measured in M, molarity) tells how crowded the ions are: 0.010 M has fewer ions; 1.0 M has many more ions.' },
-    prompt: 'What happens to the cell\'s voltage when the zinc ion concentration is raised from 0.010 M (fewer ions) to 1.0 M (more ions)?',
+    briefing: { speaker: SPEAKER, body: 'Concentration (in M, molarity) tells how crowded the ions are: 0.010 M has few ions; 1.0 M has many.' },
+    prompt: 'How does the cell voltage change when zinc ions increase from 0.010 M to 1.0 M?',
     widget,
     table: cellTable({
       fixtures: [
@@ -180,19 +180,19 @@ export const STAGES = [
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Choose an answer on the dial first.' };
       if (v === 2) return { ok: true };
       const r = readsOf(state.table);
-      if (r.rows.length < 2) return { ok: false, msg: `The cell has been read at ${r.rows.length ? 'one' : 'no'} zinc concentration${r.rows.length ? '' : 's'}; two lines let you compare.` };
+      if (r.rows.length < 2) return { ok: false, msg: 'Run the cell at both zinc concentrations so you can compare them.' };
       const [lo, hi] = r.rows;
-      return { ok: false, msg: `The cell read ${voltText(lo.V)} V with ${concLabel(lo.aC)} zinc ions and ${voltText(hi.V)} V with ${concLabel(hi.aC)}.` };
+      return { ok: false, msg: `The cell read ${voltText(lo.V)} V at ${concLabel(lo.aC)} zinc ions and ${voltText(hi.V)} V at ${concLabel(hi.aC)}.` };
     },
     get reward() {
       const lo = readAt('cu', 'zn', CONC_STEPS[0], 1); const hi = readAt('cu', 'zn', CONC_STEPS[1], 1);
       return {
         log: 'More zinc ions gave a lower voltage.',
         title: 'More Product, Lower Voltage',
-        body: `With ${concLabel(CONC_STEPS[0])} zinc ions the cell read ${voltText(lo)} V and with ${concLabel(CONC_STEPS[1])} it read ${voltText(hi)} V. Zinc ions are made as the cell runs, and the more of them the beaker holds, the lower the voltage.`
+        body: `At ${concLabel(CONC_STEPS[0])} zinc ions the cell read ${voltText(lo)} V, and at ${concLabel(CONC_STEPS[1])} it read ${voltText(hi)} V. Zinc ions are products, so more of them lowers the voltage.`
       };
     }
   },
@@ -223,18 +223,18 @@ export const STAGES = [
     ],
     check(state) {
       const card = pieceIn(state.table, 'reason');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Drop a reason card in the slot first.' };
       if (card.id === 'eq') return { ok: true };
       const e = END();
       if (card.id === 'out') return { ok: false, msg: `Both windows still hold ions: ${e.nAnode} tin and ${e.nCathode} lead.` };
-      return { ok: false, msg: `The two windows are not equal: ${e.nAnode} tin and ${e.nCathode} lead.` };
+      return { ok: false, msg: `The two ion counts are not equal: ${e.nAnode} tin and ${e.nCathode} lead.` };
     },
     get reward() {
       const e = END(); const b = balanceOf(TL.cathode, TL.anode, START);
       return {
         log: 'The ratio of ions matched K when the cell reached zero.',
         title: 'Reaction Quotient',
-        body: `${e.nAnode} ÷ ${e.nCathode} = ${fmt(e.nAnode / e.nCathode, 1)}, close to K = ${fmt(b.K, 1)}. A cell is at equilibrium, and reads 0 V, when Q reaches K.`
+        body: `${e.nAnode} ÷ ${e.nCathode} = ${fmt(e.nAnode / e.nCathode, 1)}, matching K = ${fmt(b.K, 1)}. A cell reaches equilibrium (0 V) when Q catches up to K.`
       };
     }
   },
@@ -243,7 +243,7 @@ export const STAGES = [
   {
     id: 's5-copper',
     title: 'Two Copper Beakers',
-    briefing: { speaker: SPEAKER, body: 'Even with the same metal on both sides, different ion concentrations create a voltage as the cell works to make both beakers equal.' },
+    briefing: { speaker: SPEAKER, body: 'Even with the same metal on both sides, different ion concentrations create a voltage as the cell works to equalize them.' },
     prompt: 'In this copper cell (1.0 M vs 0.010 M), press Run, then tap the electrode on the Model that electrons leave.',
     widget,
     table: cellTable({
@@ -259,18 +259,18 @@ export const STAGES = [
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode on the Model first.' };
       if (v === 2) return { ok: true };
       const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
       if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter needle is at rest.' };
-      return { ok: false, msg: `The voltmeter read ${fmt(r.V, 3)} V, right electrode against left, and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} electrode.` };
+      return { ok: false, msg: `The meter read ${fmt(r.V, 3)} V and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} electrode.` };
     },
     get reward() {
       const c = concCellRead(S5.metal, S5.cLeft, S5.cRight);
       return {
         log: 'The electrons left the electrode in the dilute beaker.',
         title: 'Concentration Cell',
-        body: `The same metal at 1.0 M and 0.010 M read ${fmt(c.E, 3)} V: a concentration cell, which runs until the two concentrations match.`
+        body: `The same metal at 1.0 M and 0.010 M read ${fmt(c.E, 3)} V. This is a concentration cell, and it runs until both beakers reach the same concentration.`
       };
     }
   },
@@ -284,7 +284,7 @@ export const STAGES = [
       body: 'More product ions lower the voltage; more reactant ions raise it. The Nernst equation gives the exact value: E = E° − (0.0592 ÷ n) × log Q.',
       worked: ['0.010 M Zn²⁺, 1.0 M Cu²⁺ (E° = 1.10 V, n = 2):', 'Q = 0.010 ÷ 1.0 = 0.010, log Q = −2', 'E = 1.10 − (0.0592 ÷ 2) × (−2) = 1.16 V']
     },
-    prompt: 'What is the voltage, in volts, of the zinc and copper cell with 1.0 M zinc ions and 0.0010 M copper ions?',
+    prompt: 'Find the voltage (in V) of this zinc–copper cell with 1.0 M Zn²⁺ and 0.0010 M Cu²⁺.',
     widget,
     entry: { id: 'v', label: 'Cell voltage', unit: 'V' },
     table: cellTable({
@@ -294,13 +294,13 @@ export const STAGES = [
       ]
     }, { w: 156, h: 66 }),
     hints: [
-      'Read the concentrations under the beakers, open the calculator icon at the bottom right if needed, and type the voltage.',
+      'Read the concentrations under the beakers, open the calculator at bottom right if needed, and type the voltage.',
       'Compare the charges on the two ions and the two concentrations with the equation on the plate.',
       'Follow the worked case in the briefing using this cell\'s concentrations and n = 2.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'v');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       const E0 = cellE0('cu', 'zn');
       const want = readAt('cu', 'zn', S6.aC, S6.cC);
       if (Math.abs(v - want) <= TOL_V) return { ok: true };
@@ -309,19 +309,19 @@ export const STAGES = [
       const inverted = nernst(E0, 2, 1 / Q);
       const noN = nernst(E0, 1, Q);
       const lnForm = E0 - (0.0592 / 2) * Math.log(Q);
-      if (near(inverted)) return { ok: false, msg: `${fmt(v, 2)} V is above the 1.10 V on the plate, and this cell holds ${concLabel(S6.aC)} zinc ions against ${concLabel(S6.cC)} copper ions.` };
-      if (near(noN)) return { ok: false, msg: `The ions under the beakers are Zn²⁺ and Cu²⁺; ${fmt(v, 2)} V counts one electron.` };
-      if (near(lnForm)) return { ok: false, msg: 'The 0.0592 on the plate goes with the base-ten log of Q, not the natural log.' };
-      if (near(E0)) return { ok: false, msg: `1.10 V is the plate's figure for equal concentrations; this cell holds ${concLabel(S6.aC)} zinc ions and ${concLabel(S6.cC)} copper ions.` };
-      if (Math.abs(v - E0) > 0.5) return { ok: false, msg: `The plate gives 1.10 V, and the readings at stage 3 moved by hundredths of a volt; ${fmt(v, 2)} V is far from it.` };
-      return { ok: false, msg: `The plate gives 1.10 V for this cell with equal concentrations; ${fmt(v, 2)} V does not follow from ${concLabel(S6.aC)} zinc ions and ${concLabel(S6.cC)} copper ions.` };
+      if (near(inverted)) return { ok: false, msg: `${fmt(v, 2)} V is above the 1.10 V on the plate, while this cell holds ${concLabel(S6.aC)} Zn²⁺ and ${concLabel(S6.cC)} Cu²⁺.` };
+      if (near(noN)) return { ok: false, msg: `The ions are Zn²⁺ and Cu²⁺; ${fmt(v, 2)} V counts one electron.` };
+      if (near(lnForm)) return { ok: false, msg: 'The 0.0592 on the plate goes with the base-ten log, not the natural log.' };
+      if (near(E0)) return { ok: false, msg: `1.10 V is for equal concentrations; this cell holds ${concLabel(S6.aC)} Zn²⁺ and ${concLabel(S6.cC)} Cu²⁺.` };
+      if (Math.abs(v - E0) > 0.5) return { ok: false, msg: `The plate gives 1.10 V and concentration shifts it by hundredths of a volt, so ${fmt(v, 2)} V is far from it.` };
+      return { ok: false, msg: `With E° = 1.10 V, ${concLabel(S6.aC)} Zn²⁺, and ${concLabel(S6.cC)} Cu²⁺, the Nernst equation does not give ${fmt(v, 2)} V.` };
     },
     get reward() {
       const E0 = cellE0('cu', 'zn'); const Q = S6.aC / S6.cC;
       return {
         log: 'The voltage followed E° and the log of Q.',
         title: 'The Nernst Equation',
-        body: `E = E° − (0.0592 ÷ 2) log Q = ${fmt(nernst(E0, 2, Q), 2)} V, the Nernst equation: the voltage is above E° when Q is below 1 and below E° when Q is above 1.`
+        body: `E = E° − (0.0592 ÷ 2) log Q = ${fmt(nernst(E0, 2, Q), 2)} V. By the Nernst equation, voltage is above E° when Q < 1 and below E° when Q > 1.`
       };
     }
   },
@@ -330,7 +330,7 @@ export const STAGES = [
   {
     id: 's7-rank',
     title: 'Three Prepared Cells',
-    prompt: 'Order these three cells from lowest voltage to highest voltage.',
+    prompt: 'Order these three cells on the rail from lowest voltage to highest, then press Run to test.',
     widget,
     table: (() => {
       const fixtures = S7_CELLS.map(([fid, , name, a, c], i) => readFixture(fid, { x: 32 + i * 56, y: 30 }, { left: 'zn', right: 'cu', aC: a, cC: c, w: 50, title: name }));
@@ -349,22 +349,22 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < S7_CELLS.length) return { ok: false, notYet: true, msg: `Put all ${S7_CELLS.length} cards on the rail.` };
+      if (order.length < S7_CELLS.length) return { ok: false, notYet: true, msg: `Place all ${S7_CELLS.length} cans on the rail first.` };
       const want = S7_WANT.map(c => c[1]);
       if (order.join() === want.join()) return { ok: true };
       const byCard = id => S7_CELLS.find(c => c[1] === id);
       const k = order.findIndex((id, i) => i > 0 && S7_V(byCard(id)) < S7_V(byCard(order[i - 1])));
       const a = byCard(order[k - 1]); const b = byCard(order[k]);
       const ra = readRead({ fixtures: t.fixtures }, a[0]).now; const rb = readRead({ fixtures: t.fixtures }, b[0]).now;
-      if (!ra || !rb) return { ok: false, msg: `${a[2]} sits left of ${b[2]}, and ${!ra ? a[2] : b[2]} has not been read yet.` };
-      return { ok: false, msg: `${a[2]} sits left of ${b[2]}, but ${a[2]} read ${voltText(ra.V)} V and ${b[2]} read ${voltText(rb.V)} V.` };
+      if (!ra || !rb) return { ok: false, msg: `${a[2]} is left of ${b[2]}, and you have not run ${!ra ? a[2] : b[2]} yet.` };
+      return { ok: false, msg: `${a[2]} is left of ${b[2]}, but ${a[2]} read ${voltText(ra.V)} V while ${b[2]} read ${voltText(rb.V)} V.` };
     },
     get reward() {
       const rows = S7_WANT.map(c => `${c[2]} ${voltText(S7_V(c))} V`);
       return {
         log: 'The cell farthest from balance read the highest.',
         title: 'Distance from Balance',
-        body: `${rows.join(', ')}. A cell with more reactant than product ions reads above E°, and one with more product ions reads below.`
+        body: `${rows.join(', ')}. More reactant ions than product ions gives a voltage above E°; more product ions gives a voltage below E°.`
       };
     }
   }
@@ -379,7 +379,7 @@ attachScenes(STAGES, {
 
 export const DEBRIEF = {
   title: 'Under Load',
-  body: 'A cell does not run out; it runs down toward a balance. The voltage falls to zero where Q reaches K, with both ions still there, and it is higher the farther Q is from K.'
+  body: 'A cell does not run out of ions—it runs down to equilibrium. Voltage hits zero when Q reaches K with both ions still present, and stays higher the farther Q is from K.'
 };
 
 export const SOLUTIONS = [

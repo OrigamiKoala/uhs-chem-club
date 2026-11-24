@@ -23,7 +23,7 @@ export const UNIT_08 = {
   place: 'Salt pans',
   title: 'Equilibrium',
   line: 'Dynamic equilibrium, equilibrium constants, Le Chatelier’s principle, solubility and free energy.',
-  brief: 'Reversible reactions settle at a fixed ratio that depends on the reaction and the temperature. In Teeter, run salt pans from either end, find the equilibrium constant, predict which way a mixture moves, and push a settled pan to see how it answers.',
+  brief: 'Reversible reactions settle at a fixed ratio set by the reaction and temperature. On Teeter, test reactions from both sides, find K, predict which way a mixture shifts, and disturb settled vessels to see how they respond.',
 
   quests: [
     {
@@ -38,7 +38,7 @@ export const UNIT_08 = {
     {
       id: 'q2-k',
       title: 'The Number That Holds',
-      line: 'Vessels that begin differently settle at different amounts; find what they share.',
+      line: 'Vessels that start differently settle at different amounts—find what they share.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -47,7 +47,7 @@ export const UNIT_08 = {
     {
       id: 'q3-q',
       title: 'Which Way It Goes',
-      line: 'A vessel is mixed to a recipe; say which way it will move before it does.',
+      line: 'Given a starting mixture, predict which way it will react.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -56,7 +56,7 @@ export const UNIT_08 = {
     {
       id: 'q4-properties',
       title: 'Combining K',
-      line: 'Rewrite a reaction and its K changes by rule; find how.',
+      line: 'Rewrite a reaction and K changes by a clear rule—find how.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -65,7 +65,7 @@ export const UNIT_08 = {
     {
       id: 'q5-ice',
       title: 'Equilibrium Concentrations',
-      line: 'The ledger gives a vessel\u2019s start and K; work out what is left.',
+      line: 'Given starting amounts and K, calculate what is left at equilibrium.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -74,7 +74,7 @@ export const UNIT_08 = {
     {
       id: 'q6-lean',
       title: 'Le Chatelier\u2019s Principle',
-      line: 'The Fifth Guild added a feed to a settled vessel; see where the amounts go.',
+      line: 'Disturb a settled vessel and see how equilibrium responds.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -83,7 +83,7 @@ export const UNIT_08 = {
     {
       id: 'q7-dissolve',
       title: 'Solubility Equilibria',
-      line: 'Salt dissolves and comes back out; find how much a beaker can hold.',
+      line: 'Solid dissolves and comes back out—find how much a beaker can hold.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -92,7 +92,7 @@ export const UNIT_08 = {
     {
       id: 'q8-free',
       title: 'Free Energy and K',
-      line: 'The lower the free energy, the more product a vessel holds when it settles.',
+      line: 'More negative free energy (ΔG°) means more product at equilibrium.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -101,7 +101,7 @@ export const UNIT_08 = {
     {
       id: 'boss-tipper',
       title: 'The Tipper',
-      line: 'The beam pump at the largest pan calls every pan finished; test five pans against it.',
+      line: 'The beam pump calls every pond finished—test five vessels to prove it wrong.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

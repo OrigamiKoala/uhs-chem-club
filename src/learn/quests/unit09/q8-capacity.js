@@ -105,20 +105,20 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 168, y: 22 }, size: { w: 36, h: 14 } }] }
     }, { w: 200, h: 46 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Picture what the pH reading counts, and what the acid does in water that is richer in hydronium.',
-      'Ask whether the acid is more likely to keep or to give up its proton when hydronium is plentiful.'
+      'Place one of the four prediction cards in the slot.',
+      'Remember that low pH means lots of H₃O⁺ in solution, and high pH means very little.',
+      'Think about whether acetic acid keeps or loses its proton when H₃O⁺ is plentiful.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = pieceIn(state.table, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Next, acetic acid is read on a strip across a range of pH.' }
+    reward: { log: 'Prediction locked in.', title: 'Prediction', body: 'Next, slide the pH dial across the strip to see which form dominates at each pH.' }
   },
 
   /* ---------------------------------------------------------------- 2 */
@@ -148,11 +148,11 @@ export const STAGES = [
     get reward() {
       const g = recall(QUEST_KEY);
       const [a3] = pct(ACETIC, 3); const [, b6] = pct(ACETIC, 6);
-      const verdict = g === 'right' ? 'It did, as you predicted. ' : g ? 'It did not match your prediction. ' : '';
+      const verdict = g === 'right' ? 'Your prediction was right. ' : g ? 'Not what you predicted. ' : '';
       return {
         log: 'Acetic acid was the main form below its pKa and acetate above it.',
         title: 'Acid and Base Forms',
-        body: `${verdict}${a3} percent acetic acid at pH 3 and ${b6} percent acetate at pH 6. The acid form is the larger below the pKa, ${fmt(PKA, 2)}, and the base form above it.`
+        body: `${verdict}At pH 3 it is ${a3} percent acetic acid; at pH 6 it is ${b6} percent acetate. Below pKa (${fmt(PKA, 2)}) the acid form dominates; above pKa the base form dominates.`
       };
     }
   },
@@ -171,8 +171,8 @@ export const STAGES = [
     })(),
     hints: [
       'Drag the "pH" dial across the strip and type the pH in the field.',
-      'Compare the heights of the red-form and yellow-form curves at the amber line, and the colour of the solution.',
-      'Find the pH where the two curves cross, and use the steps either side of it to place it.'
+      'Watch the heights of the red and yellow curves at the amber line as you slide the pH dial.',
+      'Find the pH where the red and yellow curves cross at 50% each.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'pka');
@@ -180,13 +180,13 @@ export const STAGES = [
       if (Math.abs(v - RED.pKa) <= TOL_PKA + 1e-9) return { ok: true };
       if (v < 2 || v > 8) return { ok: false, msg: 'The strip runs from pH 2 to pH 8.' };
       const [a, b] = pct(METHYL_RED, v);
-      return { ok: false, msg: `At pH ${fmt(v, 1)} the strip reads ${a} percent red form and ${b} percent yellow form.` };
+      return { ok: false, msg: `At pH ${fmt(v, 1)}, the strip reads ${a} percent red form and ${b} percent yellow form.` };
     },
     get reward() {
       return {
         log: 'The two forms were equal at the indicator\'s pKa.',
         title: 'An Indicator',
-        body: `The two forms are equal at pH ${fmt(RED.pKa, 1)}, methyl red's pKa: red below, yellow above.`
+        body: `The two forms are equal (50% each) at pH ${fmt(RED.pKa, 1)}, methyl red’s pKa—red below, yellow above.`
       };
     }
   },
@@ -195,7 +195,7 @@ export const STAGES = [
   {
     id: 's4-amount',
     title: 'Two Concentrations',
-    briefing: 'Buffer capacity is how much acid or base a buffer can take before its pH changes much.',
+    briefing: 'Buffer capacity is how much acid or base a buffer can absorb before its pH changes significantly.',
     prompt: 'Which buffer has the larger capacity?',
     widget,
     table: (() => {
@@ -207,20 +207,20 @@ export const STAGES = [
     })(),
     hints: [
       'Press "Pour" on each flask, then set the answer dial.',
-      'Compare each flask\'s pH before and after the pour, and the counts of acetic acid and acetate in its window.',
-      'Compare how many spheres of acetate each flask holds with how many spheres of acid one pour brings.'
+      'Compare each flask’s pH before and after the pour, and compare their particle counts.',
+      'Compare how many spheres of acetate each flask holds with how many spheres of acid one pour adds.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 2) return { ok: true };
-      return { ok: false, msg: `After one pour the 0.010 M flask reads ${fmt(phOf(DILUTE.ha, DILUTE.a, 1, 0, POUR5), 2)} and the 0.10 M flask reads ${fmt(phOf(STRONG.ha, STRONG.a, 1, 0, POUR5), 2)}, from ${fmt(phOf(DILUTE.ha, DILUTE.a), 2)} and ${fmt(phOf(STRONG.ha, STRONG.a), 2)}.` };
+      return { ok: false, msg: `After one pour, the 0.010 M buffer dropped from ${fmt(phOf(DILUTE.ha, DILUTE.a), 2)} to ${fmt(phOf(DILUTE.ha, DILUTE.a, 1, 0, POUR5), 2)}, while the 0.10 M buffer moved only from ${fmt(phOf(STRONG.ha, STRONG.a), 2)} to ${fmt(phOf(STRONG.ha, STRONG.a, 1, 0, POUR5), 2)}.` };
     },
     get reward() {
       return {
         log: 'The stronger buffer took the same pour with far less change.',
         title: 'Buffer Capacity',
-        body: `The same pour moved the dilute buffer to ${fmt(phOf(DILUTE.ha, DILUTE.a, 1, 0, POUR5), 2)} and the concentrated one only to ${fmt(phOf(STRONG.ha, STRONG.a, 1, 0, POUR5), 2)}. More of each member means more capacity.`
+        body: `The same pour dropped the dilute buffer to ${fmt(phOf(DILUTE.ha, DILUTE.a, 1, 0, POUR5), 2)}, while the concentrated one moved only to ${fmt(phOf(STRONG.ha, STRONG.a, 1, 0, POUR5), 2)}. Higher concentrations give greater buffer capacity.`
       };
     }
   },
@@ -238,23 +238,23 @@ export const STAGES = [
       return phTable({ fixtures: [a.fixture, b.fixture] }, { w: 100, h: a.size.h + 4 });
     })(),
     hints: [
-      'Press "Pour" on flask 1 until its acetate is gone, and type the pours in the field for flask 2.',
-      'Compare the acetate in the window of flask 1 after each pour, and compare the two flasks\' windows.',
-      'Buffer capacity grows in step with how much acetate is in the flask to soak up the acid.'
+      'Press "Pour" on Flask 1 until its acetate runs out, then type how many pours Flask 2 can take.',
+      'Compare how much acetate Flask 2 starts with compared to Flask 1.',
+      'Buffer capacity scales directly with how much acetate is available to neutralize the acid.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'n');
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
       const want = LARGE.a / POUR5;
       if (Math.abs(v - want) <= 1) return { ok: true };
-      return { ok: false, msg: `${fmt(v, 0)} pours bring ${fmt(v * POUR5, 0)} spheres of acid, and flask 2 holds ${LARGE.a} spheres of acetate against ${SMALL.a} in flask 1.` };
+      return { ok: false, msg: `${fmt(v, 0)} pours add ${fmt(v * POUR5, 0)} spheres of acid, while Flask 2 holds ${LARGE.a} spheres of acetate (Flask 1 holds ${SMALL.a}).` };
     },
     get reward() {
       const k = SMALL.a / POUR5;
       return {
-        log: 'A buffer is spent when the member that takes the pour is gone.',
+        log: 'A buffer is spent when the component that neutralizes the pour runs out.',
         title: 'The Limit',
-        body: `Flask 1's ${SMALL.a} spheres of acetate lasted ${k} pours, so flask 2's ${LARGE.a} takes ${LARGE.a / POUR5}. A buffer is spent when one member is used up.`
+        body: `Flask 1’s ${SMALL.a} spheres of acetate lasted ${k} pours, so Flask 2’s ${LARGE.a} spheres takes ${LARGE.a / POUR5}. A buffer fails once either component runs out.`
       };
     }
   },
@@ -273,22 +273,22 @@ export const STAGES = [
     })(),
     hints: [
       'Press "Pour" on each flask, then set the answer dial.',
-      'Compare how far the pH of each flask moves, and how much acetic acid each window holds to give to the pour.',
-      'Compare the sizes of the pH steps, and the counts of acetic acid and acetate before and after.'
+      'Compare how much each flask’s pH shifts after one pour of base.',
+      'Check which ratio keeps plenty of both acid and conjugate base available.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 1) return { ok: true };
       const s = RATIOS[v - 1];
-      return { ok: false, msg: `The ${s.title} flask reads ${fmt(phOf(s.ha, s.a), 2)}, then ${fmt(phOf(s.ha, s.a, 0, 1), 2)} after the pour; the ${RATIOS[0].title} flask reads ${fmt(phOf(RATIOS[0].ha, RATIOS[0].a), 2)}, then ${fmt(phOf(RATIOS[0].ha, RATIOS[0].a, 0, 1), 2)}.` };
+      return { ok: false, msg: `After pouring base, the ${s.title} flask moved from ${fmt(phOf(s.ha, s.a), 2)} to ${fmt(phOf(s.ha, s.a, 0, 1), 2)}, while the ${RATIOS[0].title} flask moved only from ${fmt(phOf(RATIOS[0].ha, RATIOS[0].a), 2)} to ${fmt(phOf(RATIOS[0].ha, RATIOS[0].a, 0, 1), 2)}.` };
     },
     get reward() {
       const mv = r => phOf(r.ha, r.a, 0, 1) - phOf(r.ha, r.a);
       return {
-        log: 'The flask with the two members near equal held best.',
+        log: 'The flask with equal amounts of both components held best.',
         title: 'The Best Ratio',
-        body: `The 1 : 1 flask moved least (${fmt(mv(RATIOS[0]), 2)} vs ${fmt(mv(RATIOS[1]), 2)} and ${fmt(mv(RATIOS[2]), 2)}). A buffer works well only while its members are within about a factor of ten of each other.`
+        body: `The 1 : 1 buffer shifted least (${fmt(mv(RATIOS[0]), 2)} vs ${fmt(mv(RATIOS[1]), 2)} and ${fmt(mv(RATIOS[2]), 2)}). Buffers work best when both components are within a factor of ten of each other.`
       };
     }
   },
@@ -306,8 +306,8 @@ export const STAGES = [
       }, { w: 156, h: s.size.h + 4 });
     })(),
     hints: [
-      'Set the "pH" dial to the wanted pH, step through the three acids with the "Acid" dial, then set the answer dial.',
-      'Compare the percentages of the two forms of each acid at that pH.',
+      'Set the "pH" dial to 4.5, cycle through the three acids with the "Acid" dial, then set the answer dial.',
+      'Compare the percentages of the two forms of each acid at pH 4.5.',
       'A buffer needs plenty of both forms, so look for the acid whose two percentages are closest.'
     ],
     check(state) {
@@ -316,14 +316,14 @@ export const STAGES = [
       if (v === 2) return { ok: true };
       const a = SEALED[v - 1]; const y = SEALED[1];
       const [x1, x2] = pct(a, WANTED_PH); const [y1, y2] = pct(y, WANTED_PH);
-      return { ok: false, msg: `At pH ${fmt(WANTED_PH, 1)} ${a.name} reads ${x1} percent acid form and ${x2} percent base form; ${y.name} reads ${y1} and ${y2}.` };
+      return { ok: false, msg: `At pH ${fmt(WANTED_PH, 1)}, ${a.name} reads ${x1} percent acid form and ${x2} percent base form, while ${y.name} reads ${y1} and ${y2}.` };
     },
     get reward() {
       const [y1, y2] = pct(SEALED[1], WANTED_PH);
       return {
-        log: 'The best buffer came from the acid whose pKa was nearest the wanted pH.',
+        log: 'The best buffer came from the acid whose pKa was nearest the target pH.',
         title: 'Choosing an Acid',
-        body: `Acid Y: at pH ${fmt(WANTED_PH, 1)} it is ${y1} percent acid form and ${y2} percent base form. Choose the acid whose pKa is closest to the pH wanted.`
+        body: `Acid Y: at pH ${fmt(WANTED_PH, 1)} it is ${y1} percent acid form and ${y2} percent base form. Pick an acid whose pKa is closest to your target pH.`
       };
     }
   },
@@ -370,7 +370,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   title: 'pKa, Protonation and Capacity',
-  body: 'An acid is mostly in its acid form below its pKa and its base form above it. A buffer holds best near its pKa, and its capacity grows with the amount of each member.'
+  body: 'An acid is mostly protonated below its pKa and deprotonated above it. A buffer works best near its pKa, and its capacity grows with the concentration of both components.'
 };
 
 export const SOLUTIONS = [

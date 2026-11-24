@@ -79,7 +79,7 @@
     {
       "id": "q3-weak#e1",
       "quest": "q3-weak",
-      "question": "A 0.10 M solution of a weak acid has Ka = 1.0 × 10⁻⁵. What is its pH, taking x much smaller than 0.10?",
+      "question": "A 0.10 M weak acid has Ka = 1.0 × 10⁻⁵. What is its pH? (Assume x ≪ 0.10.)",
       "options": [
         {
           "id": "a",
@@ -493,7 +493,7 @@
             },
             {
               "id": "b",
-              "label": "The pH 1.00 flask has a larger share of its acid ionized"
+              "label": "The pH 1.00 flask has a higher percent of its acid ionized"
             },
             {
               "id": "c",
@@ -505,7 +505,7 @@
             }
           ],
           "answer": "b",
-          "explanation": "The flasks hold the same amount of acid, so the lower pH means more hydronium, which means a larger share of the acid has ionized."
+          "explanation": "Both flasks have the same starting concentration, so the lower pH means more H₃O⁺ and a higher percent ionized."
         },
         {
           "id": "q3-weak#b2",
@@ -530,14 +530,14 @@
             }
           ],
           "answer": "a",
-          "explanation": "Ka stays the same, so a more dilute weak acid has to ionize a larger share of itself to keep the ratio at Ka."
+          "explanation": "Because Ka stays constant, diluting a weak acid causes a larger fraction of its molecules to ionize."
         }
       ],
       "worked": {
         "id": "q3-weak#w",
         "quest": "q3-weak",
         "title": "pH of a Weak Acid",
-        "setup": "What is the pH of 0.20 M hypochlorous acid, HClO? Its Ka is 3.0 × 10⁻⁸, so the acid ionizes only a very little.",
+        "setup": "What is the pH of 0.20 M hypochlorous acid, HClO? Its Ka is 3.0 × 10⁻⁸, so only a tiny fraction ionizes.",
         "steps": [
           {
             "say": "Let x be the hydronium concentration. The ClO⁻ it comes with is also x. Which ratio equals Ka?",
@@ -557,8 +557,8 @@
               }
             ],
             "answer": "a",
-            "hint": "Ka is the two ions multiplied, over the acid that is still whole.",
-            "explain": "H₃O⁺ times ClO⁻ is x times x, and the acid still whole is 0.20 − x."
+            "hint": "Ka equals the product of the two ion concentrations divided by the un-ionized acid.",
+            "explain": "[H₃O⁺][ClO⁻] is x², and the remaining un-ionized acid is 0.20 − x."
           },
           {
             "say": "Ka is tiny, so 0.20 − x is about 0.20. What is Ka × 0.20, the value of x²?",
@@ -601,7 +601,7 @@
             "explain": "7.7 × 10⁻⁵ / 0.20 × 100 = 0.039 percent."
           }
         ],
-        "finish": "Write Ka as the ratio of the two ions over the acid still whole, take the acid still whole as the amount put in, and solve for x."
+        "finish": "Set Ka = x² / [HA]₀ (valid when x is small), solve for x = [H₃O⁺], and take −log(x) for pH."
       }
     },
     "q4-structure": {
@@ -609,7 +609,7 @@
         {
           "id": "q4-structure#b1",
           "quest": "q4-structure",
-          "question": "HF, HCl and HBr are raced against each other. Which lists them from strongest acid to weakest?",
+          "question": "Which lists HF, HCl, and HBr from strongest acid to weakest?",
           "options": [
             {
               "id": "a",
@@ -708,7 +708,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Half way, half of the acid has become its conjugate base, so the pH equals the pKa."
+          "explanation": "Halfway to equivalence, half of the acid has converted to its conjugate base, so pH = pKa."
         }
       ],
       "worked": {
@@ -1049,7 +1049,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "The concentrated buffer holds ten times as much acetate to take up the acid, so the same pour is a smaller share of what it holds and the pH moves less."
+          "explanation": "The concentrated buffer holds ten times more acetate to neutralize the added acid, so its base-to-acid ratio shifts much less and its pH stays steadier."
         }
       ],
       "worked": {
@@ -1059,7 +1059,7 @@
         "setup": "A buffer holds 0.0060 mol of acetate and 0.0060 mol of acetic acid. Each pour adds 0.00050 mol of strong acid. How many pours can it take before the acetate is used up?",
         "steps": [
           {
-            "say": "Which member of the buffer takes up added acid?",
+            "say": "Which component of the buffer neutralizes added acid?",
             "kind": "choice",
             "options": [
               {
@@ -1080,7 +1080,7 @@
             "explain": "Acetate takes a proton from the added acid and becomes acetic acid."
           },
           {
-            "say": "How many moles of acetate can take acid?",
+            "say": "How many moles of acetate are available to neutralize the acid?",
             "kind": "number",
             "answer": 0.006,
             "calc": "0.0060",
@@ -1163,7 +1163,7 @@
             }
           ],
           "answer": "d",
-          "explanation": "The equivalence point of a weak base with a strong acid is acidic, because the ammonium that forms is a weak acid. Methyl red changes around pH 5, so it is the dye that turns near 25 mL."
+          "explanation": "The equivalence point of a weak base with a strong acid is acidic (pH 5.28) because NH₄⁺ is a weak acid. Methyl red changes colour across pH 4.4–6.2, matching that equivalence point."
         }
       ],
       "worked": {

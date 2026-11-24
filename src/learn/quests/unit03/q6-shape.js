@@ -112,7 +112,7 @@ const X = i => A(`a${i}`, 'X', 1, 'Bond');
 const bonds = n => Array.from({ length: n }, (_, i) => X(i + 1));
 const NOT_ALL = 'Not everything from the tray is attached to the central atom yet.';
 const unread = 'Type your angle measurement in the field below.';
-const off = (v) => `The model's angle is not ${v}°: click two attached atoms to measure the angle between them.`;
+const off = (v) => `The model's angle is not ${v}°: click an outer atom, the central atom, and a second outer atom to measure the angle.`;
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -120,14 +120,14 @@ export const STAGES = [
     title: 'Two Domains',
     briefing: {
       speaker: SPEAKER,
-      body: 'An electron domain is a bond or a lone pair on the central atom. Domains repel each other and spread as far apart as they can. Click two attached atoms to measure the angle between them.'
+      body: 'An electron domain is a bond or a lone pair on the central atom. Domains repel each other and spread as far apart as they can. Click an outer atom, the central atom, and a second outer atom to measure the angle.'
     },
     prompt: 'What is the angle between two electron domains?',
     widget: { type: 'table', label: 'The bench' },
     entry: ANGLE_ENTRY,
     table: hubTable({ sym: 'A', arms: bonds(2) }),
     hints: [
-      'Drag both bonds onto the central atom, then click the two attached atoms to read the angle between them.',
+      'Drag both bonds onto the central atom, then click an outer atom, the center, and the other outer atom to read the angle.',
       'Watch where the second bond settles when attached, and where the first one moves.',
       'Two domains that repel each other move until they point in opposite directions.'
     ],
@@ -177,7 +177,7 @@ export const STAGES = [
     entry: ANGLE_ENTRY,
     table: hubTable({ sym: 'A', arms: bonds(4), roomy: true }),
     hints: [
-      'Attach the bonds one at a time, rotate the 3D view with the joystick, and click two attached atoms to measure the angle.',
+      'Attach the bonds one at a time, rotate the 3D view with the joystick, and click three atoms (outer, center, outer) to measure the angle.',
       'Compare the flat three-bond model with the model after the fourth bond is attached.',
       'Four flat domains would be 90° apart, so check whether spreading into 3D lets them get farther apart.'
     ],
@@ -210,7 +210,7 @@ export const STAGES = [
     entry: ANGLE_ENTRY,
     table: hubTable({ sym: 'C', label: 'Carbon', arms: [A('h1', 'H'), A('h2', 'H'), A('h3', 'H'), A('h4', 'H')], roomy: true }),
     hints: [
-      'Attach all four hydrogen atoms to carbon, then click any two hydrogens to measure the H–C–H bond angle.',
+      'Attach all four hydrogen atoms to carbon, then click H, C, and another H to measure the H–C–H bond angle.',
       'All four domains around carbon are identical C–H bonds, with no lone pairs.',
       'Four equal domains settle into a symmetric tetrahedron with 109.5° between every pair of bonds.'
     ],
@@ -266,7 +266,7 @@ export const STAGES = [
     entry: ANGLE_ENTRY,
     table: hubTable({ sym: 'O', label: 'Oxygen', arms: [A('h1', 'H'), A('h2', 'H'), L('l1'), L('l2')] }),
     hints: [
-      'Water\'s oxygen has two bonds and two lone pairs: attach all four, then click the two hydrogen atoms to read the angle.',
+      'Water\'s oxygen has two bonds and two lone pairs: attach all four, then click H, O, and H to read the angle.',
       'Compare this angle with the 109.5° in methane, where all four domains were bonds.',
       'A lone pair is held by only one nucleus and spreads wider than a bond, so it repels neighboring bonds more strongly.'
     ],
@@ -297,7 +297,7 @@ export const STAGES = [
     entry: ANGLE_ENTRY,
     table: hubTable({ sym: 'A', arms: bonds(6), roomy: true }),
     hints: [
-      'Attach all six bonds, rotate with the joystick, and click two neighboring atoms to read the angle.',
+      'Attach all six bonds, rotate with the joystick, and click three atoms (outer, center, neighbor) to read the angle.',
       'Compare the angle between two neighboring bonds with the angle between two opposite bonds.',
       'All six domains spread as far apart as possible, so every bond has the same symmetric arrangement of neighbors.'
     ],
@@ -339,7 +339,7 @@ export const STAGES = [
       if (r.lone < 2 || r.atoms < 4) return { ok: false, msg: NOT_ALL };
       const real = smallestAngle(r, a => a.kind === 'arm');
       if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: `Two neighboring bonds on the model are not ${v}° apart: click two neighboring bonded atoms.` };
+      return { ok: false, msg: `Two neighboring bonds on the model are not ${v}° apart: click a bonded atom, the center, and a neighbor.` };
     },
     reward: {
       log: 'Two lone pairs sit opposite, and the four atoms lie flat.',
@@ -357,7 +357,7 @@ export const STAGES = [
     entry: ANGLE_ENTRY,
     table: hubTable({ sym: 'A', arms: bonds(5), roomy: true }),
     hints: [
-      'Attach all five bonds, rotate with the joystick until you see the flat ring of three, and click two atoms in that ring.',
+      'Attach all five bonds, rotate with the joystick until you see the flat ring of three, and click an atom in that ring, the center, and another ring atom.',
       'Compare the angle between two bonds in the ring with the angle between a ring bond and one of the top or bottom bonds.',
       'Five domains cannot all be equivalent: three form a flat ring around the middle, and two sit directly above and below it.'
     ],
@@ -389,7 +389,7 @@ export const STAGES = [
     entry: ANGLE_ENTRY,
     table: hubTable({ sym: 'A', arms: [...bonds(2), L('l1'), L('l2'), L('l3')], roomy: true }),
     hints: [
-      'Attach the two bonds and three lone pairs, rotate with the joystick, and click the two bonded atoms to check the angle.',
+      'Attach the two bonds and three lone pairs, rotate with the joystick, and click a bonded atom, the center, and the other bonded atom.',
       'Compare where the three lone pairs settled with the ring and top/bottom positions from the last stage.',
       'In the flat ring, the three lone pairs sit 120° apart, farther from each other than any other arrangement allows.'
     ],
@@ -402,7 +402,7 @@ export const STAGES = [
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
       const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
       if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: `The two bonds on the model are not ${v}° apart: click both bonded atoms to measure.` };
+      return { ok: false, msg: `The two bonds on the model are not ${v}° apart: click a bonded atom, the center, and the other bonded atom.` };
     },
     reward: {
       log: 'Three lone pairs leave the two atoms opposite.',

@@ -190,15 +190,22 @@ export const STAGES = [
     },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
+      bounds: { w: 158, h: 88 },
+      recorder: { at: { x: 155, y: 85 }, size: { w: 5, h: 3.4 } },
       pieces: [
-        molCard('a', 'CO2', rowAt(0), { field: true, extra: { showDipoles: true } }),
-        molCard('b', 'H2O', rowAt(1), { field: true, extra: { showDipoles: true } }),
-        molCard('c', 'CCl4', rowAt(2), { field: true, extra: { showDipoles: true } }),
-        molCard('d', 'NH3', rowAt(3), { field: true, extra: { showDipoles: true } }),
-        molCard('e', 'CHCl3', rowAt(4), { field: true, extra: { showDipoles: true } })
+        molCard('a', 'CO2', { x: 18, y: 75 }, { field: true, extra: { showDipoles: true } }),
+        molCard('b', 'H2O', { x: 48, y: 75 }, { field: true, extra: { showDipoles: true } }),
+        molCard('c', 'CCl4', { x: 78, y: 75 }, { field: true, extra: { showDipoles: true } }),
+        molCard('d', 'NH3', { x: 108, y: 75 }, { field: true, extra: { showDipoles: true } }),
+        molCard('e', 'CHCl3', { x: 138, y: 75 }, { field: true, extra: { showDipoles: true } })
       ],
-      zones: { trays: [{ id: 'turns', label: 'Polar', at: { x: 96, y: 18 }, size: { w: 46, h: 24 }, cell: 22 }, { id: 'stays', label: 'Nonpolar', at: { x: 134, y: 18 }, size: { w: 28, h: 24 }, cell: 22 }] },
-      fixtures: [plates('pl', { x: 34, y: 21 }, { size: { w: 62, h: 40 } })]
+      zones: {
+        trays: [
+          { id: 'turns', label: 'Polar', at: { x: 110, y: 19 }, size: { w: 84, h: 25 }, cell: 27 },
+          { id: 'stays', label: 'Nonpolar', at: { x: 110, y: 49 }, size: { w: 58, h: 25 }, cell: 27 }
+        ]
+      },
+      fixtures: [plates('pl', { x: 33, y: 28 }, { size: { w: 58, h: 38 } })]
     }),
     hints: [
       'Drag each molecule between the plates and press "Switch Field"; each card already shows its bond dipole arrows.',
@@ -313,8 +320,8 @@ export const SOLUTIONS = [
   [gap('a', 1, 75), { flip: 'a' }],
   [guess('stays')],
   [
-    gap('a', 3, 34), field, into('a', 'stays'),
-    gap('b', 3, 34), into('b', 'turns'), gap('c', 3, 34), into('c', 'stays'), gap('d', 3, 34), into('d', 'turns'), gap('e', 3, 34), into('e', 'turns')
+    gap('a', 3, 33, 28), field, into('a', 'stays'),
+    gap('b', 3, 33, 28), into('b', 'turns'), gap('c', 3, 33, 28), into('c', 'stays'), gap('d', 3, 33, 28), into('d', 'turns'), gap('e', 3, 33, 28), into('e', 'turns')
   ],
   [{ setDial: { fixture: 'ionic', dial: 'value', value: 18 } }]
 ];

@@ -85,8 +85,8 @@ export const STAGES = [
   {
     id: 's1-reverse',
     title: 'Reversing the Cell',
-    briefing: { speaker: SPEAKER, body: 'A power supply sends electrons into whichever strip you choose. To plate a metal means to coat solid metal from the solution onto a strip.' },
-    prompt: 'Set the power supply dials and press Run so the zinc strip gains mass (plates zinc).',
+    briefing: { speaker: SPEAKER, body: 'A power supply sends electrons into whichever strip you choose. Plating means coating solid metal from the solution onto a strip.' },
+    prompt: 'Set the power supply dials and press Run so zinc plates onto the zinc strip.',
     widget,
     table: cellTable({ fixtures: [supplyFixture('sup', { x: 64, y: 40 }, 'zncu').fixture] }, { w: 128, h: 82 }),
     hints: [
@@ -96,18 +96,18 @@ export const STAGES = [
     ],
     check(state) {
       const r = bench(state.table);
-      if (!r.now) return { ok: false, notYet: true, msg: 'Press "Run".' };
+      if (!r.now) return { ok: false, notYet: true, msg: 'Press "Run" first.' };
       if (r.now.zincPlates) return { ok: true };
       const into = r.now.dir === 'zn' ? 'zinc' : 'copper';
       const word = r.now.zn < 0 ? `lost ${fmt(-r.now.zn * 1000, 1)} mg` : `gained ${fmt(r.now.zn * 1000, 1)} mg`;
-      return { ok: false, msg: `At ${fmt(r.now.Vs, 1)} V with electrons sent into the ${into} strip, the zinc strip ${word}.` };
+      return { ok: false, msg: `At ${fmt(r.now.Vs, 1)} V sending electrons into ${into}, the zinc strip ${word}.` };
     },
     get reward() {
       const win = driveZnCu(1.5, 'zn'); const lose = driveZnCu(0.5, 'zn');
       return {
         log: 'A supply stronger than the cell turned zinc ions back into zinc.',
         title: 'Electrolysis',
-        body: `At 1.5 V the zinc strip gained ${fmt(win.zn * 1000, 1)} mg; at 0.5 V it lost ${fmt(-lose.zn * 1000, 1)} mg. Driving a cell backwards with a supply makes an electrolytic cell: electrolysis.`
+        body: `At 1.5 V zinc gained ${fmt(win.zn * 1000, 1)} mg; at 0.5 V it lost ${fmt(-lose.zn * 1000, 1)} mg. Using a power supply to drive a reaction backwards is electrolysis (an electrolytic cell).`
       };
     }
   },
@@ -116,8 +116,8 @@ export const STAGES = [
   {
     id: 's2-melt',
     title: 'Molten Salt',
-    briefing: { speaker: SPEAKER, body: 'Molten means melted: liquid sodium chloride holds free Na⁺ and Cl⁻ ions that can move to the electrodes.' },
-    prompt: 'Set the direction dial, press Run, then tap the electrode on the Model where sodium forms in molten sodium chloride.',
+    briefing: { speaker: SPEAKER, body: 'Molten means melted: liquid sodium chloride has free Na⁺ and Cl⁻ ions that can move to the electrodes.' },
+    prompt: 'Set the direction dial, press Run, then tap the electrode on the Model where sodium forms.',
     widget,
     table: cellTable({
       fixtures: [
@@ -132,18 +132,18 @@ export const STAGES = [
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode on the Model first.' };
       const r = bench(state.table);
-      if (!r.now) return { ok: false, msg: 'The melt has not been run yet.' };
+      if (!r.now) return { ok: false, msg: 'Press Run first.' };
       if (v === (r.now.into === 'left' ? 1 : 2)) return { ok: true };
       const other = r.now.into === 'left' ? 'right' : 'left';
-      return { ok: false, msg: `The silvery liquid formed at the ${r.now.into} electrode and the pale green gas at the ${other} electrode.` };
+      return { ok: false, msg: `The silvery liquid formed at the ${r.now.into} electrode, while pale green chlorine gas formed at the ${other} electrode.` };
     },
     get reward() {
       return {
-        log: 'Sodium came out at the electrode the electrons were sent into.',
+        log: 'Sodium formed where electrons were sent in.',
         title: 'Cathode and Anode',
-        body: 'Sodium ions gained electrons at the cathode and chloride ions lost them at the anode. Reduction is at the cathode and oxidation at the anode in every cell.'
+        body: 'Sodium ions gained electrons at the cathode, and chloride ions lost them at the anode. In every cell, reduction happens at the cathode and oxidation at the anode.'
       };
     }
   },
@@ -152,8 +152,8 @@ export const STAGES = [
   {
     id: 's3-charge',
     title: 'How Much Passed',
-    briefing: { speaker: SPEAKER, body: 'Electric charge is counted in coulombs. A current of one ampere carries one coulomb each second.' },
-    prompt: 'Order these runs from least charge passed to most charge passed.',
+    briefing: { speaker: SPEAKER, body: 'Electric charge is measured in coulombs (C). A current of 1 ampere (A) carries 1 coulomb each second (C = A × s).' },
+    prompt: 'Run all three trials, then order the cards on the rail from least charge passed to most.',
     widget,
     table: cellTable({
       pieces: S3_RUNS.map((r, i) => tag(`r${i + 1}`, `${r.I} A, ${r.t} s`, { x: 24 + i * 35, y: 70 })),
@@ -168,7 +168,7 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all 3 cards on the rail.' };
+      if (order.length < 3) return { ok: false, notYet: true, msg: 'Place all 3 cards on the rail first.' };
       if (order.join() === S3_WANT.join()) return { ok: true };
       const q = id => charge(S3_RUNS[+id.slice(1) - 1].I, S3_RUNS[+id.slice(1) - 1].t);
       const k = order.findIndex((id, i) => i > 0 && q(id) < q(order[i - 1]));
@@ -176,15 +176,15 @@ export const STAGES = [
       const rows = bench(t).rows;
       const read = id => rows.find(x => x.c === +id.slice(1) - 1);
       const ra = read(a.id); const rb = read(b.id);
-      if (!ra || !rb) return { ok: false, msg: `${a.label} sits left of ${b.label}, and the plate has no reading for ${!ra ? a.label : b.label} yet.` };
-      return { ok: false, msg: `${a.label} sits left of ${b.label}, but the plate gained ${fmt(ra.g * 1000, 1)} mg for ${a.label} and ${fmt(rb.g * 1000, 1)} mg for ${b.label}.` };
+      if (!ra || !rb) return { ok: false, msg: `${a.label} is left of ${b.label}, and you have not run ${!ra ? a.label : b.label} yet.` };
+      return { ok: false, msg: `${a.label} is left of ${b.label}, but ${a.label} plated ${fmt(ra.g * 1000, 1)} mg while ${b.label} plated ${fmt(rb.g * 1000, 1)} mg.` };
     },
     get reward() {
       const rows = S3_RUNS.map(r => `${fmt(charge(r.I, r.t), 0)} C`);
       return {
         log: 'The mass of silver followed the current and the time together.',
         title: 'The Coulomb',
-        body: `${rows[0]}, ${rows[1]} and ${rows[2]}: charge in coulombs is amperes × seconds, and the silver plated grew in step with it.`
+        body: `The charges were ${rows[0]}, ${rows[1]}, and ${rows[2]} (amperes × seconds). The silver plated grew in direct proportion to the charge passed.`
       };
     }
   },
@@ -203,7 +203,7 @@ export const STAGES = [
         '3) Mass: (0.0100 ÷ 3) × 27.0 = 0.090 g Al'
       ]
     },
-    prompt: 'What mass of copper, in grams, is plated by 2.00 A running for 30.0 minutes (convert minutes to seconds)?',
+    prompt: 'How many grams of copper are plated by 2.00 A running for 30.0 minutes (convert minutes to seconds)?',
     widget,
     entry: { id: 'g', label: 'Copper plated', unit: 'g' },
     table: cellTable({
@@ -215,11 +215,11 @@ export const STAGES = [
     hints: [
       'Choose a current and a time with the two dials, press "Run", and type the grams in the field.',
       'Compare how the plated mass changes with the current and with the time across the runs.',
-      'Turn the charge into moles of electrons with the plate, then use the half-reaction line to turn those into moles and grams of copper.'
+      'Convert charge to moles of electrons using 96,485 C/mol, then use Cu²⁺ + 2 e⁻ → Cu and molar mass for grams.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'g');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       const want = faradayMass(S4.I, S4.minutes * 60, S4.metal);
       if (Math.abs(v - want) <= TOL_G) return { ok: true };
       const wrongM = id => faradayMass(S4.I, S4.minutes * 60, 'cu') * METALS[id].M / METALS.cu.M;
@@ -227,24 +227,24 @@ export const STAGES = [
         want,
         unitNote: true,
         cases: [
-          [faradayMass(S4.I, S4.minutes, S4.metal), 'That treats 30.0 minutes as 30.0 s; the time in the question is in minutes.'],
-          [want * 2, 'You used one electron per copper atom; the half-reaction Cu²⁺ + 2 e⁻ → Cu shows two.'],
-          [wrongM('ag'), 'That uses 107.9 g/mol, the molar mass of silver; this cell holds copper.'],
-          [wrongM('zn'), 'That uses 65.4 g/mol, the molar mass of zinc; this cell holds copper.'],
-          [charge(S4.I, S4.minutes * 60), 'That figure is a charge in coulombs; the field is in grams.']
+          [faradayMass(S4.I, S4.minutes, S4.metal), 'You used 30.0 instead of converting 30.0 minutes to 1800 seconds.'],
+          [want * 2, 'You used 1 electron per copper atom, but the half-reaction Cu²⁺ + 2 e⁻ → Cu takes 2 electrons.'],
+          [wrongM('ag'), 'That uses silver\'s molar mass (107.9 g/mol); use copper (63.5 g/mol).'],
+          [wrongM('zn'), 'That uses zinc\'s molar mass (65.4 g/mol); use copper (63.5 g/mol).'],
+          [charge(S4.I, S4.minutes * 60), 'That is the charge in coulombs; convert it to grams of copper.']
         ]
       });
       if (hit) return hit;
-      if (v < 0) return { ok: false, msg: 'A mass plated is a size, not a negative number.' };
+      if (v < 0) return { ok: false, msg: 'Enter a positive mass in grams.' };
       const r = bench(state.table).rows.find(x => x.I === 2 && x.t === 60);
-      return { ok: false, msg: r ? `The bench plated ${fmt(r.g * 1000, 1)} mg of copper in a 60 s run at 2.00 A; that does not lead to ${fmt(v, 2)} g for 30.0 minutes.` : 'Run the bench at 2.00 A to see what a short run plates.' };
+      return { ok: false, msg: r ? `The bench plated ${fmt(r.g * 1000, 1)} mg of copper in 60 s at 2.00 A, which does not match ${fmt(v, 2)} g for 30.0 minutes.` : 'Run the bench at 2.00 A to see what a short run plates.' };
     },
     get reward() {
       const t = S4.minutes * 60; const q = charge(S4.I, t); const mol = molesElectrons(q);
       return {
         log: 'The plated mass followed the charge, the electrons per atom and the molar mass.',
         title: "Faraday's Law",
-        body: `${fmt(q, 0)} C is ${fmt(mol, 4)} mol of electrons; two for each copper atom gives ${fmt(mol / 2, 4)} mol, about ${fmt(faradayMass(S4.I, t, 'cu'), 2)} g. This is Faraday's law.`
+        body: `${fmt(q, 0)} C is ${fmt(mol, 4)} mol of electrons, which plates ${fmt(mol / 2, 4)} mol (${fmt(faradayMass(S4.I, t, 'cu'), 2)} g) of copper. Mass plated is proportional to charge passed—Faraday's law.`
       };
     }
   },
@@ -253,8 +253,8 @@ export const STAGES = [
   {
     id: 's6-chain',
     title: 'Cells Driving Cells',
-    briefing: { speaker: SPEAKER, body: 'Electricity can split water into hydrogen (H₂) and oxygen (O₂) gas if the voltage is high enough. Stack zinc–copper cells in the chain until gas collects in the tubes.' },
-    prompt: 'How many zinc–copper cells stacked in a chain are needed to split water?',
+    briefing: { speaker: SPEAKER, body: 'Electricity can split water into hydrogen (H₂) and oxygen (O₂) gas once the voltage is high enough. Stack zinc–copper cells in the chain until gas collects in the tubes.' },
+    prompt: 'Stack zinc–copper cells in the chain and press Run to find how many it takes to split water.',
     widget,
     table: (() => {
       const s = supplyFixture('sup', { x: 62, y: 28 }, 'water', { cells: 3 });
@@ -271,9 +271,9 @@ export const STAGES = [
     ],
     check(state) {
       const r = bench(state.table);
-      if (!r.now) return { ok: false, notYet: true, msg: 'Press "Run".' };
+      if (!r.now) return { ok: false, notYet: true, msg: 'Press "Run" first.' };
       if (r.now.goes) return { ok: true };
-      return { ok: false, msg: `${r.now.k} cell${r.now.k === 1 ? '' : 's'} in the chain read ${voltText(r.now.V)} V and the tubes stayed empty.` };
+      return { ok: false, msg: `${r.now.k} cell${r.now.k === 1 ? '' : 's'} gave only ${voltText(r.now.V)} V, so no gas formed in the tubes.` };
     },
     get reward() {
       const k = cellsToExceed(WATER_BACK_VOLTAGE, cellE0('cu', 'zn'));
@@ -281,7 +281,7 @@ export const STAGES = [
       return {
         log: 'Cells in a chain added their voltages until the water cell gave gas.',
         title: 'Coupled Reactions',
-        body: `One cell gives ${voltText(cellE0('cu', 'zn'))} V, below the ${voltText(WATER_BACK_VOLTAGE)} V water needs, but ${k} cells give ${voltText(w.V)} V and gas forms: a reaction that runs by itself can drive one that does not.`
+        body: `One cell gives ${voltText(cellE0('cu', 'zn'))} V—below the ${voltText(WATER_BACK_VOLTAGE)} V water needs—while ${k} cells give ${voltText(w.V)} V and split water. A spontaneous reaction can drive a nonspontaneous one.`
       };
     }
   },
@@ -313,23 +313,23 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const label = i => pieceIn(t, `sup.t${i}`)?.label;
-      if ([1, 2, 3, 4].some(i => !label(i))) return { ok: false, notYet: true, msg: 'Put a bubble in the seat under every tube.' };
+      if ([1, 2, 3, 4].some(i => !label(i))) return { ok: false, notYet: true, msg: 'Place a gas bubble under all four tubes first.' };
       const want = ['H₂', 'O₂', 'H₂', 'Cl₂'];
       const bad = want.findIndex((g, i) => label(i + 1) !== g);
       if (bad < 0) return { ok: true };
       const r = bench(t);
-      if (!r.now) return { ok: false, msg: 'The cells have not been run yet.' };
+      if (!r.now) return { ok: false, msg: 'Press Run first.' };
       const where = ['water, left tube', 'water, right tube', 'brine, left tube', 'brine, right tube'][bad];
       const g = [r.now.water.cathode, r.now.water.anode, r.now.brine.cathode, r.now.brine.anode][bad];
       const look = { 'H₂': 'burned with a pop', 'O₂': 'relit a glowing splint', 'Cl₂': 'was pale green and bleached litmus' }[g.gas];
-      return { ok: false, msg: `The ${where} gathered ${fmt(g.mL, 1)} mL of a gas that ${look}; the bubble in its seat does not fit that.` };
+      return { ok: false, msg: `The ${where} collected ${fmt(g.mL, 1)} mL of gas that ${look}, which does not match the bubble you placed.` };
     },
     get reward() {
       const c = compareRun(S7.I, S7.t);
       return {
         log: 'The gas at the anode depended on what was in the cell.',
         title: 'What Forms',
-        body: `Water gave ${fmt(c.water.cathode.mL, 1)} mL of hydrogen and ${fmt(c.water.anode.mL, 1)} mL of oxygen; brine gave ${fmt(c.brine.cathode.mL, 1)} mL each of hydrogen and chlorine, because oxygen forms more slowly at real electrodes so chloride ions react instead.`
+        body: `Water gave ${fmt(c.water.cathode.mL, 1)} mL H₂ and ${fmt(c.water.anode.mL, 1)} mL O₂; brine gave ${fmt(c.brine.cathode.mL, 1)} mL each of H₂ and Cl₂. Because oxygen forms slowly at real electrodes (overpotential), chloride ions react instead.`
       };
     }
   },
@@ -338,7 +338,7 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'The Sealed Plate',
-    prompt: 'Lay Plate X on the balance, convert the plated time from minutes to seconds, and type the current in amperes.',
+    prompt: 'Weigh Plate X on the balance, convert the plating time to seconds, and type the current in amperes.',
     widget,
     entry: { id: 'i', label: 'Current', unit: 'A' },
     table: (() => {
@@ -350,13 +350,13 @@ export const STAGES = [
       }, { w: 172, h: 90 });
     })(),
     hints: [
-      'Lay the plate on the balance to read its mass, then type the current in the field.',
+      'Drag Plate X onto the balance to read its mass, then type the current in amperes.',
       'Compare the mass on the balance with the time shown and the half-reaction line.',
       'Convert grams to moles of nickel, then moles of electrons, then coulombs, and divide by seconds.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'i');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field first.' };
       const want = S8.I;
       if (Math.abs(v - want) <= TOL_A) return { ok: true };
       const g = platingRun(S8.metal, S8.I, S8.t).g;
@@ -364,19 +364,19 @@ export const STAGES = [
       const near = x => Math.abs(v - x) <= 0.015 * Math.abs(x) + 1e-9;
       const f = state.table.fixtures.sup;
       const plate = supplyRead(state.table, 'sup').plate;
-      if (!plate) return { ok: false, msg: 'Lay the plate on the balance to read its mass.' };
-      if (near(I(S8.metal, 2, S8.t / 60))) return { ok: false, msg: 'That treats 25.0 minutes as 25.0 s; the time shown is in minutes.' };
-      if (near(I(S8.metal, 1))) return { ok: false, msg: 'The cell\'s half-reaction line reads Ni²⁺ + 2 e⁻ → Ni; that figure counts one electron for each nickel atom.' };
-      if (near(I('cu'))) return { ok: false, msg: 'That uses 63.5 g/mol, the molar mass of copper; this cell holds nickel.' };
-      if (near(I('zn'))) return { ok: false, msg: 'That uses 65.4 g/mol, the molar mass of zinc; this cell holds nickel.' };
-      return { ok: false, msg: `The balance reads ${fmt(weighGrams(f), 3)} g after 25.0 minutes; ${fmt(v, 2)} A does not give that mass.` };
+      if (!plate) return { ok: false, msg: 'Drag Plate X onto the balance to read its mass first.' };
+      if (near(I(S8.metal, 2, S8.t / 60))) return { ok: false, msg: 'You used 25.0 instead of converting 25.0 minutes to 1500 seconds.' };
+      if (near(I(S8.metal, 1))) return { ok: false, msg: 'You used 1 electron per nickel atom, but the half-reaction Ni²⁺ + 2 e⁻ → Ni takes 2 electrons.' };
+      if (near(I('cu'))) return { ok: false, msg: 'That uses copper\'s molar mass (63.5 g/mol); this cell plated nickel (58.7 g/mol).' };
+      if (near(I('zn'))) return { ok: false, msg: 'That uses zinc\'s molar mass (65.4 g/mol); this cell plated nickel (58.7 g/mol).' };
+      return { ok: false, msg: `The balance reads ${fmt(weighGrams(f), 3)} g after 25.0 minutes, which does not match ${fmt(v, 2)} A.` };
     },
     get reward() {
       const g = platingRun(S8.metal, S8.I, S8.t).g; const mol = g / METALS.ni.M;
       return {
         log: 'The mass on the plate gave the current that made it.',
         title: "Faraday's Law Backwards",
-        body: `${fmt(g, 3)} g of nickel is ${fmt(mol, 5)} mol; two electrons each makes ${fmt(mol * 2, 5)} mol of electrons, or ${fmt(mol * 2 * 96485, 0)} C. Over ${S8.t} s that is ${fmt(currentFor('ni', g, S8.t), 2)} A: the law works from mass to current as well as from current to mass.`
+        body: `${fmt(g, 3)} g of nickel is ${fmt(mol, 5)} mol, needing ${fmt(mol * 2, 5)} mol of electrons (${fmt(mol * 2 * 96485, 0)} C). Over ${S8.t} s that is ${fmt(currentFor('ni', g, S8.t), 2)} A—Faraday's law works in reverse too.`
       };
     }
   }
@@ -387,7 +387,7 @@ attachScenes(STAGES, { compact: [2, 5], demos: {}, own: { 1: { sitesKey: 'sides'
 
 export const DEBRIEF = {
   title: 'Electrolysis',
-  body: 'A supply stronger than a cell drives its reaction backwards. The charge passed, current times time, counts the electrons, and the electrons count the atoms plated.'
+  body: 'A power supply stronger than a cell drives its reaction backwards. Charge passed (current × time) counts the electrons, and those electrons determine how much metal plates out.'
 };
 
 export const SOLUTIONS = [

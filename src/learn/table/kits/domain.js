@@ -17,7 +17,7 @@ import * as THREE from 'three';
 import { registerKit } from './registry.js';
 import {
   planHubJoin, hubPairable, paintHubKind, printedHub, faceKeyHub, paintHubLink, hubLinkRods, paintHubFixture, settleHubs,
-  HUB_R, ARM_R, turnOf, tiltOf, flipHubPiece, openingView, hubRead
+  HUB_R, ARM_R, turnOf, tiltOf, flipHubPiece, openingView, hubRead, pickedAngle, pickedSequence
 } from './domain-hub.js';
 import {
   planFieldJoin, fieldPairable, runPlates, paintFieldKind, printedField, faceKeyField, paintFieldFixture, fieldTapZones, MOL_RECT, STREAM_RECT,
@@ -26,7 +26,8 @@ import {
 import { buildMolModel } from '../../engine/ligar-mol3d.js';
 import { YAW0 } from './domain-draw.js';
 import {
-  planOrbJoin, settleSeated, seatedOrb, paintOrbKind, printedOrb, faceKeyOrb, paintOrbLink, orbLinkRods, paintOrbFixture, ORB_R
+  planOrbJoin, settleSeated, seatedOrb, paintOrbKind, printedOrb, faceKeyOrb, paintOrbLink, orbLinkRods, paintOrbFixture, ORB_R,
+  runMixbowl, settleMixbowls
 } from './domain-orbitals.js';
 import { piecesIn } from './atoms.js';
 import {
@@ -59,12 +60,14 @@ function pairable(me, o, state) {
 function run(state, fixtureId) {
   const f = state.fixtures[fixtureId];
   if (f?.kind === 'plates') return runPlates(state, f);
+  if (f?.kind === 'mixbowl') return runMixbowl(state, f);
   return null;
 }
 
 function settle(s) {
   settleHubs(s);
   settleSeated(s);
+  settleMixbowls(s);
 }
 
 function paintPiece(ctx, p, state, o) {
@@ -112,7 +115,8 @@ function piece3d(p, state, c) {
         // The flat picture seen from its own turn; a molecule swung by the field lies true to the plates.
         yaw: pose.turned ? 0 : (read.plan.n === 1 ? pose.view.yaw : YAW0),
         arrows: arrowsOn(state, p) ? read.dip.arrows : null,
-        net: arrowsOn(state, p) && net ? (pose.turned ? [-1, 0, 0] : (p.props.flipped ? [-net[0], net[1], -net[2]] : net)) : null
+        net: arrowsOn(state, p) && net ? (pose.turned ? [-1, 0, 0] : (p.props.flipped ? [-net[0], net[1], -net[2]] : net)) : null,
+        orbitals: p.props.orbitals || null
       }, tile.userData.height);
       tile.add(model);
       return tile;
@@ -126,10 +130,174 @@ function piece3d(p, state, c) {
   }
 }
 
-/** 3D fixture dressing: physical mixing vortex and blossoming 3D hybrid orbitals for the mixer. */
+/** Helper: rotate a VSEPR unit vector by the hub's current yaw and tilt. */
+function rotatedDir(v, yaw, tilt) {
+  const x1 = v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw);
+  const y1 = v[1];
+  const z1 = -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw);
+  const wx = x1;
+  const wy = y1 * Math.cos(tilt) - z1 * Math.sin(tilt);
+  const wz = y1 * Math.sin(tilt) + z1 * Math.cos(tilt);
+  return new THREE.Vector3(wx, wy, wz).normalize();
+}
+
+/** Paint a crisp amber angle badge onto a small canvas for a floating 3D Sprite. */
+function drawAngleBadgeCanvas(canvas, text) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(14, 13, 10, 0.92)';
+  ctx.fillRect(4, 4, w - 8, h - 8);
+  ctx.strokeStyle = '#e59b24';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(4, 4, w - 8, h - 8);
+  ctx.fillStyle = '#f2b84b';
+  ctx.font = '700 42px "Quantico", "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, w / 2, h / 2 + 2);
+}
+
+/** 3D floating angle arc, midair degree label, and selection rings for a VSEPR hub. */
+function buildHubAngle3D(f, state, c) {
+  const { toPlate, ground, scale: s } = c;
+  const root = new THREE.Group();
+  const arcMat = c.own(new THREE.MeshBasicMaterial({ color: 0xf2a629 }));
+  const ringMat = c.own(new THREE.MeshBasicMaterial({ color: 0xf2a629, side: THREE.DoubleSide }));
+
+  let arcMesh = null;
+  const selRings = [];
+  for (let i = 0; i < 3; i++) {
+    const rMesh = new THREE.Mesh(new THREE.RingGeometry(ARM_R * s * 0.95, ARM_R * s * 1.15, 24), ringMat);
+    rMesh.visible = false;
+    root.add(rMesh);
+    selRings.push(rMesh);
+  }
+
+  // Floating billboard label
+  let sprite = null;
+  let spriteCanvas = null;
+  let spriteTex = null;
+  let lastText = '';
+  if (typeof document !== 'undefined') {
+    spriteCanvas = document.createElement('canvas');
+    spriteCanvas.width = 200;
+    spriteCanvas.height = 84;
+    spriteTex = new THREE.CanvasTexture(spriteCanvas);
+    spriteTex.colorSpace = THREE.SRGBColorSpace;
+    const spMat = c.own(new THREE.SpriteMaterial({ map: spriteTex, transparent: true, depthTest: false, depthWrite: false }));
+    sprite = new THREE.Sprite(spMat);
+    sprite.renderOrder = 20;
+    sprite.visible = false;
+    root.add(sprite);
+  }
+
+  function sync(_f, st) {
+    const hubId = _f.props?.hub;
+    const hub = st.pieces?.[hubId];
+    if (arcMesh) { root.remove(arcMesh); arcMesh.geometry.dispose(); arcMesh = null; }
+    for (const r of selRings) r.visible = false;
+    if (sprite) sprite.visible = false;
+    if (!hub) return;
+
+    const r = hubRead(st, hub.id);
+    if (!r.n) return;
+    const view = openingView(r.plan.vectors);
+    const yaw = view.yaw + turnOf(st, hub);
+    const tilt = tiltOf(st, hub);
+
+    const plHub = toPlate(hub.at);
+    const hubCenter = new THREE.Vector3(plHub.x, ground + HUB_R * s * 2.4, plHub.z);
+    const bondDist = 18.0 * s;
+
+    // Position helper for any piece in the 3-atom sequence
+    const posOf = id => {
+      if (id === hub.id) return hubCenter.clone();
+      const idx = r.index(id);
+      if (idx < 0 || !r.plan.vectors[idx]) return null;
+      const dir = rotatedDir(r.plan.vectors[idx].v, yaw, tilt);
+      const dist = r.arms[idx]?.kind === 'balloon' ? 13.0 * s : bondDist;
+      return hubCenter.clone().addScaledVector(dir, dist);
+    };
+
+    const seq = pickedSequence(st, hub.id);
+    seq.forEach((id, k) => {
+      const pos = posOf(id);
+      if (!pos || !selRings[k]) return;
+      selRings[k].position.copy(pos);
+      selRings[k].rotation.x = -Math.PI / 2;
+      selRings[k].visible = true;
+    });
+
+    const read = pickedAngle(st, hub.id);
+    if (!read) return;
+    const ia = r.index(read.a);
+    const ib = r.index(read.b);
+    if (ia < 0 || ib < 0) return;
+
+    const dirA = rotatedDir(r.plan.vectors[ia].v, yaw, tilt);
+    const dirB = rotatedDir(r.plan.vectors[ib].v, yaw, tilt);
+    const dot = Math.max(-1, Math.min(1, dirA.dot(dirB)));
+    const omega = Math.acos(dot);
+    const arcRad = 9.5 * s;
+    const steps = 24;
+    const pts = [];
+    let midDir;
+
+    if (omega > Math.PI - 0.04) {
+      const perp = Math.abs(dirA.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+      midDir = new THREE.Vector3().crossVectors(dirA, perp).normalize();
+      for (let i = 0; i <= steps; i++) {
+        const a = (i / steps) * Math.PI;
+        pts.push(hubCenter.clone().addScaledVector(dirA, Math.cos(a) * arcRad).addScaledVector(midDir, Math.sin(a) * arcRad));
+      }
+    } else {
+      const sinO = Math.sin(omega) || 1;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const d = dirA.clone().multiplyScalar(Math.sin((1 - t) * omega) / sinO)
+          .addScaledVector(dirB, Math.sin(t * omega) / sinO)
+          .normalize();
+        pts.push(hubCenter.clone().addScaledVector(d, arcRad));
+      }
+      midDir = dirA.clone().add(dirB).normalize();
+    }
+
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const tubeGeo = new THREE.TubeGeometry(curve, 24, 0.48 * s, 8, false);
+    arcMesh = new THREE.Mesh(tubeGeo, arcMat);
+    root.add(arcMesh);
+
+    if (sprite && spriteCanvas && spriteTex) {
+      const text = `${read.angle}°`;
+      if (text !== lastText) {
+        drawAngleBadgeCanvas(spriteCanvas, text);
+        spriteTex.needsUpdate = true;
+        lastText = text;
+      }
+      const labelPos = hubCenter.clone().addScaledVector(midDir, arcRad + 5.8 * s);
+      // Keep label cleanly above the plate
+      labelPos.y = Math.max(ground + 4.5 * s, labelPos.y);
+      sprite.position.copy(labelPos);
+      sprite.scale.set(13.5 * s, 5.7 * s, 1);
+      sprite.visible = true;
+    }
+  }
+
+  sync(f, state);
+  root.userData.sync = sync;
+  return root;
+}
+
+/** 3D fixture dressing: physical mixing vortex and blossoming 3D hybrid orbitals for the mixer, and floating 3D angle arc/label on hubs. */
 function dress3d(f, state, c) {
   if (f.kind === 'mixbowl') {
     return buildMixer3D(f, state, c);
+  }
+  if (f.kind === 'hubplate') {
+    return buildHubAngle3D(f, state, c);
   }
   return null;
 }

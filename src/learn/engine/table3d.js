@@ -486,13 +486,15 @@ export class Table3D extends BenchViewer3D {
     // bins of a spectrum), each `{id, at, n, cap, slots, r, colour}` with its slots relative to `at`.
     this.piles = new Map();
     for (const { id, at, pile } of this.pileSources(kit, state)) {
-      const mesh = new THREE.InstancedMesh(
-        new THREE.IcosahedronGeometry(1, 0),
-        this.mine(new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.15 })),
-        pile.cap
-      );
+      const geo = pile.electron
+        ? new THREE.SphereGeometry(1, 20, 16)
+        : new THREE.IcosahedronGeometry(1, 0);
+      const mat = pile.electron
+        ? this.mine(new THREE.MeshStandardMaterial({ color: 0xe8f7ff, emissive: 0x38bdf8, emissiveIntensity: 0.9, roughness: 0.18, metalness: 0.05 }))
+        : this.mine(new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.15 }));
+      const mesh = new THREE.InstancedMesh(geo, mat, pile.cap);
       mesh.name = `pile-${id}`;
-      mesh.castShadow = true;
+      mesh.castShadow = !pile.electron;
       this.layPile(mesh, at, pile);
       this.fixtureRoot.add(mesh);
       this.piles.set(id, mesh);

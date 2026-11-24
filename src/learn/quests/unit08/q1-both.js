@@ -40,10 +40,10 @@ export function toolNoteFor() { return null; }
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit08/q1-both';
 const GUESS = {
-  stopped: 'Nothing is happening: every change has stopped',
-  allB: 'All the butane has turned to isobutane and stays there',
-  both: 'Butane keeps turning to isobutane and isobutane keeps turning back',
-  oneway: 'Butane keeps turning to isobutane, and none turns back'
+  stopped: 'Everything has stopped; no particles are changing',
+  allB: 'All the butane turned into isobutane and stays that way',
+  both: 'Butane keeps turning into isobutane, and isobutane keeps turning back',
+  oneway: 'Butane keeps turning into isobutane, and none turns back'
 };
 
 // The vessels: 48 particles; butane turns to isobutane with chance kf per second and back with chance kr (K = 2.0 at 320 K).
@@ -71,7 +71,7 @@ export const STAGES = [
     title: 'Butane Alone',
     briefing: {
       speaker: 'Vess',
-      body: 'Butane and isobutane are the same atoms joined in two different shapes, and each can turn into the other.'
+      body: 'Butane and isobutane have the same atoms arranged in two shapes, and each can turn into the other.'
     },
     prompt: 'Does all the butane turn into isobutane?',
     widget,
@@ -82,24 +82,24 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Watch the orange butane and blue isobutane lines as you press "Run" until both flatten.',
-      'See whether the orange butane line drops to zero or levels off above zero.',
-      'Check the counts under the graph once both lines are flat.'
+      'Watch the orange butane and blue isobutane lines until both flatten.',
+      'Check whether the orange butane line drops to zero or levels off above zero.',
+      'Read the butane and isobutane counts under the graph once both lines are flat.'
     ],
     check(state) {
       const t = state.table;
       const v = Math.round(dialValue(t, 'ans'));
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Choose an answer on the dial.' };
       const r = panRead(t, 'pan');
-      if (r.settledA == null) return { ok: false, notYet: true, msg: 'The orange butane line on the graph is still falling.' };
+      if (r.settledA == null) return { ok: false, notYet: true, msg: 'The reaction is still running—press "Run" until the lines flatten.' };
       if (v === 3) return { ok: true };
-      if (v === 1) return { ok: false, msg: `The settled vessel holds ${r.a} butane and ${r.b} isobutane.` };
-      return { ok: false, msg: `The settled vessel still holds ${r.a} butane alongside ${r.b} isobutane.` };
+      if (v === 1) return { ok: false, msg: `Once settled, the vessel holds ${r.a} butane and ${r.b} isobutane.` };
+      return { ok: false, msg: `Once settled, the vessel still holds ${r.a} butane alongside ${r.b} isobutane.` };
     },
     reward: {
       log: 'Some butane was left when the amounts stopped changing.',
       title: 'The Amounts Settle',
-      body: 'The amounts stopped changing with some butane still there. The reaction did not use it all up.'
+      body: 'The amounts leveled off with butane still left—the reaction did not use it all up.'
     }
   },
 
@@ -117,13 +117,13 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 46, h: 16 } }] }
     }, { h: 78 }),
     hints: [
-      'Drag one of the four cards into the slot.',
-      'Think about what each card means for the particles themselves, not just the flat lines.',
-      'A flat graph means the totals hold steady; decide whether individual particles must be still.'
+      'Drag one prediction card into the slot.',
+      'Think about what individual particles are doing, not just the flat totals.',
+      'A flat graph only shows steady totals; decide if particles must stop changing to keep totals steady.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -133,7 +133,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, a settled vessel has eight particles ringed so you can follow them.'
+      body: 'Next, we ring eight particles in a settled vessel so you can watch them.'
     }
   },
 
@@ -153,24 +153,24 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Follow the ringed particles in the strip under the graph, then set the answer dial.',
-      'Count how many times the ringed particles switch colour and check the count of each change.',
-      'See whether the ringed particles stay one colour or keep switching both ways.'
+      'Watch the ringed particles in the strip below the graph, then set the dial.',
+      'Notice whether the ringed particles stay one colour or keep switching back and forth.',
+      'Check both change counts under the graph to see if changes happen both ways.'
     ],
     check(state) {
       const v = dialValue(state.table, 'verdict');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Choose an answer on the dial.' };
       if (v === 2) return { ok: true };
       const r = panRead(state.table, 'pan');
       return { ok: false, msg: `The ringed particles switched colour ${ringedChanges(r)} times—both orange to blue and blue to orange kept happening.` };
     },
     get reward() {
       const g = recall(QUEST_KEY);
-      const verdict = !g || !GUESS[g] ? '' : g === 'both' ? 'You predicted changes both ways, and the ringed particles agreed. ' : 'The ringed particles did not agree with your prediction, which is how a guess gets better. ';
+      const verdict = !g || !GUESS[g] ? '' : g === 'both' ? 'Your prediction matched. ' : 'Your prediction did not match—the ringed particles kept switching. ';
       return {
         log: 'Particles kept changing in a settled vessel.',
         title: 'Dynamic Equilibrium',
-        body: `${verdict}Butane keeps turning into isobutane and isobutane keeps turning back, at about the same rate (changes per second), so the amounts hold steady. This is dynamic equilibrium.`
+        body: `${verdict}Butane and isobutane keep turning into each other at about the same rate (changes per second), keeping totals steady—that is dynamic equilibrium.`
       };
     }
   },
@@ -179,7 +179,7 @@ export const STAGES = [
   {
     id: 's4-from-b',
     title: 'Isobutane Alone',
-    prompt: 'Starting from isobutane alone, does the vessel settle with more, less or the same butane as the dashed Stage 1 line?',
+    prompt: 'Starting with only isobutane, does the vessel settle with more, less, or the same butane as Stage 1 (dashed line)?',
     widget,
     table: pansTable({
       fixtures: [
@@ -188,16 +188,16 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Press "Run" on the vessel; the dashed lines show the vessel that started with butane alone.',
-      'Watch where the solid orange butane line ends against the dashed orange line.',
-      'See whether the solid orange line flattens above, below or level with the dashed one.'
+      'Press "Run" to settle the vessel; the dashed lines show Stage 1 (starting from butane alone).',
+      'Compare where the solid orange butane line flattens against the dashed orange line.',
+      'Ignore tiny wobbles and check whether the two orange lines level off at the same height.'
     ],
     check(state) {
       const t = state.table;
       const v = Math.round(dialValue(t, 'ans'));
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Choose an answer on the dial.' };
       const r = panRead(t, 'pan');
-      if (r.settledA == null) return { ok: false, notYet: true, msg: 'The orange butane line on the graph is still moving.' };
+      if (r.settledA == null) return { ok: false, notYet: true, msg: 'The reaction is still running—press "Run" until the lines flatten.' };
       const same = Math.abs(r.settledA - LEVEL_A) <= TOL;
       const truth = same ? 2 : r.settledA > LEVEL_A ? 3 : 1;
       if (v === truth) return { ok: true };
@@ -206,7 +206,7 @@ export const STAGES = [
     reward: {
       log: 'Isobutane alone settled at the same amounts.',
       title: 'Same Level From Either End',
-      body: 'It settled at the same amounts as when it started from butane. Where a reaction settles does not depend on which side it started.'
+      body: 'It settled at the same mix as when it started from butane. Where a reaction settles does not depend on which side you start from.'
     }
   },
 
@@ -216,15 +216,15 @@ export const STAGES = [
     title: 'Two Settled Vessels',
     briefing: {
       speaker: 'Vess',
-      body: 'The substance a reaction starts with is the reactant, and what it makes is the product.'
+      body: 'A reactant is what a reaction starts with; a product is what it makes.'
     },
     prompt: 'Which statement is NOT true of these two settled vessels?',
     widget,
     table: pansTable({
       pieces: [
-        note('c-equal', 'Reactant and product are always equal in number', { x: 26, y: 58 }),
-        note('c-both', 'Changes keep going in both directions', { x: 76, y: 58 }),
-        note('c-agree', 'On each vessel, the count of each change is about the same', { x: 126, y: 58 })
+        note('c-equal', 'Reactant and product always end up in equal amounts', { x: 26, y: 58 }),
+        note('c-both', 'Particles keep changing in both directions', { x: 76, y: 58 }),
+        note('c-agree', 'In each vessel, forward and reverse change counts roughly match', { x: 126, y: 58 })
       ],
       fixtures: [
         panFixture('p1', { x: 28, y: 25 }, { ...P_LEVEL, b0: 0, seed: 41, start: 100, title: 'Vessel 1', ...BUTANE_NAMES, ...compact }),
@@ -234,20 +234,20 @@ export const STAGES = [
     }, { h: 70 }),
     hints: [
       'Compare where the orange and blue lines level off in Vessel 1 and Vessel 2.',
-      'Check whether the two lines end at the same height on Vessel 1, and check the change counts below.',
-      'Find the one statement that Vessel 1 proves wrong.'
+      'Check whether the two lines end at the same height in Vessel 1, and compare the change counts below.',
+      'Check which statement Vessel 1 proves wrong.'
     ],
     check(state) {
       const c = pieceIn(state.table, 'false');
-      if (!c) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!c) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       if (c.id === 'c-equal') return { ok: true };
-      if (c.id === 'c-both') return { ok: false, msg: 'Both vessels still show changes running in both directions under the graph.' };
-      return { ok: false, msg: 'On both vessels, the forward and reverse change counts are close to each other.' };
+      if (c.id === 'c-both') return { ok: false, msg: 'Both vessels still show changes happening in both directions under the graph.' };
+      return { ok: false, msg: 'In both vessels, the forward and reverse change counts are nearly equal.' };
     },
     reward: {
       log: 'The amounts were not equal; the rates were about the same.',
       title: 'Not Equal Amounts',
-      body: 'At equilibrium the two rates match, not necessarily the amounts: Vessel 1 holds about twice as much isobutane as butane, while Vessel 2 settles near equal.'
+      body: 'At equilibrium, forward and reverse rates match, not necessarily the amounts: Vessel 1 holds twice as much isobutane as butane, while Vessel 2 settles near equal.'
     }
   },
 
@@ -257,7 +257,7 @@ export const STAGES = [
     title: 'Writing the Vessels',
     briefing: {
       speaker: 'Vess',
-      body: 'A reaction that runs both ways is a reversible reaction, written with a double arrow, ⇌.'
+      body: 'A reversible reaction runs both ways and uses a double arrow (⇌). A one-way reaction uses a single arrow (→).'
     },
     prompt: 'Which arrow describes how each vessel reacts?',
     widget,
@@ -275,23 +275,23 @@ export const STAGES = [
       }
     }, { h: 68 }),
     hints: [
-      'Compare the P→R count under each graph: it shows whether product turns back into reactant.',
-      'See which vessel runs out of reactant completely and which keeps both.',
-      'A one-way reaction takes →; a reversible reaction that runs both ways takes ⇌.'
+      'Check the P→R count under each graph to see whether product turns back into reactant.',
+      'See which vessel uses up all its reactant and which keeps both reactant and product.',
+      'Use → for a one-way reaction and ⇌ for a reversible reaction.'
     ],
     check(state) {
       const t = state.table;
       const a = pieceIn(t, 'l1'); const b = pieceIn(t, 'l2');
-      if (!a || !b) return { ok: false, notYet: true, msg: 'Lay a card on each vessel.' };
+      if (!a || !b) return { ok: false, notYet: true, msg: 'Place an arrow card under each vessel.' };
       if (a.id === 'one' && b.id === 'two') return { ok: true };
       return a.id !== 'one'
-        ? { ok: false, msg: 'In Vessel 1 nothing turns back into reactant (P→R is 0), and all the reactant is used up.' }
-        : { ok: false, msg: 'In Vessel 2 product keeps turning back into reactant (P→R is above 0).' };
+        ? { ok: false, msg: 'In Vessel 1, nothing turns back into reactant (P→R is 0) and all the reactant is used up.' }
+        : { ok: false, msg: 'In Vessel 2, product keeps turning back into reactant (P→R is above 0).' };
     },
     reward: {
       log: 'The vessel with changes both ways takes the double arrow.',
       title: 'Reversible Reaction',
-      body: 'In Vessel 2 product turns back, so it is written with a double arrow, ⇌. In Vessel 1 nothing turns back, so all the reactant is used up.'
+      body: 'Vessel 2 runs both ways, so it takes a double arrow (⇌). Vessel 1 never turns back, so all the reactant is used up (→).'
     }
   }
 ];

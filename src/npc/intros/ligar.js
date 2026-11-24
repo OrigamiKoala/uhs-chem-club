@@ -26,6 +26,6 @@ export const INTROS = {
   },
   'q9-orbitals': {
     prop: { kind: 'pipe', opts: { len: 2.0 } },
-    steps: walkUp('ligar-medic', 'This pipe carries air to the miners. I have to know it still carries oxygen.', { speed: 1.5 })
+    steps: walkUp('ligar-medic', 'I heard I can use magnets to detect if there is oxygen in the pipe. How would I do this?', { speed: 1.5 })
   }
 };

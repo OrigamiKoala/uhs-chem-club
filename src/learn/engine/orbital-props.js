@@ -456,28 +456,7 @@ export function buildMixer3D(f, state, c) {
   basinFloor.receiveShadow = true;
   basinGroup.add(basinFloor);
 
-  // Swirling vortex in mixing bowl
-  const vortexGroup = new THREE.Group();
-  vortexGroup.position.set(0, rimH + 0.012, 0);
-  basinGroup.add(vortexGroup);
-
-  // Glowing containment field rings
-  const ringGeo = new THREE.TorusGeometry(basinD * 0.32, 0.0016, 12, 36);
-  const ringMat = own(c, new THREE.MeshBasicMaterial({ color: COLOR.vortexRing, transparent: true, opacity: 0.55 }));
-  const vortexRing1 = new THREE.Mesh(ringGeo, ringMat);
-  vortexRing1.rotation.x = Math.PI / 2;
-  vortexGroup.add(vortexRing1);
-
-  const vortexRing2 = new THREE.Mesh(ringGeo, ringMat);
-  vortexRing2.rotation.x = Math.PI / 2;
-  vortexRing2.scale.set(0.68, 0.68, 0.68);
-  vortexGroup.add(vortexRing2);
-
-  // Ghost/energy replicas of input orbitals in the vortex
-  const inputOrbsGroup = new THREE.Group();
-  vortexGroup.add(inputOrbsGroup);
-
-  // 2. Conduit Bridge between bowl and output hub
+  // 2. Conduit Bridge & Black Mixer Box between tray and output hub
   const bridgeLen = Math.hypot(pOut.x - pBowl.x, pOut.z - pBowl.z);
   const bridgeAng = Math.atan2(pOut.z - pBowl.z, pOut.x - pBowl.x);
   const bridgeMidX = (pBowl.x + pOut.x) / 2;
@@ -497,6 +476,50 @@ export function buildMixer3D(f, state, c) {
   pipe2.rotation.y = -bridgeAng;
   pipe2.position.set(bridgeMidX, ground + 0.008, bridgeMidZ - 0.014);
   root.add(pipe2);
+
+  // Sleek black mixer box seated right across the red conduit lines
+  const boxGroup = new THREE.Group();
+  boxGroup.position.set(bridgeMidX, ground, bridgeMidZ);
+  boxGroup.rotation.y = -bridgeAng;
+  root.add(boxGroup);
+
+  const boxW = Math.max(0.068, bridgeLen * 0.24);
+  const boxH = 0.032;
+  const boxD = 0.056;
+  const boxMat = own(c, new THREE.MeshStandardMaterial({ color: 0x111114, roughness: 0.36, metalness: 0.45 }));
+  const boxMesh = new THREE.Mesh(new THREE.BoxGeometry(boxW, boxH, boxD), boxMat);
+  boxMesh.position.y = boxH / 2 + 0.001;
+  boxMesh.castShadow = true;
+  boxMesh.receiveShadow = true;
+  boxGroup.add(boxMesh);
+
+  // Subtle dark iron rim & glowing amber status strip on top of the black mixer box
+  const bezelMat = own(c, new THREE.MeshStandardMaterial({ color: COLOR.iron, roughness: 0.45, metalness: 0.75 }));
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(boxW + 0.006, 0.004, boxD + 0.006), bezelMat);
+  bezel.position.y = 0.003;
+  boxGroup.add(bezel);
+
+  const statusMat = own(c, new THREE.MeshStandardMaterial({
+    color: COLOR.amberPhase,
+    emissive: COLOR.amberPhase,
+    emissiveIntensity: 0.15,
+    roughness: 0.3
+  }));
+  const statusStrip = new THREE.Mesh(new THREE.BoxGeometry(boxW * 0.68, 0.003, 0.008), statusMat);
+  statusStrip.position.y = boxH + 0.0025;
+  boxGroup.add(statusStrip);
+
+  // Traveling energy pulses along the conduit lines during the mixing animation
+  const pulseGeo = new THREE.SphereGeometry(0.009, 12, 10);
+  const pulseMatA = own(c, new THREE.MeshStandardMaterial({ color: 0xfff0b8, emissive: COLOR.amberPhase, emissiveIntensity: 1.4 }));
+  const pulseMatB = own(c, new THREE.MeshStandardMaterial({ color: 0xd8f3ff, emissive: COLOR.cyanPhase, emissiveIntensity: 1.4 }));
+  const pulseIn1 = new THREE.Mesh(pulseGeo, pulseMatA);
+  const pulseIn2 = new THREE.Mesh(pulseGeo, pulseMatB);
+  const pulseOut = new THREE.Mesh(new THREE.SphereGeometry(0.012, 14, 10), pulseMatA);
+  pulseIn1.visible = false;
+  pulseIn2.visible = false;
+  pulseOut.visible = false;
+  root.add(pulseIn1, pulseIn2, pulseOut);
 
   // 3. Output Reactor Plinth & Central Carbon Atom (Right)
   const reactorGroup = new THREE.Group();
@@ -535,12 +558,12 @@ export function buildMixer3D(f, state, c) {
   // State trackers for animation
   let activeLobesCount = 0;
   let activeHybridType = null;
-  let bloomProgress = 1.0;
+  let mixAnimTime = 99; // 0..1.35s animation when Mix is pressed
   let mixTime = 0;
   const hybridLobeMeshes = [];
 
-  /** Rebuild the 3D hybrid orbitals matching current blend state */
-  function syncHybridLobes(read) {
+  /** Rebuild the 3D hybrid orbitals matching current blend state (only after Mix is pressed). */
+  function syncHybridLobes(read, animate = false) {
     // Clear old lobes
     while (hybridGroup.children.length > 0) {
       const child = hybridGroup.children[0];
@@ -549,56 +572,17 @@ export function buildMixer3D(f, state, c) {
     }
     hybridLobeMeshes.length = 0;
 
-    // Clear and rebuild vortex input orbitals in mixing bowl
-    while (inputOrbsGroup.children.length > 0) {
-      const child = inputOrbsGroup.children[0];
-      inputOrbsGroup.remove(child);
-      child.traverse?.(o => o.geometry?.dispose?.());
-    }
-
-    if (!read.held.length) {
+    if (!read.mixed || !read.held.length || !read.blend.blends) {
       activeLobesCount = 0;
       activeHybridType = null;
-      vortexGroup.visible = false;
-      return;
-    }
-
-    vortexGroup.visible = true;
-
-    // Build mini input orbital representations in the vortex
-    const held = read.held;
-    held.forEach((orb, i) => {
-      const orbGroup = new THREE.Group();
-      const angle = (i / held.length) * Math.PI * 2;
-      const rOrb = basinD * 0.28;
-      orbGroup.position.set(Math.cos(angle) * rOrb, 0.008, Math.sin(angle) * rOrb);
-
-      if (orb.props.type === 's') {
-        const geo = new THREE.SphereGeometry(0.012, 14, 10);
-        const mat = own(c, new THREE.MeshStandardMaterial({ color: COLOR.amberPhase, transparent: true, opacity: 0.65 }));
-        orbGroup.add(new THREE.Mesh(geo, mat));
-      } else {
-        const pLen = 0.018;
-        const pRad = 0.007;
-        const lobeGeo = buildTeardropLobeGeo(pLen, pRad, 12);
-        const m1 = new THREE.Mesh(lobeGeo, own(c, new THREE.MeshStandardMaterial({ color: COLOR.amberPhase, transparent: true, opacity: 0.65 })));
-        const m2 = new THREE.Mesh(lobeGeo, own(c, new THREE.MeshStandardMaterial({ color: COLOR.cyanPhase, transparent: true, opacity: 0.65 })));
-        m2.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0));
-        orbGroup.add(m1);
-        orbGroup.add(m2);
-      }
-      inputOrbsGroup.add(orbGroup);
-    });
-
-    if (!read.blend.blends) {
-      activeLobesCount = 0;
-      activeHybridType = null;
+      statusMat.emissiveIntensity = read.held.length ? 0.35 : 0.1;
       return;
     }
 
     activeLobesCount = read.lobes;
     activeHybridType = read.hybrid;
-    bloomProgress = 0.0; // Trigger physical growth animation
+    mixAnimTime = animate ? 0 : 99;
+    statusMat.emissiveIntensity = 0.85;
 
     // Compute 3D direction vectors for the hybrid orbitals
     // sp3 = 4 tetrahedral vectors (109.5°):
@@ -694,42 +678,94 @@ export function buildMixer3D(f, state, c) {
   }
 
   // Initial build from state
-  syncHybridLobes(bowlRead(state, f.id));
+  const initRead = bowlRead(state, f.id);
+  root.userData.lastKey = `${initRead.held.map(o => o.id).sort().join(',')}:${initRead.mixed ? 1 : 0}:${initRead.mixSeq}`;
+  syncHybridLobes(initRead, false);
 
   // 5. Update & Tick hooks
   root.userData.update = (fixture, newState) => {
     const read = bowlRead(newState, fixture.id);
-    const key = `${read.held.map(o => o.id).sort().join(',')}:${read.lobes}:${read.hybrid}`;
+    const key = `${read.held.map(o => o.id).sort().join(',')}:${read.mixed ? 1 : 0}:${read.mixSeq}`;
     if (root.userData.lastKey !== key) {
       root.userData.lastKey = key;
-      syncHybridLobes(read);
+      syncHybridLobes(read, read.mixed);
     }
   };
+
+  const cosA = Math.cos(bridgeAng);
+  const sinA = Math.sin(bridgeAng);
+  const startX = pBowl.x + cosA * (basinW * 0.42);
+  const startZ = pBowl.z + sinA * (basinW * 0.42);
 
   root.userData.tick = (delta, still) => {
     if (still) {
       hybridGroup.scale.set(1, 1, 1);
+      pulseIn1.visible = false;
+      pulseIn2.visible = false;
+      pulseOut.visible = false;
+      boxGroup.position.set(bridgeMidX, ground, bridgeMidZ);
       return;
     }
 
     mixTime += delta;
 
-    // Swirl mixing vortex in the bowl
-    vortexGroup.rotation.y += delta * 2.8;
-    inputOrbsGroup.rotation.y -= delta * 1.2;
+    // 3-phase mixing animation when Mix is pressed:
+    // 0.00..0.40s: energy pulses stream from tray into black mixer box
+    // 0.35..0.75s: black mixer box hums & amber strip flashes
+    // 0.65..0.95s: combined pulse shoots from black box to central atom
+    // 0.85..1.35s: hybrid orbitals blossom out from the central atom
+    if (mixAnimTime < 1.35) {
+      mixAnimTime += delta;
+      if (mixAnimTime < 0.42) {
+        const u = Math.min(1, mixAnimTime / 0.42);
+        const px = startX + (bridgeMidX - startX) * u;
+        const pz = startZ + (bridgeMidZ - startZ) * u;
+        pulseIn1.position.set(px, ground + 0.012, pz + 0.014);
+        pulseIn2.position.set(px, ground + 0.012, pz - 0.014);
+        pulseIn1.visible = true;
+        pulseIn2.visible = true;
+      } else {
+        pulseIn1.visible = false;
+        pulseIn2.visible = false;
+      }
 
-    // Physical growth / blooming transition of hybrid orbitals
-    if (bloomProgress < 1.0) {
-      bloomProgress = Math.min(1.0, bloomProgress + delta * 2.2);
-      // Smooth organic blossoming ease-out
-      const scale = Math.sin((bloomProgress * Math.PI) / 2);
-      hybridGroup.scale.set(scale, scale, scale);
+      if (mixAnimTime >= 0.34 && mixAnimTime < 0.78) {
+        const vib = Math.sin(mixAnimTime * 75) * 0.0018;
+        boxGroup.position.set(bridgeMidX + vib, ground, bridgeMidZ);
+        statusMat.emissiveIntensity = 1.6 + Math.sin(mixAnimTime * 30) * 0.5;
+      } else {
+        boxGroup.position.set(bridgeMidX, ground, bridgeMidZ);
+        statusMat.emissiveIntensity = activeLobesCount > 0 ? 0.85 : 0.2;
+      }
+
+      if (mixAnimTime >= 0.65 && mixAnimTime < 0.96) {
+        const u = (mixAnimTime - 0.65) / 0.31;
+        pulseOut.position.set(
+          bridgeMidX + (pOut.x - bridgeMidX) * u,
+          ground + 0.014 + Math.sin(u * Math.PI) * 0.018,
+          bridgeMidZ + (pOut.z - bridgeMidZ) * u
+        );
+        pulseOut.visible = true;
+      } else {
+        pulseOut.visible = false;
+      }
+
+      if (mixAnimTime < 0.85) {
+        hybridGroup.scale.set(0.001, 0.001, 0.001);
+      } else {
+        const b = Math.min(1, (mixAnimTime - 0.85) / 0.48);
+        const scale = Math.sin((b * Math.PI) / 2);
+        hybridGroup.scale.set(scale, scale, scale);
+      }
     } else {
+      pulseIn1.visible = false;
+      pulseIn2.visible = false;
+      pulseOut.visible = false;
+      boxGroup.position.set(bridgeMidX, ground, bridgeMidZ);
       hybridGroup.scale.set(1, 1, 1);
     }
 
-    // Continuous 3D rotation of hybrid orbitals around the vertical axis
-    // so the student can inspect the spatial arrangement from all angles
+    // Continuous gentle 3D rotation of hybrid orbitals around the vertical axis
     hybridGroup.rotation.y += delta * 0.65;
   };
 

@@ -38,10 +38,10 @@ const BUT = K_SYSTEMS.butane;
 const SO = K_SYSTEMS.so3;
 
 const GUESS_CLICK = {
-  more: 'It makes still more isobutane',
+  more: 'It makes even more isobutane',
   stay: 'It stays as it is',
-  back: 'Some of the isobutane turns back into butane',
-  all: 'All of the isobutane turns back into butane'
+  back: 'Some isobutane turns back into butane',
+  all: 'All the isobutane turns back into butane'
 };
 
 /* ---------------------------------------------------------------- the mixtures */
@@ -123,7 +123,7 @@ export const STAGES = [
     title: 'Already at Equilibrium',
     briefing: {
       speaker: 'Vess',
-      body: 'Q, the reaction quotient, is the same ratio as K, worked out for any mixture whether or not it has settled. The marker shows Q and the line shows K.'
+      body: 'Q (the reaction quotient) uses the same products-over-reactants formula as K, but for any mixture right now. The marker shows Q; the line shows K.'
     },
     prompt: 'Which mixture is already at equilibrium?',
     widget,
@@ -133,13 +133,13 @@ export const STAGES = [
       zones: { slots: [vessel('butane', true).seat] }
     }, { h: TABLE_H }),
     hints: [
-      'Lay each mixture card in the test vessel to see where its Q marker stands.',
-      'Compare where the Q marker stands against the K line for each mixture.',
-      'A mixture at equilibrium has Q equal to K and does not change when run.'
+      'Place each mixture card in the test vessel to check where its Q marker lands.',
+      'Compare the Q marker against the K line for each mixture.',
+      'A mixture already at equilibrium has Q equal to K and stays unchanged when run.'
     ],
     check: seatCheck('butane', S1, 'none', (c, r) => (r.ran
       ? `${c.label} moved when it was run: its Q marker went from ${fmtNum(r.Q0, 3)} to the K line.`
-      : `The Q marker stands at ${fmtNum(r.Q0, 3)} and the K line at ${fmtNum(BUT.K, 3)}.`)),
+      : `The Q marker stands at ${fmtNum(r.Q0, 3)}, which does not match K = ${fmtNum(BUT.K, 3)}.`)),
     reward: {
       log: 'The mixture with Q on K did not change.',
       title: 'Q, the Ratio Now',
@@ -152,7 +152,7 @@ export const STAGES = [
     id: 's2-predict',
     title: 'Far More Isobutane',
     predict: true,
-    prompt: 'What does this mixture do once it settles?',
+    prompt: 'What will this mixture do as it settles?',
     widget,
     table: pansTable({
       pieces: [
@@ -167,13 +167,13 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 48 }, size: { w: 46, h: 16 } }] }
     }, { h: TABLE_H }),
     hints: [
-      'Drag one of the four prediction cards into the slot.',
-      'Compare the amounts on the mixture card with K = 2.0.',
-      'Decide whether isobutane ÷ butane is above or below 2.0.'
+      'Drag one prediction card into the slot.',
+      'Compare isobutane ÷ butane on the mixture card against K = 2.0.',
+      'Decide whether this mixture has too much isobutane or too little compared with K = 2.0.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -183,7 +183,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, the mixture goes into the test vessel and is run.'
+      body: 'Next, we run the mixture in the test vessel.'
     }
   },
 
@@ -191,7 +191,7 @@ export const STAGES = [
   {
     id: 's3-runs-back',
     title: 'Run It',
-    get prompt() { return guessLine('Which way does a mixture run when its Q is above K?', GUESS_CLICK, KEY_CLICK); },
+    get prompt() { return guessLine('Which way does a mixture react when Q is above K?', GUESS_CLICK, KEY_CLICK); },
     widget,
     table: pansTable({
       pieces: [seated('butane', 'c-click', 'Mixture', CLICK_MIX)],
@@ -199,26 +199,26 @@ export const STAGES = [
       zones: { slots: [vessel('butane', true).seat] }
     }, { h: 66 }),
     hints: [
-      'Press "Run" on the vessel, then set the answer dial.',
+      'Press "Run" on the test vessel, then set the answer dial.',
       'Watch which bar rises, which falls, and which way the Q marker moves.',
-      'See which substance forms as Q falls back to the K line.'
+      'See which substance increases as Q drops back down to K.'
     ],
     check(state) {
       const r = qkRead(state.table, 'tv');
       if (!r.ran) return { ok: false, notYet: true, msg: 'Press "Run" on the test vessel first to watch which way the bars move.' };
       const v = dialValue(state.table, 'dir');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Choose an answer on the dial.' };
       if (v === 1) return { ok: true };
       return { ok: false, msg: ranText('butane', { label: 'the mixture', amounts: CLICK_MIX }) };
     },
     get reward() {
       const g = recall(KEY_CLICK);
-      const verdict = g === 'more' ? 'You predicted it would make more isobutane, and it did the opposite. ' : g === 'back' || g === 'all' ? 'You predicted isobutane would turn back, and it did. ' : g === 'stay' ? 'You predicted no change, and it moved. ' : '';
+      const verdict = g === 'more' ? 'You predicted more isobutane, but it went the other way. ' : g === 'back' || g === 'all' ? 'Your prediction matched. ' : g === 'stay' ? 'You predicted no change, but it shifted. ' : '';
       const Q = CLICK_MIX.isobutane / CLICK_MIX.butane;
       return {
         log: 'The mixture with Q above K made more butane.',
         title: 'Above K Runs Toward Reactants',
-        body: `${verdict}Q was ${fmtNum(Q, 2)} against K = ${fmtNum(BUT.K, 2)}, so isobutane turned back into butane until Q reached K. Above K a reaction shifts toward reactants; below K, toward products.`
+        body: `${verdict}Since Q (${fmtNum(Q, 2)}) was above K (${fmtNum(BUT.K, 2)}), isobutane turned back into butane until Q = K. Above K, reactions make reactants; below K, products.`
       };
     }
   },
@@ -227,19 +227,19 @@ export const STAGES = [
   {
     id: 's4-forward',
     title: 'Which Makes More Isobutane',
-    prompt: 'Which mixture will make more isobutane when left alone?',
+    prompt: 'Which mixture will make more isobutane?',
     widget,
     table: pansTable(stageCards('butane', S4, { noRun: true }), { h: TABLE_H }),
     hints: [
-      'Lay each mixture card in the vessel to see its Q marker against K.',
-      'Compare where Q stands relative to K for each of the three mixtures.',
-      'From the last stage, decide whether Q needs to be above or below K to make more product.'
+      'Place each mixture card in the vessel to see where its Q marker sits against K.',
+      'Compare Q and K for all three mixtures.',
+      'To make more product (isobutane), Q must start below K.'
     ],
     check: seatCheck('butane', S4, 'forward', (c, r) => `${c.label} has Q = ${fmtNum(r.Q0, 3)} against K = ${fmtNum(BUT.K, 3)}, so it does not make more isobutane.`),
     reward: {
       log: 'The mixture with equal amounts had Q below K and made more isobutane.',
       title: 'Equal Amounts Move Too',
-      body: `Mixture 1 held equal amounts, so its Q was ${fmtNum(S4[0].amounts.isobutane / S4[0].amounts.butane, 2)}, below the K of ${fmtNum(BUT.K, 2)}, and it makes more isobutane. Equal amounts are not equilibrium.`
+      body: `Mixture 1 had equal amounts, giving Q = ${fmtNum(S4[0].amounts.isobutane / S4[0].amounts.butane, 2)}, which is below K (${fmtNum(BUT.K, 2)}), so it makes more isobutane. Equal amounts do not mean equilibrium.`
     }
   },
 
@@ -247,11 +247,15 @@ export const STAGES = [
   (() => {
     const tv = testVessel('tv', { x: 58, y: 22 }, { system: 'n2o4', q: true, w: 112 });
     tv.fixture.props.gate = { fixtureDial: 'ans', dial: 'value', start: 4 };
-    tv.fixture.props.gateMsg = 'Select a mixture on Makes more NO₂ first, then press "Run".';
+    tv.fixture.props.gateMsg = 'Choose a mixture on "Makes more NO₂" first, then press "Run".';
     return {
       id: 's7-equal-pressures',
       title: 'Which Makes More NO₂',
-      prompt: 'Which mixture will make more NO₂ when it is left alone?',
+      briefing: {
+        speaker: 'Vess',
+        body: 'In 2 NO₂ ⇌ N₂O₄, the 2 means NO₂ is squared in Q: Q = N₂O₄ ÷ NO₂².'
+      },
+      prompt: 'Which mixture will make more NO₂?',
       widget,
       table: pansTable({
         pieces: S5.map((c, i) => cardOf('n2o4', c, i)),
@@ -262,13 +266,13 @@ export const STAGES = [
         zones: { slots: [tv.seat] }
       }, { h: TABLE_H }),
       hints: [
-        'Select a mixture on Makes more NO₂, then lay a mixture card in the vessel and press "Run".',
-        'Compare the Q marker with the K line for the two mixtures that have equal pressures.',
-        'Test each mixture and see which one puts Q above K so it runs toward NO₂.'
+        'Pick a mixture on the dial, then place a mixture card in the vessel and press "Run".',
+        'Compare the Q marker against the K line for the two mixtures that have equal pressures.',
+        'Look for the mixture where Q starts above K, so it reacts back toward NO₂.'
       ],
       check(state) {
         const v = Math.round(dialValue(state.table, 'ans', 'value'));
-        if (v === 4) return { ok: false, notYet: true, msg: 'Select a mixture on Makes more NO₂.' };
+        if (v === 4) return { ok: false, notYet: true, msg: 'Choose a mixture on "Makes more NO₂".' };
         const c = S5[v - 1];
         if (wayOf('n2o4', c) === 'reverse') return { ok: true };
         return { ok: false, msg: ranText('n2o4', c) };
@@ -276,7 +280,7 @@ export const STAGES = [
       reward: {
         log: 'Two mixtures with equal pressures moved in opposite directions.',
         title: 'Same Pressures, Opposite Ways',
-        body: 'Mixtures 1 and 2 each held equal pressures of NO₂ and N₂O₄, yet they ran opposite ways. NO₂ enters Q squared, so the size of the pressures matters, not only their ratio.'
+        body: 'Mixtures 1 and 2 both had equal pressures of NO₂ and N₂O₄, yet reacted in opposite ways. Because NO₂ is squared in Q, the pressure size matters, not just the ratio.'
       }
     };
   })(),
@@ -292,7 +296,7 @@ export const STAGES = [
     return {
       id: 's8-sealed',
       title: 'Three Sealed Mixtures',
-      prompt: 'Using the calculator to find Q, which way will each mixture run?',
+      prompt: 'Which way will each sealed mixture react (find Q with the calculator)?',
       widget,
       table: pansTable({
         pieces: S6.map((c, i) => mixCard(c.id, c.label, { x: 20 + i * 28, y: 52 }, 'so3', c.amounts)),
@@ -305,19 +309,19 @@ export const STAGES = [
         zones: { slots }
       }, { h: TABLE_H }),
       hints: [
-        'Calculate Q from the amounts on each mixture card, then place it in a slot.',
-        'Square SO₃ and SO₂ when working out Q = SO₃² ÷ (SO₂² × O₂).',
-        'Compare each mixture\'s Q with K = 280 to see which way it runs.'
+        'Use the calculator to find Q for each mixture card, then place it in a slot.',
+        'Square both SO₃ and SO₂ in Q = SO₃² ÷ (SO₂² × O₂).',
+        'Compare each mixture\'s Q with K = 280: below K makes product, above K makes reactant, equal does not change.'
       ],
       check(state) {
         const t = state.table;
         const placed = slots.map(s => [s, pieceIn(t, s.id)]);
-        if (placed.some(([, c]) => !c)) return { ok: false, notYet: true, msg: 'Lay a card in each of the three slots.' };
+        if (placed.some(([, c]) => !c)) return { ok: false, notYet: true, msg: 'Place a card in each of the three slots.' };
         for (const [s, p] of placed) {
           const c = S6.find(x => x.id === p.id);
           if (wayOf('so3', c) !== WAY[s.id]) {
             const q = systemRatio(SO, c.amounts);
-            return { ok: false, msg: `${c.label} has Q = ${fmtNum(q, 3)} against K = ${fmtNum(SO.K, 3)}.` };
+            return { ok: false, msg: `${c.label} has Q = ${fmtNum(q, 3)} against K = ${fmtNum(SO.K, 3)}, so it belongs in a different slot.` };
           }
         }
         return { ok: true };
@@ -325,7 +329,7 @@ export const STAGES = [
       reward: {
         log: 'Each mixture went the way its Q against K said.',
         title: 'Reading Q Anywhere',
-        body: 'With Q below K a mixture makes products, with Q above K it makes reactants, and with Q equal to K it does not change.'
+        body: 'When Q is below K, a mixture makes products; above K, it makes reactants; equal to K, it stays unchanged.'
       }
     };
   })()
