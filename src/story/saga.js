@@ -239,6 +239,10 @@ export const CAMPAIGN_STORY = [
   },
   {
     speaker: 'Vess',
+    text: 'To guard their hidden rigs and drive crews off, the Fifth Guild welds each outpost\'s own machinery into heavy automated guardians. Because those rigs run on the same chemistry as the station, learning how each world works is how you shut them down.'
+  },
+  {
+    speaker: 'Vess',
     text: 'Every one of those clues has a real chemistry explanation. Visit each world, test the evidence yourself, and we will find out who the Fifth Guild is and what they are up to.'
   }
 ];

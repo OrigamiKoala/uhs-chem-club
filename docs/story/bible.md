@@ -122,8 +122,8 @@ Every world acts as a grounded, low-text investigative episode:
 
 ## 6. The Spoil & Local Rigs
 
-Bosses and encounters are grounded in each world's real chemistry—never cartoon robots or magic monsters:
-1. **Physical Obedience:** Every rig or specimen behaves strictly according to the chemical laws measured at the bench.
+To guard their hidden extraction rigs and drive Four Guilds crews away without leaving their own people behind to get caught, the Fifth Guild welds each outpost's own industrial machinery into heavy automated guardians. Bosses and encounters are grounded in each world's real chemistry—never cartoon robots or magic monsters:
+1. **Physical Obedience:** Because each guardian is built from that station's working hardware (hoppers, compressors, crucibles, acid pumps, electroplating clamps), every rig behaves strictly according to the chemical laws measured at the bench—learning how the world works is how you shut it down.
 2. **Dispersed, Never Slaughtered:** Foes settle, cool, dissolve, or power down. No gore, no cruelty, no blood.
 3. **Honest Lighting (SCOURED PLATE):** Cast-iron and industrial hardware lit by warm filament glows, sparks, and real emission spectra.
 

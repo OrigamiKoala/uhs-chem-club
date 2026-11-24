@@ -1,18 +1,23 @@
 /**
- * cutscene/intro.js — the campaign's opening cutscene, over Vess's three opening lines (`CAMPAIGN_STORY`).
+ * cutscene/intro.js — the campaign's opening cutscene, over Vess's four opening lines (`CAMPAIGN_STORY`).
  *   1. The Avalon crosses the dark; then Vess, a silhouette in the comms bay window.
  *   2. Three things that have been turning up on the rim: metal in the salt, a tank that stays hot in the frost, a foundry
  *      that ships more iron than it took in ore. A hooded figure of the Fifth stands over them.
- *   3. The rim on the star map, and the Avalon's route lighting the worlds one by one.
+ *   3. A Fifth Guild engineer welds outpost machinery into a towering automated guardian; it stands up to block the hidden
+ *      rig while a survey hand scans its chemical seams.
+ *   4. The rim on the star map, and the Avalon's route lighting the worlds one by one.
  */
 
 import {
-  C, W, H, TAU, win, span, lerp, alpha, rng, sky, stars, nebula, hauler, vessWindow, frame, block, heatLines, person, fifthMark, held
+  C, W, H, TAU, win, span, lerp, clamp01, alpha, rng, sky, stars, nebula, ridge, hauler, vessWindow, frame, block,
+  heatLines, person, fifthMark, brackets, scan, shake, held, setLight
 } from './kit.js';
+import { light, cone, pool, halo } from './shot.js';
 
 const B1 = 6.4;
 const B2 = 7.6;
-const B3 = 6.4;
+const B3 = 8.0;
+const B4 = 6.4;
 
 function space(ctx, T, clock) {
   sky(ctx, [[0, '#040408'], [0.6, '#0a0a10'], [1, '#14110e']]);
@@ -100,7 +105,7 @@ function starMap(ctx, T, clock) {
   RIM.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
   ctx.stroke();
   ctx.setLineDash([]);
-  const p = span(T, 0.6, B3 - 1.2) * (RIM.length - 1);
+  const p = span(T, 0.6, B4 - 1.2) * (RIM.length - 1);
   // The lit route so far.
   ctx.strokeStyle = C.amber;
   ctx.lineWidth = 3;
@@ -130,10 +135,287 @@ function starMap(ctx, T, clock) {
   alpha(ctx, 0.25 + 0.15 * Math.sin(clock * 1.5), () => fifthMark(ctx, 1150, 250, 30, C.rust, 3));
 }
 
+/** Draw an articulated industrial leg/arm segment from (x0, y0) through knee (mx, my) to (x1, y1). */
+function strut(ctx, x0, y0, mx, my, x1, y1, w, color, rim) {
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = w;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(mx, my);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+  ctx.strokeStyle = rim;
+  ctx.lineWidth = Math.max(1.5, w * 0.22);
+  ctx.beginPath();
+  ctx.moveTo(x0 - 1, y0 - 2);
+  ctx.lineTo(mx - 1, my - 2);
+  ctx.lineTo(x1 - 1, y1 - 2);
+  ctx.stroke();
+  // Riveted hinge pin at the joint.
+  ctx.fillStyle = '#1b1815';
+  ctx.beginPath();
+  ctx.arc(mx, my, Math.max(2, w * 0.52), 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#8d8579';
+  ctx.beginPath();
+  ctx.arc(mx, my, Math.max(1, w * 0.24), 0, TAU);
+  ctx.fill();
+}
+
+/**
+ * Beat 3: The Fifth Guild welds outpost machinery into an automated guardian.
+ *   0.0 - 2.6 s: Hooded figure welds a dormant industrial hopper/furnace rig; sparks shower.
+ *   2.6 - 5.2 s: The guardian stands up on jointed legs, flares its amber filament lens, stamps its guard stance.
+ *   5.2 - 8.0 s: A survey hand approaches and scans the guardian's chemical/pressure seams.
+ */
+function guardiansShot(ctx, lt, clock) {
+  const gy = 568;
+  const rise = span(lt, 2.3, 4.6);
+  const wake = span(lt, 3.3, 4.8);
+  const stepThud = held(lt, 4.35, 4.85, 0.14);
+  const [sx, sy] = shake(clock, stepThud * 0.7);
+
+  setLight({ x: 840, y: 240, color: '229, 174, 110', power: 0.42 + wake * 0.22 });
+
+  ctx.save();
+  ctx.translate(sx, sy);
+
+  // Dark industrial rim sky + distant ridges.
+  sky(ctx, [[0, '#07070b'], [0.55, '#12100e'], [1, '#1c1713']]);
+  stars(ctx, 19, 110, clock, gy * 0.65, 0);
+  ridge(ctx, { y: gy - 120, amp: 54, seed: 31, color: '#14120f', top: '#241f1a', rim: 0.25, jag: 0.25 });
+  ridge(ctx, { y: gy - 55, amp: 32, seed: 57, color: '#1b1814', top: '#2b251e', rim: 0.2, jag: 0.15 });
+
+  // Outpost yard ground and riveted bulkhead gantry in the background.
+  const gnd = ctx.createLinearGradient(0, gy, 0, H);
+  gnd.addColorStop(0, '#231f1a');
+  gnd.addColorStop(1, '#0e0c0a');
+  ctx.fillStyle = gnd;
+  ctx.fillRect(0, gy, W, H - gy);
+  ctx.fillStyle = 'rgba(214, 196, 168, 0.14)';
+  ctx.fillRect(0, gy, W, 2);
+
+  // Distant station silos and gantry frame on the right.
+  ctx.fillStyle = '#161411';
+  ctx.fillRect(920, gy - 260, 74, 260);
+  ctx.fillRect(1015, gy - 210, 58, 210);
+  ctx.strokeStyle = '#26221d';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(860, gy - 290, 260, 290);
+  ctx.beginPath();
+  ctx.moveTo(860, gy - 290); ctx.lineTo(1120, gy - 140);
+  ctx.moveTo(1120, gy - 290); ctx.lineTo(860, gy - 140);
+  ctx.stroke();
+
+  // Hidden Fifth Guild extraction rig / sealed drum stack behind the guardian (what it protects).
+  const rigX = 965;
+  ctx.fillStyle = '#2c2722';
+  ctx.fillRect(rigX - 58, gy - 118, 116, 118);
+  ctx.strokeStyle = '#4a433b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rigX - 58, gy - 118, 116, 118);
+  // Glowing amber intake pipes on the hidden rig.
+  ctx.fillStyle = `rgba(229, 155, 36, ${0.45 + 0.18 * Math.sin(clock * 3.1)})`;
+  ctx.fillRect(rigX - 42, gy - 96, 84, 8);
+  ctx.fillRect(rigX - 42, gy - 68, 84, 6);
+  fifthMark(ctx, rigX, gy - 36, 14, C.rust, 2.5);
+  heatLines(ctx, rigX, gy - 122, 70, 56, clock, 0.24);
+
+  // Scattered outpost scrap / salt crates on the ground.
+  block(ctx, 520, gy, 24, '#5a534a', '#24201c', '#3d3730');
+  block(ctx, 548, gy, 18, '#4e4840', '#1f1c18', '#332e28');
+  block(ctx, 882, gy, 26, '#625a50', '#26221e', '#413b33');
+
+  // --- THE GUARDIAN MACHINE (centered around gx, rising from dormant to towering guard stance) ---
+  const gx = 740;
+  const bodyY = lerp(gy - 86, gy - 216, rise) + Math.sin(clock * 2.2) * 3 * wake;
+  const tilt = lerp(0.14, 0, rise);
+
+  // Ground shadow under the guardian.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.beginPath();
+  ctx.ellipse(gx, gy + 4, lerp(110, 145, rise), 14, 0, 0, TAU);
+  ctx.fill();
+
+  // Far mechanical legs (mantis/hopper style).
+  const farHipL = [gx - 42, bodyY + 34];
+  const farHipR = [gx + 46, bodyY + 34];
+  strut(ctx, farHipL[0], farHipL[1], gx - lerp(96, 128, rise), lerp(gy - 42, gy - 118, rise), gx - lerp(112, 134, rise), gy, 11, '#26221d', '#443e37');
+  strut(ctx, farHipR[0], farHipR[1], gx + lerp(98, 130, rise), lerp(gy - 40, gy - 116, rise), gx + lerp(118, 136, rise), gy, 11, '#26221d', '#443e37');
+
+  // Rear articulated clamp arm (swings outward as it wakes).
+  const armOpen = span(lt, 3.0, 4.9);
+  strut(
+    ctx,
+    gx + 54, bodyY - 12,
+    gx + lerp(86, 138, armOpen), bodyY + lerp(28, -32, armOpen),
+    gx + lerp(104, 178, armOpen), bodyY + lerp(62, 18, armOpen),
+    12, '#2d2823', '#544d44'
+  );
+
+  // Main riveted industrial hopper/furnace torso.
+  ctx.save();
+  ctx.translate(gx, bodyY);
+  ctx.rotate(tilt);
+
+  const hull = ctx.createLinearGradient(-72, -74, 72, 66);
+  hull.addColorStop(0, '#6a6257');
+  hull.addColorStop(0.45, '#3b3630');
+  hull.addColorStop(1, '#1b1815');
+  ctx.fillStyle = hull;
+  ctx.beginPath();
+  ctx.moveTo(-64, -68);
+  ctx.lineTo(64, -68);
+  ctx.lineTo(78, -14);
+  ctx.lineTo(54, 56);
+  ctx.lineTo(-54, 56);
+  ctx.lineTo(-78, -14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(214, 196, 168, 0.24)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Industrial exhaust stacks & pressure tank welded onto its shoulders.
+  ctx.fillStyle = '#2d2924';
+  ctx.fillRect(-52, -98, 18, 32);
+  ctx.fillRect(34, -94, 16, 28);
+  ctx.fillStyle = '#4a433a';
+  ctx.fillRect(-26, -86, 52, 18);
+
+  // Glowing chemical/thermal pressure seams along its casing (what the survey hand scans).
+  const seamA = 0.18 + wake * (0.62 + 0.16 * Math.sin(clock * 4.5));
+  ctx.fillStyle = `rgba(229, 155, 36, ${clamp01(seamA)})`;
+  ctx.fillRect(-52, -4, 104, 5);
+  ctx.fillRect(-38, 22, 76, 4);
+
+  // Sensor head / filament eye iris.
+  ctx.fillStyle = '#181512';
+  ctx.fillRect(-34, -52, 68, 32);
+  ctx.strokeStyle = '#5e564c';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-34, -52, 68, 32);
+  const eyeR = 11;
+  ctx.fillStyle = wake > 0.05 ? `rgba(229, 155, 36, ${clamp01(0.25 + wake * 0.75)})` : '#2a241e';
+  ctx.beginPath();
+  ctx.arc(-8, -36, eyeR, 0, TAU);
+  ctx.fill();
+  if (wake > 0.2) {
+    ctx.fillStyle = `rgba(255, 240, 200, ${clamp01(wake * 0.9)})`;
+    ctx.beginPath();
+    ctx.arc(-8, -36, eyeR * 0.42, 0, TAU);
+    ctx.fill();
+  }
+
+  // The Fifth's triangle mark stamped onto the guardian's chest plate.
+  alpha(ctx, clamp01(0.35 + win(lt, 1.4, 2.2) * 0.65), () => fifthMark(ctx, 22, 34, 14, C.rust, 2.5));
+  ctx.restore();
+
+  // Near mechanical legs (foreground, heavier).
+  const nearHipL = [gx - 34, bodyY + 42];
+  const nearHipR = [gx + 34, bodyY + 42];
+  strut(ctx, nearHipL[0], nearHipL[1], gx - lerp(74, 92, rise), lerp(gy - 36, gy - 104, rise), gx - lerp(82, 98, rise), gy, 14, '#3a352f', '#736b60');
+  strut(ctx, nearHipR[0], nearHipR[1], gx + lerp(72, 90, rise), lerp(gy - 34, gy - 102, rise), gx + lerp(80, 96, rise), gy, 14, '#3a352f', '#736b60');
+
+  // Near articulated saw/clamp arm (facing left toward approaching survey hand).
+  const clawX = gx - lerp(96, 174, armOpen);
+  const clawY = bodyY + lerp(58, 10, armOpen);
+  strut(
+    ctx,
+    gx - 56, bodyY - 8,
+    gx - lerp(84, 134, armOpen), bodyY + lerp(24, -24, armOpen),
+    clawX, clawY,
+    14, '#433d36', '#7b7266'
+  );
+  // Twin industrial pincer jaws at the arm tip.
+  ctx.strokeStyle = '#6c6459';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(clawX, clawY); ctx.lineTo(clawX - 24, clawY - 14);
+  ctx.moveTo(clawX, clawY); ctx.lineTo(clawX - 24, clawY + 14);
+  ctx.stroke();
+
+  // --- HOODED FIFTH ENGINEER (welds the guardian 0..2.4s, then steps back into shadow) ---
+  const weldOn = lt < 2.35;
+  const retreat = span(lt, 2.5, 4.4);
+  const hx = lerp(590, 910, retreat);
+  const hoodAlpha = 1 - win(lt, 3.8, 4.5);
+  if (hoodAlpha > 0.01) {
+    alpha(ctx, hoodAlpha, () => {
+      const h = person(ctx, hx, gy, 0.72, {
+        kind: 'hood',
+        pose: weldOn ? 'point' : 'walk',
+        phase: lt * 7,
+        f: 1,
+        clock,
+        crouch: weldOn ? 0.35 : 0
+      });
+      if (weldOn) {
+        // Welding arc flash and flying sparks at the guardian's knee joint.
+        const wx = h.hand[0] + 22;
+        const wy = h.hand[1] - 6;
+        const flicker = 0.65 + 0.35 * Math.sin(clock * 46);
+        light(ctx, () => {
+          halo(ctx, wx, wy, 48 * flicker, '255, 224, 160', 0.65);
+          halo(ctx, wx, wy, 14, '255, 252, 240', 0.95);
+        });
+        const sr = rng(Math.floor(lt * 12) + 7);
+        ctx.strokeStyle = 'rgba(255, 210, 120, 0.85)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 12; i++) {
+          const ang = -Math.PI * 0.9 + sr() * Math.PI * 1.3;
+          const dist = 12 + sr() * 54;
+          ctx.beginPath();
+          ctx.moveTo(wx + Math.cos(ang) * dist * 0.35, wy + Math.sin(ang) * dist * 0.35);
+          ctx.lineTo(wx + Math.cos(ang) * dist, wy + Math.sin(ang) * dist + 14);
+          ctx.stroke();
+        }
+      }
+    });
+  }
+
+  // --- SURVEY HAND (approaches from the left 4.2..6.0s and scans the guardian's chemical seams) ---
+  const handIn = span(lt, 4.2, 6.0);
+  if (lt > 4.1) {
+    const px = lerp(120, 360, handIn);
+    const scanning = lt > 5.7;
+    const who = person(ctx, px, gy, 0.78, {
+      kind: 'hand',
+      pose: lt < 5.9 ? 'walk' : 'point',
+      phase: lt * 7.2,
+      f: 1,
+      clock,
+      lamp: true
+    });
+    if (scanning) {
+      const scanP = win(lt, 5.7, 6.3);
+      scan(ctx, who.hand[0] + 6, who.hand[1], gx - 4, bodyY + 12, 130, scanP, clock);
+      brackets(ctx, gx, bodyY + 8, 176, 136, win(lt, 6.0, 6.8), C.amber);
+    }
+  }
+
+  // Guardian's amber searchlight cone sweeping across the yard once awake.
+  if (wake > 0.15) {
+    const eyeX = gx - 8;
+    const eyeY = bodyY - 36;
+    const sweepAng = Math.PI - 0.34 + Math.sin(clock * 1.1) * 0.12;
+    light(ctx, () => {
+      cone(ctx, eyeX, eyeY, sweepAng, 0.18, 480, '229, 155, 36', 0.24 * wake);
+      halo(ctx, eyeX, eyeY, 42 * wake, '229, 155, 36', 0.42 * wake);
+      pool(ctx, gx - 260, gy, 150, '229, 155, 36', 0.2 * wake);
+    });
+  }
+
+  ctx.restore();
+}
+
 export function introScene(lines) {
   const t2 = B1;
   const t3 = B1 + B2;
-  const end = t3 + B3;
+  const t4 = t3 + B3;
+  const end = t4 + B4;
   const paint = (ctx, T, clock) => {
     if (T < t2) {
       // 1. The hauler crosses, then the comms bay window.
@@ -174,14 +456,26 @@ export function introScene(lines) {
       frame(ctx, 1 - win(lt, 0, 0.4), clock);
       return;
     }
-    // 3. The rim on the star map.
-    const lt = T - t3;
+    if (T < t4) {
+      // 3. The Fifth Guild's automated guardians.
+      const lt = T - t3;
+      guardiansShot(ctx, lt, clock);
+      frame(ctx, 1 - win(lt, 0, 0.45), clock);
+      return;
+    }
+    // 4. The rim on the star map.
+    const lt = T - t4;
     starMap(ctx, lt, clock);
     frame(ctx, 1 - win(lt, 0, 0.5), clock);
   };
   return {
     id: 'intro',
-    beats: [{ dur: B1, say: lines[0] }, { dur: B2, say: lines[1] }, { dur: B3, say: lines[2] }],
+    beats: [
+      { dur: B1, say: lines[0] },
+      { dur: B2, say: lines[1] },
+      { dur: B3, say: lines[2] },
+      { dur: B4, say: lines[3] }
+    ],
     duration: end,
     paint
   };

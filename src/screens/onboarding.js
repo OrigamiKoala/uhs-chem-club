@@ -16,6 +16,7 @@ import { TRINKETS, getTrinketForRoll, getDeterministicRoll } from '../story/trin
 import { createTransmissionElement } from '../ui/transmission.js';
 import { CAMPAIGN_STORY } from '../story/saga.js';
 import { campaignBriefingIds } from '../story/lore.js';
+import { hasCutscene, playCutscene } from '../ui/cutscene-player.js';
 
 const TEAM_INFO = {
   earth: {
@@ -603,17 +604,18 @@ export async function renderOnboarding(container) {
       activeTransmission = null;
     }
 
-    const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
-    let currentPara = 0;
-
     session.recordNotebookMany(campaignBriefingIds());
-    const PARAGRAPHS = [
-      {
-        speaker: 'Vess',
-        text: `Welcome aboard the Avalon, recruit. You signed on under the ${activeMeta.guild} charter, and I am Vess, your quartermaster. Our ship travels the frontier between star systems, salvaging supplies and keeping independent colonies alive. Out here, we look out for each other.`
-      },
-      ...CAMPAIGN_STORY.slice(1)
-    ];
+
+    if (hasCutscene('intro')) {
+      container.innerHTML = '';
+      playCutscene('intro', { title: 'Mission Briefing', doneLabel: 'Acknowledge Orders & Disembark' }).then(() => {
+        if (!routeChanged()) commitLaunch();
+      });
+      return;
+    }
+
+    let currentPara = 0;
+    const PARAGRAPHS = [...CAMPAIGN_STORY];
 
     function renderSlideHtml() {
       const item = PARAGRAPHS[currentPara];
