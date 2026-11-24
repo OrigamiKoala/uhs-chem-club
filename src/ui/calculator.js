@@ -387,6 +387,9 @@ class DigitalCalculator {
 
   bindEvents() {
     this.inputEl.addEventListener('keydown', this.onInputKeyDown);
+    for (const evt of ['pointerdown', 'mousedown', 'touchstart', 'wheel']) {
+      this.el.addEventListener(evt, e => e.stopPropagation(), { passive: true });
+    }
 
     this.el.addEventListener('click', e => {
       const btn = e.target.closest('button');
@@ -422,6 +425,7 @@ class DigitalCalculator {
   startDrag(e) {
     if (e.target.closest('button') || e.target.closest('input')) return;
     e.preventDefault();
+    e.stopPropagation();
 
     this.isDragging = true;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;

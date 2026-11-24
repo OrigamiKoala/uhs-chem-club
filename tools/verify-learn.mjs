@@ -2508,9 +2508,9 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const v = i => rd(t, 'rb', { temp: i });
       for (let i = 1; i <= k; i++) near(v(i).V / v(i).T, v(1).V / v(1).T, 1e-9, `${q} stage 2: V over kelvin is not constant`);
       const ra = rd(t, 'ra').V;
-      holds(!props(t, 'rb').temps.includes(586) && !props(t, 'rb').temps.includes(586.3), `${q} stage 2: a setting of the dial sits on the doubling temperature`);
-      near(b2.DOUBLE_K, 586, 1e-6, `${q} stage 2 (the kelvin temperature that doubles the volume)`);
-      holds(v(1).V * b2.DOUBLE_K / 293 / ra > 1.98, `${q} stage 2: the answer does not double the volume`);
+      holds(props(t, 'rb').temps.includes(600), `${q} stage 2: a setting of the dial does not sit on the doubling temperature`);
+      near(b2.DOUBLE_K, 600, 1e-6, `${q} stage 2 (the kelvin temperature that doubles the volume)`);
+      holds(v(1).V * b2.DOUBLE_K / 300 / ra > 1.98, `${q} stage 2: the answer does not double the volume`);
       same(b2.STAGES[1].check(b2.stateFor(1, b2.SOLUTIONS[1])).ok, true, `${q} stage 2 (the solution)`);
       same(b2.STAGES[1].check(b2.stateFor(1, b2.MISSES[1])).ok, false, `${q} stage 2 (the wrong kelvin figure)`);
       same(b2.STAGES[1].check(b2.stateFor(1, [])).notYet, true, `${q} stage 2 (an empty field)`);
@@ -2597,29 +2597,34 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       same(slotCard(d, 'show'), 'same', `${q} stage 2 (the card laid)`);
       near(GK.partialOf(GK.commonRead(d, 'ct'), 'Ne'), a.P, 1e-6, `${q} stage 2 (the common tank prints neon's own pressure)`);
     }
-    // Stage 3: nitrogen's partial pressure is its mole fraction times the total pressure (60 kPa of 100 kPa).
+    // Stage 3: mole fraction & sharing the pressure (75% of moles = 75% of pressure).
     {
       const t = done(b4, 2);
-      const rdc = GK.commonRead(t, 'ct');
-      near(GK.partialOf(rdc, 'N2'), 60, 0.5, `${q} stage 3: nitrogen's partial pressure is not 60 kPa`);
-      same(b4.STAGES[2].check(b4.stateFor(2, b4.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
-      same(b4.STAGES[2].check(b4.stateFor(2, b4.MISSES[2])).ok, false, `${q} stage 3 (the miss)`);
-      same(b4.STAGES[2].check(b4.stateFor(2, [])).notYet, true, `${q} stage 3 (an empty field)`);
+      same(slotCard(t, 'answer'), 'moles', `${q} stage 3 (the card laid)`);
     }
-    // Stage 4: lowest pressure on the left, highest on the right; heaviest gas does not have highest pressure.
+    // Stage 4: nitrogen's partial pressure is its mole fraction times the total pressure (60 kPa of 100 kPa).
     {
       const t = done(b4, 3);
-      const byP = t.zones.rail.order.map(id => GK.tankRead(t.pieces[id]).P);
-      holds(byP.every((v, k) => !k || v > byP[k - 1]), `${q} stage 4: the rail is not lowest pressure first`);
-      const byM = ['a', 'b', 'c', 'd'].sort((x, y) => G.GASES[t.pieces[x].props.gas].M - G.GASES[t.pieces[y].props.gas].M).join();
-      holds(byM !== order(t), `${q} stage 4: ranking by molar mass gives the same order, so the stage has no trap`);
+      const rdc = GK.commonRead(t, 'ct');
+      near(GK.partialOf(rdc, 'N2'), 60, 0.5, `${q} stage 4: nitrogen's partial pressure is not 60 kPa`);
       same(b4.STAGES[3].check(b4.stateFor(3, b4.SOLUTIONS[3])).ok, true, `${q} stage 4 (the solution)`);
       same(b4.STAGES[3].check(b4.stateFor(3, b4.MISSES[3])).ok, false, `${q} stage 4 (the miss)`);
+      same(b4.STAGES[3].check(b4.stateFor(3, [])).notYet, true, `${q} stage 4 (an empty field)`);
     }
-    // Stage 5: gas over water (752 - 24 = 728 mmHg).
+    // Stage 5: lowest pressure on the left, highest on the right; heaviest gas does not have highest pressure.
     {
+      const t = done(b4, 4);
+      const byP = t.zones.rail.order.map(id => GK.tankRead(t.pieces[id]).P);
+      holds(byP.every((v, k) => !k || v > byP[k - 1]), `${q} stage 5: the rail is not lowest pressure first`);
+      const byM = ['a', 'b', 'c', 'd'].sort((x, y) => G.GASES[t.pieces[x].props.gas].M - G.GASES[t.pieces[y].props.gas].M).join();
+      holds(byM !== order(t), `${q} stage 5: ranking by molar mass gives the same order, so the stage has no trap`);
       same(b4.STAGES[4].check(b4.stateFor(4, b4.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
-      same(b4.STAGES[4].check(b4.stateFor(4, b4.MISSES[4])).ok, false, `${q} stage 5 (the added-vapour slip)`);
+      same(b4.STAGES[4].check(b4.stateFor(4, b4.MISSES[4])).ok, false, `${q} stage 5 (the miss)`);
+    }
+    // Stage 6: gas over water (752 - 24 = 728 mmHg).
+    {
+      same(b4.STAGES[5].check(b4.stateFor(5, b4.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
+      same(b4.STAGES[5].check(b4.stateFor(5, b4.MISSES[5])).ok, false, `${q} stage 6 (the added-vapour slip)`);
     }
   }
 
@@ -2659,14 +2664,14 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
   }
 
-  /* ---- q5 stage 6: Graham's law from times; the unknown is not on the dial ---- */
+  /* ---- q5 stage 7: Graham's law from times; the unknown is not on the dial ---- */
   if (b5) {
     const q = 'unit04/q5-speed';
-    holds(!b5.MASS_GASES.includes(b5.UNKNOWN), `${q} stage 6: the unknown gas is on the reference dial, so it can be matched and not worked out`);
+    holds(!b5.MASS_GASES.includes(b5.UNKNOWN), `${q} stage 7: the unknown gas is on the reference dial, so it can be matched and not worked out`);
     const times = b5.MASS_GASES.map(g => G.halfTime(g, 300));
-    holds(times.every((x, k) => !k || x > times[k - 1] + 0.5), `${q} stage 6: the reference gases do not leak at distinct paces`);
-    same(b5.STAGES[5].check(b5.stateFor(5, b5.SOLUTIONS[5])).ok, true, `${q} stage 6 (the figure typed)`);
-    same(b5.STAGES[5].check(b5.stateFor(5, b5.MISSES[5])).ok, false, `${q} stage 6 (the slip typed)`);
+    holds(times.every((x, k) => !k || x > times[k - 1] + 0.5), `${q} stage 7: the reference gases do not leak at distinct paces`);
+    same(b5.STAGES[6].check(b5.stateFor(6, b5.SOLUTIONS[6])).ok, true, `${q} stage 7 (the figure typed)`);
+    same(b5.STAGES[6].check(b5.stateFor(6, b5.MISSES[6])).ok, false, `${q} stage 7 (the slip typed)`);
   }
 
   /* ---- q6-real ---- */
@@ -2710,15 +2715,15 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     const ok = (m, i, script) => m.STAGES[i].check(m.stateFor(i, script)).ok;
     if (b5) {
       const q = 'unit04/q5-speed';
-      holds(b5.STAGES.length === 7, `${q} should have seven stages`);
+      holds(b5.STAGES.length === 8, `${q} should have eight stages`);
       const gases = b5.SNAP_GASES.map(g => g[1]);
-      holds(new Set(gases).size === 4, `${q} stage 7: two snapshots show the same gas`);
+      holds(new Set(gases).size === 4, `${q} stage 8: two snapshots show the same gas`);
       const peaks = gases.map(g => { const bins = G.speedBins(g, b5.SNAP_T, 24, 2400); return bins.indexOf(Math.max(...bins)); });
       const byMass = gases.map((g, i) => [G.GASES[g].M, peaks[i], Math.max(...G.speedBins(g, b5.SNAP_T, 24, 2400))]).sort((x, y) => x[0] - y[0]);
-      holds(byMass.every((r, k) => !k || (r[1] <= byMass[k - 1][1] && r[2] >= byMass[k - 1][2])), `${q} stage 7: a heavier gas does not peak lower and taller`);
-      holds(b5.SNAP_REF >= Math.max(...byMass.map(r => r[2])), `${q} stage 7: the tallest curve would be clipped`);
-      same(ok(b5, 6, b5.SOLUTIONS[6]), true, `${q} stage 7 (the solution)`);
-      same(ok(b5, 6, b5.MISSES[6]), false, `${q} stage 7 (the heavy gas first)`);
+      holds(byMass.every((r, k) => !k || (r[1] <= byMass[k - 1][1] && r[2] >= byMass[k - 1][2])), `${q} stage 8: a heavier gas does not peak lower and taller`);
+      holds(b5.SNAP_REF >= Math.max(...byMass.map(r => r[2])), `${q} stage 8: the tallest curve would be clipped`);
+      same(ok(b5, 7, b5.SOLUTIONS[7]), true, `${q} stage 8 (the solution)`);
+      same(ok(b5, 7, b5.MISSES[7]), false, `${q} stage 8 (the heavy gas first)`);
     }
   }
 

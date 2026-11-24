@@ -205,6 +205,7 @@ const tempLabel = (t, list) => (list === 'C' ? `${t} °C` : `${t} K`);
 export function rig(id, at, o = {}) {
   const {
     cyls, volumes = null, volumeStart = 1, temps = null, tempList = 'K', tempStart = 1, amounts = null, amountStart = 1,
+    gases = null, gasStart = 1, gasWithMass = true,
     show = {}, plot = null, vmax = 40, units = 'kpa', compact = false, w = null, h = null, speedScreen = false, bar = null, target = null,
     words = null, pellet = null, label = 'Cylinder', runLabel = 'Record', rowH = null, screenH = null, speedMax = 2400, screenRef = null, T = null,
     trueSize = false
@@ -213,29 +214,32 @@ export function rig(id, at, o = {}) {
   if (volumes) dials.volume = { min: 1, max: volumes.length, step: 1, value: volumeStart, label: 'Piston', labels: volumes.map(v => `${v} L`) };
   if (temps) dials.temp = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => tempLabel(t, tempList)) };
   if (amounts) dials.amount = { min: 1, max: amounts.length, step: 1, value: amountStart, label: 'Gas in', labels: amounts.map(n => `${n} mol`) };
+  if (gases) dials.gas = { min: 1, max: gases.length, step: 1, value: gasStart, label: 'Gas', labels: gases.map(g => (gasWithMass ? `${GASES[g].name}, ${Math.round(GASES[g].M)} g/mol` : GASES[g].name)) };
   const nd = Object.keys(dials).length;
-  const rowPitch = nd >= 2 ? 7.5 : 5;
+  const rowPitch = 7.2;
   const key = ['gauge', 'ideal', 'off', 'volume', 'temperature', 'amount', 'knocks', 'speed', 'energy', 'kelvin', 'z', 'mass', 'room', 'pull', 'pullShare'];
   const on = k => (['gauge', 'volume', 'temperature', 'amount'].includes(k) ? show[k] !== false : Boolean(show[k]));
   const lines = key.filter(on).length;
   const cols = o.cols ?? (compact || speedScreen ? 1 : 2);
   const rows = Math.ceil(lines / cols);
-  const topRel = nd ? Math.max(9.6 + Math.max(0, nd - 1) * rowPitch + 9.5, 16) : 12;
+  const titled = cyls.length === 1;
+  const topRel = titled ? 8.5 : 10.5;
   const BH = compact ? 5.6 : 7;
   const block = BH + 3.4 + rows * 3.3;
-  const pitch = rowH ?? (block + 2.6);
+  const pitch = rowH ?? (block + (compact ? 6.5 : 4.5));
   const n = cyls.length;
   const runKey = Boolean(plot);
-  const height = h ?? Math.max(topRel + (n - 1) * pitch + block + (runKey ? 6.4 : 2.6), speedScreen ? topRel + (screenH ?? 15) + 8 : 0);
+  const dialsBlock = nd ? (nd - 1) * rowPitch + (runKey ? 12.0 : 6.8) : (runKey ? 6.4 : 2.6);
+  const bodyH = Math.max((n - 1) * pitch + block, speedScreen ? (screenH ?? 15) + 4 : 0);
+  const height = h ?? (topRel + bodyH + dialsBlock);
   const width = w ?? (compact ? 36 : 62);
   // A lone full-size cylinder names itself in the panel's title; the glass leans over any name printed above the barrel.
-  const titled = cyls.length === 1;
   const titleOf = titled ? o.title || `${cyls[0].label || `${label} A`}${cyls[0].sealed || !GASES[cyls[0].gas] ? '' : `  ${GASES[cyls[0].gas].sym}`}` : null;
   const grab = Object.fromEntries(Object.keys(dials).map(k => [k, 2.2]));
   const props = {
     cyls: cyls.map((c, i) => ({ id: c.id || String.fromCharCode(97 + i), ...c, label: c.label || `${label} ${String.fromCharCode(65 + i)}` })),
-    ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), ...(amounts ? { amounts } : {}),
-    show, vmax, units, compact, speedScreen, speedMax, rowH: pitch, cols, rowPitch, tickLabels: true, grab,
+    ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), ...(amounts ? { amounts } : {}), ...(gases ? { gases } : {}),
+    show, vmax, units, compact, speedScreen, speedMax, rowH: pitch, cols, rowPitch, tickLabels: true, grab, dialsBelow: true,
     ...(plot ? { plot } : {}), ...(bar != null ? { bar } : {}), ...(target != null ? { target } : {}), ...(words ? { words } : {}),
     ...(pellet ? { pellet } : {}), ...(screenH ? { screenH } : {}), ...(screenRef != null ? { screenRef } : {}), ...(T != null ? { T } : {}),
     ...(trueSize ? { trueSize: true } : {}), ...(titled ? { titled: true } : {}),
@@ -243,7 +247,7 @@ export function rig(id, at, o = {}) {
     ...(o.hideUntilCommit ? { hideUntilCommit: o.hideUntilCommit } : {}),
     ...(o.gate ? { gate: o.gate } : {}),
     ...(o.gateMsg ? { gateMsg: o.gateMsg } : {}),
-    seen: { ...(volumes ? { volume: [volumeStart] } : {}), ...(temps ? { temp: [tempStart] } : {}), ...(amounts ? { amount: [amountStart] } : {}) }
+    seen: { ...(volumes ? { volume: [volumeStart] } : {}), ...(temps ? { temp: [tempStart] } : {}), ...(amounts ? { amount: [amountStart] } : {}), ...(gases ? { gas: [gasStart] } : {}) }
   };
   return {
     id, kind: 'rig', label: o.title || (titled ? titleOf : compact ? ' ' : 'Cylinder and piston'), at: { ...at }, size: { w: width, h: Math.round(height * 10) / 10 }, dials,
@@ -271,13 +275,13 @@ export function box(id, at, { gas = 'N2', n = 1, V = 10, T = 300, temps = null, 
  * The scale: a pan with a place in it for a tank, and what the tank in the pan weighs. Returns the fixture and the pan's slot (stand it
  * where the pan is: the slot is `{ id, at, size }`).
  */
-export function scaleFixture(id, at, { w = 42, h = 34 } = {}) {
+export function scaleFixture(id, at, { w = 42, h = 36 } = {}) {
   const slotId = `${id}.pan`;
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
   return {
     fixture: { id, kind: 'scale', label: 'Scale', at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { backdrop: true, slot: slotId } },
-    slots: [{ id: slotId, label: '', at: { x: x0 + w / 2, y: y0 + h - 12 }, size: { w: 18, h: 17 } }],
+    slots: [{ id: slotId, label: '', at: { x: x0 + w / 2, y: y0 + h - 10 }, size: { w: 18, h: 17 } }],
     slotId
   };
 }
@@ -293,12 +297,13 @@ export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volum
   const nd = Object.keys(dials).length;
   const rowPitch = nd >= 2 ? 7.5 : 5;
   const top = nd ? 9.6 + (nd - 1) * rowPitch + 4.2 : 8.5;
-  const tankH = 17;
-  const trayH = 17;
-  const trayY = top + (show.partials ? 15.5 + 3.4 * words + 3.5 : tankH + 4.5);
-  const h = Math.round((trayY + trayH + 3 + (record ? 6.4 : 0)) * 10) / 10;
+  const tankH = 30;
+  const leftH = show.partials ? 15.5 + 3.4 * words : 17;
+  const h = Math.round((top + Math.max(tankH, leftH) + 3 + (record ? 6.4 : 0)) * 10) / 10;
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
+  const tankX = x0 + w * 0.50;
+  const tankW = w * 0.46;
   return {
     fixture: {
       id, kind: 'common', label, at: { ...at }, size: { w, h }, ...(record ? { runLabel } : { noRun: true }), dials,
@@ -307,7 +312,7 @@ export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volum
         ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {})
       }
     },
-    tray: { id: of, label: 'Drop tanks here to open them', at: { x: x0 + w / 2, y: y0 + trayY + trayH / 2 }, size: { w: w - 4, h: trayH }, cell: 15, ...(cap ? { cap } : {}) },
+    tray: { id: of, label: '', at: { x: tankX + tankW / 2, y: y0 + top + tankH / 2 }, size: { w: tankW, h: tankH }, cell: 13.5, ...(cap ? { cap } : {}) },
     size: { w, h }
   };
 }
@@ -323,15 +328,15 @@ export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = fal
     dials[name] = { min: 1, max: p.gases.length, step: 1, value: p.start ?? 1, label: p.label || 'Gas', labels: p.gases.map(g => (p.withMass ? `${GASES[g].name}, ${Math.round(GASES[g].M)} g/mol` : GASES[g].name)) };
   }
   const nd = Object.keys(dials).length;
-  const rowPitch = nd >= 2 ? 7.5 : 5;
+  const rowPitch = 7.2;
   const width = w ?? (chambers.length > 1 ? 66 : 44);
-  const height = h ?? (9.6 + (nd - 1) * rowPitch + 5 + 7 + chamberH + 6 + (showHalf ? 4.5 : 0) + (record ? 6.4 : 2.4));
+  const height = h ?? (8.5 + chamberH + 6 + (showHalf ? 4.5 : 0) + (nd - 1) * rowPitch + (record ? 12.0 : 6.8));
   return {
     id, kind: 'pinhole', label: 'Pinhole', at: { ...at }, size: { w: width, h: Math.round(height * 10) / 10 }, dials,
     ...(record ? { runLabel } : { noRun: true }),
     props: {
       chambers: chambers.map(c => (typeof c.pick === 'string' ? { ...c, pick: { dial: c.pick, gases: picks[c.pick].gases.slice() } } : c)),
-      times, showHalf, recordIndex, chamberH, T, rowPitch, tickLabels: true,
+      times, showHalf, recordIndex, chamberH, T, rowPitch, tickLabels: true, dialsBelow: true,
       ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {})
     }
   };
@@ -341,9 +346,9 @@ export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = fal
 export function tube(id, at, { ends, times, timeStart = 1, length = 100, w = 66, record = true, runLabel = 'Check', hideUntilCommit = null, gate = null, gateMsg = null } = {}) {
   const dials = { time: { min: 1, max: times.length, step: 1, value: timeStart, label: 'Stopwatch', labels: times.map(t => `${t} s`) } };
   return {
-    id, kind: 'tube', label: 'Tube', at: { ...at }, size: { w, h: 8 + 3.6 + 5 + 5.4 + 8 + (record ? 6.4 : 2.4) }, dials,
+    id, kind: 'tube', label: 'Tube', at: { ...at }, size: { w, h: 9.5 + 5.4 + 6.5 + (record ? 12.0 : 6.8) }, dials,
     ...(record ? { runLabel } : { noRun: true }),
-    props: { ends, times, length, ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {}) }
+    props: { ends, times, length, rowPitch: 7.2, tickLabels: true, dialsBelow: true, ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {}) }
   };
 }
 

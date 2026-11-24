@@ -857,7 +857,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'One mole of helium and one mole of carbon dioxide fill the same volume (22.4 L at 0 °C and 1 atm), even though carbon dioxide weighs eleven times as much.' },
       { to: 0.75, say: 'So pressure, volume, and kelvin temperature are enough to calculate the moles inside any sealed tank with PV = nRT without opening it.' }
     ],
-    pin: 'Pressure, volume, and kelvin temperature give the moles of gas without opening the tank.'
+    pin: 'Finding the pressure, volume, and kelvin temperature gives the moles of gas without opening the tank.'
   },
   'unit04/q4-mixtures': {
     scene: 'mix-share',

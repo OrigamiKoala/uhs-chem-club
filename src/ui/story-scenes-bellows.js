@@ -167,12 +167,7 @@ function equalRooms(ctx, w, h, t) {
       by + r + bounce(hash(i, 7 + k), sp * (0.6 + hash(i, 8)), t * 2.4) * (bh - 2 * r)]);
     px.forEach(([cx, cy]) => disc(ctx, cx, cy, r, heavy ? C.steel : C.pale));
     text(ctx, GASES[gas].name, x + bw / 2, by + bh + 28, { size: 20, color: C.dust });
-    // The weight of a mole of it, as a bar standing on the floor.
-    const m = GASES[gas].M;
-    ctx.fillStyle = heavy ? C.steel : C.pale;
-    const bar = 130 * (m / GASES.CO2.M) * ease(win(t, 0.5, 0.75));
-    ctx.fillRect(x + bw / 2 - 40, by + bh + 120 - bar, 80, bar);
-    if (t > 0.6) text(ctx, `${GASES[gas].M.toFixed(1)} g`, x + bw / 2, by + bh + 142, { size: 22, color: C.amber, weight: 700 });
+    if (t > 0.6) text(ctx, `${GASES[gas].M.toFixed(1)} g`, x + bw / 2, by + bh + 66, { size: 24, color: C.amber, weight: 700 });
     if (t > 0.78) dial(ctx, x + bw / 2, by - 54, 28, (P / 300) * 0.9, '', null);
   });
   text(ctx, `${shown} particles in each`, w / 2, 60, { size: 26, color: C.text });

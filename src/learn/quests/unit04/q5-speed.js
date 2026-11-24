@@ -28,9 +28,9 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, histCard, speedBins, GASES, front } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, typed } from './_shared.js';
+import { widget, put, dial, cardIn, answerCards, answerSlot, predictStage, youPredicted, guessOf, typed } from './_shared.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\beffusion\b/i, introducedAt: 2 },
@@ -68,7 +68,12 @@ export const TUBE_CM = 100;
 const TUBE_TIMES = [0, 15, 30, 45, 60, 75];
 
 export const LEAK_GUESSES = [['he', 'The helium chamber'], ['n2', 'The nitrogen chamber'], ['same', 'They empty at the same time']];
-export const TUBE_GUESSES = [['nh3', 'Nearer the ammonia end'], ['mid', 'Halfway'], ['hcl', 'Nearer the hydrogen chloride end']];
+export const TUBE_GUESSES = [['nh3', 'Near the ammonia end'], ['mid', 'Halfway'], ['hcl', 'Near the hydrogen chloride end']];
+export const GRAHAM_CARDS = [
+  ['4', '4× as long'],
+  ['2', '2× as long'],
+  ['0.5', 'Half as long']
+];
 
 /** Where the ring has formed, as the card that says so: more than a twentieth of the tube from the middle is "nearer an end". */
 export function ringCard(ringFromLeft, length = TUBE_CM) {
@@ -209,7 +214,7 @@ export const STAGES = [
       },
       widget,
       table: gasTable({
-        pieces: [stmt('nh3', 'Nearer the ammonia end', { x: 97, y: 45 }), stmt('mid', 'Halfway', { x: 131, y: 45 }), stmt('hcl', 'Nearer the hydrogen chloride end', { x: 114, y: 57.5 })],
+        pieces: [stmt('nh3', 'Near the ammonia end', { x: 97, y: 45 }), stmt('mid', 'Halfway', { x: 131, y: 45 }), stmt('hcl', 'Near the hydrogen chloride end', { x: 114, y: 57.5 })],
         fixtures: [tb],
         zones: { slots: [{ id: 'show', label: 'Where the ring formed', at: { x: 114, y: 26 }, size: { w: 38, h: 12 } }] }
       }),
@@ -241,13 +246,50 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
+    const p = pinhole(PIN, { x: 41, y: 31 }, {
+      chambers: [{ id: 'a', gas: 'He', label: 'HELIUM (4 g/mol)', sealed: true }, { id: 'b', label: 'COMPARE GAS', pick: 'ref' }],
+      picks: { ref: { gases: ['He', 'CH4', 'Ar', 'Kr'], label: 'Gas', start: 1, withMass: true } }, times: TIMES, timeStart: 1, showHalf: true, record: false, w: 70
+    });
+    return {
+      title: 'Mass and Escape Time',
+      briefing: 'Compare helium (4 g/mol) with heavier gases on the Gas dial, watching how each gas\'s half-empty time changes.',
+      prompt: 'When molar mass is 4 times larger (from 4 g/mol to 16 g/mol), by what factor does the half-empty time multiply?',
+      widget,
+      table: gasTable({
+        pieces: [stmt('4', '4× as long', { x: 99, y: 44 }), stmt('2', '2× as long', { x: 133, y: 44 }), stmt('0.5', 'Half as long', { x: 116, y: 56 })],
+        fixtures: [p],
+        zones: { slots: [answerSlot('Effect on half-empty time', { x: 116, y: 24 })] }
+      }),
+      hints: [
+        'Turn the Gas dial to Methane, 16 g/mol (4 times helium\'s 4 g/mol).',
+        'Compare methane\'s half-empty time (2.82 s) with helium\'s (1.41 s).',
+        'Divide methane\'s half-empty time by helium\'s to find the factor.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (Math.round(t.fixtures[PIN].dials.ref.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Gas dial to compare helium (4 g/mol) with methane (16 g/mol).' };
+        const card = cardIn(t, 'answer');
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
+        if (card.id === '2') return { ok: true };
+        return { ok: false, msg: 'Compare the half-empty times of 16 g/mol (2.82 s) and 4 g/mol (1.41 s) on the pinhole chambers.' };
+      },
+      reward: {
+        log: 'Four times the molar mass doubled the half-empty time.',
+        title: 'Graham\'s Law',
+        body: 'Half-empty time scales with the square root of molar mass (Graham\'s law): 4 times the molar mass gives √4 = 2 times the half-empty time.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
     const p = pinhole(PIN, { x: 75, y: 31 }, {
       chambers: [{ id: 'a', label: 'REFERENCE', pick: 'ref' }, { id: 'b', gas: UNKNOWN, label: 'UNKNOWN', sealed: true }],
       picks: { ref: { gases: MASS_GASES, label: 'Gas', start: 1, withMass: true } }, times: TIMES, timeStart: 1, showHalf: true, record: false, w: 80
     });
     return {
-      title: 'Graham\'s Law',
-      briefing: 'Half-empty time scales with the square root of molar mass (Graham\'s law): a gas 9 times heavier takes √9 = 3 times as long to half-empty.',
+      title: 'Using Graham\'s Law',
+      briefing: 'Use Graham\'s law: half-empty time scales with the square root of molar mass.',
       prompt: 'What is the molar mass of the unknown gas?',
       entry: { id: 'ans', label: 'Molar mass', unit: 'g/mol' },
       widget,
@@ -268,21 +310,22 @@ export const STAGES = [
       },
       reward: {
         log: 'Time grew as the square root of molar mass.',
-        title: 'Graham\'s Law',
+        title: 'Unknown Molar Mass',
         body: 'By Graham\'s law, twice the half-empty time means 2² = 4 times the molar mass: 4 × 4 = 16 g/mol (methane).',
         model: { type: 'bellows-scene', scene: 'leak-race' }
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 8 */
   (() => {
     const snap = (id, label, gas) => histCard(id, label, { x: 0, y: 0 }, gas, SNAP_T, SNAP_REF);
     const speedRig = rig('speedRig', { x: 28, y: 29 }, {
       cyls: [{ id: 'a', label: 'Reference', gas: 'He', n: 1, hold: 'V', V: 20, T: SNAP_T }],
-      vmax: 20, w: 50, speedScreen: true,
-      show: { gauge: false, volume: false, temperature: false, kelvin: true },
-      title: `Helium at ${SNAP_T} K`
+      gases: ['He', 'N2', 'CO2', 'Xe'], gasStart: 1, gasWithMass: true,
+      vmax: 20, w: 50, speedScreen: true, screenRef: SNAP_REF,
+      show: { gauge: false, volume: false, temperature: false, amount: false, kelvin: true },
+      title: `Reference at ${SNAP_T} K`
     });
     return {
       title: 'Speed Distribution and Mass',
@@ -294,7 +337,7 @@ export const STAGES = [
         zones: { rail: { id: 'rail', at: { x: 102, y: 36 }, size: { w: 92, h: 24 }, first: 'Lightest', last: 'Heaviest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
       }),
       hints: [
-        'Compare each snapshot\'s curve with the helium reference screen on the left.',
+        'Turn the Gas dial on the reference cylinder from Helium (4 g/mol) to Xenon (131 g/mol) and watch the speed curve.',
         'Lighter particles move faster at 300 K, so their speed curve spreads wider to the right.',
         'Heavier particles move slower, so their curve peaks taller and narrower on the left.'
       ],
@@ -329,8 +372,9 @@ const NOTES = {
   3: ['Adjust the Gas dial to match the stack leak.'],
   4: ['Place a card in the slot.'],
   5: ['Advance the Stopwatch dial,', 'then place a card in the slot.'],
-  6: ['Compare the half-empty times,', 'then type your answer in the field at the bottom.'],
-  7: ['Drag the snapshots along the strip.']
+  6: ['Turn the Gas dial to compare masses,', 'then place a card in the slot.'],
+  7: ['Compare the half-empty times,', 'then type your answer in the field at the bottom.'],
+  8: ['Turn the Gas dial to compare curves,', 'then drag the snapshots along the strip.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -357,6 +401,7 @@ export const SOLUTIONS = [
   [dial(PIN, 'time', 2), dial(PIN, 'ref', 3)],
   [put('hcl', 'slot:predict')],
   [put('hcl', 'slot:show'), dial('tube', 'time', 6), { run: 'tube' }],
+  [dial(PIN, 'ref', 2), put('2', 'slot:answer')],
   [dial(PIN, 'ref', 2), typed('ans', "16")],
   [put('c', 'rail:0'), put('a', 'rail:1'), put('d', 'rail:2'), put('b', 'rail:3')]
 ];
@@ -368,6 +413,7 @@ export const MISSES = [
   [dial(PIN, 'ref', 2)],
   [],
   [put('mid', 'slot:show'), dial('tube', 'time', 6), { run: 'tube' }],
+  [dial(PIN, 'ref', 2), put('4', 'slot:answer')],
   [dial(PIN, 'ref', 2), typed('ans', "20")],
   [put('b', 'rail:0'), put('d', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')]
 ];

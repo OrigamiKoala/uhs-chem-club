@@ -891,22 +891,34 @@ export class Table3D extends BenchViewer3D {
               const xZero = -line.intercept / line.slope;
               if (xZero >= xMin && xZero <= xMax) {
                 const zp = pl.pxOf(xZero, 0);
+                const zText = `0 at ${Math.round(xZero)}`;
                 ctx.save();
                 ctx.fillStyle = '#e59b24';
                 ctx.beginPath();
                 ctx.arc(zp.x, zp.y, 7, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.font = 'bold 20px ui-monospace, SFMono-Regular, Menlo, monospace';
+                ctx.font = 'bold 18px ui-monospace, SFMono-Regular, Menlo, monospace';
+                const zw = ctx.measureText(zText).width;
+                const zx = Math.max(tl.x + 6, Math.min(br.x - zw - 18, zp.x - zw / 2 - 6));
+                const zy = Math.max(tl.y + 44, zp.y - 44);
+                ctx.fillStyle = 'rgba(16, 14, 11, 0.92)';
+                ctx.fillRect(zx, zy, zw + 12, 26);
+                ctx.strokeStyle = '#e59b24';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(zx, zy, zw + 12, 26);
+                ctx.fillStyle = '#ffbe40';
                 ctx.textAlign = 'left';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(`0 at ${Math.round(xZero)}`, Math.min(br.x - 110, zp.x + 10), zp.y - 8);
+                ctx.textBaseline = 'top';
+                ctx.fillText(zText, zx + 6, zy + 4);
                 ctx.restore();
               }
             }
 
-            // Display slope & y-intercept badge in the top-left corner, clear of the line.
+            // Display line equation badge in the top-left corner, clear of the line.
             const fmt = v => Math.abs(v) < 1e-6 ? '0' : Math.abs(v) < 0.1 ? Number(v.toPrecision(3)) : Math.round(v * 100) / 100;
-            const text = `Slope = ${fmt(line.slope)}  |  b = ${fmt(line.intercept)}`;
+            const bAbs = fmt(Math.abs(line.intercept));
+            const bPart = line.intercept === 0 ? '' : (line.intercept > 0 ? ` + ${bAbs}` : ` − ${bAbs}`);
+            const text = `y = ${fmt(line.slope)}x${bPart}`;
             ctx.save();
             ctx.font = 'bold 20px ui-monospace, SFMono-Regular, Menlo, monospace';
             ctx.textAlign = 'left';

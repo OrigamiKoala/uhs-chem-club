@@ -825,7 +825,7 @@ export class BenchViewer3D {
       // `.lq-world-panel` is the diegetic case: the deck and the tool plate have
       // left the page and are standing on the bench as screens. A press on one
       // is still a press on a control, not a lean on the instrument behind it.
-      e.target.closest('.lq, .lq-world-panel, #world-ui-layer, .learn-walk-hud, .hud, .in-world-terminal, .modal-container, .modal-backdrop, .learn-host-bar, .toast-stack, #fps-interact-prompt')
+      e.target.closest('.lq, .lq-world-panel, #world-ui-layer, .learn-walk-hud, .hud, .in-world-terminal, .modal-container, .modal-backdrop, .learn-host-bar, .toast-stack, #fps-interact-prompt, .scoured-calc-panel')
     );
 
     this._onPointerDown = e => {

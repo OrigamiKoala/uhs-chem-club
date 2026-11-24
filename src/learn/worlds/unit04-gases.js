@@ -57,7 +57,7 @@ export const UNIT_04 = {
       title: 'Partial Pressures',
       line: "Split a tank's pressure gas by gas.",
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q4-mixtures.js')
     },
@@ -66,7 +66,7 @@ export const UNIT_04 = {
       title: 'Speed and Escape',
       line: 'Compare how fast light and heavy gases escape and spread.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       optional: true,
       module: () => import('../quests/unit04/q5-speed.js')

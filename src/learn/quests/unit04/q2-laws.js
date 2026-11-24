@@ -38,7 +38,7 @@ export function toolNoteFor() { return null; }
    ------------------------------------------------------------------ */
 
 const RIG = 'rig';
-const T20 = 293;
+const T20 = 300;
 const P_ATM = 101.325;
 
 /** The guesses of stage 1. */
@@ -46,10 +46,10 @@ export const ROOM_GUESSES = [['twice', 'Twice as big'], ['little', 'A little big
 /** The guesses of stage 4 (and the verdicts of stage 5). */
 export const TANK_GUESSES = [['same', 'Stays the same'], ['sixth', 'Falls by about a sixth'], ['half', 'Falls by about a half']];
 
-/** Stage 2: the volume doubles at twice the kelvin temperature (586 K), which lies between two dial stops. */
+/** Stage 2: the volume doubles at twice the kelvin temperature (600 K), which is an exact stop on the dial. */
 export const DOUBLE_K = 2 * T20;
 export const DOUBLE_TOL = 6;
-export const DOUBLE_TEMPS = [293, 350, 450, 550, 650];
+export const DOUBLE_TEMPS = [300, 400, 500, 600, 700];
 
 /** Stage 3's heater, in kelvin; the volume is asked for at BEYOND_K, past the last setting. */
 const REACH_TEMPS = [300, 350, 400, 450];
@@ -102,26 +102,28 @@ export const STAGES = [
     });
     return {
       title: 'Doubling the Volume',
-      prompt: 'To what kelvin temperature must Cylinder B be heated to double Cylinder A\'s volume (at 293 K)?',
-      entry: { id: 'ans', label: 'Cylinder B at', unit: 'K' },
+      prompt: 'By what factor should kelvin temperature increase so volume doubles?',
+      entry: { id: 'ans', label: 'Temperature factor', unit: '×' },
       widget,
       table: gasTable({ fixtures: [a, b] }),
       hints: [
-        'Turn Cylinder B\'s Heater dial and watch how its volume changes with kelvin temperature.',
-        'Notice that volume scales directly with kelvin temperature, not Celsius.',
-        'Find the kelvin temperature where Cylinder B would reach twice Cylinder A\'s 24.0 L.'
+        'Turn Cylinder B\'s Heater dial until its volume is twice Cylinder A\'s.',
+        'Compare Cylinder B\'s kelvin temperature at double volume with Cylinder A\'s 300 K.',
+        'Divide the doubled-volume kelvin temperature by 300 K.'
       ],
       check(state) {
-        const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the temperature in K.' };
-        const ratio = v / T20;
-        if (Math.abs(v - DOUBLE_K) <= DOUBLE_TOL) return { ok: true };
-        return { ok: false, msg: `At ${v} K, Cylinder B's volume is ${ratio.toFixed(2)} times Cylinder A's, not twice.` };
+        const t = state.table;
+        const seen = t.fixtures.rb.props.seen?.temp || [1];
+        if (seen.length < 2) return { ok: false, notYet: true, msg: 'Turn Cylinder B\'s Heater dial first.' };
+        const v = entryNumber(t, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the factor.' };
+        if (Math.abs(v - 2) < 0.02) return { ok: true };
+        return { ok: false, msg: v > 2 ? 'At that factor, volume would more than double.' : 'At that factor, volume would less than double.' };
       },
       reward: {
-        log: 'Twice the volume took 586 K, not 40 °C.',
+        log: 'Doubling volume takes twice the kelvin temperature.',
         title: 'Charles\'s Law',
-        body: '20 °C to 40 °C is only 293 K to 313 K (a 7% rise). Doubling volume takes twice the kelvin temperature, 586 K (313 °C), which is Charles\'s law.',
+        body: '20 °C to 40 °C is only 293 K to 313 K (a 7% rise). Doubling volume takes twice the kelvin temperature (300 K to 600 K, a factor of 2), which is Charles\'s law.',
         model: { type: 'bellows-scene', scene: 'charles' }
       }
     };
@@ -137,7 +139,7 @@ export const STAGES = [
       title: 'Using Charles\'s Law',
       briefing: {
         speaker: 'Vess',
-        body: 'At constant pressure, volume divided by kelvin temperature stays constant (V₁ ÷ T₁ = V₂ ÷ T₂). Convert °C to kelvin with K = °C + 273.'
+        body: 'At constant pressure, volume divided by kelvin temperature stays constant (V₁ ÷ T₁ = V₂ ÷ T₂). Always use kelvin, never Celsius—Celsius can be 0 or negative, which would give zero or negative values.'
       },
       prompt: 'What volume would this gas fill at 327 °C?',
       entry: { id: 'ans', label: 'Volume at 327 °C', unit: 'L' },
@@ -212,7 +214,7 @@ export const STAGES = [
         const p1 = rigAt(t, RIG, { temp: COOL_AT })[0].P;
         const want = fallCard(p0, p1);
         if (card.id === want) return { ok: true };
-        return { ok: false, msg: `Pressure fell from ${Math.round(p0)} kPa to ${Math.round(p1)} kPa (about a sixth), not what that card says.` };
+        return { ok: false, msg: `Pressure fell from ${Math.round(p0)} kPa to ${Math.round(p1)} kPa; compare that drop with ${Math.round(p0)} kPa.` };
       },
       reward: {
         log: 'Pressure dropped with kelvin temperature.',
@@ -227,7 +229,7 @@ export const STAGES = [
     const r = rig(RIG, { x: 75, y: 31 }, {
       cyls: [{ id: 'a', label: 'Cylinder', gas: 'He', n: 0.24056, hold: 'dial', V: 6, T: 300 }],
       volumes: [6, 4, 3, 2], volumeStart: 1,
-      temps: [300, 450, 600], tempList: 'K', tempStart: 1,
+      temps: [300, 450, 600, 900], tempList: 'K', tempStart: 1,
       vmax: 8, w: 76, show: { amount: false, kelvin: true }, label: 'Cylinder'
     });
     return {
@@ -236,29 +238,28 @@ export const STAGES = [
         speaker: 'Vess',
         body: 'When both volume and kelvin temperature change at once, find each factor separately and multiply them together.'
       },
-      prompt: 'What is the pressure after the volume is cut to a third and the gas is heated from 300 K to 900 K?',
-      entry: { id: 'ans', label: 'Final pressure', unit: 'kPa' },
+      prompt: 'By what factor is pressure multiplied when volume is cut to a third and temperature rises from 300 K to 900 K?',
+      entry: { id: 'ans', label: 'Pressure factor', unit: '×' },
       widget,
       table: gasTable({ fixtures: [r] }),
       hints: [
-        'Use the Piston and Heater dials to see how each change multiplies the starting 100 kPa pressure.',
+        'Use the Piston and Heater dials to set 2 L and 900 K and compare with the starting 100 kPa pressure.',
         'Find what factor cutting volume to a third multiplies pressure by, and what factor heating from 300 K to 900 K multiplies it by.',
-        'Multiply the starting 100 kPa pressure by both the volume factor and the temperature factor.'
+        'Multiply the volume factor and the temperature factor together.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the pressure in kPa.' };
-        const a = rigAt(t, RIG, { volume: 1, temp: 1 })[0];
-        const want = a.P * 3 * (900 / 300);
-        if (Math.abs(v - want) / want < 0.03) return { ok: true };
-        if (Math.abs(v - a.P * 3) / (a.P * 3) < 0.05) return { ok: false, msg: '300 kPa only accounts for one of the two changes.' };
-        return { ok: false, msg: v > want ? 'The final pressure is lower than that.' : 'The final pressure is higher than that.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the factor by which pressure is multiplied.' };
+        const want = 3 * (900 / 300);
+        if (Math.abs(v - want) < 0.05) return { ok: true };
+        if (Math.abs(v - 3) < 0.05) return { ok: false, msg: 'A factor of 3 only accounts for one of the two changes.' };
+        return { ok: false, msg: v > want ? 'The pressure factor is smaller than that.' : 'The pressure factor is larger than that.' };
       },
       reward: {
-        log: 'Volume and temperature changes multiply the pressure.',
+        log: 'Volume and temperature changes multiply pressure by 9.',
         title: 'Two Changes at Once',
-        body: 'A third of the volume triples the pressure, and three times the kelvin temperature triples it again: 100 kPa becomes 900 kPa.',
+        body: 'Cutting volume to a third multiplies pressure by 3, and tripling kelvin temperature (300 K to 900 K) multiplies it by 3 again: 3 × 3 = 9.',
         last: true
       }
     };
@@ -268,11 +269,11 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Place a card in the slot.'],
-  2: ['Turn Cylinder B\'s Heater dial,', 'then type your answer in the field at the bottom.'],
+  2: ['Turn Cylinder B\'s Heater dial to double the volume,', 'then type the factor at the bottom.'],
   3: ['Turn the Heater dial,', 'then type your answer in the field at the bottom.'],
   4: ['Place a card in the slot.'],
   5: ['Turn the Heater dial,', 'then place a card in the slot.'],
-  6: ['Test the Piston and Heater dials,', 'then type your answer in the field at the bottom.']
+  6: ['Test the Piston and Heater dials,', 'then type the factor at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -295,21 +296,21 @@ export const DEBRIEF = {
 
 export const SOLUTIONS = [
   [put('little', 'slot:predict')],
-  [dial('rb', 'temp', 4), typed('ans', '586')],
+  [dial('rb', 'temp', 4), typed('ans', '2')],
   [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), typed('ans', '49')],
   [put('sixth', 'slot:predict')],
   [dial(RIG, 'temp', 4), dial(RIG, 'temp', 2), put('sixth', 'slot:show')],
-  [dial(RIG, 'volume', 4), dial(RIG, 'temp', 3), typed('ans', '900')]
+  [dial(RIG, 'volume', 4), dial(RIG, 'temp', 4), typed('ans', '9')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [typed('ans', '313')],
+  [dial('rb', 'temp', 2), typed('ans', '1.5')],
   [dial(RIG, 'temp', 4), typed('ans', '98')],
   [],
   [dial(RIG, 'temp', 2), put('half', 'slot:show')],
-  [dial(RIG, 'volume', 4), typed('ans', '300')]
+  [dial(RIG, 'volume', 4), typed('ans', '3')]
 ];
 
 function blankState() { return {}; }

@@ -464,9 +464,11 @@ function drawRecorder(ctx, state, X, Y, sc) {
     ctx.stroke();
     ctx.restore?.();
 
-    // Display slope & y-intercept badge on the plot/straightedge with smart precision
+    // Display line equation badge on the plot/straightedge with smart precision
     const fmt = v => Math.abs(v) < 1e-6 ? '0' : Math.abs(v) < 0.1 ? Number(v.toPrecision(3)) : Math.round(v * 100) / 100;
-    const label = `Slope = ${fmt(line.slope)}  b = ${fmt(line.intercept)}`;
+    const bAbs = fmt(Math.abs(line.intercept));
+    const bPart = line.intercept === 0 ? '' : (line.intercept > 0 ? ` + ${bAbs}` : ` − ${bAbs}`);
+    const label = `y = ${fmt(line.slope)}x${bPart}`;
     plateText(ctx, label, X(r.x1) - 3, Y(r.y0) + 3, { size: Math.max(9, Math.round(3.2 * sc)), align: 'right', base: 'top', color: AMBER, weight: 700 });
   }
   ctx.fillStyle = PLATE_COLORS.dust;

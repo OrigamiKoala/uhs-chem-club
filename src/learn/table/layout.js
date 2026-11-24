@@ -143,8 +143,11 @@ export function fixtureLayout(f) {
   // A fixture may set its own margin and the pitch between its dials' tracks (a well whose atoms are drawn
   // on the track needs room for them); the defaults are every other fixture's.
   const m = f.props?.margin ?? 3;
-  const pitch = f.props?.rowPitch ?? 5;
-  const top = r.y0 + (f.props?.top ?? 9.6);
+  const pitch = f.props?.rowPitch ?? (f.props?.dialsBelow ? 7.2 : 5);
+  const bottomPad = f.noRun ? 4.2 : 9.6;
+  const top = f.props?.dialsBelow
+    ? r.y1 - bottomPad - Math.max(0, names.length - 1) * pitch
+    : r.y0 + (f.props?.top ?? 9.6);
   // `grab` (per dial, in units) widens the band round a track in which a press takes the dial: a row of atoms
   // drawn on the track is its handle.
   const dials = names.map((name, i) => {

@@ -137,7 +137,7 @@ export const STAGES = [
         speaker: 'Vess',
         body: 'Pressure rises with moles (n) and kelvin temperature (T), and drops as volume (V) grows.'
       },
-      prompt: 'What constant value does P × V ÷ (n × T) equal across different dial settings?',
+      prompt: 'What constant value does PV/nT equal across different dial settings?',
       widget,
       table: gasTable({
         pieces: R_CARDS.map(([id, label, v], i) => numCard(id, label, { x: 82 + i * 20, y: 39 }, v)),
@@ -155,7 +155,7 @@ export const STAGES = [
         if (t.recorder.rows.length < 2) return { ok: false, notYet: true, msg: 'Record at least two different dial settings first so you can verify the ratio stays constant.' };
         if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (Math.abs(card.props.value - R) < 0.01) return { ok: true };
-        return { ok: false, msg: `101.3 × 22.4 ÷ (1.0 × 273) is about 8.31, not ${card.label}.` };
+        return { ok: false, msg: `Check your division of P × V by n × T using the recorded readings; it does not equal ${card.label}.` };
       },
       reward: {
         log: 'One number ties every reading together.',
@@ -193,8 +193,7 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the value in mol.' };
         const want = (PLATE.P * PLATE.V) / (R * PLATE.T);
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
-        const pAtV = (v * R * PLATE.T) / PLATE.V;
-        return { ok: false, msg: `In this ${PLATE.V} L tank at ${PLATE.T} K, ${v} mol would give ${pAtV.toFixed(0)} kPa, not ${PLATE.P} kPa.` };
+        return { ok: false, msg: v > want ? 'That is more gas than Tank X holds.' : 'That is less gas than Tank X holds.' };
       },
       reward: {
         log: 'PV ÷ RT gives the moles in Tank X.',
@@ -231,7 +230,7 @@ export const STAGES = [
         if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const hit = GAS_CARDS.find(c => c[0] === card.id);
         if (hit && hit[2] === SEALED.gas) return { ok: true };
-        return { ok: false, msg: `44.1 g in 1.00 mol is 44 g/mol, not ${card.label}.` };
+        return { ok: false, msg: `The gas in the sealed tank does not match ${card.label}.` };
       },
       reward: {
         log: 'Mass over moles named the gas.',
@@ -258,7 +257,7 @@ export const STAGES = [
       title: 'Atmospheres and Celsius',
       briefing: {
         speaker: 'Vess',
-        body: 'Pressure is also measured in atmospheres (1 atm = 101.3 kPa). With atm and liters, use R = 0.0821 L·atm/(mol·K), and always convert temperature to kelvin.'
+        body: '1 atm (atmosphere) is the air pressure at sea level (101.3 kPa). With atm and liters, use R = 0.0821 L·atm/(mol·K), and always convert temperature to kelvin so you never use zero or negative Celsius values.'
       },
       prompt: 'How many moles of gas are in Tank Y?',
       entry: { id: 'ans', label: 'Moles in Tank Y', unit: 'mol' },
@@ -276,7 +275,7 @@ export const STAGES = [
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         const celsiusTrap = (ATM_PLATE.P * ATM_PLATE.V) / (R_ATM * ATM_PLATE.TC);
         if (Math.abs(v - celsiusTrap) / celsiusTrap < 0.15) {
-          return { ok: false, msg: 'Using 27 for T gives a number eleven times too large: convert °C to kelvin first.' };
+          return { ok: false, msg: 'That value is eleven times too large for 300 K.' };
         }
         return { ok: false, msg: v > want ? 'That is more gas than Tank Y holds.' : 'That is less gas than Tank Y holds.' };
       },

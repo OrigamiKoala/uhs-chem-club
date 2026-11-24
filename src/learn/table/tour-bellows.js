@@ -34,7 +34,7 @@ const FIXTURES = {
       const ds = dialNames(f);
       const run = f.runLabel ? ` Press "${f.runLabel}" to record a point on the graph.` : '';
       if (!ds.length) {
-        if (f.props?.speedScreen) return 'Each bar shows how many particles move near that speed. Compare each snapshot\'s shape with this reference.';
+        if (f.props?.speedScreen) return 'The bar graph next to the cylinder shows how many particles move at each speed, from slow (left) to fast (right). Turn the Heater dial and compare each snapshot card with the graph.';
         return 'Read the cylinder\'s measurements, then enter your answer or place a card.';
       }
       const list = ds.map(n => `"${n}"`).join(' and ');
@@ -54,7 +54,7 @@ const FIXTURES = {
   },
   common: {
     title: 'Common tank',
-    text: 'Drag tanks into the drop tray below the common tank to open them into it and watch the total and partial pressures. {runSentence}'
+    text: 'Drag tanks into the glass common tank to open them into it and watch the total and partial pressures. {runSentence}'
   },
   pinhole: {
     title: 'Pinhole chambers',
@@ -88,7 +88,7 @@ const PIECES = {
     table => {
       if (hasFixture(table, 'scale')) return 'Drag the sealed tank onto the scale pan to weigh its gas.';
       if (table.zones?.rail) return 'Drag the tanks along the strip to put them in order.';
-      if (hasFixture(table, 'common')) return 'Drag tanks into the drop tray below the common tank to open them.';
+      if (hasFixture(table, 'common')) return 'Drag tanks into the glass common tank to open them.';
       return 'Drag a tank onto the target area.';
     }
   ],

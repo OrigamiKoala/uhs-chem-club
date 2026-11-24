@@ -63,11 +63,12 @@ export function rigRead(state, id) {
   const f = state.fixtures[id];
   const cfg = rigCfg(f);
   return (f.props.cyls || []).map(c => {
+    const gasKey = (f.dials.gas && f.props.gases) ? f.props.gases[Math.round(f.dials.gas.value) - 1] : c.gas;
     const n = amountOf(state, f, c);
-    const item = { gas: c.gas, n, T: c.T ?? 300, V: c.V ?? 20, hold: c.hold || 'dial', P0: c.P0, vdw: c.vdw, follow: c.follow };
+    const item = { gas: gasKey, n, T: c.T ?? 300, V: c.V ?? 20, hold: c.hold || 'dial', P0: c.P0, vdw: c.vdw, follow: c.follow };
     const q = planGas(item, cfg);
     // `ideal` is what the plain gas law says the gauge should read at this room, amount and temperature: the real gas (`vdw`) is held to it.
-    return { ...q, id: c.id, label: c.label || c.id, sym: GASES[c.gas].sym, name: GASES[c.gas].name, n, dots: dotsFor(n || 0.0001), pelletDish: f.props.pellet || null, ideal: pressureIdeal(n, q.T, q.V), gasKey: c.gas };
+    return { ...q, id: c.id, label: c.label || c.id, sym: GASES[gasKey].sym, name: GASES[gasKey].name, n, dots: dotsFor(n || 0.0001), pelletDish: f.props.pellet || null, ideal: pressureIdeal(n, q.T, q.V), gasKey };
   });
 }
 

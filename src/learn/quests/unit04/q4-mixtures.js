@@ -15,14 +15,14 @@ import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, rig, tank, commonTank, tankRead, planMixture, plaqueFixture, stmt, R
 } from '../../table/kits/gas.js';
-import { widget, put, cardIn, predictStage, typed } from './_shared.js';
+import { widget, put, cardIn, predictStage, answerCards, answerSlot, typed } from './_shared.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bpartial pressures?\b/i, introducedAt: 2 },
   { term: /\bdalton.?s law\b/i, introducedAt: 2 },
-  { term: /\bmole fractions?\b/i, introducedAt: 3 }
+  { term: /\bmole fractions?\b/i, introducedAt: 4 }
 ];
 
 /** The gas laws, pressure and the mole are plain words here. */
@@ -98,7 +98,7 @@ export const STAGES = [
         zones: { trays: [ct.tray], slots: [{ id: 'show', label: 'What neon\'s pressure did', at: { x: 109, y: 29 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Drag Tank B (neon), then Tank A (helium), into the drop tray below the common tank.',
+        'Drag Tank B (neon), then Tank A (helium), into the glass common tank.',
         'Watch neon\'s pressure reading when it is alone, then again after helium opens beside it.',
         'Compare neon\'s pressure before and after adding helium, then pick the matching card.'
       ],
@@ -112,7 +112,7 @@ export const STAGES = [
         const mixed = planMixture([{ gas: HELIUM.gas, n: HELIUM.n }, { gas: NEON.gas, n: NEON.n }], T0, V0).rows.find(r => r.gas === NEON.gas).P;
         const want = Math.abs(mixed - alone) < 1e-6 ? 'same' : mixed < alone ? 'lower' : 'higher';
         if (card.id === want) return { ok: true };
-        return { ok: false, msg: `Neon's own pressure stayed at ${Math.round(alone)} kPa when helium joined it.` };
+        return { ok: false, msg: 'Compare neon\'s partial pressure when alone with its partial pressure after helium joins it.' };
       },
       reward: {
         log: 'Neon has the same pressure alone and in the mixture.',
@@ -124,6 +124,50 @@ export const STAGES = [
   })(),
 
   /* ---------------------------------------------------------------- 3 */
+  (() => {
+    const ct = commonTank(CT, { x: 36, y: 31 }, { V: SHARE_V, T: T0, of: VALVES, show: { partials: true, share: true }, words: 2 });
+    const CARDS = [
+      ['moles', 'It has 75% of the gas moles'],
+      ['heavy', 'Nitrogen particles are heavier'],
+      ['fast', 'Nitrogen particles move faster'],
+      ['equal', 'All gases share pressure equally']
+    ];
+    return {
+      title: 'Sharing the Pressure',
+      prompt: 'When both tanks are open in the common tank, why does nitrogen provide 75% of the total pressure?',
+      widget,
+      table: gasTable({
+        pieces: [
+          t10('a', 'TANK A', { x: 88, y: 12 }, 'He', 1.0, { showAmount: true, noGauge: true }),
+          t10('b', 'TANK B', { x: 124, y: 12 }, 'N2', 3.0, { showAmount: true, noGauge: true }),
+          ...answerCards(CARDS, { x: 90, y: 44.5 })
+        ],
+        fixtures: [ct.fixture],
+        zones: { trays: [ct.tray], slots: [answerSlot('Why N₂ is 75%')] }
+      }),
+      hints: [
+        'Drag both Tank A (1.00 mol He) and Tank B (3.00 mol N₂) into the glass common tank.',
+        'Compare each gas\'s share of the total pressure with its share of the total moles (1.00 + 3.00 = 4.00 mol).',
+        'Remember that at the same temperature and volume, every mole of gas contributes the same pressure regardless of mass.'
+      ],
+      check(state) {
+        const t = state.table;
+        const open = Object.values(t.pieces).filter(p => p.zone === `tray:${VALVES}`);
+        if (open.length < 2) return { ok: false, notYet: true, msg: 'Open both Tank A and Tank B into the common tank first.' };
+        const card = cardIn(t, 'answer');
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
+        if (card.id === 'moles') return { ok: true };
+        return { ok: false, msg: 'That card does not match the pressure shares shown on the common tank.' };
+      },
+      reward: {
+        log: 'Pressure share equals mole share.',
+        title: 'Sharing the Pressure',
+        body: '3.00 mol out of 4.00 mol is 75% of the particles, so nitrogen causes 75% of the wall collisions and 75% of the total pressure.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 4 */
   (() => {
     const ct = commonTank(CT, { x: 39, y: 31 }, { V: SHARE_V, T: T0, of: VALVES, show: { partials: false }, words: 4, w: 72 });
     const at = [[96, 15], [128, 15], [96, 43], [128, 43]];
@@ -142,7 +186,7 @@ export const STAGES = [
         zones: { trays: [ct.tray] }
       }),
       hints: [
-        'Drag all four tanks into the drop tray below the common tank to read the total pressure.',
+        'Drag all four tanks into the glass common tank to read the total pressure.',
         'Add up the moles from all four tanks, then divide nitrogen\'s moles by that total to find its mole fraction.',
         'Multiply nitrogen\'s mole fraction by the total pressure in the common tank.'
       ],
@@ -183,7 +227,7 @@ export const STAGES = [
         pieces: tanks,
         fixtures: [plate],
         zones: {
-          rail: { id: 'rail', at: { x: 102, y: 42 }, size: { w: 92, h: 16 }, first: 'Lowest pressure', last: 'Highest pressure', items: ['a', 'b', 'c', 'd'], start: ['d', 'c', 'b', 'a'] }
+          rail: { id: 'rail', at: { x: 102, y: 24 }, size: { w: 92, h: 16 }, first: 'Lowest pressure', last: 'Highest pressure', labelsBelow: true, items: ['a', 'b', 'c', 'd'], start: ['d', 'c', 'b', 'a'] }
         }
       }),
       hints: [
@@ -224,7 +268,7 @@ export const STAGES = [
       title: 'Gas Over Water',
       briefing: {
         speaker: 'Vess',
-        body: `Pressure can also be measured in mmHg (760 mmHg = 1 atm). A gas collected over water is mixed with water vapor (${OVER_WATER.vapor} mmHg at 25 °C), so subtract the water vapor pressure from the total.`
+        body: `Pressure can also be measured in mmHg (760 mmHg = 1 atm). A gas collected over water is mixed with water vapor (${OVER_WATER.vapor} mmHg at 25 °C), so subtract the water vapor pressure from the total pressure.`
       },
       prompt: 'If a jar over water reads 752 mmHg total (including 24 mmHg of water vapor), what is the partial pressure of the gas alone?',
       entry: { id: 'ans', label: 'Gas alone', unit: 'mmHg' },
@@ -257,9 +301,10 @@ export const STAGES = [
 const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Open both tanks into the common tank,', 'then place a card in the slot.'],
-  3: ['Open all four tanks,', 'then type your answer at the bottom.'],
-  4: ['Arrange the tanks along the strip.'],
-  5: ['Type your answer in the field at the bottom.']
+  3: ['Open both tanks into the common tank,', 'then place a card in the slot.'],
+  4: ['Open all four tanks,', 'then type your answer at the bottom.'],
+  5: ['Arrange the tanks along the strip.'],
+  6: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -283,6 +328,7 @@ export const DEBRIEF = {
 export const SOLUTIONS = [
   [put('same', 'slot:predict')],
   [put('b', `tray:${VALVES}`), put('a', `tray:${VALVES}`), put('same', 'slot:show')],
+  [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('moles', 'slot:answer')],
   [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('c', `tray:${VALVES}`), put('d', `tray:${VALVES}`), typed('ans', '60')],
   [put('b', 'rail:0'), put('d', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')],
   [typed('ans', '728')]
@@ -292,6 +338,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [],
   [put('b', `tray:${VALVES}`), put('a', `tray:${VALVES}`), put('higher', 'slot:show')],
+  [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('heavy', 'slot:answer')],
   [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('c', `tray:${VALVES}`), put('d', `tray:${VALVES}`), typed('ans', '25')],
   [put('c', 'rail:0'), put('b', 'rail:1'), put('a', 'rail:2'), put('d', 'rail:3')],
   [typed('ans', '776')]

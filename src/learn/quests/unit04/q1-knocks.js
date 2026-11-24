@@ -46,7 +46,7 @@ export function toolNoteFor() { return null; }
 
 const RIG = 'rig';
 const BOX = 'box';
-const T0 = 298.15;
+const T0 = 300;
 
 /** The guesses of stage 1 and the verdicts of stage 2: one statement per wall, and the one that says they are alike. */
 export const GUESSES = [
@@ -141,7 +141,7 @@ export const STAGES = [
         const q = boxRead(t, BOX);
         const want = wallMost(q);
         if (card.id === want) return { ok: true };
-        return { ok: false, msg: `At ${Math.round(q.tC)} °C, the roof, side wall, and floor all read ${Math.round(q.P)} kPa.` };
+        return { ok: false, msg: `Look at all three readings (ROOF, SIDE WALL, FLOOR) at ${Math.round(q.tC)} °C and compare them.` };
       },
       reward: {
         log: 'All three meters read the same.',
@@ -153,7 +153,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const b = box(BOX, { x: 34, y: 31 }, {
+    const b = box(BOX, { x: 38, y: 29 }, {
       gas: 'N2', n: 1, V: 10, T: 300, temps: ZERO_TEMPS, tempList: 'C', tempStart: 3, units: 'kpa', gaugeMax: 600,
       plot: { x: 'TC', y: 'P' }, label: 'Sealed box'
     });
@@ -166,9 +166,9 @@ export const STAGES = [
       prompt: 'At what temperature would this gas\'s pressure reach zero if you kept cooling it?',
       widget,
       table: gasTable({
-        fixtures: [b, markerFixture('zero', 'Pressure reaches zero at', { x: 112, y: 55 }, { min: -400, max: 0, step: 10, start: 0, unit: '°C', w: 50 })],
+        fixtures: [b, markerFixture('zero', 'Pressure reaches zero at', { x: 112, y: 49 }, { min: -400, max: 0, step: 10, start: 0, unit: '°C', w: 52 })],
         tools: ['straightedge']
-      }, { recorder: { at: { x: 112, y: 23 }, size: { w: 50, h: 32 }, xLabel: 'Temperature', xUnit: '°C', yLabel: 'Pressure', yUnit: 'kPa', range: { xMin: -300, xMax: 200, yMin: 0, yMax: 400 } } }),
+      }, { recorder: { at: { x: 112, y: 21 }, size: { w: 52, h: 30 }, xLabel: 'Temperature', xUnit: '°C', yLabel: 'Pressure', yUnit: 'kPa', range: { xMin: -300, xMax: 200, yMin: 0, yMax: 400 } } }),
       hints: [
         'Record the pressure at several temperatures on the Heater dial to plot points on the graph.',
         'Notice that the plotted points form a straight line sloping down toward 0 kPa.',
@@ -239,35 +239,34 @@ export const STAGES = [
       title: 'Using Boyle\'s Law',
       briefing: {
         speaker: 'Vess',
-        body: 'At a fixed temperature, pressure × volume stays constant (P₁V₁ = P₂V₂).'
+        body: 'When a quantity doubles, it is multiplied by a factor of 2; when it halves, it is multiplied by 0.5. At a fixed temperature, pressure × volume stays constant (P₁V₁ = P₂V₂).'
       },
-      prompt: `What would the pressure of this gas be if compressed to ${BEYOND} L?`,
-      entry: { id: 'ans', label: `Pressure at ${BEYOND} L`, unit: 'kPa' },
+      prompt: `If this gas starts at 24 L and is compressed to ${BEYOND} L, by what factor is its pressure multiplied?`,
+      entry: { id: 'ans', label: 'Pressure factor', unit: '×' },
       widget,
       table: gasTable({ fixtures: [r] }),
       hints: [
-        'Multiply pressure and volume (P × V) at any Piston setting on the cylinder.',
-        'Verify that P × V stays the same at other Piston settings.',
-        'Since P₁V₁ = P₂V₂, divide that constant product by 1.5 L using the Calc button.'
+        'Compare the volume change from 24 L to 1.5 L.',
+        'Use the Piston dial to see how halving the volume affects pressure.',
+        'Since pressure is inversely proportional to volume, divide 24 L by 1.5 L.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the pressure in kPa.' };
-        const a = rigAt(t, RIG, { volume: 1 })[0];
-        const want = (a.P * a.V) / BEYOND;
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the factor by which pressure is multiplied.' };
+        const want = 24 / BEYOND;
         if (Math.abs(v - want) / want < 0.02) return { ok: true };
         return {
           ok: false,
-          msg: v < a.P
-            ? 'That pressure is lower than at 24 L, and compressing a gas always raises its pressure.'
-            : `At ${((a.P * a.V) / v).toFixed(1)} L this gas would read ${v} kPa, not at ${BEYOND} L.`
+          msg: v <= 1
+            ? 'Compressing a gas to a smaller volume raises its pressure, so the factor must be greater than 1.'
+            : `Multiplying by ${v} matches compressing to ${(24 / v).toFixed(1)} L, not ${BEYOND} L.`
         };
       },
       reward: {
-        log: 'Pressure × volume stays about 2490 kPa·L.',
+        log: 'Compressing from 24 L to 1.5 L multiplies pressure by 16.',
         title: 'Using Boyle\'s Law',
-        body: 'Because pressure × volume stays about 2490 kPa·L, compressing to 1.5 L raises the pressure to about 1660 kPa.'
+        body: 'Because 1.5 L is one-sixteenth of 24 L, the pressure is multiplied by a factor of 16.'
       }
     };
   })(),
@@ -283,7 +282,7 @@ export const STAGES = [
       title: 'Speeds in a Gas',
       briefing: {
         speaker: 'Vess',
-        body: 'The speed screen groups particles by speed: taller bars mean more particles at that speed. Each snapshot captures that screen at one temperature.'
+        body: 'The bar graph next to the cylinder shows particle speeds from 0 m/s (left) to 2400 m/s (right), where taller bars mean more particles at that speed. Each snapshot card shows that graph at one temperature.'
       },
       prompt: 'Order the four speed snapshots from coldest (left) to hottest (right).',
       widget,
@@ -375,7 +374,7 @@ export const STAGES = [
 const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn the Heater dial,', 'then place a card in the slot.'],
-  3: ['Record each setting, lay the straightedge,', 'then set the marker.'],
+  3: ['Record each setting, lay the straightedge, then set the marker.'],
   4: ['Turn the Piston dial,', 'then place a card in the slot.'],
   5: ['Turn the Piston dial,', 'then type your answer in the field at the bottom.'],
   6: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
@@ -405,7 +404,7 @@ export const SOLUTIONS = [
   [dial(BOX, 'temp', 3), dial(BOX, 'temp', 5), put('same', 'slot:show')],
   [dial(BOX, 'temp', 1), { run: BOX }, dial(BOX, 'temp', 3), { run: BOX }, dial(BOX, 'temp', 5), { run: BOX }, { lay: { kind: 'straightedge', through: [0, 2] } }, dial('zero', 'value', -270)],
   [dial(RIG, 'volume', 2), put('twice', 'slot:answer')],
-  [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), typed('ans', '1660')],
+  [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), typed('ans', '16')],
   [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
   [dial('rb', 'temp', 3)]
 ];

@@ -55,7 +55,7 @@ export const alarm = (id, line) => [
   { do: 'place', who: npc(id), at: 'meet', face: 'spot' },
   { do: 'go', who: npc(id), to: 'stand', face: 'player', speed: 2.6, wait: false },
   { do: 'go', who: 'cam', to: 'view', lookAt: 'spot', speed: 1.6 },
-  { do: 'say', who: npc(id), lines: [line], ask: true }
+  { do: 'say', who: npc(id), lines: line ? [line] : [], ask: true }
 ];
 
 /** Guided over the wrist link by someone who can see the problem from where they are. */

@@ -257,13 +257,15 @@ export function rigGeometry(f, lay) {
   const cyls = f.props.cyls || [];
   const compact = Boolean(f.props.compact);
   const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : b.y0 + 6;
-  // The glass tube stands up from the plate and leans over what is behind it, so it starts clear of the dial row.
-  const top = lay.dials.length ? Math.max(lastDial + 9.5, b.y0 + 16) : b.y0 + 12;
+  // The glass tube stands up from the plate and leans over what is behind it; when dials sit below, the cylinder sits cleanly at the top.
+  const top = f.props?.dialsBelow
+    ? b.y0 + (f.props.titled ? 8.5 : 10.5)
+    : (lay.dials.length ? Math.max(lastDial + 9.5, b.y0 + 16) : b.y0 + 12);
   const screenW = f.props.speedScreen ? (f.props.screenW ?? Math.min(30, (b.x1 - b.x0) * 0.46)) : 0;
   const bl = b.x0 + 2 + 1.4;
   const br = b.x1 - 2 - (screenW ? screenW + 2.5 : 0);
   const BH = compact ? 5.6 : 7;
-  const pitch = f.props.rowH ?? (compact ? 12 : 20);
+  const pitch = f.props.rowH ?? (compact ? 18 : 22);
   return {
     top, compact, BH, pitch, screenW, bl, br,
     cyls: cyls.map((c, j) => ({ c, barrel: { x0: bl, x1: br, y0: top + j * pitch, y1: top + j * pitch + BH } }))
@@ -437,7 +439,7 @@ function paintBarrel(ctx, F, g, cj, q, f, b) {
 
   // Above the barrel (clear of the glass that leans over it) the cylinder's name, and the gas it holds.
   const sealed = cj.c.sealed;
-  if (!f.props.titled) say(ctx, `${q.label}${sealed ? '' : `  ${q.sym}`}`, gx + gr + F.len(2.5), by0 - F.len(5), F.size(2.3, 6), { color: DUST, weight: 700, maxW: bx1 - (gx + gr) });
+  if (!f.props.titled) say(ctx, `${q.label}${sealed ? '' : `  ${q.sym}`}`, gx + gr + F.len(2.5), by0 - F.len(3.5), F.size(2.3, 6), { color: DUST, weight: 700, maxW: bx1 - (gx + gr) });
 }
 
 function paintScreen(ctx, F, g, q, f, b) {
@@ -596,16 +598,19 @@ function paintCommon(ctx, f, state, b) {
   const fmtP = p => (mmhg ? `${Math.round(kPaToMmHg(p))} mmHg` : `${sig(p, 3)} kPa`);
   const box = b.lay.box;
   const top = f.props.top ?? 8.5;
-  const x0 = box.x0 + f.size.w * 0.52;
-  const w = f.size.w * 0.44;
+  const x0 = box.x0 + f.size.w * 0.50;
+  const w = f.size.w * 0.46;
   const y0 = box.y0 + top;
-  const h = f.props.tankH ?? 17;
+  const h = f.props.tankH ?? 30;
   ctx.fillStyle = '#100f0c';
   ctx.fillRect(b.X(x0), b.Y(y0), F.len(w), F.len(h));
   ctx.strokeStyle = STEEL;
   ctx.lineWidth = 1.5;
   ctx.strokeRect(Math.round(b.X(x0)) + 0.5, Math.round(b.Y(y0)) + 0.5, Math.round(F.len(w)), Math.round(F.len(h)));
   ctx.lineWidth = 1;
+  if (!rd.parts.length) {
+    say(ctx, 'DROP TANKS HERE', b.X(x0 + w / 2), b.Y(y0 + h / 2), F.size(2.1, 6), { align: 'center', color: DIM, maxW: F.len(w - 2) });
+  }
   const kinds = rd.parts.map((p, i) => ({ gas: p.gas, n: p.n, shape: SHAPES[i % SHAPES.length] }));
   ctx.fillStyle = PHOS;
   kinds.forEach(k => {
@@ -646,9 +651,9 @@ function paintScale(ctx, f, state, b) {
   const r = scaleRead(state, f.id);
   const pw = f.size.w - 6;
   ctx.strokeStyle = STEEL;
-  ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(f.size.h - 9)) + 0.5, Math.round(F.len(pw)), Math.round(F.len(2.4)));
-  say(ctx, r.tank ? 'WEIGHS' : 'NOTHING ON THE PAN', F.x(3), F.y(9.8), F.size(2.3, 6), { color: DIM, maxW: F.len(pw) });
-  if (r.tank) say(ctx, `${sig(r.grams, 3)} g`, F.x(f.size.w - 3), F.y(9.8), F.size(3.4, 7.5), { color: AMBER, weight: 700, align: 'right', maxW: F.len(pw * 0.6) });
+  ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(f.size.h - 5)) + 0.5, Math.round(F.len(pw)), Math.round(F.len(2.2)));
+  say(ctx, r.tank ? 'WEIGHS' : 'NOTHING ON THE PAN', F.x(3), F.y(6.4), F.size(2.3, 6), { color: DIM, maxW: F.len(pw * 0.55) });
+  if (r.tank) say(ctx, `${sig(r.grams, 3)} g`, F.x(f.size.w - 3), F.y(6.4), F.size(3.4, 7.5), { color: AMBER, weight: 700, align: 'right', maxW: F.len(pw * 0.5) });
 }
 
 /** The pinhole: one chamber to a gas, a hole in its wall, and how much is left after the seconds the dial stands at. */
@@ -658,7 +663,7 @@ function paintPinhole(ctx, f, state, b) {
   const hide = hiddenKeys(f, state);
   const n = r.chambers.length;
   const lastDial = b.lay.dials.length ? Math.max(...b.lay.dials.map(d => d.y)) : 8;
-  const top = lastDial - b.lay.box.y0 + 7;
+  const top = f.props?.dialsBelow ? 8.5 : (lastDial - b.lay.box.y0 + 7);
   const cw = (f.size.w - 4) / n;
   r.chambers.forEach((c, i) => {
     const x0 = 2 + i * cw;
@@ -697,7 +702,7 @@ function paintTube(ctx, f, state, b) {
   const hide = hiddenKeys(f, state);
   const gated = hide?.has('ring') || (f.props.gate && !isRevealed(state, f.id) && !isCommitted(state, f.props.gate, f));
   const lastDial = b.lay.dials.length ? Math.max(...b.lay.dials.map(d => d.y)) : 8;
-  const top = lastDial - b.lay.box.y0 + 5;
+  const top = f.props?.dialsBelow ? 9.5 : (lastDial - b.lay.box.y0 + 5);
   const x0 = 4; const w = f.size.w - 8; const h = 5.4;
   ctx.fillStyle = '#100f0c';
   ctx.fillRect(F.x(x0), F.y(top), F.len(w), F.len(h));

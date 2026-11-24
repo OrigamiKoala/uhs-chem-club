@@ -161,7 +161,7 @@ export const STAGES = [
         const t = state.table;
         const start = pressureIdeal(1, toKelvin(INTAKE_TEMPS[0], 'C'), INTAKE_VOLUMES[INTAKE_START - 1]);
         const k = cylRead(t, RIG, 0).P / start;
-        if (Math.abs(k - 1) < 1e-6) return { ok: false, notYet: true, msg: 'The dials are where they started.' };
+        if (Math.abs(k - 1) < 1e-6) return { ok: false, notYet: true, msg: 'The dials haven\'t changed.' };
         if (Math.abs(k / INTAKE_FACTOR - 1) < 0.01) return { ok: true };
         return { ok: false, msg: k < INTAKE_FACTOR ? `With these settings the pressure is ${k.toFixed(1)} times the starting ${began} kPa, less than six times.` : `With these settings the pressure is ${k.toFixed(1)} times the starting ${began} kPa, more than six times.` };
       },
@@ -190,7 +190,7 @@ export const STAGES = [
         intent: 'The compressor keeps its blending tanks shut.'
       },
       hints: [
-        'Drag tanks into the drop tray below the common tank to add them, or drag them back out.',
+        'Drag tanks into the glass common tank to add them, or drag them back out.',
         'Watch both nitrogen\'s partial pressure and the total pressure after each tank.',
         'Every tank raises the total pressure, while only nitrogen tanks raise nitrogen\'s partial pressure.'
       ],
@@ -333,7 +333,7 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Turn the Piston and Heater dials.'],
-  2: ['Drag tanks into the drop tray below the common tank.'],
+  2: ['Drag tanks into the glass common tank.'],
   3: ['R = 0.0821 L·atm per mol·K.', 'Type your answer in the field at the bottom.'],
   4: ['Turn the Heater dial,', 'then place a card in the slot.'],
   5: ['Turn the Gas dial to match SEAL B.']

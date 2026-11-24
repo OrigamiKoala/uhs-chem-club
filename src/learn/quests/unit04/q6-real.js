@@ -128,7 +128,7 @@ export const STAGES = [
         if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const q = cylRead(t, RIG, 0);
         if (card.id === sideOf(q)) return { ok: true };
-        return { ok: false, msg: `At 0.06 L the sensor reads ${Math.round(q.P)} kPa, higher than the gas law's ${Math.round(q.ideal)} kPa.` };
+        return { ok: false, msg: 'Compare the measured PRESSURE with the IDEAL LAW reading at 0.06 L.' };
       },
       get reward() {
         return {

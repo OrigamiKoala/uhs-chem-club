@@ -221,7 +221,7 @@ function dressPinhole(f, state, c) {
   const items = [];
   for (let i = 0; i < n; i++) {
     const ux = box.x0 + 2 + i * cw + (cw - 2) / 2;
-    const uy = lastDial + 7 + hu / 2;
+    const uy = (f.props?.dialsBelow ? box.y0 + 8.5 : lastDial + 7) + hu / 2;
     const p = toPlate({ x: ux, y: uy });
     const cyl = new THREE.Group();
     cyl.position.set(p.x, c.ground + 0.002, p.z);
@@ -255,10 +255,10 @@ function dressCommon(f, state, c) {
   const group = new THREE.Group();
   group.name = 'gas-common';
   const top = f.props.top ?? 8.5;
-  const tankH = f.props.tankH ?? 17;
-  const wu = f.size.w * 0.44;
-  const lidH = 0.06;
-  const p = toPlate({ x: box.x0 + f.size.w * 0.52 + wu / 2, y: box.y0 + top + tankH / 2 });
+  const tankH = f.props.tankH ?? 30;
+  const wu = f.size.w * 0.46;
+  const lidH = 0.08;
+  const p = toPlate({ x: box.x0 + f.size.w * 0.50 + wu / 2, y: box.y0 + top + tankH / 2 });
   const cyl = new THREE.Group();
   cyl.position.set(p.x, c.ground + 0.002, p.z);
   cyl.add(buildLid(wu * s, tankH * s, lidH, { mats: c.mats }));
@@ -296,9 +296,10 @@ export function gasDress(f, state, c) {
   if (f.kind === 'tube') {
     const group = new THREE.Group();
     const lay = fixtureLayout(f);
-  const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : box.y0 + 8;
+    const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : box.y0 + 8;
     const lid = buildLid((f.size.w - 8) * s, 5.6 * s, 0.026, { mats: c.mats });
-    const p = toPlate({ x: box.x0 + f.size.w / 2, y: lastDial + 5 + 2.7 });
+    const ty = f.props?.dialsBelow ? box.y0 + 9.5 : lastDial + 5;
+    const p = toPlate({ x: box.x0 + f.size.w / 2, y: ty + 2.7 });
     lid.position.set(p.x, c.ground + 0.002, p.z);
     group.add(lid);
     return group;

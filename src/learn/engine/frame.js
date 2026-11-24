@@ -800,10 +800,12 @@ export class LearnFrame {
     // Stage 1 leads with the question the quest answers (`quest-story.js` `mystery`); a quest without one keeps its lead line.
     const caseKey = this.opts.world?.id && this.opts.quest?.id ? `${this.opts.world.id}/${this.opts.quest.id}` : '';
     const story = (stage.index === 0 && caseKey && mysteryFor(caseKey)) || storyFor(this.currentQuestId(), stage.index);
-    this.el.prompt.innerHTML = `${story ? `<p class="lq-story">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
+    const fmtPrompt = s => esc(s || '').replace(/PV\s*\/\s*nT|P\s*×\s*V\s*÷\s*\(n\s*×\s*T\)/g,
+      '<span class="lq-frac"><span class="lq-frac-num">PV</span><span class="lq-frac-den">nT</span></span>');
+    this.el.prompt.innerHTML = `${story ? `<p class="lq-story">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${fmtPrompt(stage.prompt)}</p>`;
     // The objective again, over the bench, for a layout that stacks the deck
     // underneath it. Hidden from a screen reader: the deck's copy is the real one.
-    if (this.el.promptStrip) this.el.promptStrip.textContent = stage.prompt || '';
+    if (this.el.promptStrip) this.el.promptStrip.innerHTML = fmtPrompt(stage.prompt || '');
     this.el.readout.innerHTML = '';
     this.bannerSeq = (this.bannerSeq || 0) + 1;
     this.el.banner.innerHTML = '';

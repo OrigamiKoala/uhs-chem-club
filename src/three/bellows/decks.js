@@ -474,10 +474,10 @@ function room(B, plan, v, lamps) {
 
   switch (rm.shell) {
     case 'skirt': {
-      B.span(M.floor, r.minX - 0.3, r.maxX + 0.3, y0 - 0.4, y0, r.minZ - 0.3, r.maxZ + 0.3);
+      B.span(M.floor, r.minX + 0.25, r.maxX - 0.25, y0 - 0.4, y0, r.minZ + 0.25, r.maxZ - 0.25);
       for (const s of plan.wallSegments(v)) wallBox(B, M.wall, s, y0 - 0.6, top);
       for (const op of v.openings) wallBox(B, M.wall, openingSeg(v, op), y0 + 4.4, top, WALL_HALF, 0);
-      B.span(M.roof, r.minX - 0.3, r.maxX + 0.3, roofY, top, r.minZ - 0.3, r.maxZ + 0.3);
+      B.span(M.roof, r.minX + 0.25, r.maxX - 0.25, roofY, top, r.minZ + 0.25, r.maxZ - 0.25);
       skirtStiffeners(B, plan, v);
       // Radial beams under the catch deck, and the sphere's drain nozzle through it.
       const cx = SPHERE.x, cz = SPHERE.z;
@@ -561,11 +561,11 @@ function skirtBand(B, r, from) {
   B.span('steel', S.minX, S.maxX, from, mid, S.maxZ - 0.6, S.maxZ);
   B.span('steel', S.minX, S.minX + 0.6, from, mid, S.minZ + 0.6, S.maxZ - 0.6);
   B.span('steel', S.maxX - 0.6, S.maxX, from, mid, S.minZ + 0.6, S.maxZ - 0.6);
-  B.span('darkSteel', S.minX - 0.2, S.maxX + 0.2, mid, mid + 0.4, S.minZ - 0.2, S.maxZ + 0.2);
+  B.span('darkSteel', S.minX - 0.04, S.maxX + 0.04, mid, mid + 0.4, S.minZ - 0.04, S.maxZ + 0.04);
   const half = (S.maxX - S.minX) / 2;
   const corner = cy - Math.sqrt(Math.max(0, SPHERE.r ** 2 - 2 * half * half));
   for (const [x, z] of [[r.minX, r.minZ], [r.maxX, r.minZ], [r.maxX, r.maxZ], [r.minX, r.maxZ]]) {
-    B.span('darkSteel', x - 0.3, x + 0.3, r.minX === x && r.minZ === z ? from - 6 : from - 6, corner + 0.5, z - 0.3, z + 0.3);
+    B.span('darkSteel', x - 0.36, x + 0.36, from - 6, corner + 0.5, z - 0.36, z + 0.36);
   }
 }
 
