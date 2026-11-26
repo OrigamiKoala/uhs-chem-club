@@ -59,7 +59,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../engine/stagerunner.js';
 import { remember, recall } from '../engine/predict.js';
-import { applyNotes } from '../table/notes.js';
 // This file sits one folder above the unit folders, so these paths lose one `../` when it is copied
 // into `quests/<unit>/` (`'../../engine/stagerunner.js'`). Import the kit's table builders from
 // '../../table/kits/<kit>.js'.

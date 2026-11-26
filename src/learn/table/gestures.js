@@ -198,9 +198,13 @@ export class TableGestures {
     for (const f of Object.values(this.state.fixtures)) {
       const lay = fixtureLayout(f);
       const pad = this.view.pxToUnits(10);
+      const hitKey = (lay.keys || []).find(k => u.x >= k.x0 - pad / 2 && u.x <= k.x1 + pad / 2 && u.y >= k.y0 - pad / 2 && u.y <= k.y1 + pad / 2);
+      if (hitKey) return { kind: 'key', fixture: f.id, key: hitKey };
+      const r = lay.run;
+      if (r && u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
       let bestDial = null;
       for (const d of lay.dials) {
-        const up = Math.max(this.view.pxToUnits(14), d.grab || 0);
+        const up = Math.max(this.view.pxToUnits(18), d.grab || 0);
         const dn = Math.max(this.view.pxToUnits(14), d.grab || 0);
         if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && u.y >= d.y - up && u.y <= d.y + dn) {
           const dist = Math.abs(u.y - d.y);
@@ -226,10 +230,6 @@ export class TableGestures {
           return { kind: 'joystick', fixture: f.id, cx: j.cx, cy: j.cy, r: j.r, start: u, initialTurn: vf.dials?.turn?.value ?? 0, initialTilt: vf.dials?.tilt?.value ?? 0 };
         }
       }
-      const hitKey = (lay.keys || []).find(k => u.x >= k.x0 - pad / 2 && u.x <= k.x1 + pad / 2 && u.y >= k.y0 - pad / 2 && u.y <= k.y1 + pad / 2);
-      if (hitKey) return { kind: 'key', fixture: f.id, key: hitKey };
-      const r = lay.run;
-      if (r && u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
     }
     // TAP ZONES: places on a fixture that are particles or apparatus to touch (`props.taps`, and the kit's `tapZones(f, state)` for places that
     // follow the picture): a supply that adds a step of gas, a burner that adds a step of heat, a piston to drag, a band of the graph that is

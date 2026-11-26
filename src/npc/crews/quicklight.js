@@ -154,7 +154,7 @@ export const TASKS = Object.freeze({
     note: {
       title: 'Quicklight · Radio Clerk\'s Note',
       speaker: 'Caspar Lind',
-      text: 'A burned-out signal flare tube from the night the vents were spiked, showing someone signaled that the sabotage was done.'
+      text: 'A burned-out signal flare tube from the night the vents were spiked. Someone signaled their crew that the sabotage was done.'
     }
   }
 });

@@ -27,7 +27,6 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, chip, stmt, cylRead, rigAt, GASES } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, answerCards, answerSlot, predictStage, youPredicted, guessOf } from './_shared.js';
 
@@ -228,14 +227,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Place a card in the slot.'],
-  2: ['Turn the Piston dial to 0.06 L,', 'then place a card in the slot.'],
-  3: ['Turn the Heater dial,', 'then place a card in the slot.'],
-  4: ['Compare the three cold cylinders,', 'then arrange them on the strip.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { potTable, chip, plaqueFixture, fixed } from '../../table/kits/pot.js';
 import { cjar, changePotFixture, potScaleFixture, evidenceFixture, changeRead, scaleRead, lampsRead, LAMPS } from '../../table/kits/pot-change.js';
 import { planChange, CASES } from '../../engine/reactdata-change.js';
@@ -404,17 +403,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Put a jar in the vessel, press Run, then sort it.'],
-  2: ['Run each jar, then slot your pick.'],
-  3: ['Drag your card into the slot.'],
-  4: ['Run the vessel, then pick a card.'],
-  5: ['Put each jar in the vessel, Run, then sort it.'],
-  6: ['Set the dials, Run, then type your answer.'],
-  7: ['Run each jar, then slot your pick.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

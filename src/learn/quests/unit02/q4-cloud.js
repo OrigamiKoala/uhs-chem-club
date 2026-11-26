@@ -32,7 +32,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   cloudTable, cloudPlate, viewFixture, ringTrack, cloudCard, ringTile, filmPiece,
   plateRead, ringRead, filmRead, trackRead, blurRead, blurAt, catchOf, axisOf, nodePm, shapeOf, FILMS, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM,
@@ -363,15 +362,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  2: ['Lay a film on the plate to count the dots inside it.'],
-  3: ['Try 1 shot, then 500 shots, and place your answer card.'],
-  4: ['Try a wave on the track.'],
-  5: ['Drag the joystick to rotate the clouds, then sort them.'],
-  6: ['Drag the joystick to rotate the clouds, then sort them.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

@@ -21,7 +21,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { thornTable, tmolFixture, molRead, arrowScript, tleadFixture, ttestFixture, resultOf, tcard, note } from '../../table/kits/thorn.js';
 import { sceneOf, pairsOf } from '../../engine/thorndata.js';
 import '../../engine/thorn-scenes/q5-reactions.js';
@@ -317,17 +316,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Drag the card you choose into the slot.'],
-  2: ['Tap an atom, then press the key.'],
-  3: ['Drag a card into the Sample slot to test it, then along the rail.'],
-  4: ['Tap a pair of dots, then an atom, then press the key.'],
-  5: ['Tap a bond to answer.'],
-  6: ['Tap an atom, then press the key.'],
-  7: ['Drag a card into the Sample slot, then into a tray.'],
-  8: ['Tap a carbon to answer.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

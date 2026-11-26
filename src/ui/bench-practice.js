@@ -14,6 +14,7 @@ import { getWorld } from '../learn/curriculum.js';
 import { benchProblems, benchWorked } from '../learn/bank.js';
 import { normalizePractice, recordAnswer, withShuffledOptions, mulberry32 } from '../learn/drills.js';
 import { mountWorked } from './worked-problem.js';
+import { toggleCalculator, closeCalculator, CALC_ICON } from './calculator.js';
 
 /** True when the bench has anything to ask. */
 export function hasBenchPractice(worldId, questId) {
@@ -41,6 +42,7 @@ export function runBenchPractice(worldId, questId) {
     const finish = () => {
       if (settled) return;
       settled = true;
+      closeCalculator();
       modalEl?.classList.remove('modal-fullscreen-practice');
       view?.dispose();
       resolve();
@@ -63,7 +65,10 @@ export function runBenchPractice(worldId, questId) {
             <div class="eyebrow lit">${esc(q.questTitle)}</div>
             <h2 id="bp-title" class="section-title">Practice</h2>
           </div>
-          <span class="tag live">${n + 1} / ${problems.length}</span>
+          <div class="bp-head-right">
+            <button type="button" class="btn-secondary quest-btn-sm lq-practice-calc" data-calc title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
+            <span class="tag live">${n + 1} / ${problems.length}</span>
+          </div>
         </div>
         <p class="lq-practice-question">${esc(q.question)}</p>
         <div class="lq-practice-options" role="group" aria-label="Answers">
@@ -77,6 +82,7 @@ export function runBenchPractice(worldId, questId) {
       `, { labelledBy: 'bp-title', onClose: finish });
 
       const modal = document.getElementById('modal-container');
+      modal.querySelector('[data-calc]')?.addEventListener('click', () => toggleCalculator());
       modal.querySelector('[data-skip]').addEventListener('click', leave);
       modal.querySelectorAll('[data-opt]').forEach(btn => btn.addEventListener('click', () => {
         if (picked !== null) return;

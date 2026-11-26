@@ -648,8 +648,9 @@ function paintStack(ctx, f, state, b) {
   ctx.beginPath(); ctx.moveTo(F.x(2), F.y(14.9)); ctx.lineTo(F.x(f.size.w - 2), F.y(14.9)); ctx.stroke();
   if (r.empty) say(ctx, 'nothing stacked', F.x(2), F.y(18.4), size, { color: DIM, maxW });
   else {
-    say(ctx, fmtSide(r.lhs) || '—', F.x(2), F.y(18.4), size, { color: PHOS, weight: 700, maxW });
-    say(ctx, `→ ${fmtSide(r.rhs) || '—'}`, F.x(2), F.y(22), size, { color: PHOS, weight: 700, maxW });
+    const sumCol = p.neutralSum ? PLATE_COLORS.text : PHOS;
+    say(ctx, fmtSide(r.lhs) || '—', F.x(2), F.y(18.4), size, { color: sumCol, weight: 700, maxW });
+    say(ctx, `→ ${fmtSide(r.rhs) || '—'}`, F.x(2), F.y(22), size, { color: sumCol, weight: 700, maxW });
   }
   if (!p.hideSum) say(ctx, `${p.symbol || 'ΔH'} ${r.empty ? '—' : signedKJ(r.dH)} kJ`, F.x(f.size.w - 2), F.y(f.size.h - 3.2), F.size(2.9, 6.5), { align: 'right', weight: 700, color: AMBER });
   if (p.ladder) {

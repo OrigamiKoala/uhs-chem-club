@@ -331,7 +331,8 @@ export function galvFixture(id, at, {
   if (link === 'seat') { const s = slot('link', 'Between beakers', cx, by - 5); slots.push(s); ids.linkSeat = s.id; }
   if (wire2) { const s = slot('wire', 'Wire seat', cx, oy + 5.5); slots.push(s); ids.wireSeat = s.id; }
   if (strips) {
-    const a = slot('L', ' ', lx + cupW / 2, by - 5); const b = slot('R', ' ', rx + cupW / 2, by - 5);
+    const a = slot('L', sealed ? 'Beaker A' : `${METALS[left].symbol} beaker`, lx + cupW / 2, by - 5, 19, 10);
+    const b = slot('R', sealed ? 'Beaker B' : `${METALS[right].symbol} beaker`, rx + cupW / 2, by - 5, 19, 10);
     slots.push(a, b); ids.seatL = a.id; ids.seatR = b.id;
   }
   if (marks) {
@@ -421,14 +422,14 @@ function paintBal(ctx, f, state, b) {
   const s = seatedIn(state, p.seat);
   const w = f.size.w;
   ctx.strokeStyle = STEEL; ctx.lineWidth = Math.max(1.6, F.len(0.5));
-  ctx.beginPath(); ctx.moveTo(F.x(3), F.y(15.5)); ctx.lineTo(F.x(w - 3), F.y(15.5)); ctx.stroke(); ctx.lineWidth = 1;
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(3), F.y(18.5), F.len(w - 6), F.len(9));
-  ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(18.5)) + 0.5, Math.round(F.len(w - 6)), Math.round(F.len(9)));
-  put(ctx, s ? `${massOf(s).toFixed(2)} g` : '—', F.x(w / 2), F.y(23), F.size(4.6, 11), { color: s ? AMBER : DIM, weight: 700, maxW: F.len(w - 8) });
-  put(ctx, 'Masses read', F.x(3), F.y(32), F.size(2.1, 6), { align: 'left', color: DUST, weight: 700 });
+  ctx.beginPath(); ctx.moveTo(F.x(3), F.y(18)); ctx.lineTo(F.x(w - 3), F.y(18)); ctx.stroke(); ctx.lineWidth = 1;
+  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(3), F.y(21), F.len(w - 6), F.len(10));
+  ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(21)) + 0.5, Math.round(F.len(w - 6)), Math.round(F.len(10)));
+  put(ctx, s ? `${massOf(s).toFixed(2)} g` : '—', F.x(w / 2), F.y(26), F.size(4.6, 11), { color: s ? AMBER : DIM, weight: 700, maxW: F.len(w - 8) });
+  put(ctx, 'Masses read', F.x(3), F.y(35), F.size(2.1, 6), { align: 'left', color: DUST, weight: 700 });
   (p.noted || []).slice(-5).forEach((n, i) => {
-    put(ctx, n.name, F.x(3), F.y(35.8 + i * 3.4), F.size(2.2, 6), { align: 'left', color: TEXT, maxW: F.len(w * 0.5) });
-    put(ctx, `${n.m.toFixed(2)} g`, F.x(w - 3), F.y(35.8 + i * 3.4), F.size(2.2, 6), { align: 'right', color: AMBER, weight: 700 });
+    put(ctx, n.name, F.x(3), F.y(39 + i * 3.5), F.size(2.2, 6), { align: 'left', color: TEXT, maxW: F.len(w * 0.5) });
+    put(ctx, `${n.m.toFixed(2)} g`, F.x(w - 3), F.y(39 + i * 3.5), F.size(2.2, 6), { align: 'right', color: AMBER, weight: 700 });
   });
 }
 
@@ -449,9 +450,9 @@ registerFixture('cellgalvbal', { paint: paintBal, settle });
 
 /** The balance: one pan (a seat) with a mass display and the list of what it has read. Returns `{ fixture, slot, size }`. */
 export function balanceFixture(id, at, { title = 'Balance', w = 38 } = {}) {
-  const h = 56;
+  const h = 60;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
-  const slot = { id: `${id}.pan`, label: ' ', at: { x: x0 + w / 2, y: y0 + 9.5 }, size: { w: 18, h: 9 } };
+  const slot = { id: `${id}.pan`, label: 'Pan', at: { x: x0 + w / 2, y: y0 + 11 }, size: { w: 24, h: 11 } };
   return {
     fixture: { id, kind: 'cellgalvbal', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { backdrop: true, seat: slot.id, noted: [] } },
     slot, size: { w, h }
@@ -518,19 +519,19 @@ for (const [kind, key] of [['cellgalvtube', 'tube'], ['cellgalvrod', 'rod'], ['c
   void key;
 }
 
-const TOOL = { tube: ['cellgalvtube', 'Salt tube', 'Fits between the beakers.'], rod: ['cellgalvrod', 'Glass rod', 'Fits between the beakers.'], wire: ['cellgalvwire', 'Second wire', 'Joins the two strips.'] };
+const TOOL = { tube: ['cellgalvtube', 'Salt tube'], rod: ['cellgalvrod', 'Glass rod'], wire: ['cellgalvwire', 'Second wire'] };
 
 /** A loose part for the cell: `which` is 'tube', 'rod' or 'wire'. */
 export function toolPiece(id, which, at, { caption = null } = {}) {
-  const [kind, label, cap] = TOOL[which];
-  return { id, kind, label, at, props: {}, caption: caption ?? cap };
+  const [kind, label] = TOOL[which];
+  return { id, kind, label, at, props: {}, ...(caption ? { caption } : {}) };
 }
 
 /** A strip of one metal (a key of `METALS`) with a start mass in grams. `sealed` hides the metal behind `label` (a letter). */
 export function stripPiece(id, metal, at, { label = null, sealed = false, m0 = 6, caption = null } = {}) {
   return {
     id, kind: 'cellgalvstrip', label: label ?? `${METALS[metal].symbol} strip`, at, props: { metal, sealed, m0, dm: 0 },
-    caption: caption ?? 'Lay it in a beaker seat or on the pan.'
+    ...(caption ? { caption } : {})
   };
 }
 

@@ -136,9 +136,9 @@ export async function checkVerdigrisQ8({ ok, fail }) {
   holds(['98 acetic acid', '2 acetate', '5 acetic acid', '95 acetate'].every(s => one.includes(s)), 'story beat 1 does not draw 98/2 and 5/95');
   holds(two.includes('pH 4.75 to 4.27') && two.includes('pH 4.74 to 4.70'), 'story beat 2 does not draw 4.75 to 4.27 and 4.74 to 4.70');
   holds(three.includes('40 acetate left') && three.includes('20 acetate left') && three.includes('2 acetate left') && three.includes('pH 3.05') && three.includes('pH 4.75'), 'story beat 3 does not draw 40, 20 and 2 acetate and pH 3.05');
-  holds(four.includes('10 dissolved, 30 solid') && four.includes('0 dissolved, 40 solid'), 'story beat 4 does not draw 10/30 and 0/40');
+  holds(four.includes('5 dissolved, 35 solid') && four.includes('0 dissolved, 40 solid'), 'story beat 4 does not draw 5/35 and 0/40');
   const say = story.beats.map(x => x.say);
-  holds(/98 acetic acid to 2 acetate/.test(say[0]) && /5 to 95/.test(say[0]) && /4\.75 to 4\.27/.test(say[1]) && /4\.74 to 4\.70/.test(say[1]) && /40 spheres/.test(say[2]) && /8 pours 2 were left/.test(say[2]) && /4\.75 to 3\.05/.test(say[2]) && /10 spheres of magnesium/.test(say[3]), 'a line of Vess quotes a number the scene does not draw');
+  holds(/98 acetic acid to 2 acetate/.test(say[0]) && /5 to 95/.test(say[0]) && /4\.75 to 4\.27/.test(say[1]) && /4\.74 to 4\.70/.test(say[1]) && /40 spheres/.test(say[2]) && /8 pours.*2 left/.test(say[2]) && /4\.75 to 3\.05/.test(say[2]) && /5 units of magnesium/.test(say[3]), 'a line of Vess quotes a number the scene does not draw');
   ok('q8-capacity story: every number Vess quotes is drawn from the same planner counts');
 
   /* ---- no refusal carries the rule ---- */

@@ -56,7 +56,7 @@ export function reactorRead(state, fid) {
   const plan = fed ? reactPlan(eq, feeds) : null;
   const yieldFrac = p.yieldFrac ?? 1;
   const outSpecies = p.outSpecies || null;
-  const outMol = plan && outSpecies ? plan.made[outSpecies] * yieldFrac : 0;
+  const outMol = plan ? (outSpecies ? plan.made[outSpecies] * yieldFrac : (Object.values(plan.made)[0] || 0) * yieldFrac) : 0;
   const outGrams = outSpecies ? round(outMol * molarMass(outSpecies), 4) : 0;
   const sig = sigOf(fid, feeds);
   const ran = fed && state.recorder.rows.some(r => r.label === sig);

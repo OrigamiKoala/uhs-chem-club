@@ -123,12 +123,12 @@ export const STAGES = [
     prompt: 'Which flask is neutral?',
     widget,
     table: (() => {
-      const f = P1_FLASKS.map((x, i) => flaskAt(scaleFlask, `f${i + 1}`, 24 + i * 46, 1, { solute: x.solute, label: x.label, w: 42, window: 14, legend: false, lens: true }));
+      const f = P1_FLASKS.map((x, i) => flaskAt(scaleFlask, `f${i + 1}`, 24 + i * 46, 1, { solute: x.solute, label: x.label, w: 42, window: 14, legend: false, lens: true, lensOnMeter: true }));
       return phTable({
         pieces: [scaleMeter('meter', { x: 160, y: 40 }, 'pH')],
         fixtures: [...f.map(x => x.fixture), selectorFixture('pick', 'The neutral flask is', { x: 96, y: 78 }, { options: ['Hydrochloric acid', 'Water', 'Sodium hydroxide', ' '], start: 4, w: 78 })],
         zones: { slots: f.map(x => x.slot) }
-      }, { w: 184, h: 92 });
+      }, { w: 184, h: 94 });
     })(),
     foes: LEACH_FOE,
     encounter: {
@@ -137,23 +137,23 @@ export const STAGES = [
       intent: 'The Leach holds three flasks up to its meter, each at a temperature of its own.'
     },
     hints: [
-      'Use the pH meter on each flask and the answer dial.',
+      'Drag the pH meter onto each flask to read its pH and ion counter, then pick the neutral flask.',
       'Compare each flask’s H₃O⁺ and OH⁻ concentrations on the ion counter.',
       'Neutral means [H₃O⁺] equals [OH⁻], even when temperature shifts pH away from 7.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Pick an option on the list.' };
       if (v === P1_PICK) return { ok: true };
       const f = P1_FLASKS[v - 1]; const s = p1Sol(f);
       return { ok: false, msg: `The ${f.name} flask reads ${fmt(s.pH, 2)}, with ${sci(s.h, 2)} M H₃O⁺ and ${sci(s.oh, 2)} M OH⁻.` };
     },
     get reward() {
-      const w = p1Sol(P1_FLASKS[1]); const a = p1Sol(P1_FLASKS[0]); const b = p1Sol(P1_FLASKS[2]);
+      const w = p1Sol(P1_FLASKS[1]); const b = p1Sol(P1_FLASKS[2]);
       return {
         log: 'Only the warm water held equal H₃O⁺ and OH⁻.',
         title: 'Neutral Is Equal Amounts',
-        body: `Warm water read ${fmt(w.pH, 2)} with equal H₃O⁺ and OH⁻, so it is neutral. The acid (${fmt(a.pH, 2)}) and base (${fmt(b.pH, 2)}) did not have equal amounts.`
+        body: `Both warm water and the dilute acid read pH ${fmt(w.pH, 2)}, while the warm base read ${fmt(b.pH, 2)}, yet only warm water held equal H₃O⁺ and OH⁻. Neutral means equal ions, not pH 7.`
       };
     }
   },
@@ -165,7 +165,7 @@ export const STAGES = [
     prompt: 'Order these three acid solutions from lowest pH to highest pH.',
     widget,
     table: (() => {
-      const f = P2_FLASKS.map((x, i) => flaskAt(flaskFixture, `f${i + 1}`, 24 + i * 46, 1, { solute: x.solute, label: x.name, w: 44, window: 16, meter: x.meter }));
+      const f = P2_FLASKS.map((x, i) => flaskAt(flaskFixture, `f${i + 1}`, 24 + i * 46, 1, { solute: x.solute, label: x.name, w: 44, window: 16, meter: x.meter, showCount: true }));
       return phTable({
         pieces: [
           meterPiece('meter', { x: 160, y: 40 }),
@@ -199,9 +199,9 @@ export const STAGES = [
     get reward() {
       const p = Object.fromEntries(P2_FLASKS.map(x => [x.key, fmt(p2PH(x), 2)]));
       return {
-        log: 'The most dilute acid had the highest percent ionized, not the lowest pH.',
-        title: 'Concentration vs. Percent Ionized',
-        body: `Formic acid is pH ${p.formic}, acetic acid ${p.acetic}, and hydrofluoric acid ${p.hf}. HF had the highest percent ionized, but it was the most dilute, so its [H₃O⁺] was lowest.`
+        log: 'The most dilute acid had the largest share of ions, not the lowest pH.',
+        title: 'Concentration vs. Share Ionized',
+        body: `Formic acid is pH ${p.formic}, acetic acid ${p.acetic}, and hydrofluoric acid ${p.hf}. HF had the largest share of molecules split into ions, but it was the most dilute, so it made the least H₃O⁺ overall.`
       };
     }
   },
@@ -213,14 +213,14 @@ export const STAGES = [
     prompt: 'Which salt solutions are acidic, which neutral and which basic?',
     widget,
     table: (() => {
-      const probe = flaskFixture('p', { x: 0, y: 0 }, { solute: P3_SALTS[0].solute, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12 });
-      const fl = P3_SALTS.map((s, i) => flaskFixture(`f${i + 1}`, { x: 24 + i * 46, y: 1 + probe.size.h / 2 }, { solute: s.solute, label: s.name, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12, meter: i === 0 }));
-      const trays = [['acidic', 'Acidic', 24], ['neutral', 'Neutral', 72], ['basic', 'Basic', 120]].map(([id, label, x]) => ({ id, label, at: { x, y: 76 }, size: { w: 44, h: 26 }, cell: 22, cellH: 12 }));
+      const probe = flaskFixture('p', { x: 0, y: 0 }, { solute: P3_SALTS[0].solute, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12, meter: true });
+      const fl = P3_SALTS.map((s, i) => flaskFixture(`f${i + 1}`, { x: 24 + i * 46, y: 1 + probe.size.h / 2 }, { solute: s.solute, label: s.name, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12, meter: true }));
+      const trays = [['acidic', 'Acidic', 24], ['neutral', 'Neutral', 72], ['basic', 'Basic', 120]].map(([id, label, x]) => ({ id, label, at: { x, y: 80 }, size: { w: 44, h: 30 }, cell: 42, cellH: 10 }));
       return phTable({
-        pieces: [meterPiece('meter', { x: 162, y: 40 }), ...P3_SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 20 + i * 40, y: 52 }))],
-        fixtures: [...fl.map(f => f.fixture), plaqueFixture('parents', 'Strong parents', { x: 166, y: 78 }, ['Acids: HCl, HNO₃', 'Bases: NaOH, KOH'], { w: 44 })],
+        pieces: [meterPiece('meter', { x: 162, y: 40 }), ...P3_SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 24 + i * 46, y: 50 }))],
+        fixtures: [...fl.map(f => f.fixture), plaqueFixture('parents', 'Strong parents', { x: 166, y: 80 }, ['Acids: HCl, HNO₃', 'Bases: NaOH, KOH'], { w: 44 })],
         zones: { trays, slots: fl.filter(f => f.slot).map(f => f.slot) }
-      }, { w: 192, h: 100 });
+      }, { w: 192, h: 104 });
     })(),
     foes: LEACH_FOE,
     encounter: {
@@ -229,8 +229,8 @@ export const STAGES = [
       intent: 'The Leach pours three salts into its vats and calls them all safe.'
     },
     hints: [
-      'Put the pH meter on ammonium nitrate, read the strong-parents plate, then drag the cards into the trays.',
-      'Compare the flask you measured with the other two using the ions on the plate.',
+      'Put the pH meter on the salt flasks, check the strong-parents plate, then drag each card into its tray.',
+      'Compare each flask’s reading with the ions listed on the plate.',
       'Ions from strong parents leave water neutral; an ion from a weak parent shifts the pH.'
     ],
     check(state) {
@@ -258,13 +258,13 @@ export const STAGES = [
   {
     id: 'p4-dye',
     title: 'Phase 4 · The Dosing Run',
-    prompt: 'Which indicator changes colour at the equivalence point of this titration?',
+    prompt: 'When HCl is poured into the ammonia flask, which indicator changes colour at equivalence?',
     widget,
     table: phTable({
       pieces: DYES.map((id, i) => tag(`c-${id}`, INDICATORS[id].name[0].toUpperCase() + INDICATORS[id].name.slice(1), { x: 112, y: 12 + i * 17 })),
       fixtures: [
         buretteFixture('bur', { x: 48, y: 46 }, {
-          samples: [{ title: 'Ammonia', sub: ['25.0 mL, 0.10 M', 'tube: hydrochloric acid'], ...P4_SPEC, meter: false }], cap: 40, rack: DYES
+          samples: [{ title: 'Ammonia', sub: ['25.0 mL, 0.10 M', 'tube: hydrochloric acid'], ...P4_SPEC, meter: true }], cap: 40, rack: DYES
         })
       ],
       zones: { slots: [{ id: 'dye', label: 'My indicator', at: { x: 150, y: 40 }, size: { w: 36, h: 14 } }] }
@@ -276,7 +276,7 @@ export const STAGES = [
       intent: 'The Leach doses a vat of ammonia from a tube of acid.'
     },
     hints: [
-      'Pour HCl while watching the four indicator tubes, then place a card in the slot.',
+      'Pour HCl while watching the pH readout and the four indicator tubes, then place a card in the slot.',
       'Compare the volume where each indicator changes colour with the equivalence volume.',
       'Look for the indicator that changes colour right across the steep pH drop at equivalence.'
     ],
@@ -310,7 +310,7 @@ export const STAGES = [
       const a = flaskAt(mixFixture, 'f1', 24, 1, { title: '100 acetic acid, 100 acetate', ...P5_REF[0], pour: false });
       const b = flaskAt(mixFixture, 'f2', 70, 1, { title: '10 acetic acid, 100 acetate', ...P5_REF[1], pour: false });
       return phTable({
-        fixtures: [a.fixture, b.fixture, plaqueFixture('plate', 'Acetic acid', { x: 120, y: 14 }, [`pKa ${fmt(P5_PKA, 2)}`, `Target pH ${fmt(P5_TARGET, 2)}`], { w: 40 })]
+        fixtures: [a.fixture, b.fixture, plaqueFixture('plate', 'Acetic acid', { x: 120, y: 16 }, [`pKa ${fmt(P5_PKA, 2)}`, `Target pH ${fmt(P5_TARGET, 2)}`, 'pH = pKa + log(ratio)'], { w: 46 })]
       }, { w: 184, h: 52 });
     })(),
     foes: LEACH_FOE,

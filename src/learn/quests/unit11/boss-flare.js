@@ -50,7 +50,7 @@ const p5 = planFoe(5);
 
 const DEBRIEF = {
   title: 'The Flare stabilized',
-  body: 'You read the cracking tower rate, rate law, half-lives, ignition barrier, and mechanism, shutting down the runaway spike.',
+  body: 'You measured the tower\'s surge rate, rate law, half-lives, ignition barrier, and mechanism, shutting down the runaway flare.',
   filed: 'Filed: the tower was seeded with a catalytic powder whose slow intermediate step matches the Fifth additive signature.'
 };
 
@@ -71,10 +71,12 @@ export const STAGES = [
           a0: 0.80,
           tMax: 25,
           mode: 'reactant',
-          freezeAt: 15,
+          freezeAt: 1,
+          noRun: true,
+          readout: '5 s: 0.50  ·  15 s: 0.20 mol/L',
           markedPoints: [
-            { t: p1.t1, v: p1.c1, label: '5 s: 0.50 M' },
-            { t: p1.t2, v: p1.c2, label: '15 s: 0.20 M' }
+            { t: p1.t1, v: p1.c1, label: '5 s: 0.50 mol/L' },
+            { t: p1.t2, v: p1.c2, label: '15 s: 0.20 mol/L' }
           ],
           w: 104,
           h: 44
@@ -89,15 +91,15 @@ export const STAGES = [
     },
     hints: [
       'Find the two marked points on the curve.',
-      'Compare the concentrations and the times of the two points.',
-      'A rate is an amount of change for each unit of time.'
+      'Compare the concentrations and the times at 5 s and 15 s.',
+      'Average rate is the drop in concentration divided by the elapsed time.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'rate');
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Enter the average rate in mol/(L·s).' };
       if (Math.abs(val - 0.30) < 0.01) return { ok: false, msg: '0.30 mol/L is the total drop, not divided by the 10 s interval.' };
-      if (Math.abs(val - 0.02) < 0.002) return { ok: false, msg: 'Dividing by 15 s uses the clock time rather than the 10 s interval from 5 s to 15 s.' };
-      if (Math.abs(val - p1.answer) > 0.002) return { ok: false, msg: 'Compare (0.50 − 0.20) mol/L over (15 − 5) s.' };
+      if (Math.abs(val - 0.02) < 0.002) return { ok: false, msg: 'Dividing by 15 s uses the clock reading instead of the 10 s span from 5 s to 15 s.' };
+      if (Math.abs(val - p1.answer) > 0.002) return { ok: false, msg: 'Divide the concentration drop between 5 s and 15 s by the time elapsed.' };
       return { ok: true };
     },
     reward: {
@@ -115,19 +117,19 @@ export const STAGES = [
     widget,
     table: rateTable({
       fixtures: [
-        rateslogFixture('log', { x: 44, y: 32 }, {
+        rateslogFixture('log', { x: 40, y: 32 }, {
           title: p2.species,
           species: ['A', 'B'],
           initialRows: p2.rows,
-          w: 72,
+          w: 70,
           h: 42
         }),
-        rateboardFixture('board', { x: 105, y: 42 }, {
+        rateboardFixture('board', { x: 102, y: 40 }, {
           title: 'Rate law',
           species: ['A', 'B'],
-          maxOrder: 3,
-          w: 42,
-          h: 26
+          maxOrder: 2,
+          w: 48,
+          h: 36
         })
       ]
     }),
@@ -138,16 +140,16 @@ export const STAGES = [
       intent: 'The Flare mixes feeds A and B across three initial-rate runs.'
     },
     hints: [
-      'Find two runs in the log where only one concentration changes.',
-      'Compare what happens to the rate in each pair of runs.',
-      'Doubling that changes the rate by a whole-number factor, and the factor tells the order.'
+      'Pick two runs in the log where only one concentration changes.',
+      'See how many times larger the rate gets in each pair.',
+      'Doubling a concentration gives 1× for order 0, 2× for order 1, and 4× for order 2.'
     ],
     check(state) {
       const oA = Math.round(state.table.fixtures.board?.dials?.o0?.value ?? 0);
       const oB = Math.round(state.table.fixtures.board?.dials?.o1?.value ?? 0);
       if (oA === 0 && oB === 0) return { ok: false, notYet: true, msg: 'Set the orders of A and B on the Rate law board.' };
-      if (oA !== p2.orders.A) return { ok: false, msg: 'Between Run 1 and Run 2, doubling [A] makes the rate 4 times as fast.' };
-      if (oB !== p2.orders.B) return { ok: false, msg: 'Between Run 1 and Run 3, doubling [B] doubles the rate.' };
+      if (oA !== p2.orders.A) return { ok: false, msg: 'Check the run pair in the log where only [A] changes.' };
+      if (oB !== p2.orders.B) return { ok: false, msg: 'Check the run pair in the log where only [B] changes.' };
       return { ok: true };
     },
     reward: {
@@ -160,14 +162,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     id: 'p3-halflife',
-    title: 'Phase 3 · Peroxide Core',
-    prompt: 'What fraction of the peroxide core remains after 48 s?',
+    title: 'Phase 3 · Fuel Core',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Read the half-life and elapsed time on the plate, then halve the fuel once for each half-life. You can type a decimal or a fraction like 1/16.'
+    },
+    prompt: 'What fraction of the fuel core remains after 48 s?',
     entry: { id: 'frac', label: 'Fraction left', unit: '' },
     widget,
     table: rateTable({
       fixtures: [
-        plaqueFixture('core', p3.species, { x: 60, y: 32 }, [
-          'First-order decomposition',
+        plaqueFixture('core', 'Fuel core decay', { x: 60, y: 32 }, [
+          'First-order breakdown',
           `Half-life = ${p3.tHalf} s`,
           'Elapsed time = 48 s'
         ], { w: 92 })
@@ -177,25 +183,25 @@ export const STAGES = [
     encounter: {
       species: 'the flare',
       act: 'Time Decay',
-      intent: 'The Flare peroxide core decays by first-order kinetics with a 12 s half-life.'
+      intent: 'The Flare fuel core breaks down by first-order kinetics with a 12 s half-life.'
     },
     hints: [
-      'Find the half-life marked on the curve.',
-      'Compare the time asked about with the half-life.',
-      'Each half-life leaves the same fraction of what was there before it.'
+      'Read the half-life and elapsed time on the plate.',
+      'Compare the elapsed time with the half-life to count how many half-lives pass.',
+      'Each half-life cuts what is left in half again.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'frac');
-      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Enter the remaining fraction as a decimal.' };
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Enter the remaining fraction (decimal or fraction).' };
       if (Math.abs(val - 0.125) < 0.005) return { ok: false, msg: '0.125 is 3 half-lives (36 s), not 4 half-lives (48 s).' };
       if (Math.abs(val - 0.25) < 0.005) return { ok: false, msg: '0.25 is 2 half-lives (24 s); 48 s is 4 half-lives.' };
-      if (Math.abs(val - p3.answer) > 0.002) return { ok: false, msg: '48 s ÷ 12 s = 4 half-lives, so the core halves four times.' };
+      if (Math.abs(val - p3.answer) > 0.002) return { ok: false, msg: '48 s ÷ 12 s = 4 half-lives, so the fuel halves four times.' };
       return { ok: true };
     },
     reward: {
       log: 'Phase 3 remaining fraction after 4 half-lives = 0.0625.',
       title: 'Core Timed',
-      body: 'Four 12 s half-lives leave (1/2)^4 = 1/16 = 0.0625 of the starting peroxide.'
+      body: 'Four 12 s half-lives leave (1/2)^4 = 1/16 = 0.0625 of the starting fuel.'
     }
   },
 
@@ -213,6 +219,7 @@ export const STAGES = [
           reactants: p4.reactants,
           ts: p4.ts,
           products: p4.products,
+          noProgress: true,
           w: 96,
           h: 44
         })
@@ -225,16 +232,16 @@ export const STAGES = [
       intent: 'The Flare holds reactants at 35 kJ/mol behind a 115 kJ/mol peak.'
     },
     hints: [
-      'Find the levels of the reactants and of the peak on the profile.',
-      'The activation energy is a climb, not a height measured from zero.',
-      'Reason about where the climb starts and where it ends.'
+      'Read the reactants level and the peak level from the dashed lines.',
+      'Activation energy is the climb from reactants to the peak, not the height from zero.',
+      'Find how much energy reactants must gain to reach the peak.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'ea');
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Enter the forward activation energy in kJ/mol.' };
-      if (Math.abs(val - 100) < 0.5) return { ok: false, msg: '100 kJ/mol is the reverse barrier from P = 15 up to TS = 115.' };
-      if (Math.abs(val - 115) < 0.5) return { ok: false, msg: '115 kJ/mol is the peak height from zero, not from R = 35.' };
-      if (Math.abs(val - p4.answer) > 0.5) return { ok: false, msg: 'Compare the reactants level (35) and transition state peak (115).' };
+      if (Math.abs(val - 100) < 0.5) return { ok: false, msg: '100 kJ/mol is the reverse climb from the products level up to the peak.' };
+      if (Math.abs(val - 115) < 0.5) return { ok: false, msg: '115 kJ/mol is the peak height from zero; start from the reactants level instead.' };
+      if (Math.abs(val - p4.answer) > 0.5) return { ok: false, msg: 'Compare the reactants level and the transition state peak on the profile.' };
       return { ok: true };
     },
     reward: {
@@ -252,18 +259,19 @@ export const STAGES = [
     widget,
     table: rateTable({
       pieces: [
-        stmt('mech1', 'Single slow step: X + Y → Z', { x: 96, y: 12 }),
-        stmt('mech2', '1 (fast): 2 X ⇌ X₂; 2 (slow): X₂ + Y → Z', { x: 96, y: 26 }),
-        stmt('mech3', '1 (slow): X + X → X₂; 2 (fast): X₂ + Y → Z', { x: 96, y: 40 })
+        stmt('mech1', '1 (slow): X + Y → XY; 2 (fast): XY + X → Z', { x: 96, y: 9 }),
+        stmt('mech2', '1 (fast): 2 X ⇌ X₂; 2 (slow): X₂ + Y → Z', { x: 96, y: 22.5 }),
+        stmt('mech3', '1 (slow): X + X → X₂; 2 (fast): X₂ + Y → Z', { x: 96, y: 36 }),
+        stmt('mech4', '1 (fast): 2 Y ⇌ Y₂; 2 (slow): X + Y₂ → Z', { x: 96, y: 49.5 })
       ],
       fixtures: [
-        plaqueFixture('obs', p5.species, { x: 35, y: 32 }, [
+        plaqueFixture('obs', p5.species, { x: 34, y: 20 }, [
           `Measured: ${p5.measuredLaw}`,
           'Overall: 2 X + Y → Z'
-        ], { w: 58 })
+        ], { w: 56 })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Matching mechanism', at: { x: 96, y: 52 }, size: { w: 52, h: 8 } }]
+        slots: [{ id: 'ans', label: 'Matching mechanism', at: { x: 34, y: 48 }, size: { w: 54, h: 12 } }]
       }
     }),
     foes: FLARE_FOE,
@@ -274,14 +282,15 @@ export const STAGES = [
     },
     hints: [
       'Read the measured rate law on the plate.',
-      'Find the slow step in each candidate mechanism.',
-      'A fast reversible first step keeps its product in step with its reactants.'
+      'Check the slow step in each candidate mechanism.',
+      'A fast reversible first step ties its intermediate to the starting reactants.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a mechanism card in "Matching mechanism".' };
-      if (card.id === 'mech1') return { ok: false, msg: 'A single slow step X + Y gives rate = k[X][Y], first order in X.' };
+      if (card.id === 'mech1') return { ok: false, msg: 'A slow Step 1 of X + Y gives rate = k[X][Y], first order in X.' };
       if (card.id === 'mech3') return { ok: false, msg: 'A slow Step 1 of 2 X gives rate = k[X]², which has no [Y] dependence.' };
+      if (card.id === 'mech4') return { ok: false, msg: 'Fast 2 Y ⇌ Y₂ followed by slow X + Y₂ gives rate = k[X][Y]², not k[X]²[Y].' };
       return { ok: true };
     },
     reward: {

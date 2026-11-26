@@ -33,7 +33,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   shellsTable, shelf, hand, electronToken, addressStrip, marker,
   readOf, rackOf, addressOfFinder, finderLight, placedTokens, addressOfToken, sameAddress, findRoom, validAddress, shellCapacity, reachPm,
@@ -280,14 +279,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Turn the n, l and ml dials:', 'the orbital they name lights up.'],
-  2: ['Drag each electron card onto the diagram.'],
-  4: ['Drag each electron card onto its exact orbital box.'],
-  5: ['Drag each electron card onto its exact 3s, 3p, or 3d box.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

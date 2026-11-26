@@ -37,11 +37,11 @@ const SUB = '₀₁₂₃₄₅₆₇₈₉';
 /** A count as a subscript (`2` → `₂`); 1 prints nothing. */
 export const sub = n => (n === 1 ? '' : String(n).split('').map(d => SUB[+d]).join(''));
 const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
-/** A charge as printed: `2+`, `−`, `3+`. The font has no superscript minus, so the sign is a plain true minus (−) and a plain plus. */
+/** A charge as printed: `²⁺`, `⁻`, `³⁺`. */
 export function chargeText(q) {
   const a = Math.abs(q);
   const digits = a === 1 ? '' : String(a).split('').map(d => SUP[+d]).join('');
-  return `${digits}${q > 0 ? '+' : '−'}`;
+  return `${digits}${q > 0 ? '⁺' : '⁻'}`;
 }
 
 /** Parse a formula (`Ca(NO3)2`, `Fe2O3`, `CH3COOH`) into element counts. Digits only; no charges, no dots. */

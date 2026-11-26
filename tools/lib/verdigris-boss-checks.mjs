@@ -132,7 +132,7 @@ export async function checkVerdigrisBoss({ ok, fail }) {
 
   /* ---- the story and the case file ---- */
   const qs = QUEST_STORY['unit09/boss-leach'];
-  holds(Boolean(qs) && qs.scene === 'leach-open' && qs.beats.length === 4 && typeof qs.pin === 'string' && qs.pin.length > 0, 'the finale has four beats and a Case Pin');
+  holds(Boolean(qs) && qs.scene === 'leach-open' && qs.beats.length === 5 && typeof qs.pin === 'string' && qs.pin.length > 0, 'the finale has five beats and a Case Pin');
   holds(Boolean(CLUES.clue_verdigris_leach) && EPISODES.unit09.bossId === 'boss-leach' && EPISODES.unit09.clueId === 'clue_verdigris_leach' && L.CLUE_ID === 'clue_verdigris_leach', 'the clue is in the Case File and the episode names the boss');
   // The numbers in the beats are the planners'.
   const say = qs.beats.map(b => b.say).join(' ');

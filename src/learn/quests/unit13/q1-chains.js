@@ -19,7 +19,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   thornTable, tbuildFixture, buildRead, buildScript, whereOn, tmolFixture, tleadFixture, tchoiceFixture, chosenIndex, note, plaqueFixture
 } from '../../table/kits/thorn.js';
@@ -320,17 +319,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Tap a carbon to add a hydrogen to it.'],
-  2: ['Drag the card you choose into the slot.'],
-  3: ['Tap a dashed ring to add a carbon; tap a carbon to add a hydrogen.'],
-  4: ['Tap a dashed ring to add a carbon; type your answer in the box.'],
-  5: ['Tap a dashed ring to add a carbon.'],
-  6: ['Tap a name to answer.'],
-  7: ['Tap the gap between two carbons to bond them; type your answer.'],
-  8: ['Tap a dashed ring to add a carbon; tap between two carbons to change the bond.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

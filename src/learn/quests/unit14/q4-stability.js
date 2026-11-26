@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { nukeTable, nchartFixture, nnucFixture, nchoiceFixture, chosenIndex, chartMove, pickValue, chartPick, note } from '../../table/kits/nuke.js';
 import { nameOf, stable, stepOf, DECAY } from '../../engine/nucdata.js';
 
@@ -252,8 +251,6 @@ export const STAGES = [
   })
 ];
 
-const NOTES = { 2: ['Drag the card you choose into the slot.'] };
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

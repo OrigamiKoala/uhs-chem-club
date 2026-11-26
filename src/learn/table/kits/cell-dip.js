@@ -384,8 +384,8 @@ export const hydrogenPiece = (id, at) => ({ id, kind: 'cellgas', label: 'H₂', 
 export const gasPiece = (id, label, at) => ({ id, kind: 'cellgas', label, at, props: {}, caption: null });
 
 /** A strip of one metal (a key of `METALS`); its face says its symbol, or "X" when `sealed`. */
-export const stripPiece = (id, metal, at, { label = null, sealed = false, caption = 'Dip it in a beaker.' } = {}) => ({
-  id, kind: 'celldipstrip', label: label ?? (sealed ? 'X' : METALS[metal].symbol), at, props: { metal, sealed }, caption
+export const stripPiece = (id, metal, at, { label = null, sealed = false, caption = null } = {}) => ({
+  id, kind: 'celldipstrip', label: label ?? (sealed ? 'X' : METALS[metal].symbol), at, props: { metal, sealed }, ...(caption ? { caption } : {})
 });
 
 export { DIM, NAIL_SPOTS };

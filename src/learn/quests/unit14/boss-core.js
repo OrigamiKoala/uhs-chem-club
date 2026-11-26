@@ -9,7 +9,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   nukeTable, ncountFixture, keptCount, nsrc, nshield, nchoiceFixture, chosenIndex, nnucFixture, nchartFixture, chartPick, pickValue,
   ndecayFixture, nscaleFixture, plaqueFixture
@@ -199,7 +198,6 @@ export const STAGES = [
   }
 ];
 
-applyNotes(STAGES, { 3: ['Press "Watch the Nucleus"; tap a square on the chart.'] });
 
 export const DEBRIEF = {
   speaker: SPEAKER,

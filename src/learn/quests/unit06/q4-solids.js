@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { matterTable, note, whereIs, leadFixture } from '../../table/kits/matter.js';
 import { solidCard, solidTestFixture, cardRows } from '../../table/kits/matter-tester.js';
 import { SOLIDS, meltText, currentReading } from '../../engine/matterdata-tester.js';
@@ -344,8 +343,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines removed from the plate. */
-applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

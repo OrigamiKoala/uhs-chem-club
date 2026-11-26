@@ -24,7 +24,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { potTable, plaqueFixture, stmt } from '../../table/kits/pot.js';
 import { eqBench, boardRead, windowRead, ledgerRead, tallyRead, tallyFixture, formulaFixture, formulaRead, stateTile } from '../../table/kits/pot-balance.js';
 import { parseEquation, parseFormula, pretty, atomLedger } from '../../engine/reactdata.js';
@@ -83,7 +82,7 @@ const GUESS = { chg: 'Change the small number in H₂O', front: 'Put a number in
 const board = t => boardRead(t, 'bd');
 const untouched = r => r.coefs.every(n => n === 1) && !Object.keys(r.subs).length;
 const rowOf = (rows) => rows.find(r => r.left !== r.right);
-const countsMsg = (row) => `${pretty(row.el)} does not match: ${row.left} on the left and ${row.right} on the right.`;
+const countsMsg = (row) => `${pretty(row.el)} does not match: ${row.left} on the left and ${row.right} on the right — raise the ${row.left < row.right ? 'left' : 'right'} side.`;
 
 /** A balanced-or-not verdict for a board stage: the first atom/group row that disagrees. */
 function ledgerMiss(t, lid = 'led') {
@@ -319,11 +318,16 @@ export const STAGES = [
     return {
       id: 's7-groups',
       title: 'Groups That Stay Whole',
-      prompt: 'Which coefficients balance this equation if you count each ringed group as one unit?',
+      briefing: {
+        speaker: SPEAKER,
+        fx: 'win',
+        body: 'Each dashed ring in the particle view marks a group of atoms (OH, PO₄) that stays whole through the reaction. Count each ring as one piece.'
+      },
+      prompt: 'With each dashed ring (OH, PO₄) counted as one piece, which coefficients balance this equation?',
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Turn the four dials on the board and read the ledger of pieces.',
+        'Compare the Reactants and Products columns of the ledger.',
         'Look at the rings in the particle view: what is inside a ring stays whole, so compare how many of each ring stand on each side.',
         'Balance the pieces that appear in only one substance on each side first, then the one that appears in two.'
       ],
@@ -350,9 +354,9 @@ export const STAGES = [
       title: 'Sealed Bags',
       prompt: 'What is the formula of the substance in each sealed bag?',
       widget,
-      table: potTable({ fixtures: [...b.fixtures, formulaFixture('fm', { x: 39, y: 40 }, { elements: ['P', 'O'] })], zones: { slots: [] } }),
+      table: potTable({ fixtures: [...b.fixtures, formulaFixture('fm', { x: 39, y: 45 }, { elements: ['P', 'O'] })], zones: { slots: [] } }),
       hints: [
-        'Count the atoms in the particle view and set the "P atoms" and "O atoms" dials.',
+        'Look at how many P and O atoms go in on the left, and how many sealed bags come out on the right.',
         'Count each kind of atom on the left of the particle view, then count how many sealed bags are on the right.',
         'The atoms in the bags are the atoms that went in, shared equally among the bags.'
       ],
@@ -362,7 +366,7 @@ export const STAGES = [
         const want = parseFormula(SEALED_FORMULA);
         const same = Object.keys(want).length === Object.keys(r.counts).length && Object.entries(want).every(([el, n]) => r.counts[el] === n);
         if (same) return { ok: true };
-        return { ok: false, msg: `${r.text} has ${r.counts.P || 0} P and ${r.counts.O || 0} O, and the particle view shows 2 sealed bags after the change.` };
+        return { ok: false, msg: `${r.text} has ${r.counts.P || 0} P and ${r.counts.O || 0} O, and the particle view shows 2 sealed bags after the change. Atoms cannot disappear: 4 P and 10 O went in.` };
       },
       reward: {
         log: 'P₄ + 5 O₂ → 2 P₂O₅.',
@@ -373,18 +377,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Set both tally dials to your count.'],
-  2: ['Drag the card you choose into the slot.'],
-  3: ['Turn the board dials and read the ledger.'],
-  4: ['Turn the board dials. The particle view cannot be changed.'],
-  5: ['Drag a tile into the slot under each substance.'],
-  6: ['Turn the board dials and count atoms in the particle view.'],
-  7: ['Turn the board dials and read the ledger.'],
-  8: ['Turn the formula dials to build the formula.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

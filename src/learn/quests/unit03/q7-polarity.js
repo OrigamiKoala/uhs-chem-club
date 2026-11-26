@@ -30,7 +30,6 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import { createTable } from '../../table/model.js';
 import { RIG_MOLECULES, planDipole, bondKind, EN, ionicPercent, BOND_DIPOLE, E_DEBYE_PER_ANGSTROM } from '../../engine/vsepr.js';
 import {
@@ -270,9 +269,6 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

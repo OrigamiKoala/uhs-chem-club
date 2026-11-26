@@ -333,9 +333,8 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+/** Legend lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  2: ['Drag the right-hand atom along its track.'],
   3: ['A ring lights on an atom when its outer shell is full (full s + p = 8 for most atoms).'],
   4: ['The number on each atom is its electronegativity.'],
   5: ['Atoms keep bonding until every outer shell is full.']

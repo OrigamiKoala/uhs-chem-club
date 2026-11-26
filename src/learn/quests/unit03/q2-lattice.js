@@ -448,10 +448,9 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+/** Legend line printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  2: ['A streak behind a particle', 'shows that it is moving.'],
-  3: ['Drag a block onto the hotplate,', 'then turn the heat dial.']
+  2: ['A streak behind a particle', 'shows that it is moving.']
 };
 applyNotes(STAGES, NOTES);
 

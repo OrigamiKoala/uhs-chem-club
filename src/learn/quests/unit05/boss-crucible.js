@@ -21,7 +21,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, eqn, bondChip, rxnFixture, cupFixture, plotFixture, plaqueFixture, markerFixture, selectorFixture, ledgerFixture, stackFixture, markerRead, dialAt,
   plotRead, ledgerRead, stackRead, cupRead, whereIs, fixed, gibbsFreeEnergy, SPECIFIC_HEAT_WATER, FORMATION_TABLE, bondEnthalpySum, heatTransfer, crossingTemperature
@@ -283,15 +282,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Type your answer in the box below.'],
-  2: ['Type your estimated ΔH in the box below.'],
-  3: ['Drag the needed cards into the stack; tap a card to Flip.'],
-  4: ['Type your ΔS in the box below.'],
-  5: ['Drag the ball along the line, then type your answer in kelvin.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

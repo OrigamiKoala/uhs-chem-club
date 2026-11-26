@@ -103,9 +103,9 @@ export async function checkBrinewireQ3({ ok, fail }) {
   holds(run(4, [go('rig'), dial('pick', 'value', 1)]).ok && !run(4, [go('rig'), dial('pick', 'value', 2)]).ok, 'stage 5 grading');
   holds(/Zn²⁺ count rose from 8 to 10 in the right beaker/.test(run(4, [go('rig'), dial('pick', 'value', 2)]).msg), 'stage 5 refusal does not name the count');
   const w = [put('fe', 'slot:bal.pan'), put('fe', 'slot:rig.L'), put('cu', 'slot:bal.pan'), put('cu', 'slot:rig.R'), go('rig'), put('fe', 'slot:bal.pan')];
-  holds(run(5, [...w, dial('pick', 'value', 2)]).ok && !run(5, [...w, dial('pick', 'value', 1)]).ok, 'stage 6 grading');
-  holds(/read 6\.00 g and then 5\.63 g/.test(run(5, [...w, dial('pick', 'value', 1)]).msg), 'stage 6 refusal does not name the two readings');
-  holds(/has not been weighed/.test(run(5, [dial('pick', 'value', 1)]).msg), 'stage 6 refusal for an unweighed strip');
+  holds(run(5, [...w, dial('scene', 'p', 2)]).ok && !run(5, [...w, dial('scene', 'p', 1)]).ok, 'stage 6 grading');
+  holds(/read 6\.00 g and then 5\.63 g/.test(run(5, [...w, dial('scene', 'p', 1)]).msg), 'stage 6 refusal does not name the two readings');
+  holds(/has not been weighed/.test(run(5, [dial('scene', 'p', 1)]).msg), 'stage 6 refusal for an unweighed strip');
   const chips = ['k0', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6'];
   holds(run(6, chips.map((id, i) => put(id, `rail:${i}`))).ok, 'stage 7 refuses the shorthand');
   holds(run(6, chips.map((id, i) => put(id, `rail:${i}`)).concat([])).ok && run(6, ['k0', 'k5', 'k2', 'k3', 'k4', 'k1', 'k6'].map((id, i) => put(id, `rail:${i}`))).ok, 'stage 7 does not treat the two single bars alike');

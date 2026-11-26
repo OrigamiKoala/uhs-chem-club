@@ -89,9 +89,9 @@ export function reactorFixture(id, at, o = {}) {
   const dials = {};
   if (pour) dials.pour = { min: 1, max: pour.list.length, step: 1, value: pour.start ?? 1, label: pourLabel, labels: pour.list.map(v => `${v} ${pour.unit}`) };
   const nd = Object.keys(dials).length;
-  const top = contentTop(nd);
+  const top = nd ? contentTop(nd) + 3.4 : contentTop(0);
   const seatH = seats || out ? 16.4 : 2.4;
-  const h = Math.round((top + seatH + (window || gas ? (seats || out ? 19 : 27) : 10.6) + 7) * 10) / 10;
+  const h = Math.round((top + seatH + (window || gas ? (seats || out ? 19 : 25) : 10.6) + 7) * 10) / 10;
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
   const slotY = y0 + top + 7.5;
@@ -110,7 +110,7 @@ export function reactorFixture(id, at, o = {}) {
   return {
     fixture: {
       id, kind: 'reactor', label: title, at: { ...at }, size: { w, h }, dials, runLabel,
-      props: { backdrop: true, eq, ins, out: outId, outSpecies: out, pour: pour ? { ...pour, label: pourLabel } : null, plenty, unitMol, window, yieldFrac, gas, top, panelTop: Math.round((top + seatH) * 10) / 10 }
+      props: { backdrop: true, eq, ins, out: outId, outSpecies: out, pour: pour ? { ...pour, label: pourLabel } : null, plenty, unitMol, window, yieldFrac, gas, top, panelTop: Math.round((top + seatH) * 10) / 10, ...(nd ? { grab: { pour: 3.4 }, dialIndent: 5 } : {}) }
     },
     slots, ins, outSlot: outId, size: { w, h }
   };
@@ -145,24 +145,47 @@ function paintReactor(ctx, f, state, b) {
   const supplied = p.plenty.length ? `SUPPLIED: ${p.plenty.map(pretty).join(', ')}` : '';
   if (supplied) say(ctx, supplied, F.x(px + 1.5), F.y(py + ph - 1.8), F.size(1.9, 5.8), { color: DIM });
   if (p.gas) {
-    // A syringe: the barrel stands as long as the gas fills, between 0 and its top mark.
-    const gx = px + 3; const gw = pw - 8; const gy = py + ph * 0.5 - 2.2; const gh = 4.4;
+    // A gas syringe: barrel with plunger and rising gas bubbles.
+    const gx = px + 3; const gw = pw - 10; const gy = py + ph * 0.5 - 2.6; const gh = 5.2;
     ctx.strokeStyle = DUST; ctx.strokeRect(Math.round(F.x(gx)) + 0.5, Math.round(F.y(gy)) + 0.5, Math.round(F.len(gw)), Math.round(F.len(gh)));
     const L = r.ran && r.gas ? r.gas.L : 0;
-    ctx.fillStyle = inkOfSpecies(p.gas.species); ctx.globalAlpha = 0.7;
-    ctx.fillRect(F.x(gx) + 1, F.y(gy) + 1, Math.max(0, F.len(gw * Math.min(1, L / p.gas.maxL)) - 2), F.len(gh) - 2); ctx.globalAlpha = 1;
+    const fillW = Math.max(0, F.len(gw * Math.min(1, L / p.gas.maxL)) - 2);
+    ctx.fillStyle = inkOfSpecies(p.gas.species); ctx.globalAlpha = 0.65;
+    ctx.fillRect(F.x(gx) + 1, F.y(gy) + 1, fillW, F.len(gh) - 2); ctx.globalAlpha = 1;
+    // Plunger head + rod
+    const pxEnd = F.x(gx) + 1 + fillW;
+    ctx.fillStyle = AMBER;
+    ctx.fillRect(pxEnd, F.y(gy) + 1, Math.max(3, F.len(1.1)), F.len(gh) - 2);
+    ctx.strokeStyle = STEEL; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(pxEnd + Math.max(3, F.len(1.1)), F.y(gy + gh / 2)); ctx.lineTo(F.x(gx + gw + 4), F.y(gy + gh / 2)); ctx.stroke();
+    ctx.lineWidth = 1;
     for (let t = 0; t <= p.gas.maxL; t += 1) {
       const tx = F.x(gx + gw * (t / p.gas.maxL));
-      ctx.strokeStyle = DIM; ctx.beginPath(); ctx.moveTo(tx, F.y(gy + gh)); ctx.lineTo(tx, F.y(gy + gh + 1)); ctx.stroke();
-      say(ctx, String(t), tx, F.y(gy + gh + 3), F.size(1.9, 6), { align: 'center', color: DIM });
+      ctx.strokeStyle = DIM; ctx.beginPath(); ctx.moveTo(tx, F.y(gy + gh)); ctx.lineTo(tx, F.y(gy + gh + 1.1)); ctx.stroke();
+      say(ctx, `${t} L`, tx, F.y(gy + gh + 3.2), F.size(2.0, 6.2), { align: 'center', color: DUST });
     }
-    say(ctx, 'litres', F.x(gx + gw), F.y(gy - 2.2), F.size(1.9, 6), { align: 'right', color: DIM });
-    say(ctx, r.ran && r.gas ? `${r.gas.L.toFixed(2)} L` : 'not run', F.x(gx), F.y(gy - 2.2), F.size(2.6, 6.5), { color: r.ran ? AMBER : DIM, weight: 700 });
+    say(ctx, 'Gas volume', F.x(gx + gw), F.y(gy - 2.2), F.size(2.0, 6.2), { align: 'right', color: DUST });
+    say(ctx, r.ran && r.gas ? `${r.gas.L.toFixed(2)} L` : 'not run', F.x(gx), F.y(gy - 2.2), F.size(2.8, 7), { color: r.ran ? AMBER : DIM, weight: 700 });
     say(ctx, `${pretty(p.gas.species)} collected at ${p.gas.tC} °C, ${p.gas.atm.toFixed(2)} atm`, F.x(px + 1.5), F.y(py + ph - 1.8), F.size(1.9, 5.8), { color: DIM, maxW: F.len(pw - 3) });
     return;
   }
   if (!p.window) {
-    say(ctx, r.ran ? 'DONE' : r.fed ? 'READY' : 'EMPTY', F.x(px + pw / 2), F.y(py + ph / 2 - 1.2), F.size(3, 7.5), { align: 'center', color: r.ran ? AMBER : DIM, weight: 700 });
+    if (r.ran) {
+      // Visual reaction particles + any leftover reactant
+      const prodInk = p.outSpecies ? inkOfSpecies(p.outSpecies) : AMBER;
+      ctx.fillStyle = prodInk; ctx.globalAlpha = 0.75;
+      for (let i = 0; i < 6; i++) {
+        ctx.beginPath();
+        ctx.arc(F.x(px + 8 + i * 5), F.y(py + ph * 0.55 + (i % 2 ? -1.1 : 1.1)), Math.max(2, F.len(0.9)), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      const leftovers = Object.entries(r.plan?.left || {}).filter(([, m]) => m > 1e-4).map(([sp]) => pretty(sp));
+      const status = leftovers.length ? `DONE · leftover ${leftovers.join(', ')}` : `DONE · ${p.outSpecies ? pretty(p.outSpecies) + ' collected' : 'reacted'}`;
+      say(ctx, status, F.x(px + pw / 2), F.y(py + ph / 2 - 1.4), F.size(2.5, 6.8), { align: 'center', color: AMBER, weight: 700, maxW: F.len(pw - 4) });
+    } else {
+      say(ctx, r.fed ? 'READY' : 'EMPTY', F.x(px + pw / 2), F.y(py + ph / 2 - 1.2), F.size(3, 7.5), { align: 'center', color: DIM, weight: 700 });
+    }
     return;
   }
   // Before on the left, after on the right.
@@ -205,13 +228,13 @@ registerFixture('reactor', { paint: paintReactor, run: runReactor });
 
 /** A balance with a pan (a seat). Returns the fixture, its slot and its size. */
 export function weighFixture(id, at, { title = 'Balance', w = 34, digits = 1 } = {}) {
-  const top = 10;
-  const h = Math.round((top + 26) * 10) / 10;
+  const top = 12.5;
+  const h = Math.round((top + 24.5) * 10) / 10;
   const slotId = `${id}.pan`;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   return {
     fixture: { id, kind: 'weigh', label: title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, slot: slotId, digits } },
-    slot: { id: slotId, label: ' ', at: { x: x0 + w / 2, y: y0 + top + 10.5 }, size: { ...SEAT } },
+    slot: { id: slotId, label: ' ', at: { x: x0 + w / 2, y: y0 + top + 12.5 }, size: { ...SEAT } },
     slotId, size: { w, h }
   };
 }
@@ -220,10 +243,10 @@ function paintWeigh(ctx, f, state, b) {
   const F = frameOf(b);
   const r = weighRead(state, f.id);
   const w = f.size.w;
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(3), F.y(5.4), F.len(w - 6), F.len(6.4));
-  ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(5.4)) + 0.5, Math.round(F.len(w - 6)), Math.round(F.len(6.4)));
-  say(ctx, r.item ? `${r.grams.toFixed(f.props.digits ?? 1)} g` : '— g', F.x(w - 4.5), F.y(8.7), F.size(3.4, 8), { align: 'right', color: r.item ? AMBER : DIM, weight: 700 });
-  say(ctx, 'jar mass left out', F.x(w / 2), F.y(f.size.h - 2.2), F.size(1.8, 5.6), { align: 'center', color: DIM });
+  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(3), F.y(4.6), F.len(w - 6), F.len(6.2));
+  ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(4.6)) + 0.5, Math.round(F.len(w - 6)), Math.round(F.len(6.2)));
+  say(ctx, r.item ? `${r.grams.toFixed(f.props.digits ?? 1)} g` : '— g', F.x(w - 4.5), F.y(7.8), F.size(3.4, 8), { align: 'right', color: r.item ? AMBER : DIM, weight: 700 });
+  say(ctx, 'jar mass left out', F.x(w / 2), F.y(f.size.h - 1.9), F.size(1.8, 5.6), { align: 'center', color: DIM });
 }
 
 registerFixture('weigh', { paint: paintWeigh });
@@ -243,7 +266,7 @@ addTourText({
   'pot:reactor': { title: 'Reaction vessel', dials: false, text: REACTOR_TEXT },
   'pot:weigh': { title: 'Balance', text: 'Drag a jar onto the pan to weigh its contents.' }
 }, {
-  jar: ['Jars', 'Drag a jar into a vessel seat, or onto the balance to weigh it.']
+  jar: ['Jars', 'Drag a jar onto a seat to use or weigh it.']
 });
 
 export { molarMass };

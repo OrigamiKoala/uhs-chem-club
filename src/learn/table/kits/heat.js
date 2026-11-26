@@ -234,10 +234,14 @@ function tapZones(f) {
   if (f.kind === 'curve' && f.dials.heat) return [{ x0: 2, x1: f.size.w - 2, y0: top, y1: f.size.h - 2, dial: 'heat', drag: { axis: 'x', x0: 30, x1: f.size.w - 4 } }];
   if (f.kind === 'selector' && f.props.list && f.dials.value) {
     const out = [];
+    const noDial = f.props?.hidden?.includes('value');
+    const y0 = noDial ? 8.8 : 15.0;
+    const step = 3.9;
     let row = 0;
     f.props.options.forEach((o, k) => {
       if (!o.trim()) return;
-      out.push({ x0: 2, x1: f.size.w - 2, y0: 12.4 + row * 3.5, y1: 15.9 + row * 3.5, dial: 'value', value: k + 1 });
+      const cy = y0 + row * step;
+      out.push({ x0: 1.5, x1: f.size.w - 1.5, y0: cy - step * 0.5, y1: cy + step * 0.5, dial: 'value', value: k + 1 });
       row++;
     });
     return out;
@@ -304,7 +308,7 @@ export const block = (id, label, at, { m, c, T, mat = '', mass = null, latent = 
 export const charge = (id, label, at, { moles, dH, shown = undefined }, extra = {}) =>
   piece('charge', id, label, at, { moles, dH, ...(shown !== undefined ? { shown } : {}) }, extra);
 /** A step card: `lhs` and `rhs` are `[[coefficient, species], ...]`, `dH` the step's measured ΔH. */
-export const eqn = (id, at, lhs, rhs, dH, extra = {}) => piece('eqn', id, id, at, { lhs, rhs, dH, ...(extra.symbol ? { symbol: extra.symbol } : {}) }, extra);
+export const eqn = (id, at, lhs, rhs, dH, extra = {}) => piece('eqn', id, id, at, { lhs, rhs, dH, ...(extra.symbol ? { symbol: extra.symbol } : {}), ...(extra.hideDH ? { hideDH: true } : {}) }, extra);
 /** A bond chip: its kind ("C-H"), its energy, and how many of them there are; `note` says where it comes from ("methane"). */
 export const bondChip = (id, bond, at, { label = null, dH = null, count = 1, note = '' } = {}, extra = {}) => {
   const e = BOND_ENTHALPIES[bond];
@@ -423,11 +427,11 @@ export function ledgerFixture(id, at, { broken, formed, hideNet = false, hideTot
  * ladder down the right edge: one step per card, each as tall as that card's ΔH as it stands, so two routes are seen to end level and a
  * flipped card is seen to climb.
  */
-export function stackFixture(id, at, { tray, target, hideSum = false, w = 44, h = 30, title = 'Wanted, and the stack', symbol = 'ΔH', ladder = null } = {}) {
+export function stackFixture(id, at, { tray, target, hideSum = false, neutralSum = false, w = 44, h = 30, title = 'Wanted, and the stack', symbol = 'ΔH', ladder = null } = {}) {
   const fmt = side => side.map(([n, s]) => `${n === 1 ? '' : n === 0.5 ? '½' : `${n} `}${s}`).join(' + ');
   return {
     id, kind: 'stack', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {},
-    props: { tray, target: targetMap(target.lhs, target.rhs), targetText: [fmt(target.lhs), fmt(target.rhs)], hideSum, symbol, ...(ladder ? { ladder } : {}) }
+    props: { tray, target: targetMap(target.lhs, target.rhs), targetText: [fmt(target.lhs), fmt(target.rhs)], hideSum, neutralSum, symbol, ...(ladder ? { ladder } : {}) }
   };
 }
 
@@ -537,11 +541,11 @@ export function markerFixture(id, label, at, { min = 0, max = 8, step = 0.5, w =
 }
 
 /** A dial with named positions: set it to the one the table shows. */
-export function selectorFixture(id, label, at, { options, start = 1, w = 46, list = false } = {}) {
+export function selectorFixture(id, label, at, { options, start = 1, w = 46, list = false, dialLabel = null } = {}) {
   const shown = options.filter(o => o.trim()).length;
   return {
-    id, kind: 'selector', label, at: { ...at }, size: { w, h: list ? 15 + shown * 3.5 : 16 }, noRun: true,
-    dials: { value: { min: 1, max: options.length, step: 1, value: start, label: 'Set to', labels: options } },
+    id, kind: 'selector', label, at: { ...at }, size: { w, h: list ? Math.round((15.5 + shown * 3.9) * 10) / 10 : 16 }, noRun: true,
+    dials: { value: { min: 1, max: options.length, step: 1, value: start, label: dialLabel || (list ? 'Pick one' : 'Set to'), labels: options } },
     props: { options, ...(list ? { list: true } : {}) }
   };
 }

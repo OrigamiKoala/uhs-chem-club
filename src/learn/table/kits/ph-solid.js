@@ -66,14 +66,19 @@ function paintSolid(ctx, f, state, b) {
   const ionH = wh * 0.5;
   const ions = cellGrid(20 * 3, 20, x + 0.6, y + 0.6, ww - 1.2, ionH - 0.8);
   const ionList = [...Array(r.cations).fill([CAT_INK]), ...Array(r.anions).fill([AN_INK])];
-  ionList.slice(0, ions.length).forEach(([ink], i) => { const c = ions[i]; const wb = wobble(i, b.clock || 0); ball(ctx, F.x(c.x + wb.wx * c.cw * 0.5), F.y(c.y + wb.wy * c.ch * 0.5), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.44)), ink); });
+  ionList.slice(0, ions.length).forEach(([ink], i) => { const c = ions[i]; const wb = wobble(i, b.clock || 0); ball(ctx, F.x(c.x + wb.wx * c.cw * 0.6), F.y(c.y + wb.wy * c.ch * 0.7), Math.max(1.8, F.len(Math.min(c.cw, c.ch) * 0.48)), ink); });
   ctx.strokeStyle = '#2a2622'; ctx.beginPath(); ctx.moveTo(F.x(x + 0.6), F.y(y + ionH)); ctx.lineTo(F.x(x + ww - 0.6), F.y(y + ionH)); ctx.stroke();
   const pel = cellGrid(p.solid, 20, x + 0.6, y + ionH + 0.4, ww - 1.2, wh - ionH - 1);
-  for (let i = 0; i < r.left && i < pel.length; i++) {
+  for (let i = 0; i < p.solid && i < pel.length; i++) {
     const c = pel[i]; const s = Math.min(c.cw, c.ch) * 0.8;
-    ctx.fillStyle = SOLID_INK; ctx.fillRect(F.x(c.x - s / 2), F.y(c.y - s / 2), F.len(s), F.len(s));
+    if (i < r.left) {
+      ctx.fillStyle = SOLID_INK; ctx.fillRect(F.x(c.x - s / 2), F.y(c.y - s / 2), F.len(s), F.len(s));
+    } else {
+      ctx.strokeStyle = 'rgba(176, 141, 87, 0.35)'; ctx.lineWidth = 1;
+      ctx.strokeRect(F.x(c.x - s / 2) + 0.5, F.y(c.y - s / 2) + 0.5, Math.max(1, F.len(s) - 1), Math.max(1, F.len(s) - 1));
+    }
   }
-  const size = F.size(1.9, 5.8);
+  const size = F.size(2.1, 6.2);
   const items = [[SOLID_INK, `solid ${p.formula}`, 'sq'], [CAT_INK, p.cation, 'o']];
   if (r.anions) items.push([AN_INK, p.anion, 'o']);
   let cx = x; let cy = y + wh + 3;
@@ -87,7 +92,7 @@ function paintSolid(ctx, f, state, b) {
     put(ctx, nm, F.x(cx) + sw + F.len(0.6), F.y(cy), size, { align: 'left', color: DUST });
     cx += tu;
   }
-  put(ctx, `acid poured: ${r.n * p.acidSph} spheres, not drawn`, F.x(2), F.y(f.size.h - 3.2), size, { align: 'left', color: DIM });
+  put(ctx, `Solid: ${r.left}/${p.solid} · Dissolved: ${r.cations}`, F.x(2), F.y(f.size.h - 3.2), F.size(2.2, 6.6), { align: 'left', color: r.cations > 0 ? PLATE_COLORS.amber : DUST, weight: 700 });
 }
 
 function run(state, fid) {

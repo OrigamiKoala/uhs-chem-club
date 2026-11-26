@@ -429,8 +429,8 @@ for (const kind of ['cellsupplypack', 'cellsupplyplate']) {
 }
 
 /** A zinc–copper cell on a bar, to seat in the chain. */
-export const packPiece = (id, at) => ({ id, kind: 'cellsupplypack', label: `Zn–Cu ${voltText(cellE0('cu', 'zn'))} V`, at, props: { ink: '#a8a08c' }, caption: 'Seat it in the chain.' });
+export const packPiece = (id, at) => ({ id, kind: 'cellsupplypack', label: `Zn–Cu ${voltText(cellE0('cu', 'zn'))} V`, at, props: { ink: '#a8a08c' } });
 /** The sealed plate, to lay on the balance. */
-export const platePiece = (id, at, { label = 'Plate X' } = {}) => ({ id, kind: 'cellsupplyplate', label, at, props: { ink: '#8a8780' }, caption: 'Lay it on the balance.' });
+export const platePiece = (id, at, { label = 'Plate X' } = {}) => ({ id, kind: 'cellsupplyplate', label, at, props: { ink: '#8a8780' } });
 
 export { WATER_BACK_VOLTAGE };

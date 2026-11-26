@@ -76,8 +76,7 @@ function cloudyPond(ctx, w, h, t) {
   const packedNow = list.filter(d => d.leaves).length;
   const shown = Math.min(list.length, Math.floor(appear * 1.6 * 6));
   if (appear > 0.5) text(ctx, `ions in the jars: ${list.length}`, tx, h * 0.2, { size: fs(h), color: C.dust, align: 'left' });
-  if (t > 0.3) text(ctx, `dissolved in the water: ${list.length - (pack > 0.98 ? packedNow : 0)}`, tx, h * 0.3, { size: fs(h), color: C.pale, align: 'left' });
-  if (t > 0.5) text(ctx, `packed into a solid: ${packedNow}`, tx, h * 0.4, { size: fs(h), color: '#d9b61c', align: 'left', weight: 700 });
+  if (t > 0.5) text(ctx, `packed into a solid: ${packedNow}`, tx, h * 0.34, { size: fs(h), color: '#d9b61c', align: 'left', weight: 700 });
   // The ions that did not move, ringed and counted.
   const stay = ease(win(t, 0.54, 0.72));
   if (stay > 0.05) {
@@ -85,7 +84,7 @@ function cloudyPond(ctx, w, h, t) {
     ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.globalAlpha = stay;
     for (const d of stood) { ctx.beginPath(); ctx.arc(d.x0, d.y0, r * 1.4, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1; ctx.lineWidth = 1;
-    if (stay > 0.5) text(ctx, `unchanged: ${stood.length}  (${ionText(B.cat)}, ${ionText(A.an)})`, tx, h * 0.5, { size: fs(h), color: C.amber, align: 'left', weight: 700 });
+    if (stay > 0.5) text(ctx, `still dissolved: ${stood.length} (${ionText(B.cat)}, ${ionText(A.an)})`, tx, h * 0.48, { size: fs(h), color: C.amber, align: 'left', weight: 700 });
   }
   // The equation of what changed, from the solid's own ions.
   const eq = ease(win(t, 0.78, 0.92));

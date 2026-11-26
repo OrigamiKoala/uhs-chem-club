@@ -21,7 +21,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   matterTable, molCard, probeFixture, plaqueFixture, whereIs, fixed
 } from '../../table/kits/matter.js';
@@ -316,14 +315,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  2: ['Drag a card into the probe, press its key, then put the card on the rail.'],
-  3: ['Set the dials, press "Settle", then type your answer.'],
-  4: ['Heat the sample, then type your answer.'],
-  5: ['Drag the stock into the flask, turn the dial, then type your answer.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

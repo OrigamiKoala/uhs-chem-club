@@ -54,6 +54,18 @@ export const PRIMERS = {
       });
     }
   },
+  mole: {
+    title: 'The mole and molar mass',
+    html: `<p>A mole (mol) is a fixed count of particles: 6.02 × 10<sup>23</sup> of them. Molar mass (g/mol) is the mass of one mole. Multiply moles by molar mass to get grams; divide grams by molar mass to get moles.</p>
+      ${slider('ml-n', 'Amount (mol)', 0.5, 5, 0.5, 2)}${slider('ml-m', 'Molar mass (g/mol)', 2, 100, 2, 18)}
+      <p id="ml-r"></p>`,
+    wire(root) {
+      bind(root, ['ml-n', 'ml-m'], (v, set) => {
+        const n = v('ml-n'); const M = v('ml-m');
+        set('ml-r', `${n.toFixed(1)} mol × ${M.toFixed(0)} g/mol = <strong>${(n * M).toFixed(1)} g</strong> &nbsp; (${(n * M).toFixed(1)} g ÷ ${M.toFixed(0)} g/mol = ${n.toFixed(1)} mol)`);
+      });
+    }
+  },
   amount: {
     title: 'Concentration, volume and amount',
     html: `<p>Concentration (mol/L) is how many moles are in each litre. Multiply it by the volume in litres to get the amount in moles. Move both.</p>

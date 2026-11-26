@@ -342,7 +342,7 @@
             "explain": "2² = 4, so the reaction is second order in B."
           },
           {
-            "say": "Using Run 1, what is the denominator [A]¹[B]²?",
+            "say": "Using Run 1, what is [A]¹[B]²?",
             "kind": "number",
             "answer": 0.001,
             "unit": "mol³/L³",
@@ -388,7 +388,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "For a second-order reaction, the integrated rate law is 1/[A]_t − 1/[A]₀ = kt, so 1/[A] plotted against t is linear with slope +k."
+          "explanation": "For a second-order reaction, the integrated rate law is 1/[A]t − 1/[A]₀ = kt, so 1/[A] plotted against t is a straight line with slope +k."
         },
         {
           "id": "q3-time#b2",
@@ -413,14 +413,14 @@
             }
           ],
           "answer": "a",
-          "explanation": "For a first-order reaction, t_{1/2} = ln(2)/k = 0.693 / 0.03465 = 20 s, independent of initial concentration."
+          "explanation": "For a first-order reaction, t½ = ln(2)/k = 0.693 / 0.03465 = 20 s, regardless of the starting concentration."
         }
       ],
       "worked": {
         "id": "q3-time#w",
         "quest": "q3-time",
         "title": "First-order decay over multiple half-lives",
-        "setup": "A first-order reaction starts at [A]₀ = 1.60 mol/L with t_{1/2} = 15 s. Find [A] at t = 45 s.",
+        "setup": "A first-order reaction starts at [A]₀ = 1.60 mol/L with t½ = 15 s. Find [A] at t = 45 s.",
         "steps": [
           {
             "say": "How many half-lives pass in 45 s?",
@@ -487,7 +487,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Ea is unchanged by temperature, but the Maxwell-Boltzmann distribution shifts right so more collisions exceed Ea."
+          "explanation": "Temperature does not change Ea, but it shifts the energy spread upward so more collisions reach Ea."
         },
         {
           "id": "q4-collide#b2",
@@ -512,7 +512,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Collision theory requires both sufficient kinetic energy (≥ Ea) to break bonds and proper orientation so reactive atoms meet."
+          "explanation": "Particles react only when they collide with enough kinetic energy (at least Ea) to break bonds and lined up so their reactive atoms meet."
         }
       ],
       "worked": {
@@ -764,7 +764,7 @@
         {
           "id": "boss-flare#b1",
           "quest": "boss-flare",
-          "question": "A first-order reaction has t_{1/2} = 15 s. What fraction of reactant remains after 60 s?",
+          "question": "A first-order reaction has t½ = 15 s. What fraction of reactant remains after 60 s?",
           "options": [
             {
               "id": "a",
@@ -842,7 +842,7 @@
             "calc": "0.800 * Math.exp(-(0.693 / 24.0) * 35.0)",
             "unit": "mol/L",
             "hint": "Take e^(ln[A]t).",
-            "explain": "e^(−1.234) = 0.291 mol/L (between one half-life 0.400 M at 24 s and two half-lives 0.200 M at 48 s)."
+            "explain": "e^(−1.234) = 0.291 mol/L (between one half-life 0.400 mol/L at 24 s and two half-lives 0.200 mol/L at 48 s)."
           },
           {
             "say": "What is the reverse activation energy Ea(rev) if Ea(fwd) = 65 kJ/mol and ΔH = −25 kJ/mol?",

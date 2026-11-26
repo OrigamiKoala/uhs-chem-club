@@ -206,7 +206,7 @@ export const STAGES = [
     id: 's4-roles',
     title: 'Atoms Leave, Atoms Join',
     briefing: { speaker: SPEAKER, body: 'Each metal strip in a cell is an electrode. Oxidation happens at the anode (atoms leave as ions), and reduction happens at the cathode (ions join as atoms).' },
-    prompt: 'Press Run, then tap each strip on the Model to mark the anode (atoms leave) and cathode (atoms join).',
+    prompt: 'Press Run, then tap each strip on the Model once for anode (atoms leave) or twice for cathode (atoms join).',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 52 }, { ...S4, link: 'fixed', ammeter: false, windows: 'metal' });
@@ -296,19 +296,16 @@ export const STAGES = [
     prompt: 'Weigh each strip before and after running the cell, then tap the strip on the Model that gained mass.',
     widget,
     table: (() => {
-      const g = galvFixture('rig', { x: 44, y: 46 }, { left: S6.left, right: S6.right, link: 'fixed', ammeter: false, strips: true, minutes: true });
-      const bal = balanceFixture('bal', { x: 110, y: 46 });
+      const g = galvFixture('rig', { x: 48, y: 46 }, { left: S6.left, right: S6.right, link: 'fixed', ammeter: false, strips: true, minutes: true });
+      const bal = balanceFixture('bal', { x: 122, y: 46 });
       return cellTable({
         pieces: [
-          stripPiece(S6.left, S6.left, { x: 30, y: 98 }, { m0: S6.m0[S6.left] }),
-          stripPiece(S6.right, S6.right, { x: 90, y: 98 }, { m0: S6.m0[S6.right] })
+          stripPiece(S6.left, S6.left, { x: 34, y: 98 }, { m0: S6.m0[S6.left] }),
+          stripPiece(S6.right, S6.right, { x: 94, y: 98 }, { m0: S6.m0[S6.right] })
         ],
-        fixtures: [
-          g.fixture, bal.fixture,
-          hideDials(selectorFixture('pick', 'Gained mass', { x: 154, y: 46 }, { options: [`The ${METALS[S6.left].symbol} strip`, `The ${METALS[S6.right].symbol} strip`, ' '], start: 3, w: 36, list: true }))
-        ],
+        fixtures: [g.fixture, bal.fixture],
         zones: { slots: [...g.slots, bal.slot] }
-      }, { w: 176, h: 112 });
+      }, { w: 152, h: 112 });
     })(),
     hints: [
       'Weigh each strip on the balance, drag both into their beakers, press "Run", then weigh them again.',
@@ -317,9 +314,12 @@ export const STAGES = [
     ],
     check(state) {
       const t = state.table;
-      const v = dialValue(t, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a strip on the Model first.' };
-      if (v === 2) return { ok: true };
+      const v = Math.round(t.fixtures.scene.dials.p.value);
+      if (!v) return { ok: false, notYet: true, msg: 'Tap the strip on the Model that gained mass first.' };
+      if (v === 2) {
+        if (!galvRead(t, 'rig').ran) return { ok: false, notYet: true, msg: 'Run the cell and weigh a strip first.' };
+        return { ok: true };
+      }
       const name = `${METALS[S6.left].symbol} strip`;
       const w = weighed(t, 'bal', name);
       if (!w) return { ok: false, msg: `The ${name} has not been weighed yet.` };
@@ -332,7 +332,7 @@ export const STAGES = [
       return {
         log: 'The anode lost mass and the cathode gained mass.',
         title: 'Mass Follows the Atoms',
-        body: `The ${METALS[S6.right].symbol} strip gained ${fmt(dr, 2)} g and the ${METALS[S6.left].symbol} strip lost ${fmt(-dl, 2)} g. Atoms leave the anode and plate onto the cathode, so the cathode gains mass.`
+        body: `The ${METALS[S6.right].symbol} strip gained ${fmt(dr, 2)} g while the ${METALS[S6.left].symbol} strip lost ${fmt(-dl, 2)} g (copper atoms are heavier than iron atoms). Atoms leave the anode and plate onto the cathode, so the cathode gains mass.`
       };
     }
   },
@@ -441,7 +441,7 @@ attachScenes(STAGES, {
         siteLabels: [sides(S5.left, S5.right).left === 'anode' ? 'Anode' : 'Cathode', sides(S5.left, S5.right).right === 'anode' ? 'Anode' : 'Cathode']
       }
     },
-    5: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteLabels: [`${METALS[S6.left].symbol} strip`, `${METALS[S6.right].symbol} strip`] } }
+    5: { sitesKey: 'sides', dials: { p: { min: 0, max: 2, step: 1, value: 0, label: 'Gained mass' } }, extra: { targetDial: 'p', pickMap: [1, 2], siteLabels: [`${METALS[S6.left].symbol} strip`, `${METALS[S6.right].symbol} strip`] } }
   }
 });
 
@@ -463,7 +463,7 @@ export const SOLUTIONS = [
   [...S3_CELLS.flatMap(([id, l, r]) => [run(id), dial(id, 'says', electronsToward(l, r) === 'left' ? 1 : 2)])],
   (() => { const r = sides(S4.left, S4.right); return [run('rig'), dial('scene', 'm0', r.left === 'anode' ? 1 : 2), dial('scene', 'm1', r.right === 'anode' ? 1 : 2)]; })(),
   [run('rig'), dial('pick', 'value', 1)],
-  [...S6_FLOW, dial('pick', 'value', 2)],
+  [...S6_FLOW, dial('scene', 'p', 2)],
   railIds(NOTE).map((id, i) => put(id, `rail:${i}`)),
   [...S8_FLOW, put('ansB', 'slot:ans')]
 ];
@@ -474,7 +474,7 @@ export const MISSES = [
   [run('ra'), run('rb'), run('rc'), dial('ra', 'says', 2), dial('rb', 'says', 2), dial('rc', 'says', 1)],
   (() => { const r = sides(S4.left, S4.right); return [run('rig'), dial('scene', 'm0', r.left === 'anode' ? 2 : 1), dial('scene', 'm1', r.right === 'anode' ? 2 : 1)]; })(),
   [run('rig'), dial('pick', 'value', 2)],
-  [...S6_FLOW, dial('pick', 'value', 1)],
+  [...S6_FLOW, dial('scene', 'p', 1)],
   [6, 1, 4, 3, 2, 5, 0].map((k, i) => put(`k${k}`, `rail:${i}`)),
   [...S8_FLOW, put('ansA', 'slot:ans')]
 ];

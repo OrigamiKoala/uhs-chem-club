@@ -24,9 +24,9 @@ const hash = i => { let x = (i + 1) * 2654435761 % 4294967296; x = ((x ^ (x >>> 
 
 /** How each instrument is stood up. `wall`: curves stand upright on a glass wall; `tank`: a dark window is a glass tank; `hill`: the profile curve is a solid. */
 const KINDS = {
-  kvessel: { tank: true, tankOnly: true },
-  lead: { tank: true, tankOnly: true },
-  collview: { tank: true, rest: true, big: 1.5, lines: true, tankK: 0.28 }
+  kvessel: { tank: true, tankOnly: true, tankK: 0.20 },
+  lead: { tank: true, tankOnly: true, tankK: 0.18 },
+  collview: { tank: true, rest: true, big: 1.5, lines: true, tankK: 0.16 }
 };
 
 function recorder() {

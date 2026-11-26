@@ -150,6 +150,7 @@ const SKIP_PIECES = new Set([
   'token', 'model', 'guess', 'stmt', 'note', 'tag', 'chip', 'num', 'card',
   'matter:stmt', 'cell:tag', 'cell:note', 'cell:chip',
   'heat:stmt', 'heat:tag', 'heat:note', 'heat:chip', 'heat:num', 'heat:gcard', 'heat:shift', 'heat:phase', 'heat:shelf',
+  'ph:tag', 'ph:note',
   'thorn:tcard'
 ]);
 

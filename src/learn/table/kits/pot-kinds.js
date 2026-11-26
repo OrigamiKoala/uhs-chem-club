@@ -96,12 +96,14 @@ const halfWidth = formula => Math.max(...sketchOf(formula).map(a => Math.abs(a[1
  * numbers mode uses `{ name, species, charge }` instead and has no key.
  */
 export function windowFixture(id, at, { mode, cases, dialLabel = 'Pot', title = 'Window', w = 84, runLabel = 'Run', picture = 27 } = {}) {
-  const dials = cases.length > 1 ? { pot: { min: 1, max: cases.length, step: 1, value: 1, label: dialLabel, labels: cases.map(c => c.name) } } : {};
-  const top = contentTop(Object.keys(dials).length);
+  const shortLabel = name => (dialLabel && name.startsWith(`${dialLabel} `) ? name.slice(dialLabel.length + 1) : name);
+  const dials = cases.length > 1 ? { pot: { min: 1, max: cases.length, step: 1, value: 1, label: dialLabel, labels: cases.map(c => shortLabel(c.name)) } } : {};
+  const nd = Object.keys(dials).length;
+  const top = nd ? contentTop(nd) + 3.4 : contentTop(0);
   const h = Math.round((top + picture + 7.5) * 10) / 10;
   return {
     id, kind: 'kwindow', label: title, at: { ...at }, size: { w, h }, dials, ...(mode === 'numbers' ? { noRun: true } : { runLabel }),
-    props: { backdrop: true, mode, cases, picture, top }
+    props: { backdrop: true, mode, cases, picture, top, ...(nd ? { grab: { pot: 3.4 }, dialIndent: 5 } : {}) }
   };
 }
 
@@ -161,13 +163,9 @@ function paintWindow(ctx, f, state, b) {
   say(ctx, 'BEFORE', F.x(px + 1.5), F.y(top + 2.2), F.size(2, 6), { color: DIM });
   say(ctx, 'AFTER', F.x(mid + 1.5), F.y(top + 2.2), F.size(2, 6), { color: DIM });
   if (p.mode === 'electrons') { paintElectrons(ctx, F, r, px, mid, pw, top, ph); return; }
-  const tr = r.proton;
-  const markL = tr ? { f: tr.donor, copy: 0, atom: donorAtom(tr.donor) } : null;
-  const markR = tr ? { f: tr.product, copy: 0, atom: arrivedAtom(tr.product) } : null;
-  drawSide(ctx, F, r.eq.lhs, px + 1, mid - 1, cy, markL);
-  if (r.ran) drawSide(ctx, F, r.eq.rhs, mid + 1, px + pw - 1, cy, markR);
+  drawSide(ctx, F, r.eq.lhs, px + 1, mid - 1, cy, null);
+  if (r.ran) drawSide(ctx, F, r.eq.rhs, mid + 1, px + pw - 1, cy, null);
   else say(ctx, 'press Run', F.x(mid + pw / 4), F.y(cy), F.size(2.2, 6), { align: 'center', color: DIM });
-  if (p.mode === 'proton' && r.ran && tr) say(ctx, 'amber ring: H⁺', F.x(mid), F.y(top + ph - 2.2), F.size(2.2, 6.2), { align: 'center', color: AMBER, weight: 700 });
 }
 
 function paintElectrons(ctx, F, r, px, mid, pw, top, ph) {
@@ -287,7 +285,17 @@ function paintBurner(ctx, f, state, b) {
   const w = f.size.w;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(2.5), F.y(20), F.len(w - 5), F.len(7));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(2.5)) + 0.5, Math.round(F.y(20)) + 0.5, Math.round(F.len(w - 5)), Math.round(F.len(7)));
-  say(ctx, r.ran ? 'BURNT' : r.fuel ? 'READY' : 'NO FUEL', F.x(w / 2), F.y(23.5), F.size(2.8, 7), { align: 'center', color: r.ran ? AMBER : DIM, weight: 700 });
+  if (r.ran) {
+    // Draw glowing flame + gas wisps flowing into the gas jar
+    const fx = F.x(w * 0.25); const fy = F.y(25.5);
+    ctx.fillStyle = '#e57c24';
+    ctx.beginPath(); ctx.moveTo(fx - F.len(2.2), fy); ctx.quadraticCurveTo(fx, F.y(20.6), fx + F.len(2.2), fy); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffd27a';
+    ctx.beginPath(); ctx.moveTo(fx - F.len(1.1), fy); ctx.quadraticCurveTo(fx, F.y(22.2), fx + F.len(1.1), fy); ctx.closePath(); ctx.fill();
+    say(ctx, 'BURNT · gas collected', F.x(w * 0.62), F.y(23.5), F.size(2.4, 6.5), { align: 'center', color: AMBER, weight: 700 });
+  } else {
+    say(ctx, r.fuel ? 'READY' : 'NO FUEL', F.x(w / 2), F.y(23.5), F.size(2.8, 7), { align: 'center', color: DIM, weight: 700 });
+  }
   say(ctx, 'SUPPLIED: oxygen', F.x(3.5), F.y(f.size.h - 3), F.size(1.9, 5.8), { color: DIM });
 }
 
@@ -303,13 +311,13 @@ registerFixture('burner', { paint: paintBurner, run: runBurner });
 /** The gas rig: a seat for a gas jar, a "Test" dial over the four tests, and a key that runs the test the dial is on. */
 export function gasrigFixture(id, at, { title = 'Gas tests', runLabel = 'Test', w = 70 } = {}) {
   const dials = { test: { min: 1, max: GAS_TEST_ORDER.length, step: 1, value: 1, label: 'Test', labels: GAS_TEST_ORDER.map(k => GAS_TESTS[k].label) } };
-  const top = contentTop(1);
-  const h = Math.round((top + 26 + 7.5) * 10) / 10;
+  const top = contentTop(1) + 3.4;
+  const h = Math.round((top + 25 + 7.5) * 10) / 10;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const seat = `${id}.seat`;
   return {
-    fixture: { id, kind: 'gasrig', label: title, at: { ...at }, size: { w, h }, dials, runLabel, props: { backdrop: true, seat, top } },
-    slot: { id: seat, label: ' ', at: { x: x0 + 12, y: y0 + top + 9 }, size: { ...SEAT } },
+    fixture: { id, kind: 'gasrig', label: title, at: { ...at }, size: { w, h }, dials, runLabel, props: { backdrop: true, seat, top, grab: { test: 3.4 }, dialIndent: 5 } },
+    slot: { id: seat, label: ' ', at: { x: x0 + 12, y: y0 + top + 10.5 }, size: { ...SEAT } },
     slotId: seat, size: { w, h }
   };
 }
@@ -332,14 +340,13 @@ function paintRig(ctx, f, state, b) {
   const r = rigRead(state, f.id);
   const top = topOf(f, b.lay);
   const w = f.size.w;
-  let y = top + 3.6;
+  let y = top + 4.4;
   for (const t of GAS_TEST_ORDER) {
     const cur = t === r.testKey;
     const res = r.shown[t];
-    say(ctx, GAS_TESTS[t].label, F.x(24), F.y(y), F.size(2.1, 6.2), { color: cur ? TEXT : DUST, weight: cur ? 700 : 500 });
-    say(ctx, GAS_TESTS[t].use, F.x(24), F.y(y + 2.9), F.size(1.8, 5.8), { color: DIM, maxW: F.len(w - 26) });
-    say(ctx, res ? res.text : '—', F.x(w - 2.5), F.y(y), F.size(2.1, 6.2), { align: 'right', color: res ? AMBER : DIM, weight: 700, maxW: F.len(w - 44) });
-    y += 6.2;
+    say(ctx, GAS_TESTS[t].label, F.x(24), F.y(y), F.size(2.2, 6.4), { color: cur ? TEXT : DUST, weight: cur ? 700 : 500 });
+    say(ctx, res ? res.text : 'not tested', F.x(w - 2.5), F.y(y), F.size(2.2, 6.4), { align: 'right', color: res ? AMBER : DIM, weight: res ? 700 : 500, maxW: F.len(w - 44) });
+    y += 5.8;
   }
 }
 
@@ -363,10 +370,19 @@ export const rxn = (id, eqText, at, extra = {}) => ({
   id, kind: 'rxn', label: equationText(equationOf(eqText)), at, props: { eq: eqText, markable: true, marks: {} }, ...extra
 });
 
+const KIND_BADGE = { synthesis: 'S', decomposition: 'D', combustion: 'C', 'acid-base': 'A', redox: 'R' };
+const KIND_RULE = {
+  synthesis: '2+ substances join into 1',
+  decomposition: '1 substance splits into 2+',
+  combustion: 'fuel reacts with O₂',
+  'acid-base': 'H⁺ transfers to another molecule',
+  redox: 'oxidation numbers change'
+};
+
 function paintRxn(ctx, p, state, o) {
   const lit = Boolean(p.props.flipped);
   const box = slab(ctx, { ...o, lit }, RXN_RECT, lit ? '#33290f' : '#2a2620');
-  say(ctx, p.label, o.x, o.y, Math.max(6, 1.95 * o.sc), { align: 'center', weight: 600, maxW: box.w - 2.4 * o.sc, color: lit ? AMBER : TEXT });
+  say(ctx, p.label, o.x, o.y, Math.max(7.2, 2.2 * o.sc), { align: 'center', weight: 600, maxW: box.w - 2.4 * o.sc, color: lit ? AMBER : TEXT });
 }
 
 registerPiece('rxn', {
@@ -376,18 +392,24 @@ registerPiece('rxn', {
   printed: p => String(p.label)
 });
 
-/** The kinds board: a reading printed beside each reaction card for the kind the "Look for" dial is on. `rows` is `[{card, y}]` (the card's table y). */
-export function kboardFixture(id, at, { rows, title = 'Readings', w = 108, h = 60 } = {}) {
+/** The kinds board: shows each card's marked kinds (S/D/C/A/R) below it without spoiling the answer. */
+export function kboardFixture(id, at, { rows, title = 'Furnace log', w = 108, h = 60 } = {}) {
   return { id, kind: 'kboard', label: title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, rows: rows.map(r => ({ ...r })) } };
 }
 
 /** The "Look for" dial: five kinds of reaction. The board and the cards follow it. */
-export function lookFixture(id, at, { w = 38, title = 'Kind' } = {}) {
+export function lookFixture(id, at, { w = 40, title = 'Kind' } = {}) {
   const dials = { look: { min: 1, max: KINDS.length, step: 1, value: 1, label: 'Look for', labels: KINDS.map(k => KIND_LABEL[k]) } };
-  return { id, kind: 'klook', label: title, at: { ...at }, size: { w, h: 16 }, dials, noRun: true, props: {} };
+  return { id, kind: 'klook', label: title, at: { ...at }, size: { w, h: 21 }, dials, noRun: true, props: { grab: { look: 3.6 }, dialIndent: 5 } };
 }
 
-registerFixture('klook', { paint() {} });
+registerFixture('klook', {
+  paint(ctx, f, state, b) {
+    const F = frameOf(b);
+    const look = KINDS[dialAt(state, f.id, 'look') - 1];
+    say(ctx, KIND_RULE[look] || '', F.x(f.size.w / 2), F.y(f.size.h - 2.8), F.size(2.0, 6.2), { align: 'center', color: AMBER, maxW: F.len(f.size.w - 3) });
+  }
+});
 
 /** The kind the board is looking for, and each card's marks (kind: bool), reconciled with the card's light as it stands. */
 export function boardRead(state) {
@@ -424,9 +446,10 @@ function paintBoard(ctx, f, state, b) {
     const dx = row.x - 25.5 - left;
     ctx.fillStyle = '#100f0c';
     ctx.fillRect(F.x(dx), F.y(dy - 2.2), F.len(51), F.len(4.4));
-    const eq = equationOf(state.pieces[row.card].props.eq);
-    const lit = bd.marks[row.card]?.[bd.look];
-    say(ctx, readingFor(bd.look, eq), F.x(dx + 1), F.y(dy), F.size(1.9, 6.2), { color: lit ? AMBER : DUST, weight: 600, maxW: F.len(49) });
+    const cardMarks = bd.marks[row.card] || {};
+    const badges = KINDS.filter(k => cardMarks[k]).map(k => `${KIND_BADGE[k]}:${KIND_LABEL[k]}`).join(' · ');
+    const lit = cardMarks[bd.look];
+    say(ctx, badges || 'none marked', F.x(dx + 1.2), F.y(dy), F.size(2.0, 6.4), { color: lit ? AMBER : badges ? DUST : DIM, weight: badges ? 700 : 500, maxW: F.len(48.5) });
   }
 }
 
@@ -483,5 +506,5 @@ addTourText({
   }
 }, {
   rxn: ['Reaction cards', 'Tap a reaction card to mark or unmark it.'],
-  gjar: ['Gas jars', 'Place a gas jar on the gas test slot to test what is inside.']
+  gjar: null
 });

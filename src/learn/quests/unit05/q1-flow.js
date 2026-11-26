@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { heatTable, block, charge, note, tag, cupFixture, latticeFixture, leadFixture, blockRead, cupRead, shelvesRead, whereIs, fixed } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 4 };
@@ -231,14 +230,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag one block onto another to join them;', 'tap the gap between them to separate.'],
-  2: ['Drag your prediction into the slot.'],
-  3: ['Place an answer card in the slot, then drag the valve onto a source.'],
-  4: ['Drag each sample onto the cup, then sort it into a tray.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

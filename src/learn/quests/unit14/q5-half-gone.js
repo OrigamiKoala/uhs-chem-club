@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { nukeTable, ndecayFixture, decayRead, nchoiceFixture, chosenIndex, note, plaqueFixture } from '../../table/kits/nuke.js';
 import { commas } from '../../table/kits/nuke-draw.js';
 import { C14_LIVING } from '../../engine/nucdata.js';
@@ -280,7 +279,6 @@ export const STAGES = [
   }
 ];
 
-applyNotes(STAGES, { 2: ['Drag the card you choose into the slot.'] });
 
 export const DEBRIEF = {
   speaker: SPEAKER,

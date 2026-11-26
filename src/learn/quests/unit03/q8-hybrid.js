@@ -31,7 +31,6 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import { planMix, planBlend, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } from '../../engine/vsepr.js';
 import {
   domainTable, orbital, mixbowl, twist, bowlRead, bondsBuilt, twistRead, molCard, molRead, marker, markerValue
@@ -402,9 +401,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

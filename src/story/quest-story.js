@@ -257,77 +257,79 @@ export const QUEST_STORY = {
   'unit11/q1-watch': {
     scene: 'rate-watch',
     role: 'Direct Clue',
-    mystery: 'Two fuel lines burn the same fuel, but one tower just flared scorching hot. What is different about that one?',
+    mystery: 'Two lines burn the same fuel, yet one tower finished much sooner and overheated. What was different?',
     beats: [
-      { to: 0.35, say: 'Both vessels ended at 0.40 mol/L of product, yet Vessel 2 climbed more steeply and finished sooner.' },
-      { to: 0.70, say: 'Every run starts steepest and flattens as reactant is used up; for 2 A → B, A falls twice as fast as B rises.' },
-      { to: 0.95, say: 'Higher concentration, higher temperature, and powdered solids all gave steeper lines; a larger vessel slowed the rate.' }
+      { to: 0.35, say: 'Both vessels ended at 0.40 mol/L of product, yet Vessel 2 climbed steeper and finished sooner.' },
+      { to: 0.70, say: 'Every run starts steepest and slows as reactant runs low. For 2 A → B, A drops twice as fast as B rises.' },
+      { to: 0.95, say: 'More A, higher temperature, and powdered solid speed up a reaction; a larger vessel slows it down.' }
     ],
-    pin: 'The spiked line runs the same reaction, only much faster.'
+    pin: 'The tower flared because the same fuel burned faster, releasing its heat all at once.'
   },
   'unit11/q2-law': {
-    scene: 'rate-watch',
+    scene: 'rate-law',
     role: 'Direct Clue',
-    mystery: 'Three feeds pour into the overheating tank. Which of them actually change how fast it burns?',
+    mystery: 'Three feeds (A, B, and C) pour into the overheating tank. Which of them change how fast it burns?',
     beats: [
-      { to: 0.35, say: 'Doubling A doubled the initial rate, doubling B made it four times as large, and doubling C changed nothing.' },
-      { to: 0.70, say: 'Those measured powers give rate = k[A][B]², showing that stoichiometric coefficients never determine the rate law.' },
+      { to: 0.35, say: 'Doubling A doubled the initial rate, doubling B made it four times as fast, and doubling C changed nothing.' },
+      { to: 0.70, say: 'Those measured powers give rate = k[A][B]², showing that equation numbers do not have to match the rate law.' },
       { to: 0.95, say: 'With k = 2.0 from runs 1 and 2, the rate law predicted 0.036 mol/(L·s) for run 3.' }
     ],
-    pin: 'Only two of the three feeds change the rate. The third makes no difference.'
+    pin: 'Only feeds A and B change the rate; feed C makes no difference.'
   },
   'unit11/q3-time': {
-    scene: 'rate-watch',
+    scene: 'rate-time',
     role: 'Direct Clue',
-    mystery: 'The spiked fuel breaks down as it sits. Does it take the same time to lose each half?',
+    mystery: 'The fuel in the tank breaks down over time. Does it take the same time to lose each half of what is left?',
     beats: [
-      { to: 0.35, say: 'In the first-order tank, the first halving took 20 s and the second halving also took 20 s.' },
-      { to: 0.70, say: 'Replotting the readings as ln[A] against time put every point on the straightedge, while 1/[A] straightened second-order data.' },
-      { to: 0.95, say: 'From t½ = 15 s, the relation k = 0.693 ÷ t½ gave k = 0.0462 each second.' }
+      { to: 0.35, say: 'In the first-order tank, losing the first half took 20 s and losing the next half also took 20 s.' },
+      { to: 0.70, say: 'Equal halving times match a straight ln[A] plot. A straight [A] plot is zero order, and a straight 1/[A] plot is second order.' },
+      { to: 0.95, say: 'Only first-order reactions have a constant half-life. In second-order reactions, each halving takes longer.' }
     ],
-    pin: 'Yes. It loses half in equal times, so its breakdown is first order.'
+    pin: 'Yes. It loses half in equal times (first order), so the half-life stays constant.'
   },
   'unit11/q4-collide': {
-    scene: 'rate-watch',
-    role: 'Toolkit',
+    scene: 'rate-collide',
+    role: 'Direct Clue',
+    mystery: 'Why does cold fuel sit safely while hot fuel burns?',
     beats: [
-      { to: 0.35, say: 'Particles only react when they collide with at least the activation energy and with their reactive ends aligned.' },
-      { to: 0.70, say: 'Raising temperature leaves the activation energy barrier fixed, yet pushes a larger fraction of particles past it.' },
-      { to: 0.95, say: 'The transition state sits at the energy peak, and the lower barrier sets which competing path forms product faster.' }
-    ]
+      { to: 0.35, say: 'Particles react only when they collide with at least the activation energy and with their reactive ends lined up.' },
+      { to: 0.70, say: 'Warming leaves the activation energy hill in the same place, while moving a larger share of particles past it.' },
+      { to: 0.95, say: 'The transition state sits at the top of the hill, and a lower hill always forms product faster.' }
+    ],
+    pin: 'Cold fuel sits safely because few collisions clear the energy hill; warming lifts more over.'
   },
   'unit11/q5-steps': {
-    scene: 'rate-watch',
+    scene: 'rate-steps',
     role: 'Direct Clue',
     mystery: 'The fuel burns in several steps, one after another. Which step decides how fast the whole burn goes?',
     beats: [
-      { to: 0.35, say: 'Elementary steps add to the overall equation, with intermediates like NO3 cancelling out between steps.' },
-      { to: 0.70, say: 'The slowest step sets the pace, and only a slow step matching the measured rate law fits experiment.' },
-      { to: 0.95, say: 'On a two-step energy profile, the highest climb marks the rate-determining step and the valley holds the intermediate.' }
+      { to: 0.35, say: 'Elementary steps add up to the overall equation, and intermediates like NO₃ cancel out between steps.' },
+      { to: 0.70, say: 'The slowest step sets the overall speed, and its colliding particles give the measured rate law.' },
+      { to: 0.95, say: 'On a two-step energy profile, the tallest climb marks the slowest step and the valley holds the intermediate.' }
     ],
-    pin: 'The slowest step sets the rate of the whole reaction, and so of the spike.'
+    pin: 'The slowest step sets the pace of the whole burn.'
   },
   'unit11/q6-shortcut': {
-    scene: 'rate-watch',
+    scene: 'rate-shortcut',
     role: 'Direct Clue',
-    mystery: 'Yellow dust in the vents makes the fuel burn faster, and the dust never gets used up. What is it doing?',
+    mystery: 'Yellow dust in the vents makes the fuel burn faster. What is it doing?',
     beats: [
-      { to: 0.35, say: 'A catalyst speeds up a reaction by opening an alternate pathway with a lower activation energy.' },
-      { to: 0.70, say: 'All six catalyst particles remained at the end, and the reactant and product energies did not move.' },
-      { to: 0.95, say: 'A catalyst is consumed first and regenerated later, and solid catalysts work at their exposed surface.' }
+      { to: 0.35, say: 'A catalyst speeds up a reaction by opening a new path with a lower activation energy hill.' },
+      { to: 0.70, say: 'All six catalyst particles remained at the end, and the start and end energy levels did not change.' },
+      { to: 0.95, say: 'A catalyst enters one step and comes back in the next. Solid catalysts work on their exposed surface.' }
     ],
-    pin: 'The dust is a catalyst: it lowers the energy hill and is never used up.'
+    pin: 'The yellow dust is a catalyst: it lowers the energy hill and comes back unchanged.'
   },
   'unit11/boss-flare': {
-    scene: 'rate-watch',
+    scene: 'rate-flare',
     role: 'Boss Payoff',
-    mystery: 'Someone has been tampering with Quicklight\'s fuel from the start. Who leads the Fifth Guild?',
+    mystery: 'Someone tampered with Quicklight\'s fuel to make the tower run away. What drove the flare, and who is behind it?',
     beats: [
-      { to: 0.35, say: 'Between 5 s and 15 s the tower fell 0.30 mol/L at 0.030 mol/(L·s), following rate = k[A]²[B].' },
-      { to: 0.70, say: 'Four 12 s half-lives left 0.0625 of the peroxide core, behind an 80 kJ/mol ignition barrier.' },
-      { to: 0.95, say: 'The pre-equilibrium mechanism 2 X ⇌ X₂ followed by slow X₂ + Y → Z matched rate = k[X]²[Y] and shut the flare down.' }
+      { to: 0.35, say: 'The tower surged at 0.030 mol/(L·s), and the feed manifold followed rate = k[A]²[B].' },
+      { to: 0.70, say: 'Four 12 s half-lives left 0.0625 of the fuel core behind an 80 kJ/mol ignition hill.' },
+      { to: 0.95, say: 'Fast 2 X ⇌ X₂ followed by slow X₂ + Y → Z matched rate = k[X]²[Y] and shut the flare down.' }
     ],
-    pin: 'Their leader is The Catalyst. The Fifth are the crews the Four Guilds left behind.'
+    pin: 'The yellow dust was a catalyst, which is also the callsign of the Fifth Guild\'s leader.'
   },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
@@ -375,7 +377,7 @@ export const QUEST_STORY = {
       { to: 0.26, say: 'In the zinc and copper beaker, zinc went from 0 to +2 and copper from +2 to 0. An atom\'s oxidation number counts the electrons it has lost or gained.' },
       { to: 0.5, say: 'Written as half-reactions, zinc loses 2 electrons in oxidation and copper gains 2 in reduction—together a redox reaction. The electrons lost equal the electrons gained.' },
       { to: 0.76, say: 'Aluminium gives 3 electrons and copper takes 2, so the halves are scaled 2 and 3 times: 6 electrons given and 6 taken.' },
-      { to: 0.94, say: 'Permanganate in acid takes 5 electrons from 5 iron(II) ions, with charge +17 on each side. A redox reaction is one where some oxidation number changes.' }
+      { to: 0.94, say: 'Permanganate takes 5 electrons from 5 iron(II) ions, balancing atoms and charge (+17 on each side).' }
     ],
     pin: 'Electrons are moving between the two metals, and that is what corrodes the pylons.'
   },
@@ -446,14 +448,14 @@ export const QUEST_STORY = {
   'unit09/q8-capacity': {
     scene: 'capacity-limit',
     role: 'Station Fix',
-    mystery: 'The fort\'s water is protected for now. How much more acid can it take before the protection fails?',
+    mystery: 'How does pH shift a buffer\'s two forms, and how much acid can the fort\'s buffer take before failing?',
     beats: [
-      { to: 0.26, say: 'At pH 3 the strip showed 98 acetic acid to 2 acetate, and at pH 6 it showed 5 to 95. An acid is mostly protonated below its pKa and deprotonated above it.' },
+      { to: 0.26, say: 'At pH 3 the strip showed 98 acetic acid to 2 acetate, and at pH 6 it showed 5 to 95. An acid keeps its H⁺ below its pKa and loses its H⁺ above it.' },
       { to: 0.5, say: 'The same pour moved the 0.010 M buffer from 4.75 to 4.27 and the 0.10 M buffer only from 4.74 to 4.70. Buffer capacity grows with concentration.' },
-      { to: 0.76, say: 'Flask 1 held 40 spheres of acetate and each pour used 5. After 8 pours 2 were left and the pH had dropped from 4.75 to 3.05.' },
-      { to: 0.94, say: 'Two pours of acid dissolved 10 spheres of magnesium hydroxide, because acid neutralizes its OH⁻, but none of the silver chloride. Basic anions make salts more soluble in acid.' }
+      { to: 0.76, say: 'Flask 1 held 40 spheres of acetate and each pour used 5. After 8 pours its acetate was nearly used up (2 left) and the pH dropped from 4.75 to 3.05.' },
+      { to: 0.94, say: 'One pour of 10 acid spheres dissolved 5 units of magnesium hydroxide, because acid reacts with its OH⁻, but none of the silver chloride. Salts whose ions react with acid dissolve more in acid.' }
     ],
-    pin: 'We measured the buffer\'s capacity, so we know how much runoff the intake can take.'
+    pin: 'The larger buffer holds 120 spheres of acetate—about 24 pours before protection fails.'
   },
   'unit09/q7-buffer': {
     scene: 'buffer-catch',
@@ -518,14 +520,15 @@ export const QUEST_STORY = {
   'unit09/boss-leach': {
     scene: 'leach-open',
     role: 'Boss Payoff',
-    mystery: 'The Fifth\'s acid runoff pours out at a huge rate. What kind of work makes that much acid?',
+    mystery: 'The Leach labels all five intake vats "acid" without measuring them. What is really in each vat?',
     beats: [
-      { to: 0.25, say: 'Warm water read pH 6.51 yet held equal H₃O⁺ and OH⁻, so it was neutral. The warm base that read 7.00 held far more OH⁻ than H₃O⁺.' },
-      { to: 0.5, say: 'Formic acid read 2.54, acetic acid 2.88, and hydrofluoric acid 3.26. The pH depended on total [H₃O⁺], not just the percent ionized.' },
-      { to: 0.76, say: 'Ammonia reached equivalence at 25.0 mL of acid and pH 5.28. Methyl red changed colour right across that jump, while the other indicators did not.' },
+      { to: 0.20, say: 'At 60 °C, water splits into more ions so neutral water reads pH 6.51 with equal H₃O⁺ and OH⁻, while a dilute base at 60 °C reads 7.00 with far more OH⁻.' },
+      { to: 0.40, say: 'Formic acid read 2.54, acetic acid 2.88, and hydrofluoric acid 3.26. The pH depended on total H₃O⁺ made, not just the share of molecules split.' },
+      { to: 0.60, say: 'Ammonium nitrate read 4.98 (acidic), potassium chloride 7.00 (neutral), and sodium carbonate 11.65 (basic). Only ions from weak parents react with water.' },
+      { to: 0.80, say: 'Ammonia reached equivalence at 25.0 mL of acid and pH 5.28. Methyl red changed colour right across that jump, while the other indicators did not.' },
       { to: 0.94, say: '100 acetic acid spheres with 227 acetate spheres read pH 5.10. Choosing the buffer ratio sets the target pH.' }
     ],
-    pin: 'The runoff matches heavy ore washing, far beyond ordinary mining.'
+    pin: 'Each vat differed: warm neutral water, weak acids, reactive salts, ammonia, and a 2.27:1 buffer.'
   },
   /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
   'unit08/boss-tipper': {
@@ -910,35 +913,36 @@ export const QUEST_STORY = {
     role: 'Station Fix',
     mystery: 'Two clear waste streams run into the pond, and where they meet the water turns cloudy yellow. What is forming?',
     beats: [
-      { to: 0.2, say: 'One jar holds dissolved lead and nitrate ions; the other holds potassium and iodide ions. Pour them together and a yellow cloud forms.' },
-      { to: 0.5, say: 'Only lead and iodide ions lock together into a solid precipitate and leave the water.' },
-      { to: 0.74, say: 'The potassium and nitrate ions are spectator ions: they stay dissolved and unchanged before and after mixing.' },
-      { to: 0.94, say: 'The net ionic equation keeps only what changed: the lead ion and two iodide ions packing into a solid.' }
+      { to: 0.2, say: 'One jar holds dissolved lead and nitrate ions; the other holds potassium and iodide ions. Pour them together and a yellow solid forms.' },
+      { to: 0.5, say: 'Only lead and iodide ions lock together into a solid precipitate (PbI₂); potassium and nitrate ions stay dissolved as spectators.' },
+      { to: 0.74, say: 'Solubility rules track which ions stay dissolved (like Na⁺, K⁺, NH₄⁺, NO₃⁻). Clear solutions can still react, like H⁺ and OH⁻ forming water.' },
+      { to: 0.94, say: 'A complete ionic equation lists every dissolved ion; canceling the spectators on both sides leaves the net ionic equation.' }
     ],
-    pin: 'One pair of ions formed a solid, and that solid clouds the pond.'
+    pin: 'Lead and iodide ions formed lead iodide (PbI₂), a yellow solid that clouds the pond.'
   },
   'unit07/boss-golem': {
     scene: 'golem-vault',
     role: 'Boss Payoff',
-    mystery: 'Kettle\'s log records a 50-ton iron haul. Where did all that metal really come from?',
+    mystery: 'Kettle\'s log records a 50-ton iron haul from 39.9 tons of ore. Where did all that metal really come from?',
     beats: [
-      { to: 0.22, say: 'We checked every reaction and weight reading until the Recipe Golem ran out of reactants to run on.' },
-      { to: 0.5, say: 'Its valves sealed shut and the steam died down. Once a limiting reactant runs out, the reaction stops.' },
-      { to: 0.7, say: 'Behind the golem sits a locked vault holding the foundry\'s shipping log: ore in, iron out.' },
-      { to: 0.92, say: 'The ore in that log can produce at most 27.9 tons of iron. Claiming 50.0 tons means 22.1 tons came from somewhere else.' }
+      { to: 0.22, say: 'We checked all five of the Recipe Golem\'s tests: limiting feed, compound labels, balanced equations, percent yield, and the shipping log.' },
+      { to: 0.5, say: 'Every reaction obeyed conservation of mass and stoichiometry — once a limiting reactant runs out, production stops.' },
+      { to: 0.7, say: 'With the golem dispersed, we compared the foundry\'s shipping log against the iron ore equation: 39.9 tons of ore in, 50.0 tons of iron claimed out.' },
+      { to: 0.92, say: '39.9 tons of Fe₂O₃ ore can produce at most 27.9 tons of iron. Claiming 50.0 tons leaves 22.1 tons that could never have come from that ore.' }
     ],
-    pin: '22 of the 50 tons came from outside the ore. The shipping log is impossible.'
+    pin: '39.9 tons of ore give at most 27.9 tons; 22.1 tons came from outside scrap iron.'
   },
   'unit07/q4-balance': {
     scene: 'recipe-board',
     role: 'Station Fix',
     mystery: 'The furnace turns ore into iron. How do we count atoms in a recipe so no atom is lost?',
     beats: [
-      { to: 0.26, say: 'The furnace equation lists the reactants, Fe₂O₃ and CO, and the products, Fe and CO₂. Count the atoms and the sides disagree: oxygen is 4 on the left and 2 on the right.' },
-      { to: 0.6, say: 'A coefficient in front of a formula counts molecules, changing the atom counts while keeping each substance the same. Raise them one at a time until every row matches.' },
-      { to: 0.94, say: 'At 1, 3, 2, and 3, every row matches: 2 iron, 3 carbon, and 6 oxygen on each side.' }
+      { to: 0.22, say: 'The furnace equation lists the reactants, Fe₂O₃ and CO, and the products, Fe and CO₂. Count the atoms and the sides disagree: oxygen is 4 on the left and 2 on the right.' },
+      { to: 0.48, say: 'A coefficient in front of a formula counts molecules, changing the atom counts while keeping each substance the same. Raise them one at a time until every row matches.' },
+      { to: 0.72, say: 'At 1, 3, 2, and 3, every row matches: 2 iron, 3 carbon, and 6 oxygen on each side. State symbols — (s), (l), (g), (aq) — record each substance\'s state.' },
+      { to: 0.94, say: 'Groups that stay intact (like PO₄) can be counted as one piece, and conserving atoms even reveals the formula hidden inside sealed product bags.' }
     ],
-    pin: 'The furnace equation balances as Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
+    pin: 'Every atom must match on both sides; coefficients are how you change the count.'
   },
   'unit07/q2-names': {
     scene: 'crate-labels',
@@ -967,48 +971,50 @@ export const QUEST_STORY = {
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
     role: 'Direct Clue',
-    mystery: 'The foundry log says 40 tons of ore made 50 tons of iron. Is that possible?',
+    mystery: 'The foundry log says 40 tons of ore made 50 tons of iron. How do balanced equations predict product mass, and is that log possible?',
     beats: [
-      { to: 0.24, say: 'An equation counts molecules, not grams. Two hydrogens and one oxygen make two waters, and the masses still add to 36.0 on both sides.' },
-      { to: 0.5, say: 'To go from grams of one substance to grams of another, convert through moles. Three moles of hydrogen to two moles of ammonia is a mole ratio, regardless of mass.' },
-      { to: 0.72, say: 'Feed two reactants and the reaction stops when one runs out. What is left of the other is the excess.' },
-      { to: 0.94, say: 'Forty tons of ore can give at most 28.0 tons of iron. A real furnace keeps only a part of that.' }
+      { to: 0.24, say: 'An equation counts molecules, not grams. Two H₂ molecules and one O₂ molecule make two H₂O molecules, and the masses still add to 36.0 g on both sides.' },
+      { to: 0.5, say: 'To go from grams of one substance to grams or gas volume of another, convert through moles using molar mass and the equation\'s mole ratio.' },
+      { to: 0.72, say: 'Feed two reactants and the reaction stops when the limiting reactant runs out; what remains is excess. Impurities also lower the measured element percent.' },
+      { to: 0.94, say: 'Forty tons of ore can give at most 28.0 tons of iron (the theoretical yield), and a real furnace keeps only part of that.' }
     ],
-    pin: '40 tons of ore makes at most 28 tons of iron. 22 tons came from elsewhere.'
+    pin: '40 tons of ore make at most 28 tons; someone added 22 tons of outside iron.'
   },
   'unit07/q7-titrate': {
     scene: 'burette-count',
     role: 'Station Fix',
-    mystery: 'The foundry\'s cleaning tank holds an acid of unknown strength. How strong is it?',
+    mystery: 'The foundry\'s cleaning tank holds an acid of unknown strength. How can we measure its concentration?',
     beats: [
-      { to: 0.24, say: 'A burette adds base to the acid in measured amounts. Its reading tracks the exact volume added.' },
-      { to: 0.5, say: 'Each milliliter holds a fixed number of moles of base, and each mole of base neutralizes one mole of acid.' },
-      { to: 0.74, say: 'When all the acid has reacted, that is the equivalence point. The indicator changes color right at the endpoint.' },
-      { to: 0.95, say: 'So the acid\'s concentration equals the moles of base added divided by the acid\'s volume in liters.' }
+      { to: 0.24, say: 'A burette adds a known base to the acid in measured amounts. Its reading tracks the volume added.' },
+      { to: 0.5, say: 'Each mole of OH⁻ neutralizes one mole of H⁺ — so an acid like H₂SO₄ that releases two H⁺ needs twice as much base.' },
+      { to: 0.74, say: 'When all the acid has reacted, that is the equivalence point. Where the indicator changes color is the endpoint; a good indicator changes close to the equivalence point.' },
+      { to: 0.95, say: 'Dividing the moles of acid neutralized by the acid\'s volume in liters gives its concentration: 0.180 mol/L for the tank.' }
     ],
-    pin: 'Titration gave the exact concentration of the acid in the cleaning tank.'
+    pin: 'Titration showed the cleaning tank\'s HCl acid is 0.180 mol/L.'
   },
   'unit07/q8-kinds': {
     scene: 'furnace-log',
-    role: 'Toolkit',
+    role: 'Station Fix',
+    mystery: 'How can we classify the reactions in the foundry\'s furnace logs?',
     beats: [
-      { to: 0.24, say: 'The furnace log lists the ore reaction. In Fe₂O₃, each iron atom has oxidation number +3 and each oxygen has −2, adding up to 0.' },
-      { to: 0.5, say: 'The other reactant is CO, where carbon is +2 and oxygen is −2.' },
-      { to: 0.78, say: 'Six electrons transfer from the three carbons to the two irons. Iron drops from +3 to 0 (reduced), and carbon rises from +2 to +4 (oxidized).' },
-      { to: 0.97, say: 'Oxygen moves from the ore to the carbon. Because electrons transfer, this is a redox reaction that leaves pure iron behind.' }
-    ]
+      { to: 0.24, say: 'Reactions sort by what changes: synthesis joins substances into one, decomposition splits one into several, and combustion burns fuel in oxygen to make CO₂ and H₂O.' },
+      { to: 0.5, say: 'In an acid-base reaction, a proton (H⁺) moves from an acid to a base. In a redox reaction, electrons transfer and oxidation numbers change.' },
+      { to: 0.78, say: 'In Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂, six electrons move from carbon to iron: iron drops +3 to 0 (reduced) and carbon rises +2 to +4 (oxidized).' },
+      { to: 0.97, say: 'One reaction can belong to several kinds at once because each kind tracks a different feature; the ore reaction is redox, leaving pure iron behind.' }
+    ],
+    pin: 'Reactions sort by joining, splitting, burning, proton transfer, or electron transfer; ore smelting is redox.'
   },
   'unit07/q9-hsab': {
     scene: 'hsab-vat',
     role: 'Station Fix',
-    mystery: 'The foundry\'s waste vat holds several metals mixed together. How can we pull them apart?',
+    mystery: 'The foundry\'s waste vat holds several metals mixed together. Metals dissolve as ions — what property lets us pull them apart?',
     beats: [
       { to: 0.25, say: 'Hard ions are small and compact with tightly held electron clouds, while soft ions are large with clouds easily pulled out of shape.' },
-      { to: 0.5, say: 'Hard cations like calcium lock to hard fluoride with strong ionic attraction. Mismatched pairs stay dissolved in the water.' },
-      { to: 0.75, say: 'Soft silver ions share electrons with soft sulfide through covalent overlap, forming an insoluble black precipitate.' },
-      { to: 0.95, say: 'Hard soft acid base theory explains how the foundry selectively separates precious metals from furnace waste.' }
+      { to: 0.5, say: 'In the four test pairs, hard Ca²⁺ paired with hard F⁻ to form a solid, while the mismatched pairs stayed dissolved.' },
+      { to: 0.75, say: 'Soft ions like Ag⁺ and Pb²⁺ pair with soft sulfide (S²⁻) — held by attraction plus overlapping clouds — forming dark solids.' },
+      { to: 0.95, say: 'That hard-versus-soft guide lets the foundry drop soft lead out of wastewater as PbS while leaving hard magnesium dissolved.' }
     ],
-    pin: 'Each metal holds on to sulfide differently, and that difference separates them.'
+    pin: 'Add sulfide: soft lead (Pb²⁺) drops out as a solid, while hard magnesium (Mg²⁺) stays dissolved.'
   },
   'unit05/q1-flow': {
     scene: 'frost-manifold',

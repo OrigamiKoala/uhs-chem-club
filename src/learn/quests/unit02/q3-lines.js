@@ -34,7 +34,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { planJump, jumpsForLine, photonJoules, LINES, bohrJoules } from '../../engine/lightdata.js';
 import {
   opticsTable, spectrograph, energyLadder, linesStrip, filament, gasTube, coolCell, refStrip,
@@ -306,14 +305,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  2: ['Drag a source into the socket.'],
-  3: ['Put the tube in the socket, then slide an element\'s', 'strip into the reference slot.'],
-  4: ['Drag the electron to another level.', 'Any light that leaves is written on the strip.'],
-  5: ['Put the filament in the socket and the cool cell in front of it,', 'then slide a strip into the reference slot.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

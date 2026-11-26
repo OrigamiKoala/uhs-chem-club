@@ -62,7 +62,7 @@ function recipeBoard(ctx, w, h, t) {
       text(ctx, el, w * 0.1, y, { size: 26, color: C.dust, align: 'left', weight: 700 });
       text(ctx, String(l), w * 0.34, y, { size: 28, color: C.amber, weight: 700 });
       text(ctx, String(r), w * 0.66, y, { size: 28, color: C.amber, weight: 700 });
-      text(ctx, l === r ? '=' : '≠', w / 2, y, { size: 28, color: l === r ? C.green : C.danger, weight: 700 });
+      text(ctx, l === r ? '= equal' : '≠ unequal', w / 2, y, { size: 22, color: l === r ? C.green : C.danger, weight: 700 });
     });
   }
 }

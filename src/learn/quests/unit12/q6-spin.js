@@ -18,7 +18,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   lodeTable, magnetFixture, dsplitFixture, dsplitRead, specFixture, vial, note, numCard, lodeLeadFixture
 } from '../../table/kits/lode.js';
@@ -311,16 +310,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Holder, "Switch On", then the answer slot.'],
-  2: ['Drag the card you choose into the slot.'],
-  3: ['Tap boxes to place six, then "Test Energy".'],
-  4: ['Set the dials, "Fill Lowest", then sort.'],
-  5: ['Rank on the rail, then test on the magnet.'],
-  6: ['Test in the lamp, choose in the slot, then magnet.'],
-  7: ['Test both vials on the magnet, then lay a card.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

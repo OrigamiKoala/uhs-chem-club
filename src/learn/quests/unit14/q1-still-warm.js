@@ -21,7 +21,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   nukeTable, ncountFixture, keptCount, keptCounts, nsrc, nnucFixture, nchoiceFixture, chosenIndex, nleadFixture, ndrumFixture,
   note, plaqueFixture
@@ -334,17 +333,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Drag a card into the Sample slot and press "Count"; drag your answer into the answer slot.'],
-  2: ['Press "Count"; "Lead Housing" closes lead round the tube. Tap a statement to answer.'],
-  3: ['Press "Watch the Nucleus". Tap a statement to answer.'],
-  4: ['Drag the card you choose into the slot.'],
-  5: ['Tap a temperature, then press "Count".'],
-  6: ['Count each card, then type your answer in the field.'],
-  7: ['Tap a drum to look inside its wall. Tap a statement to answer.'],
-  8: ['Drag a card into the Sample slot and press "Count"; drag your answer into the answer slot.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

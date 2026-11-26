@@ -82,9 +82,9 @@ function capacityLimit(ctx, w, h, t) {
     return;
   }
   const k = ease(win(t, 0.78, 0.9));
-  text(ctx, 'Two pours of acid, 10 spheres each, on a solid with 40 spheres', w / 2, 34, { size: 24, color: C.dust });
+  text(ctx, 'One pour of acid, 10 spheres, on a solid with 40 spheres', w / 2, 34, { size: 24, color: C.dust });
   [['Mg_OH_2', true, 'Magnesium hydroxide', 80], ['AgCl', false, 'Silver chloride', 540]].forEach(([salt, basic, title, x]) => {
-    const n = k > 0.95 ? 2 : 0;
+    const n = k > 0.95 ? 1 : 0;
     const q = solidAfter({ salt, solid: 40, basic, n, acidSph: 10 });
     const d = spheres(ctx, x, 110, 340, 150, 20, 6, [[q.cations, CAT_INK], [q.left, C.steel]]);
     text(ctx, title, x + 170, 88, { size: 21, color: C.dust, weight: 700 });

@@ -18,7 +18,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, eqn, note, leadFixture, stackFixture, stackRead, FORMATION_TABLE
 } from '../../table/kits/heat.js';
@@ -219,14 +218,6 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag your prediction into the slot.'],
-  2: ['Drag cards into the two route stacks.'],
-  3: ['Drag cards into the stack; tap a card to Flip or press Larger.'],
-  4: ['Drag cards into the stack; tap a card to Flip.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

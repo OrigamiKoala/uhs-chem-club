@@ -189,6 +189,7 @@ export function loadFixture(id, at, { anode = 'sn', cathode = 'pb', cAnode0 = 1,
   const lx = 5; const rx = 40;
   return {
     id, kind: 'cellloadrun', label: title, at: { ...at }, size: { w, h }, runLabel: 'Run',
+    ...(tick >= LOAD.maxTick ? { noRun: true } : {}),
     dials: { tick: { min: 0, max: LOAD.maxTick, step: 1, value: tick, label: 'Time' } },
     props: {
       hidden: ['tick'], backdrop: true, anode, cathode, cAnode0, cCathode0, counts, lx, rx,

@@ -129,7 +129,7 @@ registerPiece('phmeter2', {
 /** A pH meter (`scale: 'pH'`) or a pOH meter (`'pOH'`), loose on the table at `at`. */
 export const scaleMeter = (id, at, scale = 'pH', extra = {}) => ({
   id, kind: 'phmeter2', label: scale === 'pOH' ? 'pOH meter' : 'pH meter', at, props: { scale },
-  caption: scale === 'pOH' ? 'Lay it on a flask to read its pOH.' : 'Lay it on a flask to read its pH.', ...extra
+  ...extra
 });
 
 /* ------------------------------------------------------------------ the flask */

@@ -17,7 +17,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { lodeTable, dshellFixture, dshellRead, elemCard, note, plaqueFixture, lodeLeadFixture } from '../../table/kits/lode.js';
 import { ELEMENTS } from '../../engine/lodedata.js';
 
@@ -250,15 +249,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Tap a box to add an electron; a third tap empties it.'],
-  2: ['Tap a box to add an electron; a third tap empties it.'],
-  3: ['Drag the card you choose into the slot.'],
-  4: ['Tap an electron to remove it.'],
-  5: ['Tap an electron to remove it.'],
-  6: ['Drag a card onto the ladder, then tap electrons away.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

@@ -112,7 +112,7 @@ export function boardFixture(id, at, { eq, dialed = 'all', start = {}, sub = nul
     id, kind: 'eqboard', label: title, at: { ...at }, size: { w, h }, dials, noRun: true,
     props: {
       backdrop: true, eq, dialed: dl, sub, states, sealed, lex, eqTop,
-      ...(nd ? { rowPitch, grab, tickLabels: true } : {})
+      ...(nd ? { rowPitch, grab, tickLabels: true, dialIndent: 5.5 } : {})
     }
   };
 }
@@ -211,8 +211,32 @@ function paintSide(ctx, F, groups, x0, w, y0, bodyH, o) {
     const ax = x0 + LABEL_W; const aw = w - LABEL_W;
     const mol = (cx, cy) => {
       if (g.sealed) {
-        ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(cx - 1.6)) + 0.5, Math.round(F.y(cy - 1.6)) + 0.5, Math.round(F.len(3.2)), Math.round(F.len(3.2)));
-        say(ctx, '?', F.x(cx), F.y(cy), F.size(2.6, 7), { align: 'center', color: DUST, weight: 700 });
+        const opened = o.revealedFormula && o.revealedFormula === g.f;
+        const bx = F.x(cx); const by = F.y(cy);
+        const bw = F.len(3.4); const bh = F.len(3.6);
+        if (opened) {
+          ctx.strokeStyle = AMBER; ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(bx - bw * 0.55, by - bh * 0.35);
+          ctx.lineTo(bx - bw * 0.45, by + bh * 0.55);
+          ctx.lineTo(bx + bw * 0.45, by + bh * 0.55);
+          ctx.lineTo(bx + bw * 0.55, by - bh * 0.35);
+          ctx.stroke();
+          drawMolecule(ctx, F, g.f, cx, cy + 0.2, u * 0.72, false);
+        } else {
+          // Closed tied bag
+          ctx.fillStyle = '#25211a'; ctx.strokeStyle = AMBER; ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(bx - bw * 0.25, by - bh * 0.55);
+          ctx.lineTo(bx + bw * 0.25, by - bh * 0.55);
+          ctx.lineTo(bx + bw * 0.16, by - bh * 0.32);
+          ctx.lineTo(bx + bw * 0.48, by + bh * 0.48);
+          ctx.lineTo(bx - bw * 0.48, by + bh * 0.48);
+          ctx.lineTo(bx - bw * 0.16, by - bh * 0.32);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          say(ctx, '?', bx, by + bh * 0.1, F.size(2.6, 7.5), { align: 'center', color: AMBER, weight: 700 });
+        }
       } else drawMolecule(ctx, F, g.f, cx, cy, u, o.rings);
     };
     if (o.phases) {
@@ -259,7 +283,8 @@ function paintWindow(ctx, f, state, b) {
   say(ctx, 'BEFORE', F.x(3), F.y(3.4), hs, { color: DIM });
   say(ctx, 'AFTER', F.x(mid + 1.8), F.y(3.4), hs, { color: DIM });
   const bodyH = h - WINDOW_BODY.top - WINDOW_BODY.bottom;
-  const opts = { phases: Boolean(p.phases), rings: Boolean(p.rings) };
+  const revealedFormula = state.fixtures.fm ? formulaRead(state, 'fm').formula : null;
+  const opts = { phases: Boolean(p.phases), rings: Boolean(p.rings), revealedFormula };
   if (r.before.length) paintSide(ctx, F, r.before, 3, mid - 4.8, WINDOW_BODY.top, bodyH, opts);
   if (r.after.length) paintSide(ctx, F, r.after, mid + 1.8, mid - 4.8, WINDOW_BODY.top, bodyH, opts);
   // The key: the colour of each kind of atom drawn.
@@ -311,13 +336,14 @@ function paintLedger(ctx, f, state, b) {
   const w = f.size.w;
   const hs = F.size(2.1, 6);
   const showRight = !f.props.checkMode || state.recorder.rows.some(r => r.label === ledgerSig(state, f.id));
-  say(ctx, f.props.groups ? 'Pieces' : 'Atoms', F.x(4), F.y(8), hs, { color: DIM });
+  say(ctx, f.props.groups ? 'Pieces (rings)' : 'Atoms', F.x(4), F.y(8), hs, { color: DIM });
   say(ctx, 'Reactants', F.x(w * 0.58), F.y(8), hs, { align: 'center', color: DIM });
   say(ctx, 'Products', F.x(w * 0.86), F.y(8), hs, { align: 'center', color: DIM });
   const size = F.size(2.9, 7.5);
   rows.forEach((r, i) => {
     const y = 12.4 + i * 4.1;
-    say(ctx, pretty(r.el), F.x(4), F.y(y), size, { weight: 700 });
+    const tag = f.props.groups ? (r.el === 'OH' || r.el === 'PO4' ? ' (ring)' : r.el === 'H' ? ' (alone)' : '') : '';
+    say(ctx, `${pretty(r.el)}${tag}`, F.x(4), F.y(y), size, { weight: 700 });
     say(ctx, String(r.left), F.x(w * 0.58), F.y(y), size, { align: 'center', color: AMBER, weight: 700 });
     say(ctx, showRight ? String(r.right) : '?', F.x(w * 0.86), F.y(y), size, { align: 'center', color: showRight ? AMBER : DIM, weight: 700 });
   });
@@ -356,10 +382,17 @@ export function formulaRead(state, fid) {
 }
 
 /** A formula built by setting how many atoms of each kind it has (`elements`, in the order they are written). */
-export function formulaFixture(id, at, { elements = ['P', 'O'], w = 56, title = 'Formula' } = {}) {
+export function formulaFixture(id, at, { elements = ['P', 'O'], w = 60, title = 'Formula' } = {}) {
   const dials = {};
-  elements.forEach(el => { dials[`el_${el}`] = { min: 0, max: 6, step: 1, value: 0, label: `${el} atoms _` }; });
-  return { id, kind: 'eqformula', label: title, at: { ...at }, size: { w, h: R1(contentTop(elements.length) + 9) }, dials, noRun: true, props: { backdrop: true, elements } };
+  const grab = {};
+  elements.forEach(el => {
+    dials[`el_${el}`] = { min: 0, max: 6, step: 1, value: 0, label: `${el} atoms _` };
+    grab[`el_${el}`] = 3.6;
+  });
+  return {
+    id, kind: 'eqformula', label: title, at: { ...at }, size: { w, h: R1(9.5 + elements.length * 8.0 + 5.5) }, dials, noRun: true,
+    props: { backdrop: true, elements, rowPitch: 8.0, grab, tickLabels: true, dialIndent: 5.5 }
+  };
 }
 
 registerFixture('eqformula', {

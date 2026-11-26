@@ -23,7 +23,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { matterTable, note, plaqueFixture, fixed, whereIs, mleadFixture } from '../../table/kits/matter.js';
 import { flaskFixture, sample, flaskRead, dropFor } from '../../table/kits/matter-flask.js';
 import { SOLUTES } from '../../engine/matterdata.js';
@@ -414,8 +413,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines removed from the plate. */
-applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

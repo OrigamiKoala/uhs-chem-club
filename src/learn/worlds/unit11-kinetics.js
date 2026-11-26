@@ -11,13 +11,13 @@ export const UNIT_11 = {
   place: 'Storm belt',
   title: 'Kinetics',
   line: 'Reaction rates, rate laws, mechanisms, activation energy, and catalysis.',
-  brief: 'Investigate reaction rates, experimental rate laws, integrated plots, collision theory, mechanisms, and catalysts across six refinery benches.',
+  brief: 'Measure reaction rates, find rate laws, test collisions, trace reaction steps, and see how catalysts work across six refinery benches.',
 
   quests: [
     {
       id: 'q1-watch',
       title: 'How Fast',
-      line: 'Two feed lines yield the same fuel, yet one tower is already overheating.',
+      line: 'Two feed lines make the same fuel, yet one tower is already overheating.',
       arena: 'bench',
       stageCount: 7,
       status: 'live',
@@ -35,7 +35,7 @@ export const UNIT_11 = {
     {
       id: 'q3-time',
       title: 'Concentration Over Time',
-      line: 'Half the peroxide broke down in twenty seconds; how long until half of what remains is gone?',
+      line: 'Half the fuel broke down in twenty seconds. How long until half of what is left is gone?',
       arena: 'bench',
       stageCount: 7,
       status: 'live',

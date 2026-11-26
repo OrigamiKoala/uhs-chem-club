@@ -19,7 +19,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { potTable, jar, plaqueFixture, stmt, tag, chip, seatedIn } from '../../table/kits/pot.js';
 import {
   windowFixture, windowRead, burnerFixture, burnerRead, gasrigFixture, rigRead, gjar, rxn, kboardFixture, lookFixture,
@@ -134,7 +133,12 @@ const S8_CARDS = [
   { id: 'lime', eq: 'CaCO3(s) -> CaO(s) + CO2(g)' },
   { id: 'ch4', eq: 'CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(g)' }
 ];
-const GUESS = { one_syn: 'Synthesis only', one_comb: 'Combustion only', one_redox: 'Redox only', many: 'More than one kind' };
+const GUESS = {
+  one_syn: 'Only synthesis (two join into one)',
+  one_comb: 'Only combustion (burns in oxygen)',
+  one_redox: 'Only redox (electrons transfer)',
+  many: 'Synthesis, combustion, and redox'
+};
 
 /* ------------------------------------------------------------------
    HELPERS
@@ -176,7 +180,7 @@ export const STAGES = [
         title: 'Synthesis and Decomposition',
         body: 'In a synthesis, two or more substances join into one. In a decomposition, one substance breaks into two or more.'
       },
-      prompt: 'Which reactions are synthesis, which are decomposition, and which are neither?',
+      prompt: 'Put each vessel in a tray: synthesis (joins into one), decomposition (splits into several), or neither.',
       widget,
       table: potTable({
         pieces: S1_POTS.map((p, i) => chip(p.id, p.name, { x: 10.5 + i * 18.6, y: 57.6 })),
@@ -184,7 +188,7 @@ export const STAGES = [
         zones: { trays: trayZone(S1_TRAYS, { x: 131.2, y: 12 }, 20, { w: 36, h: 14, cell: 18, cellH: 10 }) }
       }),
       hints: [
-        'Use the "Vessel" dial and the "Run" key to look at each reaction, then drag the cards into the trays.',
+        'Look at how many different substances appear before and after each reaction.',
         'Compare how many different substances stand on the left of the particle view with how many stand on the right.',
         'Group reactions by whether substances join together, break apart, or do neither.'
       ],
@@ -198,7 +202,7 @@ export const STAGES = [
       reward: {
         log: 'Some reactions join, some split, some do neither.',
         title: 'Synthesis and Decomposition',
-        body: 'Counting the substances on each side sorts them into synthesis and decomposition. Many reactions are neither: their atoms change partners.'
+        body: 'Counting the substances on each side sorts synthesis and decomposition. The "neither" reactions have names you will meet next — replacement and combustion — where atoms change partners.'
       }
     };
   })(),
@@ -211,9 +215,9 @@ export const STAGES = [
       title: 'Three Gas Jars',
       briefing: {
         title: 'Testing Unknown Gases',
-        body: 'Each gas reacts differently to a glowing splint, a lit splint, and limewater. Test each jar to identify the gas inside.'
+        body: 'A glowing wooden splint, a lit splint, and clear limewater each react differently with different gases. Test each jar to learn the gas tests you will use on a flame\'s products next.'
       },
-      prompt: 'Which gas is in each sample jar?',
+      prompt: 'Learn the gas tests for reading combustion products next: which gas is in each sample jar?',
       widget,
       table: potTable({
         pieces: [
@@ -229,7 +233,7 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Drag a sample jar onto the seat, turn the "Test" dial and press "Test", then drag a name onto each sample.',
+        'Watch how each test responds when you run it on a sample jar.',
         'Compare which tests change in each jar and which stay as they were.',
         'Run only the tests needed to tell each jar apart from the other gases.'
       ],
@@ -249,9 +253,9 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: `${open.s.name} has no name yet.` };
       },
       reward: {
-        log: 'Each gas has a test that only it answers.',
+        log: 'Each gas has a test pattern that tells it from the others.',
         title: 'Gas Tests',
-        body: 'Oxygen relights a glowing splint, hydrogen pops with a lit one and carbon dioxide turns limewater cloudy. Nitrogen changes none of them.'
+        body: 'Oxygen relights a glowing splint, hydrogen pops with a lit one, and carbon dioxide turns limewater cloudy. Nitrogen changes none of them.'
       }
     };
   })(),
@@ -263,7 +267,7 @@ export const STAGES = [
     return {
       id: 's3-burn',
       title: 'Burn a Fuel',
-      prompt: 'What does methane make when it burns in oxygen?',
+      prompt: 'When methane burns in oxygen and you test the gas jar, what products come out?',
       widget,
       table: potTable({
         pieces: [
@@ -274,11 +278,11 @@ export const STAGES = [
         fixtures: [b.fixture, g.fixture],
         zones: {
           slots: [...b.slots, g.slot],
-          trays: [{ id: 'made', label: 'Made by the burning', at: { x: 136, y: 34 }, size: { w: 28, h: 46 }, cell: 28, cellH: 12 }]
+          trays: [{ id: 'made', label: 'Made by the burning', at: { x: 135, y: 34 }, size: { w: 28, h: 46 }, cell: 26, cellH: 12 }]
         }
       }),
       hints: [
-        'Use the burner and its "Burn" key, then the gas tests with the "Test" dial and the "Test" key, then the tray.',
+        'Burn the methane into the gas jar, then compare how each gas test responds.',
         'Compare how each test changes in the jar after the burner has run, and what that test is for.',
         'A positive gas test means that substance was formed by burning the methane.'
       ],
@@ -297,9 +301,9 @@ export const STAGES = [
         return { ok: false, msg: 'One of the gas tests was positive, but its product is missing from the tray.' };
       },
       reward: {
-        log: 'Methane burns to carbon dioxide and water.',
+        log: 'Methane burns in oxygen to make carbon dioxide and water.',
         title: 'Combustion',
-        body: 'The tests found carbon dioxide and water. Burning a fuel in oxygen is combustion.'
+        body: 'The tests found carbon dioxide and water. Burning a fuel in oxygen (using up O₂) is combustion — one of the Stage 1 reactions that was neither synthesis nor decomposition.'
       }
     };
   })(),
@@ -314,7 +318,7 @@ export const STAGES = [
         title: 'Acid-Base Reactions',
         body: 'A hydrogen ion (H⁺) is a single proton. In an acid-base reaction, a proton transfers from an acid to a base.'
       },
-      prompt: 'In which reactions does a proton transfer from one molecule to another?',
+      prompt: 'In which reactions does a proton (H⁺) move from one molecule to another (acid-base)?',
       widget,
       table: potTable({
         pieces: S4_POTS.map((p, i) => chip(p.id, p.name, { x: 10.5 + i * 18.6, y: 57.6 })),
@@ -322,21 +326,23 @@ export const STAGES = [
         zones: { trays: trayZone(S4_TRAYS, { x: 128, y: 17 }, 28, { w: 44, h: 18, cell: 22, cellH: 10 }) }
       }),
       hints: [
-        'Use the "Vessel" dial and the "Run" key to look at each reaction, then drag the cards into the two trays.',
-        'Look for an amber ring on a hydrogen atom, and see whether it sits on a different molecule after the reaction.',
-        'An acid being present is not enough; the ringed hydrogen has to change molecules.'
+        'Compare the formulas before and after each reaction to see where hydrogen (H) moves.',
+        'Check whether an H⁺ leaves one molecule (like HCl) and joins a different molecule (like OH⁻ → H₂O or NH₃ → NH₄⁺).',
+        'Having HCl present is not enough: in Mg + 2 HCl → MgCl₂ + H₂, H⁺ gains electrons to make H₂ gas instead of moving to another molecule.'
       ],
       check(state) {
         return sortCheck(state, S4_POTS, S4_TRAYS, p => (protonTransfer(eqOf(p.eq)) ? 'ring' : 'none'), (p, tray, i, t) => {
           if (!ranPot(t, 'win', i)) return `${p.name} has not been run in the particle view yet.`;
-          const ringed = Boolean(protonTransfer(eqOf(p.eq)));
-          return `${p.name} is in the tray "${trayLabel(S4_TRAYS, tray)}", and its particle view after Run shows ${ringed ? 'an amber ring' : 'no amber ring'}.`;
+          const tr = protonTransfer(eqOf(p.eq));
+          return tr
+            ? `${p.name} transfers H⁺ from ${pretty(tr.donor)} to ${pretty(tr.acceptor)}, so it belongs in "Acid-base".`
+            : `${p.name} does not transfer H⁺ to another molecule, so it belongs in "Not acid-base".`;
         });
       },
       reward: {
         log: 'A hydrogen ion passes from an acid to a base.',
         title: 'Acid-Base Reaction',
-        body: 'When the ringed H⁺ moves to a different molecule, the reaction is acid-base.'
+        body: 'When an H⁺ moves from one molecule (the acid) to another (the base), the reaction is acid-base. Mg + 2 HCl makes H₂ gas instead, so it is not acid-base.'
       }
     };
   })(),
@@ -349,24 +355,24 @@ export const STAGES = [
       title: 'Zinc in Copper Sulfate',
       briefing: {
         title: 'Oxidation and Reduction',
-        body: 'Losing electrons is oxidation and gaining electrons is reduction.'
+        body: 'Watch the small orange dots (electrons) on each atom before and after the reaction. Losing electrons is oxidation; gaining electrons is reduction.'
       },
-      prompt: 'Which particle is oxidised and which is reduced?',
+      prompt: 'Which particle loses electrons (is oxidized) and which gains electrons (is reduced)?',
       widget,
       table: potTable({
         pieces: S5_PARTS.map((p, i) => tag(p.id, p.label, { x: 14 + i * 28, y: 57.6 })),
         fixtures: [w],
         zones: {
           slots: [
-            { id: 'gave', label: 'Oxidised', at: { x: 122, y: 16 }, size: { w: 30, h: 14 } },
+            { id: 'gave', label: 'Oxidized', at: { x: 122, y: 16 }, size: { w: 30, h: 14 } },
             { id: 'took', label: 'Reduced', at: { x: 122, y: 40 }, size: { w: 30, h: 14 } }
           ]
         }
       }),
       hints: [
-        'Press "Run", then drag one particle into each slot.',
-        'Compare the amber dots on each atom before the reaction with the dots after it.',
-        'The particle that loses dots is oxidised; the one that gains them is reduced.'
+        'Compare the small orange electron dots on each atom before and after the reaction.',
+        'Check which atom starts with orange electron dots and loses them, and which atom gains them.',
+        'The particle that loses electrons is oxidized; the one that gains them is reduced.'
       ],
       check(state) {
         const t = state.table;
@@ -376,14 +382,14 @@ export const STAGES = [
         if (!gave || !took) return { ok: false, notYet: true, msg: 'Fill both slots.' };
         if (gave.el === 'Zn' && took.el === 'Cu') return { ok: true };
         if (!ranPot(t, 'win', 0)) return { ok: false, msg: 'Run the particle view first.' };
-        if (gave.el === 'SO4' || took.el === 'SO4') return { ok: false, msg: `${S5_PARTS[2].label} has no dots before the reaction or after it.` };
-        if (gave.el === 'Cu') return { ok: false, msg: `${gave.label} has no dots before the reaction.` };
-        return { ok: false, msg: `${took.label} has dots before the reaction already.` };
+        if (gave.el === 'SO4' || took.el === 'SO4') return { ok: false, msg: `${S5_PARTS[2].label} has no electrons (orange dots) moving before or after the reaction.` };
+        if (gave.el === 'Cu') return { ok: false, msg: `${gave.label} has no electrons (orange dots) to lose before the reaction.` };
+        return { ok: false, msg: `${took.label} already has the orange electron dots before the reaction, so it loses them instead of gaining.` };
       },
       reward: {
         log: 'Zinc lost 2 electrons; copper gained them.',
         title: 'Oxidation and Reduction',
-        body: 'Zinc lost two electrons and was oxidised; Cu²⁺ gained them and was reduced. A reaction in which electrons move is a redox reaction.'
+        body: 'Zinc lost two electrons and was oxidized; Cu²⁺ gained them and was reduced. A reaction where electrons move is a redox reaction (reduction + oxidation).'
       }
     };
   })(),
@@ -396,7 +402,7 @@ export const STAGES = [
       title: 'Oxidation Number',
       briefing: {
         title: 'Oxidation Number',
-        body: 'An oxidation number is the charge an atom would have if every shared electron went to the atom that pulls harder. Oxygen is usually −2.'
+        body: 'An oxidation number is the charge an atom would have if every shared electron went to the atom that attracts electrons more. Oxygen is usually −2.'
       },
       prompt: `What is the oxidation number of manganese in MnO₄${chargeText(-1)}?`,
       entry: { id: 'on', label: 'Oxidation number of Mn', unit: '' },
@@ -423,7 +429,7 @@ export const STAGES = [
       reward: {
         log: 'Manganese has oxidation number +7 in MnO₄⁻.',
         title: 'Oxidation Number',
-        body: 'Four oxygens at −2 make −8, and the ion’s charge is −1, so manganese has oxidation number +7. A rising oxidation number means electrons were lost.'
+        body: 'Four oxygens at −2 make −8, and the ion’s charge is −1, so manganese has oxidation number +7. A rising oxidation number means electrons were lost (oxidation, the opposite of reduction).'
       }
     };
   })(),
@@ -441,9 +447,9 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 116, y: 38 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the four cards and the slot.',
+      'Look at the equation 2 Mg + O₂ → 2 MgO and think about which reaction definitions it fits.',
       'Think about what is happening to the magnesium, to the oxygen, and to the electrons.',
-      'Commit to the answer you expect, then check it against the readings on the next bench.'
+      'Commit to the answer you expect, then check it against the furnace log on the next bench.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -467,8 +473,8 @@ export const STAGES = [
       title: 'The Furnace Log',
       get prompt() {
         const g = recall(QUEST_KEY);
-        const guess = g && GUESS[g] ? `You guessed "${GUESS[g].toLowerCase()}". ` : '';
-        return `${guess}Which kind of reaction is each of these?`;
+        const guess = g && GUESS[g] ? `You guessed "${GUESS[g]}". ` : '';
+        return `${guess}For each kind on the dial, tap every equation that fits it (one equation can belong to several kinds).`;
       },
       widget,
       table: potTable({
@@ -477,8 +483,8 @@ export const STAGES = [
         zones: { slots: [] }
       }),
       hints: [
-        'Turn the "Look for" dial to a kind, then tap the cards that belong to it.',
-        'Compare each card\'s reading with what that kind of reaction needs, and check the same card under every kind.',
+        'Check the rule shown under the "Look for" dial, then inspect each equation.',
+        'Compare each equation with what that kind of reaction needs, and check the same equation under all five kinds.',
         'A reaction can belong to more than one kind, so check every card under all five kinds.'
       ],
       check(state) {
@@ -498,14 +504,10 @@ export const STAGES = [
         return { ok: true };
       },
       get reward() {
-        const g = recall(QUEST_KEY);
-        const verdict = g && GUESS[g]
-          ? (g === 'many' ? 'The board agreed with your guess. ' : 'The board disagreed with your guess. ')
-          : '';
         return {
           log: 'Magnesium burning is a synthesis, a combustion and a redox reaction.',
           title: 'A Reaction Has Many Kinds',
-          body: `${verdict}Burning magnesium is a synthesis, a combustion, and a redox reaction at once. Each kind tracks a different feature: substances, oxygen, protons, or electrons.`
+          body: 'Burning magnesium is a synthesis, a combustion, and a redox reaction at once. Each of the five furnace-log reactions can fit multiple kinds because each kind tracks a different feature.'
         };
       }
     };
@@ -515,14 +517,6 @@ export const STAGES = [
 /** The gases a burn of the fuel leaves. */
 function burnerGases() { return ['CO2', 'H2O']; }
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  5: ['Press Run, then drag a particle into each slot.'],
-  6: ['Type your answer in the box below.'],
-  7: ['Drag the card you choose into the slot.'],
-  8: ['Tap a card to light it,', 'tap again to put it out.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

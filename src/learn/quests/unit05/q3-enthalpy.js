@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { heatTable, charge, note, cupFixture, shelvesFixture, plaqueFixture, markerFixture, leadFixture, rxnFixture, markerRead, cupRead, shelvesRead, fixed, FUELS, SPECIFIC_HEAT_WATER } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 6 };
@@ -347,16 +346,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag the powder onto the cup, then turn the "ΔH" dial.'],
-  2: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
-  3: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
-  4: ['Type your answer in the box below.'],
-  5: ['Drag your prediction into the slot.'],
-  6: ['Test each fuel in the tank, then rank them on the rail.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

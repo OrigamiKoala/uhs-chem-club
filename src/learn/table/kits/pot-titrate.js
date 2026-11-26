@@ -98,22 +98,22 @@ export function titratorFixture(id, at, o = {}) {
     named = true, title = named ? 'Burette and flask' : 'Tube and flask', runLabel = 'Open Tap', baseName = 'Base', acidName = 'acid'
   } = o;
   const dials = { press: { min: 1, max: presses.length, step: 1, value: pressStart, label: 'Per press', labels: presses.map(v => `${v} mL`) } };
-  const top = contentTop(1);
-  const w = win ? 96 : 54;
-  const h = 56;
+  const top = contentTop(1) + 2.6;
+  const w = win ? 96 : 58;
+  const h = 58;
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
-  const c0 = top + 3.5;
+  const c0 = top + 2.2;
   const slots = [];
   let mouth = null;
   if (indicator) {
     mouth = `${id}.mouth`;
-    slots.push({ id: mouth, label: ' ', at: { x: x0 + 32.5, y: y0 + c0 + 27 }, size: { ...SLOT } });
+    slots.push({ id: mouth, label: ' ', at: { x: x0 + 34.5, y: y0 + c0 + 24.5 }, size: { ...SLOT } });
   }
   return {
     fixture: {
       id, kind: 'titrator', label: title, at: { ...at }, size: { w, h }, dials, runLabel,
-      props: { backdrop: true, named, top, c0, mode: perm ? 'perm' : 'acid', sys, perm, presses: presses.slice(), window: win, unit, mouth, baseName, acidName }
+      props: { backdrop: true, named, top, c0, mode: perm ? 'perm' : 'acid', sys, perm, presses: presses.slice(), window: win, unit, mouth, baseName, acidName, grab: { press: 3.6 }, dialIndent: 5.5 }
     },
     slots, mouth, size: { w, h }
   };
@@ -161,7 +161,7 @@ function paintTitrator(ctx, f, state, b) {
   const c0 = p.c0;
   const small = F.size(2.0, 6);
   // The burette: a tube 50 mL long, the base in it standing from the surface down to the tip, and a scale on its left.
-  const tx = 8; const tw = 6; const th = 16;
+  const tx = 8; const tw = 6; const th = 14;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(tx), F.y(c0), F.len(tw), F.len(th));
   const level = th * (r.vMl / BURETTE_ML);
   ctx.fillStyle = '#8aa0b8'; ctx.globalAlpha = 0.6;
@@ -175,43 +175,43 @@ function paintTitrator(ctx, f, state, b) {
   }
   ctx.strokeStyle = AMBER; ctx.beginPath(); ctx.moveTo(F.x(tx - 1.6), F.y(c0 + level)); ctx.lineTo(F.x(tx + tw), F.y(c0 + level)); ctx.stroke();
   // The tap and the tip.
-  ctx.fillStyle = STEEL; ctx.fillRect(F.x(tx + 1), F.y(c0 + th), F.len(tw - 2), F.len(1.6));
-  ctx.fillRect(F.x(tx + tw / 2 - 0.4), F.y(c0 + th + 1.6), F.len(0.8), F.len(2.2));
-  // Its name, its strength and the total let out.
-  say(ctx, p.baseName, F.x(17), F.y(c0 + 1.6), small, { color: DIM });
+  ctx.fillStyle = STEEL; ctx.fillRect(F.x(tx + 1), F.y(c0 + th), F.len(tw - 2), F.len(1.4));
+  ctx.fillRect(F.x(tx + tw / 2 - 0.4), F.y(c0 + th + 1.4), F.len(0.8), F.len(1.8));
+  // Its name, its known strength and the total let out.
+  say(ctx, `Known ${p.baseName.toLowerCase()}`, F.x(17.5), F.y(c0 + 1.4), small, { color: DIM });
   const strength = p.mode === 'perm' ? p.perm.mn.M : p.sys.base.M;
-  say(ctx, `${strength} mol/L`, F.x(17), F.y(c0 + 4.6), F.size(2.4, 6.5), { color: DUST, weight: 700 });
-  say(ctx, 'reading', F.x(17), F.y(c0 + 8.4), small, { color: DIM });
-  say(ctx, `${r.vMl.toFixed(1)} mL`, F.x(17), F.y(c0 + 11.8), F.size(3.2, 7.5), { color: AMBER, weight: 700 });
+  say(ctx, `${strength.toFixed(3)} mol/L`, F.x(17.5), F.y(c0 + 4.4), F.size(2.6, 7), { color: DUST, weight: 700 });
+  say(ctx, 'reading', F.x(17.5), F.y(c0 + 8.0), small, { color: DIM });
+  say(ctx, `${r.vMl.toFixed(1)} mL`, F.x(17.5), F.y(c0 + 11.4), F.size(3.2, 7.5), { color: AMBER, weight: 700 });
   // The flask under the tip: a neck and a body, filled with the colour the planner gives.
   const fx = tx + tw / 2;
-  const neckY = c0 + 20.5; const bodyY = c0 + 24; const baseY = c0 + 35;
+  const neckY = c0 + 17.6; const bodyY = c0 + 20.6; const baseY = c0 + 30.2;
   const poly = (pts, fill, stroke) => {
     ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(F.x(x), F.y(y)) : ctx.moveTo(F.x(x), F.y(y)))); ctx.closePath();
     if (fill) { ctx.fillStyle = fill; ctx.fill(); }
     if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
   };
   const ink = COLOUR_INK[r.colour] || COLOUR_INK.colourless;
-  poly([[fx - 3, neckY], [fx + 3, neckY], [fx + 3, bodyY], [fx + 11, baseY], [fx - 11, baseY], [fx - 3, bodyY]], '#100f0c', STEEL);
+  poly([[fx - 3, neckY], [fx + 3, neckY], [fx + 3, bodyY], [fx + 10.5, baseY], [fx - 10.5, baseY], [fx - 3, bodyY]], '#100f0c', STEEL);
   ctx.save();
   ctx.globalAlpha = r.colour === 'colourless' ? 0.35 : 0.8;
-  poly([[fx + 3, bodyY + 1.2], [fx + 10.4, baseY - 0.4], [fx - 10.4, baseY - 0.4], [fx - 3, bodyY + 1.2]], ink, null);
+  poly([[fx + 3, bodyY + 1.2], [fx + 9.9, baseY - 0.4], [fx - 9.9, baseY - 0.4], [fx - 3, bodyY + 1.2]], ink, null);
   ctx.restore();
   const flaskMl = p.mode === 'perm' ? p.perm.fe.mL : p.sys.acid.mL;
-  say(ctx, `${flaskMl.toFixed(1)} mL ${p.acidName}`, F.x(1.5), F.y(c0 + 37.2), small, { color: DIM });
-  say(ctx, r.colour, F.x(1.5), F.y(c0 + 40.2), F.size(2.4, 6.5), { color: ink, weight: 700 });
-  if (p.mouth) say(ctx, 'Indicator', F.x(32.5), F.y(c0 + 19.4), small, { align: 'center', color: DIM });
+  say(ctx, `${flaskMl.toFixed(1)} mL ${p.acidName}`, F.x(1.8), F.y(c0 + 32.6), small, { color: DUST });
+  say(ctx, r.colour, F.x(1.8), F.y(c0 + 35.4), F.size(2.4, 6.5), { color: ink, weight: 700 });
+  if (p.mouth) say(ctx, 'Indicator', F.x(34.5), F.y(c0 + 15.8), small, { align: 'center', color: DIM });
   // The window: the ions that have not yet met, one disc a `unit` of moles.
   if (p.window) {
-    const wx = 47; const ww = 46;
-    ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(wx), F.y(c0), F.len(ww), F.len(34));
-    ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(wx)) + 0.5, Math.round(F.y(c0)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(34)));
+    const wx = 48; const ww = 45;
+    ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(wx), F.y(c0), F.len(ww), F.len(31));
+    ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(wx)) + 0.5, Math.round(F.y(c0)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(31)));
     const left = r.flask;
-    say(ctx, `${ionText('H')} in the flask`, F.x(wx + 1.6), F.y(c0 + 3), F.size(2.3, 6.5), { color: WARM, weight: 700 });
-    discs(ctx, F, left.acidLeft / p.unit, wx + 0.8, c0 + 7, WARM);
-    say(ctx, `${ionText('OH')} in the flask`, F.x(wx + 1.6), F.y(c0 + 16.6), F.size(2.3, 6.5), { color: COLD, weight: 700 });
-    discs(ctx, F, left.baseLeft / p.unit, wx + 0.8, c0 + 20.6, COLD);
-    say(ctx, `one circle is ${p.unit} mol`, F.x(wx + 1.6), F.y(c0 + 31.2), F.size(1.9, 5.8), { color: DIM });
+    say(ctx, `${ionText('H')} in the flask`, F.x(wx + 1.6), F.y(c0 + 2.8), F.size(2.3, 6.5), { color: WARM, weight: 700 });
+    discs(ctx, F, left.acidLeft / p.unit, wx + 0.8, c0 + 6.6, WARM);
+    say(ctx, `${ionText('OH')} in the flask`, F.x(wx + 1.6), F.y(c0 + 15.6), F.size(2.3, 6.5), { color: COLD, weight: 700 });
+    discs(ctx, F, left.baseLeft / p.unit, wx + 0.8, c0 + 19.4, COLD);
+    say(ctx, `one circle is ${p.unit} mol`, F.x(wx + 1.6), F.y(c0 + 28.6), F.size(1.9, 5.8), { color: DIM });
   }
 }
 
@@ -221,10 +221,12 @@ registerFixture('titrator', { paint: paintTitrator, run: runTitrator });
    TOUR WORDS
    ------------------------------------------------------------------ */
 
-const TITRATOR_TEXT = f => `Set "Per press" and press "${f.runLabel}" to add solution from the burette to the flask.`;
+const TITRATOR_TEXT = f => (f.props.mouth
+  ? `First drag an indicator card into the slot beside the flask, then set "Per press" and press "${f.runLabel}" to add base.`
+  : `Set "Per press" and press "${f.runLabel}" to add solution from the burette to the flask.`);
 
 addTourText({
   'pot:titrator': { title: f => f.label, dials: false, text: TITRATOR_TEXT }
 }, {
-  indicator: ['Indicator cards', 'Drag an indicator into the slot beside the flask.']
+  indicator: null
 });

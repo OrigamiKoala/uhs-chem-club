@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   shellsTable, shelf, hand, configCard, energyWell,
   readOf, rackOf, rackPull, rackFor, groundConfig, readRack, isLaddered, boxPieceId, configString, shortString, symbolOf
@@ -406,11 +405,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate. */
-const NOTES = {
-  1: ['Drag an arrow onto an orbital.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

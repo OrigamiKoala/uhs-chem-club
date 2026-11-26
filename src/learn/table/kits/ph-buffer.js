@@ -106,13 +106,25 @@ function paintMix(ctx, f, state, b) {
       put(ctx, nm, F.x(cx) + sw + F.len(0.6), F.y(cy), size, { align: 'left', color: DUST });
       cx += tu;
     }
-    if (r.caughtA || r.caughtHA) put(ctx, 'ringed: caught the pour', F.x(w - 2), F.y(y + wh + 3), size, { align: 'right', color: DIM });
+    if (r.caughtA || r.caughtHA) {
+      put(ctx, 'ringed: caught the pour', F.x(x), F.y(cy + 3.4), F.size(1.9, 5.8), { align: 'left', color: DUST });
+    }
+    if (p.showLimit && r.a0 > 0 && r.na * p.acidSph >= r.a0) {
+      put(ctx, 'Acetate used up', F.x(w - 2), F.y(cy + 3.4), F.size(2.2, 6.8), { align: 'right', color: AMBER, weight: 700 });
+    } else if (p.pourNote) {
+      put(ctx, p.pourNote, F.x(w - 2), F.y(cy + 3.4), F.size(1.9, 6.0), { align: 'right', color: DUST });
+    }
   }
   if (p.meter) {
     const by = f.size.h - 3.2;
     put(ctx, 'pH', F.x(2), F.y(by), F.size(2.2, 6), { align: 'left', color: DUST });
     put(ctx, fmt(r.pH, 2), F.x(6.2), F.y(by), F.size(3.8, 9), { align: 'left', color: AMBER, weight: 700 });
-    if (r.pours) put(ctx, `was ${fmt(r.pH0, 2)}`, F.x(w - 14), F.y(by), F.size(1.9, 5.8), { align: 'right', color: DIM });
+    const rightX = f.noRun ? w - 2 : w - Math.max(14, (f.runLabel ? f.runLabel.length * 1.9 + 5.5 : 14));
+    if (p.showLimit && r.pours) {
+      put(ctx, `Pours: ${r.pours}`, F.x(rightX), F.y(by), F.size(2.3, 7.0), { align: 'right', color: DUST, weight: 700 });
+    } else if (r.pours) {
+      put(ctx, `was ${fmt(r.pH0, 2)}`, F.x(rightX), F.y(by), F.size(2.3, 7.0), { align: 'right', color: DUST });
+    }
   }
 }
 const TEXTC = PLATE_COLORS.text;
@@ -162,7 +174,7 @@ export function mixFixture(id, at, o = {}) {
   const {
     ha = 0, a = 0, Ka = ACIDS.acetic.Ka, names = { HA: 'CH₃COOH', A: 'CH₃COO⁻' }, reagent = 'acid', acidSph = 10, baseSph = 10,
     pourVol = 0.010, maxPour = 12, build = false, levels = [0, 25, 50, 100], meter = true, sealed = false, rows = 10, cols = 20,
-    w = 44, title = 'Flask', runLabel = 'Pour', V = 0.1, empty = 'water only', pour = true, showCounts = false
+    w = 44, title = 'Flask', runLabel = 'Pour', V = 0.1, empty = 'water only', pour = true, showCounts = false, showLimit = false, pourNote = ''
   } = o;
   const dials = { na: { min: 0, max: maxPour, step: 1, value: 0, label: 'Acid poured' }, nb: { min: 0, max: maxPour, step: 1, value: 0, label: 'Base poured' } };
   if (reagent === 'dial') dials.rg = { min: 1, max: 2, step: 1, value: 1, label: 'Pour in', labels: ['Acid', 'Base'] };
@@ -174,13 +186,13 @@ export function mixFixture(id, at, o = {}) {
   const rowPitch = nd > 1 ? 10.5 : 5;
   const winTop = nd ? Math.round((DIAL_TOP + (nd - 1) * rowPitch + 7.2) * 10) / 10 : 10.5;
   const wh = Math.round(rows * ((w - 5.2) / cols) * 10) / 10;
-  const h = Math.round((winTop + wh + 3 + 3.3 * 2 + 9) * 10) / 10;
+  const h = Math.round((winTop + wh + 3 + 3.4 * 2 + 10) * 10) / 10;
   return {
     fixture: {
       id, kind: 'phmix', label: title, at: { ...at }, size: { w, h }, ...(pour ? { runLabel } : { noRun: true }), dials,
       props: {
         hidden: ['na', 'nb'], backdrop: true, top: DIAL_TOP, rowPitch, Ka, ha0: ha, a0: a, names, reagent, acidSph, baseSph, pourVol, maxPour,
-        build, levels, meter, sealed, rows, cols, wh, winTop, V, empty, showCounts, seed: [...id].reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 11)
+        build, levels, meter, sealed, rows, cols, wh, winTop, V, empty, showCounts, showLimit, pourNote, seed: [...id].reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 11)
       }
     },
     size: { w, h }

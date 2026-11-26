@@ -98,7 +98,7 @@ export const STAGE_STORY = {
   'q5-salts': { 1: 'Check if the neutralized waste tank water is actually safe.' },
   'q6-titrate': { 1: 'Track the pH curve as you neutralize the marsh\'s worst tank.' },
   'q7-buffer': { 1: 'Build a buffer mix that protects the fort\'s intake from acid spikes.' },
-  'q8-capacity': { 1: 'Test how much runoff the fort\'s buffer tank can absorb before failing.' },
+  'q8-capacity': { 1: 'First check how pH shifts acetic acid’s two forms, then test how much acid the fort’s buffer can absorb.' },
 
   /* ---- Unit 10 — Brinewire (Electrochemistry): illegal power taps stripping copper from the marsh ---- */
   'q1-halves': { 1: 'Find out what is moving inside the corroded power pylons.' },
@@ -109,12 +109,12 @@ export const STAGE_STORY = {
   'q6-electrolysis': { 1: 'See what the Fifth is making by forcing electric current into the pool.' },
 
   /* ---- Unit 11 — Quicklight (Kinetics): fuel towers overheating ten times too fast from mystery dust ---- */
-  'q1-watch': { 1: 'Time both fuel lines to see why one is overheating.' },
-  'q2-law': { 1: 'Test which of the three fuel feeds actually speeds up the tank.' },
-  'q3-time': { 1: 'Time how fast the spiked fuel breaks down by half.' },
-  'q4-collide': { 1: 'See why cold fuel sits safely until collisions clear the energy hill.' },
-  'q5-steps': { 1: 'Find which step of the fuel reaction controls the overheating spike.' },
-  'q6-shortcut': { 1: 'Test the vent dust that speeds up the burn without running out.' },
+  'q1-watch': { 1: 'Time both fuel lines to see why one tower finished sooner.' },
+  'q2-law': { 1: 'Test which of the three fuel feeds (A, B, and C) speeds up the tank.' },
+  'q3-time': { 1: 'Time how long it takes the fuel to lose each half of what is left.' },
+  'q4-collide': { 1: 'Why does cold fuel sit safely while hot fuel burns?' },
+  'q5-steps': { 1: 'Find which step of the fuel burn sets the overall pace.' },
+  'q6-shortcut': { 1: 'Test what the yellow dust in the vents is doing to the burn.' },
 
   /* ---- Unit 12 — Lodestone (Transition Metals): giant magnet sorting metal drums for Cinder Halo ---- */
   'q1-dblock': { 1: 'Check iron\'s d-electrons before testing the Fifth\'s metal drums.' },

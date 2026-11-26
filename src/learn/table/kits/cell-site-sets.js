@@ -30,7 +30,8 @@ siteSets.ledger = (state, scene) => {
     if (f.props.mult) {
       const n = f.dials.k.max; const cur = val(state, fid, 'k');
       const sym = SPECIES[Object.keys(f.props.base.left)[0]]?.text || '';
-      for (let j = 0; j < n; j++) out.push({ id: `${fid}:k:${j}`, x: sx - ((n - 1) * 0.04) / 2 + j * 0.04, y: 0.41, r: 0.017, on: cur > j, label: '', color: '#9aa3b8', act: { type: 'count', fixture: fid, dial: 'k', index: j, min: 1 } });
+      const step = 0.046;
+      for (let j = 0; j < n; j++) out.push({ id: `${fid}:k:${j}`, x: sx - ((n - 1) * step) / 2 + j * step, y: 0.41, r: 0.019, on: cur > j, label: String(j + 1), color: '#9aa3b8', act: { type: 'count', fixture: fid, dial: 'k', index: j, min: 1 } });
       out.push({ id: `${fid}:k:t`, x: sx, y: 0.465, r: 0, text: `${cur} × ${sym}` });
     }
   });
@@ -59,19 +60,20 @@ siteSets.nails = (state, scene) => {
 
 const answerSel = state => Object.values(state.fixtures).find(f => f.kind === 'selector')?.id;
 
-/** Tap a vessel, a strip or a bar: the answer dial of the stage's (hidden) selector takes `pickMap[i]`. `siteX` places the sites. */
+/** Tap a vessel, a strip or a bar: the answer dial of the stage's selector (or `scene.props.targetDial`) takes `pickMap[i]`. `siteX` places the sites. */
 siteSets.sides = (state, scene) => {
-  const sel = answerSel(state);
+  const dial = scene.props.targetDial || 'value';
+  const sel = scene.props.targetDial ? scene.id : answerSel(state);
   const map = scene.props.pickMap || [1, 2]; const xs = scene.props.siteX || [0.24, 0.76];
-  const cur = val(state, sel, 'value');
+  const cur = val(state, sel, dial);
   const labels = scene.props.siteLabels || (xs.length === 2 ? ['Left', 'Right'] : xs.map((_, i) => `#${i + 1}`));
-  return xs.map((x, i) => ({ id: `side${i}`, x, y: 0.43, r: 0.032, on: cur === map[i], label: labels[i] || '', color: AMBER, read: cur === map[i] ? 'chosen' : 'tap', ring: cur === map[i], act: { type: 'pick', fixture: sel, dial: 'value', value: map[i] } }));
+  return xs.map((x, i) => ({ id: `side${i}`, x, y: 0.43, r: 0.032, on: cur === map[i], label: labels[i] || '', color: AMBER, read: cur === map[i] ? 'chosen' : 'tap', ring: cur === map[i], act: { type: 'pick', fixture: sel, dial, value: map[i] } }));
 };
 
 /** Two strips, each tapped until it says whether atoms leave it or join it. */
 siteSets.marks2 = (state, scene) => [0, 1].map(i => {
   const v = val(state, scene.id, `m${i}`);
-  return { id: `m${i}`, x: i ? 0.76 : 0.24, y: 0.43, r: 0.032, on: v > 0, label: i ? 'Right' : 'Left', color: v === 1 ? AMBER : '#6aa3b8', read: v === 1 ? 'atoms leave' : v === 2 ? 'atoms join' : 'tap to mark', ring: v > 0, act: { type: 'cycle', fixture: scene.id, dial: `m${i}`, n: 3 } };
+  return { id: `m${i}`, x: i ? 0.76 : 0.24, y: 0.43, r: 0.032, on: v > 0, label: i ? 'Right' : 'Left', color: v === 1 ? AMBER : '#6aa3b8', read: v === 1 ? 'anode (leave)' : v === 2 ? 'cathode (join)' : '1× anode · 2× cathode', ring: v > 0, act: { type: 'cycle', fixture: scene.id, dial: `m${i}`, n: 3 } };
 });
 
 /** `q1-halves` stage 5: the strip metal or the ion of each beaker, tapped for the one that gives up electrons. */

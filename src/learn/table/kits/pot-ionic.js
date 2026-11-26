@@ -70,11 +70,12 @@ function paintSol(ctx, p, state, o) {
   ctx.fillStyle = coloured || '#7f98a8'; ctx.globalAlpha = coloured ? 0.6 : 0.28;
   ctx.fillRect(bx + 1, by + bh * 0.3, bw - 2, bh * 0.7 - 1); ctx.globalAlpha = 1;
   ctx.fillStyle = STEEL; ctx.fillRect(bx - 0.4 * sc, by - 0.9 * sc, bw + 0.8 * sc, 0.9 * sc);
-  const y = box.y0 + box.h - 5.1 * sc;
+  const y = box.y0 + box.h - 5.2 * sc;
   if (pr.sealed) { say(ctx, p.label, o.x, y + 1.2 * sc, Math.max(6.2, 2.1 * sc), { align: 'center', weight: 700, maxW: box.w - 1.4 * sc }); return; }
   const s = solution(pr.cat, pr.an);
-  say(ctx, s.text, o.x, y, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 1.4 * sc });
-  say(ctx, pr.name ?? s.name, o.x, y + 2.5 * sc, Math.max(5.8, 1.55 * sc), { align: 'center', color: DUST, maxW: box.w - 1.4 * sc });
+  say(ctx, s.text, o.x, y - 0.5 * sc, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 1.4 * sc });
+  say(ctx, pr.name ?? s.name, o.x, y + 1.6 * sc, Math.max(5.6, 1.45 * sc), { align: 'center', color: DUST, maxW: box.w - 1.4 * sc });
+  say(ctx, `${ionText(pr.cat)}, ${ionText(pr.an)}`, o.x, y + 3.5 * sc, Math.max(5.4, 1.35 * sc), { align: 'center', color: AMBER, maxW: box.w - 1.4 * sc });
 }
 
 registerPiece('sol', {
@@ -87,17 +88,20 @@ registerPiece('sol', {
 /** One ion as a puck. */
 export const ionPuck = (id, ionId, at, extra = {}) => ({ id, kind: 'ion', label: ionText(ionId), at, props: { ion: ionId }, ...extra });
 
+const DARK_IONS = new Set(['I', 'Cu2', 'O', 'Ba', 'Fe2', 'Fe3', 'NO3']);
+const inkTextOf = ion => (DARK_IONS.has(ion) ? '#f5f0e6' : '#12100c');
+
 function discOf(ctx, x, y, r, ion, mark) {
   ctx.fillStyle = inkOfIon(ion); ctx.strokeStyle = '#2e2a26';
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  if (mark) say(ctx, chargeMark(ion), x, y, Math.max(6, r * 1.05), { align: 'center', weight: 700, color: '#15130f' });
+  if (mark) say(ctx, ionText(ion), x, y, Math.max(6.2, r * 0.72), { align: 'center', weight: 700, color: inkTextOf(ion), maxW: r * 1.9 });
 }
 
 function paintIon(ctx, p, state, o) {
   ctx.fillStyle = inkOfIon(p.props.ion);
   ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = o.lit ? AMBER : '#2e2a26'; ctx.lineWidth = o.lit ? 2 : 1.2; ctx.stroke(); ctx.lineWidth = 1;
-  say(ctx, p.label, o.x, o.y, Math.max(6.4, o.r * 0.56), { align: 'center', weight: 700, color: '#15130f', maxW: o.r * 1.8 });
+  say(ctx, p.label, o.x, o.y, Math.max(8, o.r * 0.66), { align: 'center', weight: 700, color: inkTextOf(p.props.ion), maxW: o.r * 1.85 });
 }
 
 registerPiece('ion', {
@@ -172,10 +176,10 @@ export function ionPotFixture(id, at, o = {}) {
   const { mixes = null, window = false, lamp = false, title = 'Reaction vessel', runLabel = 'Mix' } = o;
   const dials = {};
   if (mixes) dials.mix = { min: 1, max: mixes.length, step: 1, value: 1, label: 'Mixture', labels: mixes.map((_, i) => String(i + 1)) };
-  const top = contentTop(mixes ? 1 : 0);
+  const top = mixes ? contentTop(1) + 3.2 : contentTop(0);
   const winW = PANEL.w * 2 + 3 + 2;
   const w = Math.round((LW + 2 + (window ? winW : 22) + (lamp ? LAMP_W + 2 : 0) + 2) * 10) / 10;
-  const h = Math.round((top + 28 + 8) * 10) / 10;
+  const h = Math.round((top + (mixes ? 26.5 : 28) + 7.5) * 10) / 10;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const slots = []; const ins = [];
   if (!mixes) {
@@ -186,7 +190,7 @@ export function ionPotFixture(id, at, o = {}) {
     }
   }
   return {
-    fixture: { id, kind: 'ionpot', label: title, at: { ...at }, size: { w, h }, dials, runLabel, props: { backdrop: true, ins, mixes, window, lamp, top } },
+    fixture: { id, kind: 'ionpot', label: title, at: { ...at }, size: { w, h }, dials, runLabel, props: { backdrop: true, ins, mixes, window, lamp, top, ...(mixes ? { grab: { mix: 3.4 }, dialIndent: 4.5 } : {}) } },
     slots, ins, size: { w, h }
   };
 }
@@ -235,10 +239,11 @@ function paintPanel(ctx, F, x, y, title, tintInk) {
 }
 
 function paintWater(ctx, x, y, r) {
+  const rr = r * 1.15;
   ctx.fillStyle = WATER_INK; ctx.strokeStyle = '#2e2a26';
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#d8d2c4';
-  for (const dx of [-0.8, 0.8]) { ctx.beginPath(); ctx.arc(x + dx * r, y - r * 0.72, r * 0.38, 0, Math.PI * 2); ctx.fill(); }
+  ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e8e2d4';
+  for (const dx of [-0.78, 0.78]) { ctx.beginPath(); ctx.arc(x + dx * rr, y - rr * 0.7, rr * 0.45, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
 }
 
 function paintGlass(ctx, F, r, gx, gy, gw, gh) {
@@ -247,16 +252,19 @@ function paintGlass(ctx, F, r, gx, gy, gw, gh) {
   if (r.ran) {
     const tint = SOLUTION_TINT[r.A.cat] || SOLUTION_TINT[r.A.an] || SOLUTION_TINT[r.B.cat] || SOLUTION_TINT[r.B.an] || '#7f98a8';
     ctx.fillStyle = tint; ctx.globalAlpha = 0.3; ctx.fillRect(F.x(gx), F.y(gy + gh * 0.22), F.len(gw), F.len(gh * 0.78)); ctx.globalAlpha = 1;
+    // Draw dissolved ions floating in the liquid
+    const dis = listOf(r.out.after);
+    scatter(`${r.sig}|gdis`, dis.length, gx + 1.2, gy + gh * 0.28, gw - 2.4, gh * 0.48, 3.6).forEach((q, i) => discOf(ctx, F.x(q.x), F.y(q.y), F.len(1.1), dis[i], false));
     if (solid && !r.filtered) {
       ctx.fillStyle = solidInk(solid.formula);
-      ctx.globalAlpha = 0.5; ctx.fillRect(F.x(gx), F.y(gy + gh * 0.22), F.len(gw), F.len(gh * 0.62)); ctx.globalAlpha = 1;
+      ctx.globalAlpha = 0.45; ctx.fillRect(F.x(gx), F.y(gy + gh * 0.22), F.len(gw), F.len(gh * 0.62)); ctx.globalAlpha = 1;
       ctx.fillRect(F.x(gx), F.y(gy + gh - 3.6), F.len(gw), F.len(3.6));
     }
   }
   ctx.strokeStyle = STEEL; ctx.lineWidth = 2;
   ctx.strokeRect(Math.round(F.x(gx)) + 0.5, Math.round(F.y(gy)) + 0.5, Math.round(F.len(gw)), Math.round(F.len(gh)));
   ctx.lineWidth = 1;
-  say(ctx, r.ran ? (solid && !r.filtered ? 'CLOUDY' : 'CLEAR') : r.ready ? 'READY' : 'EMPTY', F.x(gx + gw / 2), F.y(gy + gh + 2.6), F.size(2.1, 6), { align: 'center', color: r.ran ? AMBER : DIM, weight: 700 });
+  say(ctx, r.ran ? (solid && !r.filtered ? 'CLOUDY' : 'CLEAR') : r.ready ? 'READY' : 'EMPTY', F.x(gx + gw / 2), F.y(gy + gh + 2.4), F.size(2.1, 6), { align: 'center', color: r.ran ? AMBER : DIM, weight: 700 });
 }
 
 function paintKey(ctx, F, items, x, y, w) {
@@ -310,19 +318,19 @@ function paintIonPot(ctx, f, state, b) {
     const sa = solution(r.A.cat, r.A.an); const sb = solution(r.B.cat, r.B.an);
     const ja = [...Array(o.units.a * sa.nCat).fill(r.A.cat), ...Array(o.units.a * sa.nAn).fill(r.A.an)];
     const jb = [...Array(o.units.b * sb.nCat).fill(r.B.cat), ...Array(o.units.b * sb.nAn).fill(r.B.an)];
-    scatter(`${r.sig}|a`, ja.length, wx + 0.6, py + 5, half - 1.2, 13.4).forEach((q, i) => discOf(ctx, F.x(q.x), F.y(q.y), F.len(1.9), ja[i], true));
-    scatter(`${r.sig}|b`, jb.length, wx + half + 0.6, py + 5, half - 1.2, 13.4).forEach((q, i) => discOf(ctx, F.x(q.x), F.y(q.y), F.len(1.9), jb[i], true));
+    scatter(`${r.sig}|a`, ja.length, wx + 0.6, py + 5, half - 1.2, 13.4, 4.6).forEach((q, i) => discOf(ctx, F.x(q.x), F.y(q.y), F.len(2.25), ja[i], true));
+    scatter(`${r.sig}|b`, jb.length, wx + half + 0.6, py + 5, half - 1.2, 13.4, 4.6).forEach((q, i) => discOf(ctx, F.x(q.x), F.y(q.y), F.len(2.25), jb[i], true));
     const keyItems = [...new Set([...ja, ...jb])].map(ion => ({ ion }));
     if (o.water) keyItems.push({ water: true });
     paintKey(ctx, F, keyItems, wx + 1, py + 20.4, PANEL.w - 1.5);
     if (r.ran) {
       const dis = listOf(o.after);
-      scatter(`${r.sig}|after`, dis.length + o.water, ax + 0.6, py + 5, PANEL.w - 1.2, 13.4).forEach((q, i) => {
-        if (i < dis.length) discOf(ctx, F.x(q.x), F.y(q.y), F.len(1.9), dis[i], true); else paintWater(ctx, F.x(q.x), F.y(q.y), F.len(1.9));
+      scatter(`${r.sig}|after`, dis.length + o.water, ax + 0.6, py + 5, PANEL.w - 1.2, 13.4, 4.8).forEach((q, i) => {
+        if (i < dis.length) discOf(ctx, F.x(q.x), F.y(q.y), F.len(2.25), dis[i], true); else paintWater(ctx, F.x(q.x), F.y(q.y), F.len(2.1));
       });
       if (solid && !r.filtered) {
         ctx.strokeStyle = DIM; ctx.beginPath(); ctx.moveTo(F.x(ax + 0.6), F.y(py + 18.7)); ctx.lineTo(F.x(ax + PANEL.w - 0.6), F.y(py + 18.7)); ctx.stroke();
-        packed(solid).forEach((ion, i) => discOf(ctx, F.x(ax + 3.4 + (i % 3) * 3.9), F.y(py + 21.2 + Math.floor(i / 3) * 3.9), F.len(1.9), ion, true));
+        packed(solid).forEach((ion, i) => discOf(ctx, F.x(ax + 3.6 + (i % 3) * 4.5), F.y(py + 21.4 + Math.floor(i / 3) * 4.2), F.len(2.15), ion, true));
       }
     } else {
       say(ctx, 'press Mix', F.x(ax + PANEL.w / 2), F.y(py + 12), F.size(2.1, 6), { align: 'center', color: DIM });
@@ -360,7 +368,7 @@ export function filterRead(state, fid) {
 function paintFilter(ctx, f, state, b) {
   const F = frameOf(b);
   const r = filterRead(state, f.id);
-  const gx = 4; const gy = 10.5; const gw = f.size.w - 8; const gh = 9;
+  const gx = 4; const gy = 7.4; const gw = f.size.w - 8; const gh = 8.4;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(gx)) + 0.5, Math.round(F.y(gy)) + 0.5, Math.round(F.len(gw)), Math.round(F.len(gh)));
   if (r.done) {
@@ -368,7 +376,7 @@ function paintFilter(ctx, f, state, b) {
     const rnd = seededRng(`${r.pot.sig}|paper`);
     for (let i = 0; i < 26; i++) { ctx.beginPath(); ctx.arc(F.x(gx + 1.5 + rnd() * (gw - 3)), F.y(gy + 1.4 + rnd() * (gh - 2.8)), F.len(0.6), 0, Math.PI * 2); ctx.fill(); }
   }
-  say(ctx, r.done ? 'SOLID ON PAPER' : 'PAPER', F.x(f.size.w / 2), F.y(gy + gh + 3), F.size(2.1, 6), { align: 'center', color: r.done ? AMBER : DIM, weight: 700, maxW: F.len(f.size.w - 3) });
+  say(ctx, r.done ? 'SOLID ON PAPER' : 'PAPER', F.x(f.size.w / 2), F.y(gy + gh + 2.3), F.size(2.1, 6), { align: 'center', color: r.done ? AMBER : DIM, weight: 700, maxW: F.len(f.size.w - 3) });
 }
 
 function runFilter(state, fid) {
@@ -386,13 +394,13 @@ registerFixture('ionfilter', { paint: paintFilter, run: runFilter });
 
 const POT_TEXT = f => (f.props.mixes
   ? 'Pick a "Mixture" with the dial and press "Mix" to combine the solutions.'
-  : 'Press "Mix" to combine the two solutions in the vessel.');
+  : 'Put two solution jars in the seats (if empty), then press "Mix" to combine them.');
 
 addTourText({
   'pot:ionpot': { title: 'Reaction vessel', dials: false, text: POT_TEXT },
-  'pot:ionfilter': { title: 'Filter', text: 'Press "Filter" to lift any solid onto the filter paper.' }
+  'pot:ionfilter': { title: 'Filter', text: 'After mixing, press "Filter" to lift any solid onto the filter paper.' }
 }, {
-  sol: ['Solution jars', 'Drag two solution jars onto the vessel seats to mix them.'],
+  sol: null,
   'pot:ion': ['Ions', 'Drag an ion into a tray to sort or count it.'],
   formula: null
 });

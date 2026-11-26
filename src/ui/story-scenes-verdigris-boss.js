@@ -8,7 +8,7 @@
  * acid spheres until the pH reaches the target, counting the spheres drawn.
  */
 
-import { scaleSolution, weakAcid, ACIDS, INDICATORS, titrationML, equivalenceML, indicatorWindowML, bufferState, fmt, sci, BASES } from '../learn/engine/phdata.js';
+import { scaleSolution, weakAcid, weakBase, ACIDS, INDICATORS, titrationML, equivalenceML, indicatorWindowML, bufferState, fmt, sci, BASES } from '../learn/engine/phdata.js';
 import { cellGrid, ACID_INK, BASE_INK } from '../learn/table/kits/ph-read.js';
 import { C, text, ground, win, ease, disc, line, tag, alpha } from './story-kit.js';
 
@@ -19,14 +19,19 @@ const FLASKS = [
   { name: 'NaOH, 60 °C', solute: { id: 'naoh', c: 8.6e-7, T: 60 } }
 ];
 const ACIDSET = [['Formic acid', 'formic', 0.050], ['Acetic acid', 'acetic', 0.10], ['Hydrofluoric acid', 'hf', 0.0010]];
+const SALTS = [
+  { name: 'Ammonium nitrate', pH: weakAcid(ACIDS.nh4.Ka, 0.20).pH, kind: 'acidic', ink: H_INK },
+  { name: 'Potassium chloride', pH: 7.00, kind: 'neutral', ink: C.dust },
+  { name: 'Sodium carbonate', pH: weakBase(1e-14 / 4.7e-11, 0.10).pH, kind: 'basic', ink: OH_INK }
+];
 const AMMONIA = { analyte: { type: 'weakBase', Kb: BASES.nh3.Kb }, c0: 0.100, V0: 25, ct: 0.100 };
 const U = 1e-4;
 const KA = ACIDS.acetic.Ka;
 
 function leachOpen(ctx, w, h, t) {
   ground(ctx, w, h);
-  if (t < 0.25) {
-    const p = ease(win(t, 0.02, 0.2));
+  if (t < 0.20) {
+    const p = ease(win(t, 0.02, 0.16));
     text(ctx, 'Three flasks, each at its own temperature', w / 2, 34, { size: 24, color: C.dust });
     FLASKS.forEach((f, i) => {
       const s = scaleSolution(f.solute);
@@ -45,8 +50,8 @@ function leachOpen(ctx, w, h, t) {
     });
     return;
   }
-  if (t < 0.5) {
-    const p = ease(win(t, 0.28, 0.46));
+  if (t < 0.40) {
+    const p = ease(win(t, 0.22, 0.36));
     text(ctx, 'H₃O⁺ in three acids', w / 2, 34, { size: 24, color: C.dust });
     ACIDSET.forEach(([name, id, c], i) => {
       const r = weakAcid(ACIDS[id].Ka, c);
@@ -58,8 +63,20 @@ function leachOpen(ctx, w, h, t) {
     });
     return;
   }
-  if (t < 0.76) {
-    const p = ease(win(t, 0.54, 0.72));
+  if (t < 0.60) {
+    const p = ease(win(t, 0.42, 0.56));
+    text(ctx, 'Three salt solutions on the pH scale', w / 2, 34, { size: 24, color: C.dust });
+    SALTS.forEach((s, i) => {
+      const y = 120 + i * 120;
+      text(ctx, s.name, 220, y, { size: 22, color: C.text, weight: 700, align: 'right' });
+      const len = (s.pH / 14) * 460 * p;
+      ctx.fillStyle = s.ink; ctx.fillRect(240, y - 22, Math.max(1, len), 44);
+      text(ctx, `pH ${fmt(s.pH, 2)} (${s.kind})`, 240 + len + 14, y, { size: 20, color: C.amber, weight: 700, align: 'left' });
+    });
+    return;
+  }
+  if (t < 0.80) {
+    const p = ease(win(t, 0.62, 0.76));
     text(ctx, 'Ammonia, 25.0 mL, titrated with 0.100 M hydrochloric acid', w / 2, 34, { size: 22, color: C.dust });
     const x = 130; const y = 80; const W = 700; const H = 330; const maxV = 40;
     const X = v => x + (v / maxV) * W; const Y = pH => y + H - (pH / 14) * H;
@@ -81,7 +98,7 @@ function leachOpen(ctx, w, h, t) {
   }
   // The flask for pH 5.10: 100 spheres of acetic acid and acetate added until the planner's pH reaches the target.
   const target = 5.10;
-  const p = ease(win(t, 0.78, 0.92));
+  const p = ease(win(t, 0.82, 0.94));
   const nA = Math.round(p * 227);
   const st = bufferState({ Ka: KA, nHA: 100 * U, nA: nA * U, V: 0.1 });
   text(ctx, '100 acetic acid spheres, with acetate added', w / 2, 34, { size: 24, color: C.dust });

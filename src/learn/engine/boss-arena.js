@@ -501,8 +501,16 @@ export class BossArena {
    * hurt and angrier.
    */
   onCorrect({ index = 0, total = this.total, last = false } = {}) {
-    if (this.disposed || this.defeated || !this.monster || this.pending > 0) return;
+    if (this.disposed || this.defeated || !this.monster) return;
+    if (this.pending > 0 && !last) return;
     const target = last ? 0 : Math.round(MAX_HP * (total - index - 1) / total);
+    if (last) {
+      // Empty the boss bar immediately when the last phase clears so no red sliver remains.
+      this.hp = 0;
+      this.hud?.setHp(0);
+      this.hud?.hit();
+      this.monster.setDamage(1);
+    }
     const dmg = Math.max(0, this.hp - target);
     const n = last ? 4 : 3;
     this.pending = n;
@@ -517,12 +525,6 @@ export class BossArena {
       this.monster.triggerHitReact(final ? 1 : 0.4);
       if (this.fx && point) {
         this.fx.hitBurst(point, { scale: final ? 1.5 : 1 });
-        if (part > 0) {
-          const at = point.clone();
-          at.y += this.monster.height * 0.18;
-          at.x += (i - 1) * 0.5;
-          this.fx.damageNumber(at, `-${part}`, { big: final, color: final ? '#ffb347' : '#ffe7b0' });
-        }
         if (final) this.fx.addTrauma(last ? 0.5 : 0.35);
       }
       this.pending--;

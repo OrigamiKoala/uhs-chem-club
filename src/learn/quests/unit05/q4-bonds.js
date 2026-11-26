@@ -23,7 +23,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, bondChip, note, tag, wellFixture, ledgerFixture, markerFixture, selectorFixture, leadFixture, markerRead, dialAt, ledgerRead, wellRead,
   whereIs, bondEnthalpySum, BOND_ENTHALPIES, signedKJ
@@ -315,16 +314,6 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag your prediction into the slot.'],
-  2: ['Slide the Pull knob, then select your answer from the list.'],
-  3: ['Drag each bond card into a tray; tap one to press Larger.'],
-  4: ['Drag your prediction into the slot.'],
-  5: ['Drag a card into the slot.'],
-  6: ['Sort the bond cards (tap H–Cl and press Larger), then enter ΔH.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

@@ -17,7 +17,6 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   cloudTable, cloudPlate, cloudCard, waveStrip,
   plateRead, ringRead, waveStripRead
@@ -276,11 +275,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Set Measurements to 500 and press Measure,', 'then turn Ring (pm).'],
-  2: ['Drag Probe (pm) past 0 to see', 'where ψ changes sign.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

@@ -194,11 +194,12 @@ export class Encounter {
         </li>`;
     }).join('');
 
+    const midBoss = this.phase && this.phase.count > 1 && this.phase.index < this.phase.count - 1;
     const tagText = {
       counter: 'Missed Trial',
       knockback: 'Knocked back',
-      won: 'Dispersed',
-      flawless: 'Flawless'
+      won: midBoss ? `Phase ${this.phase.index + 1} cleared` : 'Dispersed',
+      flawless: midBoss ? `Phase ${this.phase.index + 1} cleared` : 'Flawless'
     }[this.tag] || '';
 
     this.publish();

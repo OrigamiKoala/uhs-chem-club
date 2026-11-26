@@ -33,7 +33,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { planPhotocell, photonJoules, thresholdNm } from '../../engine/lightdata.js';
 import {
   opticsTable, plaque, photocell, metalPlate, lamp, cellRead, firstFreeing, seated
@@ -374,12 +373,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  2: ['Drag the plate into the holder.', 'Turn the dials and watch the plate.'],
-  5: ['Try each plate in the holder.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

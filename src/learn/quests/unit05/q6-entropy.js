@@ -19,7 +19,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, phaseCard, stmt, shiftCard, tag, note, leadFixture, rxnFixture, chamberFixture, shakesOf, whereIs, waysOf, plaqueFixture, markerFixture, markerRead, FORMATION_TABLE, fixed
 } from '../../table/kits/heat.js';
@@ -278,15 +277,6 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag your prediction into the slot.'],
-  2: ['Press "Shake" at least 10 times;', 'then drag a card into the slot.'],
-  3: ['Drag each change into a tray.'],
-  4: ['Drag the boxes into order along the rail.'],
-  5: ['Type your answer in the box below.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

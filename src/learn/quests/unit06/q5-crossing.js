@@ -22,7 +22,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { matterTable, note, stmt, plaqueFixture, markerFixture, markerRead, fixed, mleadFixture } from '../../table/kits/matter.js';
 import {
   heatCurveFixture, coolerFixture, phaseMapFixture, sampleCard, heatRead, coolRead, mapRead, sweptWithoutLiquid, pressureText
@@ -369,8 +368,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines removed from the plate. */
-applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

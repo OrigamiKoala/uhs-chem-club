@@ -36,7 +36,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   cuvetteTable, cuvette, dropper, rinser, chip, motionCard, readingCard, spectro, plaqueFixture, markerFixture,
   spectroRead, regionRead, absorbOf, concOf, missingColour, colourOfNm, chipIn, lightOf, fmtWave, markerRead, planAbsorb, planRegion, regionOf,
@@ -384,13 +383,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  2: ['Put the cuvette in the holder to see the light', 'that gets through it.'],
-  3: ['Put a cuvette in the holder and turn the', 'Wavelength dial.'],
-  4: ['Stock adds +2.0 mmol/L;', 'Rinse resets to 0.0 mmol/L.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

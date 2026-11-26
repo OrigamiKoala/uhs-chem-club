@@ -128,8 +128,7 @@ const dishAt = (id, label, s, x, y = 12, open = false) => ({
 });
 
 const TOOL_HOME = { lens: { x: SHELF, y: 10 }, cutter: { x: SHELF, y: 52 } };
-const CAPTIONS = { lens: 'Drag over a dish', cutter: 'Drag across a dish' };
-const tool = (kind, label) => ({ id: kind, kind, label, at: { ...TOOL_HOME[kind] }, caption: CAPTIONS[kind] });
+const tool = (kind, label) => ({ id: kind, kind, label, at: { ...TOOL_HOME[kind] } });
 
 /** A loose atom. `mask` withholds the symbol, `tint` overrides the element's own. */
 const atomAt = (id, el, x, y, props = {}) => ({ id, kind: 'atom', label: props.mask ? 'Atom' : el, at: { x, y }, props: { el, ...props } });
@@ -145,12 +144,6 @@ const scopeFixture = {
 /** A tray for dishes, a tray of one row: two dishes with room. */
 const dishTray = (id, label, x, y = 34, w = 40, h = 17) => ({ id, label, at: { x, y }, size: { w, h }, cell: 17 });
 const trayAt = (id, label, x, y, w = 26, h = 16) => ({ id, label, at: { x, y }, size: { w, h } });
-
-/** What a table that joins atoms tells the player about joins. Printed on the plate, at the foot of the work. */
-const JOIN_NOTES = [
-  { at: { x: 4, y: 57.5 }, text: 'Drop one atom onto another to join them.' },
-  { at: { x: 4, y: 61.5 }, text: 'Tap the join between two atoms to break it.' }
-];
 
 /** Lay `ids` of atoms in a row at y: `row('H', 'H', 'O')` -> positions along the middle. */
 const heap = (y, list, x0 = 12, pitch = 12) => list.map(([id, el], i) => atomAt(id, el, x0 + i * pitch, y));
@@ -271,8 +264,7 @@ export const STAGES = [
           { ...trayAt('t4', 'Tray 4', 101, 50, 26, 16), view: 'mass-tag' }
         ]
       },
-      fixtures: [{ id: 'reader', kind: 'reader', label: 'Scale', at: { x: 98, y: 14 }, size: { w: 36, h: 14 }, noRun: true, props: { slot: 'rd' } }],
-      notes: [{ at: { x: 4, y: 36 }, text: 'Put an atom in the scale slot to read its mass.' }]
+      fixtures: [{ id: 'reader', kind: 'reader', label: 'Scale', at: { x: 98, y: 14 }, size: { w: 36, h: 14 }, noRun: true, props: { slot: 'rd' } }]
     }),
     hints: [
       'Drop an atom in the scale slot to see its mass.',
@@ -358,7 +350,6 @@ export const STAGES = [
         tool('lens', 'Lens')
       ],
       fixtures: [scopeFixture],
-      notes: JOIN_NOTES,
       opts: { atom3d: false }
     }),
     hints: [
@@ -399,7 +390,6 @@ export const STAGES = [
         tool('lens', 'Lens')
       ],
       fixtures: [scopeFixture],
-      notes: JOIN_NOTES,
       opts: { atom3d: false }
     }),
     hints: [
@@ -442,10 +432,6 @@ export const STAGES = [
           trayAt('comp', 'Compound', 68, 48, 40, 24)
         ]
       },
-      notes: [
-        { at: { x: 4, y: 24.5 }, text: 'Drop one atom onto another to join them.' },
-        { at: { x: 4, y: 29 }, text: 'Tap the join between two atoms to break it.' }
-      ],
       opts: { atom3d: false }
     }),
     hints: [

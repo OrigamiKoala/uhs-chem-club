@@ -261,7 +261,7 @@ registerPiece('phmeter', {
   printed: () => 'pH meter'
 });
 
-/** The pH meter, loose on the table at `at`. It carries the caption that says what it does. */
-export const meterPiece = (id, at, extra = {}) => ({ id, kind: 'phmeter', label: 'pH meter', at, props: {}, caption: 'Lay it on a flask to read its pH.', ...extra });
+/** The pH meter, loose on the table at `at`. */
+export const meterPiece = (id, at, extra = {}) => ({ id, kind: 'phmeter', label: 'pH meter', at, props: {}, ...extra });
 
 export { flaskSol };

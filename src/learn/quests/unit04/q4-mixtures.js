@@ -11,7 +11,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, rig, tank, commonTank, tankRead, planMixture, plaqueFixture, stmt, R
 } from '../../table/kits/gas.js';
@@ -297,16 +296,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Place a card in the slot.'],
-  2: ['Open both tanks into the common tank,', 'then place a card in the slot.'],
-  3: ['Open both tanks into the common tank,', 'then place a card in the slot.'],
-  4: ['Open all four tanks,', 'then type your answer at the bottom.'],
-  5: ['Arrange the tanks along the strip.'],
-  6: ['Type your answer in the field at the bottom.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

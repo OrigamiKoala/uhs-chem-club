@@ -44,53 +44,76 @@ export function stripRead(state, fid) {
   return { f, pH, acid, ai, lo: reach.lo, hi: reach.hi, fr, pctHA: HA, pctA: 100 - HA };
 }
 
+const MULTI_INKS = [
+  ['#d99423', '#a66b1a'],
+  ['#78a142', '#4c8c64'],
+  ['#6f8fb0', '#5a6fa8']
+];
+
 function paintStrip(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
   const r = stripRead(state, f.id);
   const w = f.size.w;
-  const x0 = 12; const pw = w - 16; const y0 = p.plotTop; const ph = p.plotH;
+  // Align plot left/right edges with the pH dial track (margin 10) so the knob and cursor line up vertically.
+  const x0 = p.margin ?? 10; const pw = w - x0 * 2; const y0 = p.plotTop; const ph = p.plotH;
   const X = v => x0 + ((v - PH_MIN) / (PH_MAX - PH_MIN)) * pw;
   const Y = v => y0 + ph - (v / 100) * ph;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x0), F.y(y0), F.len(pw), F.len(ph));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x0)) + 0.5, Math.round(F.y(y0)) + 0.5, Math.round(F.len(pw)), Math.round(F.len(ph)));
-  const size = F.size(2.1, 6);
+  const size = F.size(2.5, 7.5);
   for (const v of [0, 50, 100]) {
     ctx.strokeStyle = '#2a2622'; ctx.beginPath(); ctx.moveTo(F.x(x0), F.y(Y(v))); ctx.lineTo(F.x(x0 + pw), F.y(Y(v))); ctx.stroke();
-    put(ctx, String(v), F.x(x0 - 1.2), F.y(Y(v)), size, { align: 'right', color: DIM });
+    put(ctx, String(v), F.x(x0 - 1.4), F.y(Y(v)), size, { align: 'right', color: DUST });
   }
-  for (let v = PH_MIN; v <= PH_MAX; v++) put(ctx, String(v), F.x(X(v)), F.y(y0 + ph + 2.6), size, { color: DIM });
-  put(ctx, 'pH', F.x(x0 + pw), F.y(y0 + ph + 5.6), size, { align: 'right', color: DIM });
-  put(ctx, '% of the acid', F.x(1.6), F.y(y0 - 2.1), size, { align: 'left', color: DIM });
-  const inkHA = p.indicator ? mix(RED, RED, 0) : ACID_INK;
-  const inkA = p.indicator ? mix(YELLOW, YELLOW, 0) : BASE_INK;
-  // Each curve only over the pH range the dial has been moved across.
-  const curve = (key, ink) => {
-    ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1.6, F.len(0.5)); ctx.beginPath();
+  for (let v = PH_MIN; v <= PH_MAX; v++) put(ctx, String(v), F.x(X(v)), F.y(y0 + ph + 2.8), size, { color: DUST });
+  put(ctx, 'pH', F.x(x0 + pw + 1.5), F.y(y0 + ph + 2.8), size, { align: 'left', color: DUST });
+  put(ctx, '% of acid', F.x(1.6), F.y(y0 - 2.1), F.size(2.2, 6.6), { align: 'left', color: DUST });
+  const multi = p.acids.length > 1;
+  const inkFor = idx => (p.indicator
+    ? [mix(RED, RED, 0), mix(YELLOW, YELLOW, 0)]
+    : multi ? MULTI_INKS[idx % MULTI_INKS.length] : [ACID_INK, BASE_INK]);
+  const [inkHA, inkA] = inkFor(r.ai);
+  // Draw curves over each acid's explored pH range; keep previously explored acids visible as ghost curves.
+  const drawCurve = (acid, reach, key, ink, ghost = false) => {
+    if (!reach) return;
+    ctx.save();
+    if (ghost) { ctx.globalAlpha = 0.42; ctx.setLineDash([4, 3]); }
+    ctx.strokeStyle = ink; ctx.lineWidth = Math.max(ghost ? 1.2 : 1.8, F.len(ghost ? 0.35 : 0.55)); ctx.beginPath();
     let first = true;
-    for (let v = r.lo; v <= r.hi + 1e-9; v += 0.1) {
-      const q = fractions(r.acid.pKa, Math.min(v, r.hi));
-      const px = F.x(X(Math.min(v, r.hi))); const py = F.y(Y(q[key] * 100));
+    for (let v = reach.lo; v <= reach.hi + 1e-9; v += 0.1) {
+      const q = fractions(acid.pKa, Math.min(v, reach.hi));
+      const px = F.x(X(Math.min(v, reach.hi))); const py = F.y(Y(q[key] * 100));
       if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py);
     }
-    if (r.hi === r.lo) { ctx.lineTo(F.x(X(r.hi)) + 0.01, F.y(Y(fractions(r.acid.pKa, r.hi)[key] * 100))); }
-    ctx.stroke(); ctx.lineWidth = 1;
+    if (reach.hi === reach.lo) { ctx.lineTo(F.x(X(reach.hi)) + 0.01, F.y(Y(fractions(acid.pKa, reach.hi)[key] * 100))); }
+    ctx.stroke();
+    ctx.restore();
   };
-  curve('HA', inkHA); curve('A', inkA);
+  if (multi) {
+    p.acids.forEach((ac, j) => {
+      if (j === r.ai || !p.reach[j]) return;
+      const [gHA, gA] = inkFor(j);
+      drawCurve(ac, p.reach[j], 'HA', gHA, true);
+      drawCurve(ac, p.reach[j], 'A', gA, true);
+    });
+  }
+  drawCurve(r.acid, { lo: r.lo, hi: r.hi }, 'HA', inkHA, false);
+  drawCurve(r.acid, { lo: r.lo, hi: r.hi }, 'A', inkA, false);
   // The dial's pH: a line, and a dot on each curve.
   ctx.strokeStyle = AMBER; ctx.beginPath(); ctx.moveTo(F.x(X(r.pH)), F.y(y0)); ctx.lineTo(F.x(X(r.pH)), F.y(y0 + ph)); ctx.stroke();
   for (const [key, ink] of [['HA', inkHA], ['A', inkA]]) {
-    ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(F.x(X(r.pH)), F.y(Y(r.fr[key] * 100)), Math.max(2, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(F.x(X(r.pH)), F.y(Y(r.fr[key] * 100)), Math.max(2.2, F.len(0.75)), 0, Math.PI * 2); ctx.fill();
   }
   const nameHA = ionText(p.indicator ? 'red form' : r.acid.HA); const nameA = ionText(p.indicator ? 'yellow form' : r.acid.A);
-  const by = y0 + ph + 9.4;
+  const by = y0 + ph + 9.2;
   const hidePct = p.hidePct && !isRevealed(state, f.id);
-  put(ctx, hidePct ? nameHA : `${nameHA} ${r.pctHA} %`, F.x(2), F.y(by), F.size(2.7, 7), { align: 'left', color: inkHA, weight: 700 });
-  put(ctx, hidePct ? nameA : `${nameA} ${r.pctA} %`, F.x(w - 2), F.y(by), F.size(2.7, 7), { align: 'right', color: inkA, weight: 700 });
+  put(ctx, hidePct ? nameHA : `${nameHA} ${r.pctHA} %`, F.x(2), F.y(by), F.size(3.3, 9.2), { align: 'left', color: inkHA, weight: 700 });
+  put(ctx, hidePct ? nameA : `${nameA} ${r.pctA} %`, F.x(w - 2), F.y(by), F.size(3.3, 9.2), { align: 'right', color: inkA, weight: 700 });
   if (p.indicator) {
-    ctx.fillStyle = mix(RED, YELLOW, r.fr.A); ctx.fillRect(F.x(2), F.y(by + 3), F.len(9), F.len(4));
-    ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(2)) + 0.5, Math.round(F.y(by + 3)) + 0.5, Math.round(F.len(9)), Math.round(F.len(4)));
-    put(ctx, 'colour of the solution', F.x(12.5), F.y(by + 5), F.size(2.1, 6), { align: 'left', color: DUST });
+    ctx.fillStyle = mix(RED, YELLOW, r.fr.A); ctx.fillRect(F.x(2), F.y(by + 3.4), F.len(9), F.len(4));
+    ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(2)) + 0.5, Math.round(F.y(by + 3.4)) + 0.5, Math.round(F.len(9)), Math.round(F.len(4)));
+    put(ctx, 'colour of the solution', F.x(12.5), F.y(by + 5.4), F.size(2.3, 6.8), { align: 'left', color: DUST });
   }
   // Below the curves: 40 molecules of the acid in a row. The share in the second form is the curve's at the dial's pH; the molecules trade a proton
   // while that share holds, so the row keeps changing and the count of each form stays.
@@ -130,7 +153,7 @@ export function stripFixture(id, at, { acids, indicator = false, start = 5, w = 
   return {
     fixture: {
       id, kind: 'phstrip', label: title, at: { ...at }, size: { w, h }, noRun: true, dials,
-      props: { backdrop: true, top: 10.5, acids, indicator, plotTop, plotH, reach: { 0: { lo: start, hi: start } }, ...(hidePct ? { hidePct: true } : {}) }
+      props: { backdrop: true, top: 10.5, margin: 10, grab: { ph: 3.5 }, acids, indicator, plotTop, plotH, reach: { 0: { lo: start, hi: start } }, ...(hidePct ? { hidePct: true } : {}) }
     },
     size: { w, h }
   };

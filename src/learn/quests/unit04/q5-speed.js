@@ -26,7 +26,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, histCard, speedBins, GASES, front } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, answerCards, answerSlot, predictStage, youPredicted, guessOf, typed } from './_shared.js';
 
@@ -365,18 +364,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Place a card in the slot.'],
-  2: ['Turn the Stopwatch dial,', 'then drag the chambers into order on the strip.'],
-  3: ['Adjust the Gas dial to match the stack leak.'],
-  4: ['Place a card in the slot.'],
-  5: ['Advance the Stopwatch dial,', 'then place a card in the slot.'],
-  6: ['Turn the Gas dial to compare masses,', 'then place a card in the slot.'],
-  7: ['Compare the half-empty times,', 'then type your answer in the field at the bottom.'],
-  8: ['Turn the Gas dial to compare curves,', 'then drag the snapshots along the strip.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

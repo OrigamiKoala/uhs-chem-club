@@ -10,7 +10,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { planKineticsRun } from '../../engine/ratedata.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   rateTable, kvesselFixture, plotterFixture, plaqueFixture, stmt
 } from '../../table/kits/rate.js';
@@ -43,10 +42,10 @@ const N2O5_POINTS = [
   { t: 60, A: 0.10 }
 ];
 
-// Stage 4: Three reactions (R1 = zero order, R2 = first order, R3 = second order)
-const R1_PTS = planKineticsRun({ order: 0, k: 0.015, a0: 0.80, tMax: 40, nSteps: 4 }).points;
-const R2_PTS = planKineticsRun({ order: 1, k: 0.045, a0: 0.80, tMax: 40, nSteps: 4 }).points;
-const R3_PTS = planKineticsRun({ order: 2, k: 0.12, a0: 0.80, tMax: 40, nSteps: 4 }).points;
+// Stage 4: Three reactions shuffled (R1 = second order, R2 = zero order, R3 = first order)
+const R1_PTS = planKineticsRun({ order: 2, k: 0.12, a0: 0.80, tMax: 40, nSteps: 4 }).points;
+const R2_PTS = planKineticsRun({ order: 0, k: 0.015, a0: 0.80, tMax: 40, nSteps: 4 }).points;
+const R3_PTS = planKineticsRun({ order: 1, k: 0.045, a0: 0.80, tMax: 40, nSteps: 4 }).points;
 
 // Stage 5: t1/2 = 15 s => k = 0.693 / 15 = 0.0462 s^-1
 const T_HALF_5 = 15;
@@ -58,7 +57,7 @@ export const STAGES = [
   {
     id: 's1-half-life',
     title: 'Half, Then Half Again',
-    prompt: 'How does the time for the second halving compare with the first?',
+    prompt: 'How does the time to lose the second half compare with the time to lose the first half?',
     widget,
     table: rateTable({
       pieces: [
@@ -67,26 +66,27 @@ export const STAGES = [
         stmt('shorter', 'Shorter', { x: 90, y: 53 })
       ],
       fixtures: [
-        kvesselFixture('v1', { x: 52, y: 23 }, {
-          title: '2 N₂O₅ → 4 NO₂ + O₂',
+        kvesselFixture('v1', { x: 50, y: 23 }, {
+          title: 'Fuel breakdown',
+          equation: 'A → products',
           order: 1,
           k: K_20,
           a0: 0.80,
           tMax: 45,
           mode: 'reactant',
           halfLives: true,
-          w: 90,
-          h: 34
+          w: 88,
+          h: 36
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Second halving', at: { x: 126, y: 23 }, size: { w: 32, h: 14 } }]
+        slots: [{ id: 'ans', label: 'Second halving', at: { x: 126, y: 23 }, size: { w: 38, h: 14 } }]
       }
     }),
     hints: [
       'Press "Run" and watch the halving markers appear on the curve.',
-      'Compare the time marked for the first halving with the second.',
-      'When both intervals are equal, the halving time is constant.'
+      'Compare the time for the first halving with the time for the second.',
+      'Equal time gaps mean the halving time stays constant.'
     ],
     check(state) {
       if (!state.table.fixtures.v1.props.ran) {
@@ -94,14 +94,15 @@ export const STAGES = [
       }
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Second halving".' };
-      if (card.id === 'longer') return { ok: false, msg: 'The markers on the curve show 20 s for the first halving and 20 s for the second.' };
-      if (card.id === 'shorter') return { ok: false, msg: 'Both halvings took 20 s on the curve.' };
+      if (card.id === 'longer' || card.id === 'shorter') {
+        return { ok: false, msg: 'Check the two time intervals marked above the curve.' };
+      }
       return { ok: true };
     },
     reward: {
       log: 'First and second halvings both took 20 s.',
       title: 'Half-Life',
-      body: 'Each halving took 20 s. That constant interval is the reaction\'s half-life.'
+      body: 'Both halvings took 20 s. That repeating time gap is the reaction\'s half-life.'
     }
   },
 
@@ -111,24 +112,20 @@ export const STAGES = [
     title: 'After Three Half-Lives',
     briefing: {
       speaker: SPEAKER,
-      body: 'Each half-life multiplies the remaining reactant by one-half.',
-      worked: [
-        'After 1 half-life: ½ (0.50) remains',
-        'After 2 half-lives: ½ × ½ = ¼ (0.25) remains'
-      ]
+      body: 'Each half-life cuts the remaining reactant in half: ½ (0.50) after one, ¼ (0.25) after two. You can type a decimal (0.125) or a fraction (1/8).'
     },
-    prompt: 'What fraction (as a decimal) of the reactant is left after three half-lives?',
+    prompt: 'What fraction of the reactant is left after three half-lives?',
     entry: { id: 'frac', label: 'Fraction left', unit: '' },
     widget,
     table: rateTable({
       pieces: [],
       fixtures: [
         kvesselFixture('v1', { x: 75, y: 28 }, {
-          title: 'N₂O₅ decay · t½ = 20 s',
+          title: 'Fuel decay · half-life = 20 s',
           order: 1,
           k: K_20,
           a0: 0.80,
-          tMax: 45,
+          tMax: 65,
           mode: 'reactant',
           halfLives: true,
           freezeAt: 1,
@@ -140,13 +137,13 @@ export const STAGES = [
       zones: {}
     }),
     hints: [
-      'Read the remaining concentrations after 1 and 2 half-lives, then type the fraction at 3.',
-      'Each half-life cuts the remaining amount in half again.',
-      'Multiply ½ × ½ × ½ (or divide 0.25 by 2).'
+      'Look at the three dotted half-life markers on the curve.',
+      'Each half-life cuts what is left in half again.',
+      'After two half-lives ¼ (0.25) remains, and the third half-life halves that again.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'frac');
-      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the remaining fraction as a decimal.' };
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the remaining fraction (for example 0.125 or 1/8).' };
       if (Math.abs(val - 0.125) <= 0.005) return { ok: true };
       if (Math.abs(val - 0.25) <= 0.01) {
         return { ok: false, msg: '0.25 is the fraction left after 2 half-lives (40 s), not 3.' };
@@ -159,7 +156,7 @@ export const STAGES = [
     reward: {
       log: 'Fraction left after 3 half-lives = 0.125 (1/8).',
       title: 'Repeated Halving',
-      body: 'After three half-lives, ½ × ½ × ½ = 0.125 (⅛) remains. Each half-life multiplies what is left by one-half.'
+      body: 'After three half-lives, ½ × ½ × ½ = 0.125 (⅛) remains. Each half-life cuts what is left in half.'
     }
   },
 
@@ -169,9 +166,9 @@ export const STAGES = [
     title: 'Which Plot Is Straight',
     briefing: {
       speaker: SPEAKER,
-      body: 'The plotter redraws the same concentration readings three ways: [A], ln[A], or 1/[A] against time. Here ln is the natural logarithm key on your calculator, used to straighten a curve.'
+      body: 'ln[A] is the natural log of [A] (the ln key on a calculator). For a reaction with equal half-lives, one of these three plots turns into a straight line.'
     },
-    prompt: 'Which plot of this reaction\'s readings is a straight line?',
+    prompt: 'Which plot of this reaction\'s data forms a straight line?',
     widget,
     table: rateTable({
       pieces: [
@@ -180,21 +177,21 @@ export const STAGES = [
         stmt('invA', '1/[A] vs t', { x: 90, y: 53 })
       ],
       fixtures: [
-        plotterFixture('plot', { x: 52, y: 23 }, {
-          title: 'N₂O₅ readings',
-          datasets: [{ label: 'N₂O₅', points: N2O5_POINTS }],
+        plotterFixture('plot', { x: 50, y: 23 }, {
+          title: 'Fuel readings',
+          datasets: [{ label: 'Fuel', points: N2O5_POINTS }],
           w: 88,
-          h: 34
+          h: 36
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Straight plot', at: { x: 126, y: 23 }, size: { w: 32, h: 14 } }]
+        slots: [{ id: 'ans', label: 'Straight plot', at: { x: 126, y: 23 }, size: { w: 38, h: 14 } }]
       }
     }),
     hints: [
-      'Turn the "Plot" dial through [A], ln[A], and 1/[A] and check against the dashed straightedge.',
-      'See which set of points lies directly on the straight line.',
-      'A first-order exponential decay becomes linear when you plot ln[A] against time.'
+      'Switch the "Plot" dial through [A], ln[A], and 1/[A] and compare each to the dashed straightedge.',
+      'Look for the plot where every point sits right on the dashed line.',
+      'A reaction with a constant half-life straightens out on one specific plot.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -206,7 +203,7 @@ export const STAGES = [
     reward: {
       log: 'ln[A] vs time is straight for N2O5.',
       title: 'First-Order Plot',
-      body: 'ln[A] against time is straight. That straight line is the mark of a first-order reaction.'
+      body: 'ln[A] versus time is a straight line. That is the signature of a first-order reaction.'
     }
   },
 
@@ -214,13 +211,17 @@ export const STAGES = [
   {
     id: 's4-three-reactions',
     title: 'Three Reactions',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A straight [A] plot means zero order, a straight ln[A] plot means first order, and a straight 1/[A] plot means second order.'
+    },
     prompt: 'What is the order of each reaction?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('R1', 'R1', { x: 94, y: 14 }),
-        stmt('R2', 'R2', { x: 94, y: 30 }),
-        stmt('R3', 'R3', { x: 94, y: 46 })
+        stmt('R1', 'R1', { x: 92, y: 14 }),
+        stmt('R2', 'R2', { x: 92, y: 30 }),
+        stmt('R3', 'R3', { x: 92, y: 46 })
       ],
       fixtures: [
         plotterFixture('plot', { x: 38, y: 28 }, {
@@ -230,37 +231,37 @@ export const STAGES = [
             { label: 'R2', points: R2_PTS },
             { label: 'R3', points: R3_PTS }
           ],
-          w: 66,
-          h: 38
+          w: 68,
+          h: 44
         })
       ],
       zones: {
         trays: [
-          { id: 'zero', label: 'Zero order', at: { x: 130, y: 14 }, size: { w: 30, h: 12 }, cellH: 8 },
-          { id: 'first', label: 'First order', at: { x: 130, y: 31 }, size: { w: 30, h: 12 }, cellH: 8 },
-          { id: 'second', label: 'Second order', at: { x: 130, y: 48 }, size: { w: 30, h: 12 }, cellH: 8 }
+          { id: 'zero', label: 'Zero order', at: { x: 130, y: 12 }, size: { w: 36, h: 13 }, cellH: 8 },
+          { id: 'first', label: 'First order', at: { x: 130, y: 31 }, size: { w: 36, h: 13 }, cellH: 8 },
+          { id: 'second', label: 'Second order', at: { x: 130, y: 50 }, size: { w: 36, h: 13 }, cellH: 8 }
         ]
       }
     }),
     hints: [
-      'Select each reaction ("R1", "R2", "R3") and check "[A]", "ln[A]", and "1/[A]" against the straightedge.',
-      'Straight [A] is zero order, straight ln[A] is first order, and straight 1/[A] is second order.',
-      'Match each reaction\'s straight plot to its order tray.'
+      'Select each reaction (R1, R2, R3) and check [A], ln[A], and 1/[A] against the dashed line.',
+      'Match each reaction\'s straight plot to its order: [A] is zero, ln[A] is first, 1/[A] is second.',
+      'Test each reaction one by one, since their labels are shuffled.'
     ],
     check(state) {
       const pieces = Object.values(state.table.pieces);
       const placed = pieces.filter(p => p.zone && p.zone.startsWith('tray:'));
       if (placed.length < 3) return { ok: false, notYet: true, msg: 'Sort all three reactions (R1, R2, R3) into the order trays.' };
       const zoneOf = id => pieces.find(p => p.id === id)?.zone;
-      if (zoneOf('R1') !== 'tray:zero') return { ok: false, msg: 'For R1, [A] vs time lies on the straightedge, while ln[A] and 1/[A] curve.' };
-      if (zoneOf('R2') !== 'tray:first') return { ok: false, msg: 'For R2, ln[A] vs time lies on the straightedge.' };
-      if (zoneOf('R3') !== 'tray:second') return { ok: false, msg: 'For R3, 1/[A] vs time lies on the straightedge.' };
+      if (zoneOf('R1') !== 'tray:second') return { ok: false, msg: 'Check which plot is straight for R1.' };
+      if (zoneOf('R2') !== 'tray:zero') return { ok: false, msg: 'Check which plot is straight for R2.' };
+      if (zoneOf('R3') !== 'tray:first') return { ok: false, msg: 'Check which plot is straight for R3.' };
       return { ok: true };
     },
     reward: {
-      log: 'R1 is zero order, R2 is first order, R3 is second order.',
+      log: 'R1 is second order, R2 is zero order, R3 is first order.',
       title: 'Integrated Rate Laws',
-      body: 'Zero-order gives a straight [A] plot, first-order gives a straight ln[A] plot, and second-order gives a straight 1/[A] plot.'
+      body: 'R2 had a straight [A] plot (zero order), R3 had a straight ln[A] plot (first order), and R1 had a straight 1/[A] plot (second order).'
     }
   },
 
@@ -270,13 +271,13 @@ export const STAGES = [
     title: 'k From the Half-Life',
     briefing: {
       speaker: SPEAKER,
-      body: 'For a first-order reaction, k = 0.693 ÷ half-life.',
+      body: 'For a first-order reaction, k = 0.693 ÷ half-life (where 0.693 is ln 2). The unit 1/s means "per second".',
       worked: [
         'Example: half-life = 10 s',
-        'k = 0.693 ÷ 10 = 0.0693 each second'
+        'k = 0.693 ÷ 10 = 0.0693 1/s'
       ]
     },
-    prompt: 'What is k for this first-order reaction?',
+    prompt: 'What is k for this first-order reaction, in 1/s?',
     entry: { id: 'k', label: 'Rate constant k', unit: '1/s' },
     widget,
     table: rateTable({
@@ -290,6 +291,7 @@ export const STAGES = [
           tMax: 35,
           mode: 'reactant',
           halfLives: true,
+          readout: 'Half-life = 15 s',
           freezeAt: 1,
           noRun: true,
           w: 80,
@@ -300,26 +302,26 @@ export const STAGES = [
       zones: {}
     }),
     hints: [
-      'Read the half-life from the curve markers, then type k.',
-      'Use the relation on the plate: k = 0.693 ÷ half-life.',
-      'A shorter half-life means a faster reaction, so check that your k gets larger as the half-life gets shorter.'
+      'Read the half-life from the curve markers.',
+      'Rearrange t½ = 0.693 / k on the plate to solve for k.',
+      'A shorter half-life means a faster reaction and a larger k.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'k');
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the rate constant k in 1/s.' };
       if (Math.abs(val - K_5) <= 0.002) return { ok: true };
       if (Math.abs(val - 0.693 * T_HALF_5) <= 0.5) {
-        return { ok: false, msg: '0.693 × 15 gives 10.4, which would give a half-life under 0.1 s.' };
+        return { ok: false, msg: 'k should be small when the half-life is long. Divide 0.693 by 15, do not multiply.' };
       }
       if (Math.abs(val - T_HALF_5 / 0.693) <= 1.0) {
-        return { ok: false, msg: 'Dividing 15 by 0.693 inverts the formula.' };
+        return { ok: false, msg: 'Dividing 15 by 0.693 flips the formula upside down. Divide 0.693 by 15 instead.' };
       }
       return { ok: false, msg: `${val} 1/s gives a half-life of ${(0.693 / val).toFixed(1)} s, not 15 s.` };
     },
     reward: {
       log: 'k = 0.693 / 15 = 0.0462 1/s.',
       title: 'Half-Life and k',
-      body: 'A half-life of 15 s gives k = 0.693 ÷ 15 = 0.0462 each second. Shorter half-lives mean larger k.'
+      body: 'A 15 s half-life gives k = 0.693 ÷ 15 = 0.0462 1/s. Shorter half-lives always mean larger k.'
     }
   },
 
@@ -327,11 +329,12 @@ export const STAGES = [
   {
     id: 's6-integrated',
     title: 'How Much Is Left',
+    beyondAp: true,
     briefing: {
       speaker: SPEAKER,
-      body: 'The straight ln[A] line has a slope of −k, so ln[A] = ln[A]₀ − kt, where [A]₀ is the starting concentration.',
+      body: 'The straight ln[A] line has slope −k, which gives ln[A] = ln[A]₀ − kt, where [A]₀ is the starting concentration.',
       worked: [
-        'Another run: [A]₀ = 0.50 mol/L, k = 0.10 per second, t = 10 s',
+        'Another run: [A]₀ = 0.50 mol/L, k = 0.10 1/s, t = 10 s',
         'ln[A] = ln 0.50 − 0.10 × 10 = −0.693 − 1.0 = −1.693',
         '[A] = e^(−1.693) = 0.18 mol/L'
       ]
@@ -348,33 +351,34 @@ export const STAGES = [
           k: K_5,
           a0: 0.80,
           tMax: 30,
+          extendTo: 45,
           mode: 'reactant',
           freezeAt: 1,
           noRun: true,
           w: 80,
           h: 40
         }),
-        plaqueFixture('eq', 'The run', { x: 118, y: 28 }, ['[A]₀ = 0.80 mol/L', 'k = 0.0462 per second'], { w: 46 })
+        plaqueFixture('eq', 'The run', { x: 118, y: 28 }, ['[A]₀ = 0.80 mol/L', 'k = 0.0462 1/s'], { w: 46 })
       ],
       zones: {}
     }),
     hints: [
-      'The curve stops at 30 s, so the answer is beyond the drawn graph.',
-      'Estimate first: find how many half-lives 40 s is, and between which two amounts the answer must lie.',
-      'Put your estimate and the relation together; a result outside your estimate means a slip in the calculator.'
+      'The solid curve stops at 30 s, so 40 s lies on the dashed extension.',
+      'Estimate first: 40 s is between two half-lives (30 s) and three half-lives (45 s).',
+      'Because 40 s lies between 30 s and 45 s, [A] must fall between 0.20 and 0.10 mol/L.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'left');
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the concentration left in mol/L.' };
       if (Math.abs(val - A_40) <= 0.006) return { ok: true };
-      if (val >= 0.2) return { ok: false, msg: 'After 30 s (two half-lives) 0.20 mol/L is left, and more time has passed since then.' };
-      if (val < 0.1) return { ok: false, msg: 'After 45 s (three half-lives) 0.10 mol/L is left, and 40 s is sooner than that.' };
-      return { ok: false, msg: 'That lies between the amounts left after two and three half-lives, but the relation gives a different value.' };
+      if (val >= 0.2) return { ok: false, msg: 'At 30 s (two half-lives), 0.20 mol/L is left. At 40 s, less must remain.' };
+      if (val < 0.1) return { ok: false, msg: 'At 45 s (three half-lives), 0.10 mol/L is left. At 40 s, more must remain.' };
+      return { ok: false, msg: 'That is in the right range (between 0.10 and 0.20 mol/L), so double-check your ln[A] = ln[A]₀ − kt math.' };
     },
     reward: {
       log: '[A] after 40 s = 0.80 × e^(−0.0462 × 40) = 0.126 mol/L.',
       title: 'Integrated Rate Law',
-      body: 'About 0.13 mol/L is left, between the 0.20 after two half-lives and the 0.10 after three. The relation gives amounts at times the graph does not show.'
+      body: 'About 0.126 mol/L remains, right between 0.20 at two half-lives and 0.10 at three. The integrated rate law works for any time.'
     }
   },
 
@@ -382,7 +386,7 @@ export const STAGES = [
   {
     id: 's7-second-order-halves',
     title: 'A Second-Order Reaction',
-    prompt: 'How does the time for the second halving compare with the first in this second-order reaction?',
+    prompt: 'For this second-order reaction (straight 1/[A] plot), how does the second halving time compare with the first?',
     widget,
     table: rateTable({
       pieces: [
@@ -391,26 +395,27 @@ export const STAGES = [
         stmt('shorter', 'Shorter', { x: 90, y: 53 })
       ],
       fixtures: [
-        kvesselFixture('v1', { x: 52, y: 23 }, {
-          title: '2 NO₂ → 2 NO + O₂',
+        kvesselFixture('v1', { x: 50, y: 23 }, {
+          title: 'Second-order decay',
+          equation: '2 NO₂ → 2 NO + O₂',
           order: 2,
           k: 0.0625,
           a0: 0.80,
           tMax: 70,
           mode: 'reactant',
           halfLives: true,
-          w: 90,
-          h: 34
+          w: 88,
+          h: 36
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Second halving', at: { x: 126, y: 23 }, size: { w: 32, h: 14 } }]
+        slots: [{ id: 'ans', label: 'Second halving', at: { x: 126, y: 23 }, size: { w: 38, h: 14 } }]
       }
     }),
     hints: [
       'Press "Run" and read the time marked for each halving.',
-      'Compare with the first-order reaction you tested earlier, where the halvings took equal times.',
-      'In this reaction the rate depends on the square of the concentration; ask what a lower concentration does to the rate.'
+      'Compare this with the first-order reaction, where both halvings took the same time.',
+      'Because rate depends on [A]², losing half the reactant slows the reaction down sharply.'
     ],
     check(state) {
       if (!state.table.fixtures.v1.props.ran) {
@@ -419,30 +424,21 @@ export const STAGES = [
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Second halving".' };
       if (card.id === 'same') return { ok: false, msg: 'The markers show 20 s for the first halving and a different time for the second.' };
-      if (card.id === 'shorter') return { ok: false, msg: 'The second marker is further from the first marker than the first marker is from the start.' };
+      if (card.id === 'shorter') return { ok: false, msg: 'The second halving spans more seconds on the axis than the first.' };
       return { ok: true };
     },
     reward: {
       log: 'Second-order halvings: 20 s, then 40 s.',
       title: 'Second-Order Half-Life',
-      body: 'The second halving took twice as long as the first, because less reactant means far fewer collisions. A constant half-life belongs to first-order reactions only.'
+      body: 'The second halving took twice as long (40 s vs 20 s) because less reactant means far fewer collisions. Only first-order reactions have a constant half-life.'
     }
   }
 ];
 
-applyNotes(STAGES, {
-  1: ['Press "Run", then place one card in the slot.'],
-  2: ['Read the half-life markers, then type the fraction remaining after 3 half-lives.'],
-  3: ['Cycle the "Plot" dial to test each graph against the straightedge, then place one card.'],
-  4: ['Check each reaction across all three plots, then sort R1, R2, and R3.'],
-  5: ['Read t½ from the curve, then type k.'],
-  6: ['Type the concentration left after 40 s; use Calc for ln and e.'],
-  7: ['Press "Run", then place one card in the slot.']
-});
 
 export const DEBRIEF = {
   title: 'Decay Plots Complete',
-  body: 'First-order decay has a constant half-life (t½ = 0.693/k), and straight plots of [A], ln[A], or 1/[A] distinguish zero, first, and second order.'
+  body: 'First-order reactions have a constant half-life (t½ = 0.693/k). Checking whether [A], ln[A], or 1/[A] plots straight tells you if a reaction is zero, first, or second order.'
 };
 
 const put = (piece, to) => ({ place: { piece, to } });
@@ -453,7 +449,7 @@ export const SOLUTIONS = [
   [runFx('v1'), put('same', 'slot:ans')],
   [{ type: { entry: 'frac', value: '0.125' } }],
   [dial('plot', 'plot', 2), put('lnA', 'slot:ans')],
-  [put('R1', 'tray:zero'), put('R2', 'tray:first'), put('R3', 'tray:second')],
+  [put('R1', 'tray:second'), put('R2', 'tray:zero'), put('R3', 'tray:first')],
   [{ type: { entry: 'k', value: '0.0462' } }],
   [{ type: { entry: 'left', value: '0.126' } }],
   [runFx('v1'), put('longer', 'slot:ans')]

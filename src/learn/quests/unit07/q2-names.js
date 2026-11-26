@@ -21,7 +21,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { potTable, plaqueFixture, tag, chip, piecesInTray } from '../../table/kits/pot.js';
 import { ionChip, crate, needleFixture, needleRead, labelerFixture, labelWords, windowFixture, windowRead } from '../../table/kits/pot-names.js';
 import { nameIonic, nameMolecular, nameAcid, ionicFormula, parseFormula, IONS } from '../../engine/reactdata.js';
@@ -453,18 +452,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag your chosen card into the slot.'],
-  2: ['Drag ions from the supply tray into the tray.'],
-  3: ['Drag a name card into each label slot.'],
-  4: ['Drag a numeral card into each label.'],
-  5: ['Put a sample in the particle view, press Dissolve, then build the formula left to right.'],
-  6: ['Put a sample in the particle view, press Look, then fill the label.'],
-  7: ['Drag an acid card into each label slot.'],
-  8: ['Put the drum in the particle view, press Dissolve, then fill the label.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

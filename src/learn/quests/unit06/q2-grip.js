@@ -22,7 +22,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   matterTable, molCard, ionCard, probeFixture, wellFixture, probeRead, whereIs, note, stmt, fixed, mleadFixture
 } from '../../table/kits/matter.js';
@@ -522,8 +521,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines removed from the plate: the prompt is the only instruction; how-to belongs in the Tour. */
-applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

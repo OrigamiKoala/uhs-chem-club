@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, note, leadFixture, rxnFixture, gCard, plotFixture, gibbsBarsFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed, FORMATION_TABLE
 } from '../../table/kits/heat.js';
@@ -317,16 +316,6 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag your prediction into the slot.'],
-  2: ['Drag the ball along the line to change the temperature.'],
-  3: ['Drag each card into a tray.'],
-  4: ['Type your answer in the box below.'],
-  5: ['Drag the ball along the line, then type your answer in kelvin.'],
-  6: ['Type your answer in the box below.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

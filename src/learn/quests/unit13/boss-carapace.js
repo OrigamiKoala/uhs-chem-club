@@ -9,7 +9,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import { thornTable, tbuildFixture, tmolFixture, molRead, ttestFixture, resultOf, tcard } from '../../table/kits/thorn.js';
 import { alkaneH } from '../../engine/thorndata.js';
 import '../../engine/thorn-scenes/q4-groups.js';
@@ -182,14 +181,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Tap a dashed ring to add a carbon; type your answer.'],
-  2: ['Drag a card into the Sample slot to test it, then drag your answer into the slot.'],
-  3: ['Tap a carbon to answer.'],
-  4: ['Tap an atom to answer.'],
-  5: ['Tap a bond to answer.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

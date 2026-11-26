@@ -68,11 +68,11 @@ export const STAGES = [
         title: 'Electron Clouds',
         body: 'An ion\'s electrons form a cloud around its nucleus. The probe brings a charge nearby to show whether the cloud keeps its shape or stretches.'
       },
-      prompt: 'Which ions are hard and which are soft?',
+      prompt: 'Metals dissolve as ions — which of these ions are hard and which are soft in the electric field?',
       widget,
       hints: [
-        'Drag an ion into the probe socket and press "Test".',
-        'Look at whether the electron cloud keeps its shape or pulls toward the charge.',
+        'Watch the electron cloud inside the probe when you test each ion.',
+        'Look at whether the electron cloud keeps its round shape or stretches toward the plate.',
         'Compare each ion\'s cloud in the probe with the two tray descriptions.'
       ],
       reward: {
@@ -118,8 +118,8 @@ export const STAGES = [
   /* -------------------------------------------------------------- 2 */
   (() => {
     const w = wellsFixture('wells', { x: 75, y: 24 }, {
-      w: 56, h: 30, label: 'Test Wells',
-      cat1: 'Ca', cat2: 'Ag',
+      w: 58, label: 'Test Wells',
+      cat1: 'Ca', cat2: 'Ag', reagents: ['F', 'I'],
       dials: { reagent: { min: 1, max: 2, step: 1, value: 1, label: 'Reagent', labels: ['Fluoride (F⁻)', 'Iodide (I⁻)'] } }
     });
     return {
@@ -128,7 +128,7 @@ export const STAGES = [
       prompt: 'Which pairs of ions form a solid?',
       widget,
       hints: [
-        'Use the reagent dial on the wells and press "Mix".',
+        'Watch which well forms a solid precipitate with fluoride and which with iodide.',
         'Compare which wells turn cloudy with fluoride versus iodide.',
         'Compare each pair that formed a solid with what Stage 1 showed about its two ions.'
       ],
@@ -173,27 +173,27 @@ export const STAGES = [
 
   /* -------------------------------------------------------------- 3 */
   (() => {
-    const b = bondViewerFixture('bonds', { x: 75, y: 22 });
+    const b = bondViewerFixture('bonds', { x: 75, y: 23 });
     return {
       id: 's3-bonds',
       title: 'What Holds Each Solid',
-      prompt: 'What holds each of the two solids together?',
+      prompt: 'What holds the ions together in solid calcium fluoride (CaF₂) and solid silver iodide (AgI)?',
       widget,
       hints: [
-        'Look at the particle diagrams in the two views.',
-        'Check whether the clouds stay as separate spheres or merge between the nuclei.',
-        'Match each diagram to whether opposite charges attract or clouds overlap.'
+        'Compare the electron clouds of Ca²⁺/F⁻ with those of Ag⁺/I⁻.',
+        'Check whether the clouds stay as separate spheres or overlap between the nuclei.',
+        'Match each solid to electrical attraction alone versus attraction with shared overlapping clouds.'
       ],
       reward: {
-        log: 'Hard ions attract as charges; soft ions share clouds.',
+        log: 'Hard ions attract as separate charges; soft ions also share overlapping clouds.',
         title: 'What Holds Each Solid',
-        body: 'Hard ions stay as separate charged spheres held by electrical attraction. Soft ions stretch their electron clouds toward each other and share electrons.'
+        body: 'Hard ions (Ca²⁺ and F⁻) stay as separate charged spheres held by electrical attraction. Soft ions (Ag⁺ and I⁻) are held by attraction plus electron sharing where their soft clouds overlap.'
       },
       table: potTable({
         fixtures: [b.fixture],
         pieces: [
-          hsabChip('chip_ionic', 'Attraction between opposite charges', { x: 42, y: 54 }, { type: 'ionic' }),
-          hsabChip('chip_covalent', 'Sharing electrons where clouds overlap', { x: 108, y: 54 }, { type: 'covalent' })
+          hsabChip('chip_ionic', 'Attraction between opposite charges', { x: 42, y: 55 }, { type: 'ionic' }),
+          hsabChip('chip_covalent', 'Attraction with shared overlapping clouds', { x: 108, y: 55 }, { type: 'covalent' })
         ],
         zones: {
           slots: b.slots
@@ -225,7 +225,7 @@ export const STAGES = [
     prompt: 'Which ions do you expect sulfide to form a solid with: Ag⁺, Ca²⁺, both or neither?',
     widget,
     hints: [
-      'Pick the card that states your prediction.',
+      'Compare sulfide\'s large size with the ions you tested in Stages 1 and 2.',
       'Compare sulfide\'s soft electron cloud with Ag⁺ and Ca²⁺.',
       'Decide whether sulfide will pair with the soft ion, the hard ion, both or neither.'
     ],
@@ -236,9 +236,8 @@ export const STAGES = [
     },
     table: potTable({
       fixtures: [
-        plaqueFixture('plk', 'Prediction', { x: 75, y: 11 }, [
-          'Sulfide, S²⁻, is a large, soft ion.',
-          'Ag⁺ is soft; Ca²⁺ is hard.'
+        plaqueFixture('plk', 'Sulfide', { x: 75, y: 11 }, [
+          'Sulfide (S²⁻) is a large ion.'
         ])
       ],
       pieces: [
@@ -249,7 +248,7 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          trayAt('choice', 'Your Prediction', { x: 75, y: 34 }, { w: 52, h: 12 })
+          { ...trayAt('choice', 'Your Prediction', { x: 75, y: 34 }, { w: 52, h: 12 }), single: true }
         ]
       }
     }),
@@ -266,8 +265,8 @@ export const STAGES = [
 
   /* -------------------------------------------------------------- 5 */
   (() => {
-    const w = wellsFixture('wells', { x: 75, y: 24 }, {
-      w: 56, h: 30, label: 'Sulfide Reaction Wells',
+    const w = wellsFixture('wells', { x: 75, y: 22 }, {
+      w: 58, label: 'Sulfide Reaction Wells',
       cat1: 'Ag', cat2: 'Ca', reagent: 'S'
     });
     return {
@@ -281,13 +280,13 @@ export const STAGES = [
       },
       widget,
       hints: [
-        'Press "Mix" to react the test wells with sulfide, then place the solid in the tray.',
+        'Compare what happens in the Ag⁺ well and the Ca²⁺ well after mixing with sulfide.',
         'Compare what settles in the silver well with what stays clear in the calcium well.',
         'Collect the solid that settles in the wells.'
       ],
       reward: {
         log: 'Soft Ag⁺ formed black Ag₂S with soft S²⁻.',
-        title: 'Sulfide Prediction Confirmed',
+        title: 'Sulfide Test Result',
         body: 'Soft Ag⁺ formed black Ag₂S with soft S²⁻. Hard Ca²⁺ stayed dissolved.'
       },
       table: potTable({
@@ -299,7 +298,7 @@ export const STAGES = [
         zones: {
           slots: w.slots,
           trays: [
-            trayAt('collector', 'Precipitated solid', { x: 75, y: 52 }, { w: 36, h: 14 })
+            { ...trayAt('collector', 'Precipitated solid', { x: 75, y: 52 }, { w: 36, h: 14 }), single: true }
           ]
         }
       }),
@@ -322,8 +321,8 @@ export const STAGES = [
   /* -------------------------------------------------------------- 6 */
   (() => {
     const w = wellsFixture('wells', { x: 52, y: 24 }, {
-      w: 56, h: 30, label: 'Wastewater Wells',
-      cat1: 'Pb2', cat2: 'Mg',
+      w: 58, label: 'Wastewater Wells',
+      cat1: 'Pb2', cat2: 'Mg', reagents: ['F', 'S'],
       dials: { reagent: { min: 1, max: 2, step: 1, value: 1, label: 'Reagent', labels: ['Fluoride (F⁻)', 'Sulfide (S²⁻)'] } }
     });
     return {
@@ -331,14 +330,14 @@ export const STAGES = [
       title: 'Take Out the Lead',
       briefing: {
         title: 'Separating Two Ions',
-        body: 'Lead ions, Pb²⁺, are large and soft; magnesium ions, Mg²⁺, are small and hard.'
+        body: 'Test both reagents on the Pb²⁺ and Mg²⁺ wells to see which removes only the lead as a solid.'
       },
       prompt: 'Which reagent removes the lead from the water and leaves the magnesium dissolved?',
       widget,
       hints: [
-        'Use the reagent dial on the wells and press "Mix", then place the matching card in the tray.',
+        'Compare what happens in both wells with fluoride versus sulfide.',
         'Look for the reagent that forms a solid in the Pb²⁺ well while keeping the Mg²⁺ well clear.',
-        'Compare what happens in both wells for fluoride and for sulfide.'
+        'Fluoride precipitates both ions, while sulfide precipitates only the soft Pb²⁺.'
       ],
       reward: {
         log: 'Soft sulfide removed Pb²⁺ and left hard Mg²⁺ dissolved.',
@@ -354,7 +353,7 @@ export const STAGES = [
         zones: {
           slots: w.slots,
           trays: [
-            trayAt('reagent_choice', 'Selected Reagent', { x: 122, y: 24 }, { w: 40, h: 24 })
+            { ...trayAt('reagent_choice', 'Selected Reagent', { x: 122, y: 24 }, { w: 40, h: 24 }), single: true }
           ]
         }
       }),
@@ -367,7 +366,7 @@ export const STAGES = [
 
         const choice = picked[0].props.reagent;
         if (choice === 'F') {
-          return { ok: false, msg: 'In the wells, fluoride forms a solid with Mg²⁺ and leaves Pb²⁺ dissolved.' };
+          return { ok: false, msg: 'In the wells, fluoride forms a solid with both Pb²⁺ and Mg²⁺, so it does not separate the lead from the magnesium.' };
         }
         return { ok: true };
       }

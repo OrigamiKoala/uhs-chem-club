@@ -78,7 +78,16 @@ export function blankAnswer(stage) {
 /** What a move changes about a table, as one string: everything but what the last action said and what is in the hand. */
 const tableBody = t => JSON.stringify({ ...t, last: null, carry: null });
 /** The number a stage's field holds (`stage.entry`), read as a decimal; NaN when it is empty or not a number. */
-export const entryNumber = (table, id) => { const t = String(table.entries?.[id] ?? '').trim().replace(',', '.'); return t === '' ? NaN : Number(t); };
+export const entryNumber = (table, id) => {
+  const t = String(table.entries?.[id] ?? '').trim().replace(',', '.');
+  if (t === '') return NaN;
+  const frac = /^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/.exec(t);
+  if (frac) {
+    const den = Number(frac[2]);
+    return den === 0 ? NaN : Number(frac[1]) / den;
+  }
+  return Number(t);
+};
 
 /**
  * The end state of a table stage from a script of actions (a `SOLUTIONS` or
@@ -130,7 +139,9 @@ export function createRunner(container, ctx, cfg) {
     onExit: () => ctx.exit()
   });
 
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
+  let index = typeof ctx.initialStage === 'number'
+    ? Math.max(0, Math.min(ctx.initialStage, STAGES.length - 1))
+    : (ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1));
   let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
   let state = null;
   let busy = false;
@@ -170,6 +181,7 @@ export function createRunner(container, ctx, cfg) {
 
   function loadStage(i) {
     index = i;
+    ctx.onStageChange?.(i);
     history = [];
     holdBase = null;
     lastDial = null;
@@ -202,7 +214,7 @@ export function createRunner(container, ctx, cfg) {
     // A quest opens on its question (`story/quest-story.js` `mystery`), once each time it is opened at stage 1, before
     // any briefing; the debrief answers it.
     // A scene in the world that has just asked it (`three/mystery/director.js`) counts as asking.
-    const mystery = i === 0 && !caseAsked && questKey && !consumeIntro(questKey) ? mysteryFor(questKey) : '';
+    const mystery = i === 0 && !caseAsked && !ctx.skipCaseOpen && questKey && !consumeIntro(questKey) ? mysteryFor(questKey) : '';
     if (mystery && typeof document !== 'undefined' && !globalThis.__LQ_TEST__) {
       caseAsked = true;
       import('../../ui/case-open.js')

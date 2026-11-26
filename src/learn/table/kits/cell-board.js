@@ -223,7 +223,7 @@ registerPiece('cellelectrode', {
  */
 export const electrodePiece = (id, metal, at, { label = null, sealed = false, caption = null } = {}) => ({
   id, kind: 'cellelectrode', label: label ?? METALS[metal].symbol, at, props: { metal, sealed },
-  caption: caption ?? 'Lay it in the seat.'
+  ...(caption ? { caption } : {})
 });
 
 export { HYDROGEN };

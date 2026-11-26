@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { nukeTable, ncountFixture, keptCount, nsrc, nshield, ntissueFixture, nchoiceFixture, chosenIndex, note } from '../../table/kits/nuke.js';
 import { commas } from '../../table/kits/nuke-draw.js';
 
@@ -315,15 +314,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Drag a source into the Sample slot; press "Run".'],
-  2: ['Drag a source into the Sample slot; press "Run".'],
-  3: ['Drag a source into the Sample slot; press "Run".'],
-  4: ['Drag the card you choose into the slot.'],
-  6: ['Tap Alpha, Beta or Gamma on the strip; tap your answer.'],
-  7: ['Drag a shield into the Shield slot to count behind it.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

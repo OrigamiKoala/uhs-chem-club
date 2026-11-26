@@ -13,6 +13,7 @@
 
 import { api } from '../api.js';
 import { stage } from '../three/stage.js';
+import { tierManager } from '../three/tier.js';
 import { esc } from '../ui/layout.js';
 import { getWorld, getQuest, loadQuestModule, ARENAS } from '../learn/curriculum.js';
 import {
@@ -30,6 +31,11 @@ let active = null;
 /** Called by the router whenever it leaves a learn quest route. */
 export function disposeLearnQuest() {
   if (!active) return;
+  try {
+    active.unsubTier?.();
+  } catch (err) {
+    console.error('Learn quest tier unsubscribe failed:', err);
+  }
   try {
     active.bossArena?.dispose?.();
   } catch (err) {
@@ -187,6 +193,11 @@ export function renderLearnQuest(container, params = {}) {
     bossArena,
     stagesCleared: prog.cleared,
     isComplete: prog.complete,
+    initialStage: params.initialStage,
+    skipCaseOpen: Boolean(params.skipCaseOpen),
+    onStageChange(i) {
+      if (active && active.token === token) active.stageIndex = i;
+    },
 
     /** One stage cleared. Local first; the server call is telemetry. */
     reportStage(stageIndex) {
@@ -207,7 +218,14 @@ export function renderLearnQuest(container, params = {}) {
   };
 
   const token = {};
-  active = { world: world.id, quest: quest.id, token, mounted: null, bossArena };
+  const was3D = tierManager.is3D();
+  const unsubTier = tierManager.subscribe(() => {
+    if (!active || active.token !== token) return;
+    if (tierManager.is3D() === was3D) return;
+    const keepStage = typeof active.stageIndex === 'number' ? active.stageIndex : params.initialStage;
+    renderLearnQuest(container, { ...params, initialStage: keepStage, skipCaseOpen: true });
+  });
+  active = { world: world.id, quest: quest.id, token, mounted: null, bossArena, stageIndex: params.initialStage, unsubTier };
 
   // A module is fetched on first visit, which on a slow connection is long
   // enough to read as a broken page. Say what is happening until it arrives.

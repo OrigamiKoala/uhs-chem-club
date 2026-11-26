@@ -56,6 +56,7 @@ const settle = state => {
 export const POT_KIT = {
   ...HEAT_KIT,
   id: POT_KIT_ID,
+  returnFree: true,
   kinds: { ...HEAT_KIT.kinds, ...pieceKinds() },
   run,
   paintPiece,

@@ -20,7 +20,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { matterTable, molCard, fixed, whereIs, note, tag, mleadFixture } from '../../table/kits/matter.js';
 import {
   stripFixture, filterFixture, stillFixture, boilerFixture, planFixture, inkCard, dyeCard, mixCard, soluteCard,
@@ -361,8 +360,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines removed from the plate. */
-applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

@@ -17,7 +17,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { lodeTable, cplxFixture, cplxRead, matchFixture, matchRead, lchoiceFixture, chosen, pickOf, note, lodeLeadFixture } from '../../table/kits/lode.js';
 import { cisTrans, distinctCount } from '../../engine/lodedata.js';
 
@@ -263,15 +262,6 @@ export const STAGES = [
   }
 ];
 
-const NOTES = {
-  1: ['Press "Release", then turn the dial.'],
-  2: ['Turn a dial, then tap a model.'],
-  3: ['Drag the card you choose into the slot.'],
-  4: ['Tap rings, press a "Turn" key, tap a number.'],
-  5: ['Tap rings, press the key, tap a number.'],
-  6: ['Turn a dial; tap a model to mark it.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

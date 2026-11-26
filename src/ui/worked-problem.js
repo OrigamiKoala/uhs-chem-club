@@ -13,7 +13,7 @@
 
 import { esc } from './layout.js';
 import { checkStep, answerText } from '../learn/worked.js';
-import { toggleCalculator } from './calculator.js';
+import { toggleCalculator, CALC_ICON } from './calculator.js';
 
 /**
  * @param {HTMLElement} host
@@ -66,7 +66,7 @@ export function mountWorked(host, problem, { onDone, onLeave } = {}) {
             <h2 class="section-title bp-title">${esc(problem.title)}</h2>
           </div>
           <div class="bp-head-right">
-            <button type="button" class="btn-secondary quest-btn-sm" data-calc>Calculator</button>
+            <button type="button" class="btn-secondary quest-btn-sm lq-practice-calc" data-calc title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
             <span class="tag live">Step ${i + 1} / ${steps.length}</span>
           </div>
         </div>

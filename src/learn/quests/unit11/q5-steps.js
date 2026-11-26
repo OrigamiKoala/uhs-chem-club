@@ -42,7 +42,7 @@ function toolNoteFor() {
 
 const DEBRIEF = {
   title: 'Bench 5 cleared',
-  body: 'Elementary steps sum to the overall equation, intermediates cancel out, and the slowest step sets the rate law.',
+  body: 'Elementary steps add up to the overall equation, intermediates cancel out, and the slowest step sets the rate law.',
   filed: 'Filed: the additive runs in two elementary steps; the slow first step sets the rate law.'
 };
 
@@ -59,20 +59,21 @@ export const STAGES = [
     title: 'Adding Elementary Steps',
     briefing: {
       speaker: SPEAKER,
-      body: 'Most reactions happen as a series of single collisions called elementary steps. Added together, the steps must give the overall reaction.'
+      body: 'Most reactions happen as a chain of single collisions called elementary steps. Add these two steps to see the overall reaction.'
     },
     prompt: 'What overall reaction do these two elementary steps produce?',
     widget,
     table: rateTable({
       pieces: [
-        eqn('e1', { x: 25, y: 18 }, [[2, 'NO₂']], [[1, 'NO₃'], [1, 'NO']], 0),
-        eqn('e2', { x: 25, y: 38 }, [[1, 'NO₃'], [1, 'CO']], [[1, 'NO₂'], [1, 'CO₂']], 0)
+        eqn('e1', { x: 25, y: 18 }, [[2, 'NO₂']], [[1, 'NO₃'], [1, 'NO']], 0, { hideDH: true }),
+        eqn('e2', { x: 25, y: 38 }, [[1, 'NO₃'], [1, 'CO']], [[1, 'NO₂'], [1, 'CO₂']], 0, { hideDH: true })
       ],
       fixtures: [
         stackFixture('wanted', { x: 126, y: 28 }, {
           tray: 'stack',
           target: TARGET_SUM,
-          hideSum: false,
+          hideSum: true,
+          neutralSum: true,
           w: 44,
           h: 44
         })
@@ -84,20 +85,20 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Move both elementary step cards into "The stack" tray.',
-      'NO₃ appears once on the right of Step 1 and once on the left of Step 2, so it cancels.',
-      'Add the left sides of the two steps and the right sides, then remove whatever appears on both.'
+      'Drag both step cards into "The stack" tray to see how they combine.',
+      'Anything made on the right of Step 1 and used on the left of Step 2 cancels out.',
+      'The overall equation keeps only what is left after matching substances on opposite sides cancel.'
     ],
     check(state) {
       const r = stackRead(state.table, 'wanted');
-      if (r.empty) return { ok: false, notYet: true, msg: 'Move both elementary step cards into "The stack".' };
-      if (!r.matches) return { ok: false, msg: 'Both steps are needed so NO₃ and one NO₂ cancel.' };
+      if (r.empty) return { ok: false, notYet: true, msg: 'Move step cards into "The stack".' };
+      if (!r.matches) return { ok: false, msg: 'Something is still left over. Try putting both cards in the stack.' };
       return { ok: true };
     },
     reward: {
       log: 'Elementary steps sum to NO2 + CO -> NO + CO2.',
       title: 'Elementary Steps',
-      body: 'Each elementary step shows one molecular collision event, and their sum gives the overall reaction.'
+      body: 'Each elementary step is a single collision, and adding the steps gives the overall reaction.'
     }
   },
 
@@ -105,13 +106,17 @@ export const STAGES = [
   {
     id: 's2-intermediate',
     title: 'Spotting the Intermediate',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An intermediate is made in one step and used up in a later step, so it cancels out of the overall reaction.'
+    },
     prompt: 'Which species is an intermediate in this two-step path?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('NO3', 'NO₃', { x: 112, y: 9 }),
-        stmt('NO2', 'NO₂', { x: 112, y: 24 }),
-        stmt('CO', 'CO', { x: 112, y: 39 })
+        stmt('NO3', 'NO₃', { x: 114, y: 10 }),
+        stmt('NO2', 'NO₂', { x: 114, y: 24 }),
+        stmt('CO', 'CO', { x: 114, y: 38 })
       ],
       fixtures: [
         plaqueFixture('steps', 'Two-step path', { x: 46, y: 28 }, [
@@ -121,25 +126,25 @@ export const STAGES = [
         ], { w: 78 })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Intermediate', at: { x: 112, y: 52 }, size: { w: 46, h: 8 } }]
+        slots: [{ id: 'ans', label: 'Intermediate', at: { x: 114, y: 52 }, size: { w: 46, h: 12 } }]
       }
     }),
     hints: [
-      'Compare the two steps with the overall equation.',
-      'An intermediate is produced in an earlier step and consumed in a later step, so it never appears in the overall equation.',
-      'Look for the species made in Step 1 and used up in Step 2.'
+      'Compare the two steps with the overall equation on the plate.',
+      'Look for a substance that appears in the steps but is missing from the overall equation.',
+      'An intermediate is made in Step 1 and consumed in Step 2.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Intermediate".' };
-      if (card.id === 'NO2') return { ok: false, msg: 'NO₂ is a starting reactant present before Step 1 begins.' };
+      if (card.id === 'NO2') return { ok: false, msg: 'NO₂ is a starting reactant in the overall equation, not something created only in Step 1.' };
       if (card.id === 'CO') return { ok: false, msg: 'CO is a starting reactant in the overall equation.' };
       return { ok: true };
     },
     reward: {
       log: 'NO3 is the reaction intermediate.',
       title: 'Reaction Intermediate',
-      body: 'An intermediate is formed in one elementary step and consumed in a later step, cancelling from the overall equation.'
+      body: 'NO₃ is formed in Step 1 and used up in Step 2, so it is a reaction intermediate and cancels from the overall equation.'
     }
   },
 
@@ -149,15 +154,15 @@ export const STAGES = [
     title: 'The Bottleneck',
     briefing: {
       speaker: SPEAKER,
-      body: 'In a two-step mechanism the first step makes an intermediate, I, and the second turns I into the product, P.'
+      body: 'Here Step 1 makes intermediate I and Step 2 turns I into product P. Like people passing a bucket down a line, one step limits the whole pace.'
     },
     prompt: 'Which step controls how fast the final product P forms?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('slow', 'The slower step', { x: 116, y: 9 }),
-        stmt('fast', 'The faster step', { x: 116, y: 24 }),
-        stmt('equal', 'Both steps equally', { x: 116, y: 39 })
+        stmt('slow', 'The slower step', { x: 118, y: 10 }),
+        stmt('fast', 'The faster step', { x: 118, y: 24 }),
+        stmt('equal', 'Both steps equally', { x: 118, y: 38 })
       ],
       fixtures: [
         kvesselFixture('v1', { x: 48, y: 28 }, {
@@ -174,29 +179,29 @@ export const STAGES = [
           },
           tMax: 60,
           w: 84,
-          h: 42
+          h: 44
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Controls rate', at: { x: 116, y: 52 }, size: { w: 42, h: 8 } }]
+        slots: [{ id: 'ans', label: 'Controls rate', at: { x: 118, y: 52 }, size: { w: 46, h: 12 } }]
       }
     }),
     hints: [
-      'Run the vessel under both presets on the "Step speeds" dial.',
-      'Compare how quickly P forms under the two settings, and how much I builds up in each.',
-      'Think of the steps as a line of people passing a bucket: what limits how fast buckets arrive?'
+      'Switch the "Step speeds" dial between both presets and press "Run" for each.',
+      'Watch how fast product P forms in both runs, and whether intermediate I builds up.',
+      'Just like a bucket line, the whole reaction can only finish as fast as its bottleneck.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Controls rate".' };
       if (card.id === 'fast') return { ok: false, msg: 'Making one step fast still leaves product P waiting on the slow step.' };
-      if (card.id === 'equal') return { ok: false, msg: 'The product line is not the same under both settings, so the two steps are not equally important.' };
+      if (card.id === 'equal') return { ok: false, msg: 'Look at the two runs: changing which step is slow changes how much intermediate builds up, while product P still waits on the slow step.' };
       return { ok: true };
     },
     reward: {
       log: 'The slowest step is the rate-determining step.',
       title: 'Rate-Determining Step',
-      body: 'The slowest step in a mechanism acts as the bottleneck and is called the rate-determining step.'
+      body: 'The slowest step is the bottleneck that controls the overall speed. Chemists call it the rate-determining step.'
     }
   },
 
@@ -206,7 +211,7 @@ export const STAGES = [
     title: 'One-Step Collision Law',
     briefing: {
       speaker: SPEAKER,
-      body: 'For a single elementary step, the rate depends directly on how many molecules must collide in that step.'
+      body: 'An overall equation cannot tell you the rate law, but a single elementary step can: its orders match the particles colliding in that step.'
     },
     prompt: 'What is the rate law for the elementary step 2 A → B?',
     widget,
@@ -216,35 +221,35 @@ export const STAGES = [
           title: 'Elementary step: 2 A → B',
           mode: 'elementary',
           pairs: [
-            { label: '2 A collide', speed: 1.0, angle: 0, reacts: true, note: 'Two A molecules meet' }
+            { label: '2 A collide', aLabel: 'A', bLabel: 'A', preLabel: '1 A + 1 A', prodLabel: 'B formed', speed: 1.0, angle: 0, reacts: true }
           ],
           w: 70,
-          h: 42
+          h: 44
         }),
         rateboardFixture('board', { x: 114, y: 28 }, {
           title: 'Elementary rate law',
           species: ['A'],
           maxOrder: 2,
-          w: 50,
-          h: 26
+          w: 54,
+          h: 30
         })
       ]
     }),
     hints: [
-      'Watch how many A molecules must meet in this single elementary collision.',
-      'Ask how doubling [A] changes the chance of meeting for each of the particles that must collide.',
-      'Each colliding particle contributes its own factor of [A] to how often the collision happens.'
+      'Watch how many A particles collide in this single elementary step.',
+      'When two A particles must meet, doubling [A] makes collisions four times as frequent.',
+      'Each colliding A contributes a factor of [A] to the collision rate.'
     ],
     check(state) {
       const ordA = Math.round(state.table.fixtures.board?.dials?.o0?.value ?? 0);
       if (ordA === 0) return { ok: false, notYet: true, msg: 'Set the order of A on the Elementary rate law board.' };
-      if (ordA === 1) return { ok: false, msg: 'Two A molecules must collide together in this elementary step, not one.' };
+      if (ordA === 1) return { ok: false, msg: 'Count how many A particles meet in the collision.' };
       return { ok: true };
     },
     reward: {
       log: 'Elementary step 2 A -> B has rate = k[A]^2.',
       title: 'Elementary Rate Law',
-      body: 'Unlike an overall equation, a single elementary step has orders equal to the number of colliding reactants.'
+      body: 'For a single elementary step, the order matches the number of colliding particles. Two colliding A particles give rate = k[A]².'
     }
   },
 
@@ -252,12 +257,17 @@ export const STAGES = [
   {
     id: 's5-match-mechanism',
     title: 'Testing a Mechanism',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A valid mechanism must add up to the overall equation, and its slow step\'s colliding particles must match the measured rate law.'
+    },
     prompt: 'Which mechanism matches the measured rate law?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('m1', '1 (slow): 2 NO₂ → NO₃+NO; 2 (fast): NO₃+CO → NO₂+CO₂', { x: 112, y: 12 }),
-        stmt('m2', 'Single slow step: NO₂ + CO → NO + CO₂', { x: 112, y: 28 })
+        stmt('m1', '1 (slow): 2 NO₂ → NO₃+NO; 2 (fast): NO₃+CO → NO₂+CO₂', { x: 112, y: 10 }),
+        stmt('m2', 'Single slow step: NO₂ + CO → NO + CO₂', { x: 112, y: 24 }),
+        stmt('m3', '1 (slow): NO₂ + CO → NO₃ + C; 2 (fast): NO₃ + C → NO + CO₂', { x: 112, y: 38 })
       ],
       fixtures: [
         plaqueFixture('obs', 'Lab measurements', { x: 38, y: 28 }, [
@@ -267,24 +277,24 @@ export const STAGES = [
         ], { w: 66 })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Valid mechanism', at: { x: 112, y: 48 }, size: { w: 58, h: 10 } }]
+        slots: [{ id: 'ans', label: 'Valid mechanism', at: { x: 112, y: 52 }, size: { w: 60, h: 12 } }]
       }
     }),
     hints: [
       'Find the slow step in each candidate mechanism.',
-      'Read the plate: which concentration matters, and to what power?',
-      'A slow step is an elementary step, so its colliding particles give its rate law; compare that with the plate.'
+      'Check the plate: which reactant appears in the rate law, and to what power?',
+      'Write the rate law of each slow step from its colliding particles and compare it with the plate.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a mechanism card in "Valid mechanism".' };
-      if (card.id === 'm2') return { ok: false, msg: 'A single step NO₂ + CO would give rate = k[NO₂][CO], which depends on [CO].' };
+      if (card.id === 'm2' || card.id === 'm3') return { ok: false, msg: 'A slow step with NO₂ + CO would give rate = k[NO₂][CO], which depends on [CO].' };
       return { ok: true };
     },
     reward: {
       log: 'Only a slow 2 NO2 step gives rate = k[NO2]^2.',
       title: 'Matching Rate Laws',
-      body: 'A valid mechanism must sum to the overall equation and have a slow step whose rate law matches experiment.'
+      body: 'Only a slow 2 NO₂ step gives rate = k[NO₂]² without [CO]. A valid mechanism must match both the overall equation and the measured rate law.'
     }
   },
 
@@ -292,9 +302,10 @@ export const STAGES = [
   {
     id: 's6-pre-eq',
     title: 'Fast Pre-Equilibrium',
+    beyondAp: true,
     briefing: {
       speaker: SPEAKER,
-      body: 'Step 1, 2 NO ⇌ N₂O₂, runs fast in both directions, so the amount of N₂O₂ stays in step with the NO. Step 2, N₂O₂ + O₂ → 2 NO₂, is slow.'
+      body: 'Step 1 (2 NO ⇌ N₂O₂) is fast and reversible, so [N₂O₂] rises and falls with [NO]². Step 2 (N₂O₂ + O₂ → 2 NO₂) is slow.'
     },
     prompt: 'What is the rate law of the overall reaction, in terms of NO and O₂?',
     widget,
@@ -303,39 +314,40 @@ export const STAGES = [
         kvesselFixture('v1', { x: 44, y: 28 }, {
           title: 'Pre-equilibrium run',
           mode: 'twostep',
-          twoStep: { mode: 'preeq', k1f: 0.4, k1r: 0.3, k2: 0.04, a0: 1.0, b0: 0 },
+          speciesLabels: { i: 'N₂O₂', b: 'NO₂' },
+          twoStep: { mode: 'preeq', k1f: 0.4, k1r: 0.3, k2: 0.04, a0: 1.0, b0: 1.0 },
           tMax: 60,
           w: 76,
-          h: 42
+          h: 44
         }),
         rateboardFixture('board', { x: 118, y: 28 }, {
           title: 'Overall rate law',
           species: ['NO', 'O₂'],
           maxOrder: 2,
-          w: 54,
-          h: 30
+          w: 56,
+          h: 38
         })
       ]
     }),
     hints: [
-      'Run the vessel and watch how much N₂O₂ there is while the product forms.',
-      'The slow step sets the rate, but the intermediate it uses cannot appear in the answer.',
-      'Replace the intermediate by what it stays in step with, then count how many NO and how many O₂ remain.'
+      'Press "Run" and watch N₂O₂ and NO₂ form over time.',
+      'The slow step sets the rate, but intermediate N₂O₂ cannot appear in the final rate law.',
+      'Swap N₂O₂ for the 2 NO that make it in Step 1, then count the NO and O₂.'
     ],
     check(state) {
       const d = state.table.fixtures.board?.dials || {};
       const o0 = Math.round(d.o0?.value ?? 0); const o1 = Math.round(d.o1?.value ?? 0);
       if (o0 === 0 && o1 === 0) return { ok: false, notYet: true, msg: 'Set the order of NO and of O₂ on the board.' };
-      if (o0 === 1 && o1 === 1) return { ok: false, msg: 'That counts the NO once; the intermediate N₂O₂ is made from two NO.' };
-      if (o0 === 0) return { ok: false, msg: 'The NO is in the rate law: the slow step uses N₂O₂, and N₂O₂ is made from NO.' };
-      if (o1 === 0) return { ok: false, msg: 'O₂ collides in the slow step, so its concentration is in the rate law.' };
-      if (o0 !== 2 || o1 !== 1) return { ok: false, msg: 'Count the particles in the slow step: how many NO and how many O₂ make up its reactants?' };
+      if (o0 === 1 && o1 === 1) return { ok: false, msg: 'Check how many NO particles make one N₂O₂ in Step 1.' };
+      if (o0 === 0) return { ok: false, msg: 'NO belongs in the rate law because the slow step uses N₂O₂, which is made from NO.' };
+      if (o1 === 0) return { ok: false, msg: 'O₂ collides in the slow step, so [O₂] belongs in the rate law.' };
+      if (o0 !== 2 || o1 !== 1) return { ok: false, msg: 'Replace N₂O₂ in the slow step with 2 NO from Step 1, then count NO and O₂.' };
       return { ok: true };
     },
     reward: {
       log: 'Overall rate = k[NO]²[O₂].',
       title: 'Pre-Equilibrium Rate Law',
-      body: 'The slow step uses N₂O₂ and O₂, and N₂O₂ stays proportional to [NO]², so rate = k[NO]²[O₂]. An intermediate never appears in the overall rate law.'
+      body: 'The slow step uses N₂O₂ and O₂, and Step 1 ties [N₂O₂] to [NO]², giving rate = k[NO]²[O₂]. Intermediates never appear in the overall rate law.'
     }
   },
 
@@ -343,6 +355,10 @@ export const STAGES = [
   {
     id: 's7-two-hump-profile',
     title: 'Two Hills, One Slow Step',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'On a two-step energy profile, each hill is one step. A taller climb means a slower step, and the valley between them holds the intermediate.'
+    },
     prompt: 'What is the activation energy of the step that sets the overall rate?',
     entry: { id: 'ea_rds', label: 'Ea of slow step', unit: 'kJ/mol' },
     widget,
@@ -355,28 +371,29 @@ export const STAGES = [
           valley: 55,
           ts2: 75,
           products: 15,
+          noProgress: true,
           w: 104,
           h: 44
         })
       ]
     }),
     hints: [
-      'Find the level of each peak and of the valley between them on the profile.',
-      'Each step starts from the level just before it and climbs to its own peak.',
-      'The step that sets the rate is the one that is hardest to get over.'
+      'Read the energy of each peak and the valley between them.',
+      'Each step climbs from the level right before it to its own peak.',
+      'The step with the taller climb is the slower step that sets the overall rate.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'ea_rds');
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the activation energy in kJ/mol.' };
       if (Math.abs(val - 65) <= 0.5) return { ok: true };
       if (Math.abs(val - 20) <= 0.5) return { ok: false, msg: 'That is the climb of the second step; compare it with the climb of the first.' };
-      if (Math.abs(val - 95) <= 0.5) return { ok: false, msg: 'The first peak is at 95, but the climb starts at the reactants level, not at zero.' };
+      if (Math.abs(val - 95) <= 0.5) return { ok: false, msg: 'The first peak is at 95 kJ/mol, but Step 1 starts at the reactants level (30), not at zero.' };
       return { ok: false, msg: 'Check the climb of each step: from where it starts to where its own peak is.' };
     },
     reward: {
       log: 'Slow step Ea = 95 - 30 = 65 kJ/mol.',
       title: 'Two-Step Profile',
-      body: 'The first step climbs 65 kJ/mol and the second only 20, so the first is the rate-determining step. The valley between the hills holds the intermediate.'
+      body: 'Step 1 climbs 65 kJ/mol (30 to 95) while Step 2 climbs 20 kJ/mol (55 to 75), so Step 1 is the rate-determining step.'
     }
   }
 ];

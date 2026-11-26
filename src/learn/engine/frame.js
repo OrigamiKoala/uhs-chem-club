@@ -788,6 +788,7 @@ export class LearnFrame {
     this.stage = stage;
     this.dropModel();
     if (stage.briefing?.body) this.benchIntro = stage.briefing.body;
+    if (this.isPredictStage()) (this.predictIndices ||= new Set()).add(stage.index);
     if (stage.reward) this.findings[stage.index] = stage.reward;
     this.misses = 0;
     this.rung = 0;
@@ -840,6 +841,7 @@ export class LearnFrame {
         ev.stopPropagation();
         if (ev.key === 'Enter') { ev.preventDefault(); this.opts.onSubmit(); }
       });
+      this.el.entry.addEventListener('focus', () => this.el.entry?.select());
       this.el.entry.addEventListener('input', () => this.opts.onEntry?.(this.el.entry.dataset.entry, this.el.entry.value));
     }
 
@@ -1005,6 +1007,10 @@ export class LearnFrame {
   miss(message) {
     this.misses++;
     soundscape.playMissBuzzer?.();
+    if (this.el.entry) {
+      this.el.entry.value = '';
+      this.opts.onEntry?.(this.el.entry.dataset.entry, '');
+    }
     this.announce(`
       <div class="stage-error-banner">
         <span class="banner-mark" aria-hidden="true">!!</span>
@@ -1128,6 +1134,7 @@ export class LearnFrame {
         ev.stopPropagation();
         if (ev.key === 'Enter') { ev.preventDefault(); this.opts.onSubmit(); }
       });
+      this.el.entry.addEventListener('focus', () => this.el.entry?.select());
       this.el.entry.addEventListener('input', () => this.opts.onEntry?.(this.el.entry.dataset.entry, this.el.entry.value));
     }
     const dockCommit = this.el.dockCommit;
@@ -1183,7 +1190,7 @@ export class LearnFrame {
   hintTermButton(text) {
     const g = glossaryFor(this.currentQuestId());
     const t = g?.terms.find(x => x.re.test(text));
-    return t ? ` <button type="button" class="btn-chip" data-act="glossary" data-term="${esc(t.id)}">What is this?</button>` : '';
+    return t ? ` <button type="button" class="btn-chip" data-act="glossary" data-term="${esc(t.id)}">Glossary: ${esc(t.term)}</button>` : '';
   }
 
   /**
@@ -1582,7 +1589,7 @@ export class LearnFrame {
     const here = this.stage ? this.stage.index : -1;
     const out = [];
     this.findings.forEach((r, i) => {
-      if (!r || !r.title || r.title === 'Prediction') return;
+      if (!r || !r.title || r.title === 'Prediction' || r.title === 'Now test it' || r.title === 'Prediction locked in' || this.predictIndices?.has(i)) return;
       if ((i < this.cleared && (here < 0 || i < here)) || (this.solved && i === here)) out.push({ index: i, reward: r });
     });
     return out;

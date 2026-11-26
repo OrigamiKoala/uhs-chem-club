@@ -10,7 +10,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   rateTable, kvesselFixture, rateLeadFixture, choiceFixture, pickable, stmt
 } from '../../table/kits/rate.js';
@@ -44,12 +43,12 @@ const V2 = { order: 1, k: 0.25, a0: 0.40, tMax: 30 };
 const AVG_RATE = 0.04;
 
 // Stage 6: Change dial presets (k values relative to baseline k = 0.08).
-const CHANGE_OPTIONS = ['Baseline', 'More A', 'Higher T', 'Powdered solid', 'Larger vessel'];
+const CHANGE_OPTIONS = ['Baseline', 'More A', 'Hotter', 'Powdered solid', 'Larger vessel'];
 const CHANGE_PRESETS = [
   { k: 0.08, a0: 0.40 },
-  { k: 0.08, a0: 0.70 },
-  { k: 0.22, a0: 0.40 },
-  { k: 0.18, a0: 0.40 },
+  { k: 0.08, a0: 0.70, moreParticles: true },
+  { k: 0.22, a0: 0.40, hot: true },
+  { k: 0.18, a0: 0.40, powder: true },
   { k: 0.04, a0: 0.25 }
 ];
 
@@ -59,25 +58,29 @@ export const STAGES = [
     id: 's1-predict',
     title: 'Fast and Slow',
     predict: true,
-    prompt: 'Two reactions end with the same amount of product: how does the faster one\'s graph differ?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A reaction turns starting substances into products. The vertical axis shows how much product has formed, and the horizontal axis shows time.'
+    },
+    prompt: 'When two reactions make the same total product, how does the faster one\'s graph look different?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('steeper', 'It climbs more steeply', { x: 96, y: 14 }),
-        stmt('higher', 'It ends higher', { x: 96, y: 30 }),
-        stmt('later', 'It starts later', { x: 96, y: 46 })
+        stmt('steeper', 'It climbs more steeply', { x: 90, y: 14 }),
+        stmt('higher', 'It ends higher', { x: 90, y: 30 }),
+        stmt('later', 'It starts later', { x: 90, y: 46 })
       ],
       fixtures: [
-        rateLeadFixture('clip', { x: 40, y: 27 }, { scene: 'rates', title: 'Watch first', w: 66, h: 30 })
+        rateLeadFixture('clip', { x: 37, y: 27 }, { scene: 'rates', title: 'Watch first', w: 66, h: 34 })
       ],
       zones: {
-        slots: [{ id: 'guess', label: 'My prediction', at: { x: 132, y: 30 }, size: { w: 28, h: 14 } }]
+        slots: [{ id: 'guess', label: 'My prediction', at: { x: 129, y: 30 }, size: { w: 36, h: 14 } }]
       }
     }),
     hints: [
-      'Watch how the curve in the preview climbs as product forms.',
-      'A faster reaction makes more product in each second.',
-      'Making the same final amount in less time changes the slope, not the height.'
+      'Watch how the fast and slow curves in the preview climb to the same height.',
+      'A faster reaction makes more product each second.',
+      'Making the same amount in less time changes how steep the curve is.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -91,7 +94,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked for the two-vessel test.',
       title: 'Prediction Locked',
-      body: 'You locked in your prediction. Now run two vessels side by side to test it.'
+      body: 'Prediction locked. Now run two vessels side by side to test it.'
     }
   },
 
@@ -101,28 +104,28 @@ export const STAGES = [
     title: 'Two Vessels',
     briefing: {
       speaker: SPEAKER,
-      body: 'Reaction rate is how fast the concentration of a substance changes, in moles per litre (mol/L) each second.'
+      body: 'Reaction rate is how much product appears each second, measured in moles per litre per second (mol/(L·s)).'
     },
     get prompt() {
       const g = recall(QUEST_KEY);
       return g
-        ? `You predicted "${GUESS_LABELS[g]}". Run both vessels: which reaction has the higher rate?`
-        : 'Which reaction has the higher rate?';
+        ? `You predicted "${GUESS_LABELS[g]}". Which vessel has the higher reaction rate?`
+        : 'Which vessel has the higher reaction rate?';
     },
     widget,
     table: rateTable({
       pieces: [],
       fixtures: [
-        pickable(kvesselFixture('v1', { x: 38, y: 24 }, { ...V1, title: 'Vessel 1', w: 64, h: 34 }), 1, 'pick'),
-        pickable(kvesselFixture('v2', { x: 110, y: 24 }, { ...V2, title: 'Vessel 2', w: 64, h: 34 }), 2, 'pick'),
-        choiceFixture('pick', 'Higher rate', { x: 74, y: 52 }, { options: ['Vessel 1', 'Vessel 2', ' '] })
+        pickable(kvesselFixture('v1', { x: 38, y: 24 }, { ...V1, title: 'Vessel 1', w: 64, h: 38 }), 1, 'pick'),
+        pickable(kvesselFixture('v2', { x: 110, y: 24 }, { ...V2, title: 'Vessel 2', w: 64, h: 38 }), 2, 'pick'),
+        choiceFixture('pick', 'Higher rate', { x: 74, y: 53 }, { options: ['Vessel 1', 'Vessel 2', ' '] })
       ],
       zones: {}
     }),
     hints: [
-      'Press "Run" on both vessels and tap the one that finishes sooner.',
-      'Compare how steeply the two product lines climb.',
-      'Both end at the same concentration, so what differs is how long each took to get there.'
+      'Press "Run" on both vessels, then pick the one you choose.',
+      'Compare how steeply the two product curves climb.',
+      'Both reach the same final amount, so look for the one that gets there sooner.'
     ],
     check(state) {
       const t = state.table;
@@ -132,7 +135,7 @@ export const STAGES = [
       const pick = Math.round(t.fixtures.pick.dials.value.value);
       if (pick === 3) return { ok: false, notYet: true, msg: 'Tap the vessel with the higher reaction rate.' };
       if (pick === 1) {
-        return { ok: false, msg: 'Vessel 2 reached 0.40 mol/L product much earlier than Vessel 1, with a steeper line.' };
+        return { ok: false, msg: 'Compare the two curves: one vessel reaches 0.40 mol/L much earlier with a steeper climb.' };
       }
       return { ok: true };
     },
@@ -142,7 +145,7 @@ export const STAGES = [
       get body() {
         const g = recall(QUEST_KEY);
         const tail = g === 'steeper' ? ' Your prediction matched what the vessels showed.' : '';
-        return `Vessel 2's product rose faster, so its line is steeper. The steepness of the concentration-time line is the reaction rate.${tail}`;
+        return `Vessel 2 made product faster, so its curve is steeper. The steepness of the curve is the reaction rate.${tail}`;
       }
     }
   },
@@ -153,14 +156,14 @@ export const STAGES = [
     title: 'Putting a Number on It',
     briefing: {
       speaker: SPEAKER,
-      body: 'Average reaction rate equals change in concentration divided by time.',
+      body: 'Average reaction rate is the change in concentration divided by time. The unit mol/(L·s) means moles per litre, per second.',
       worked: [
         'Other run: 0.40 mol/L at 0 s, 0.10 mol/L at 20 s',
         'Change = 0.40 − 0.10 = 0.30 mol/L in 20 s',
         'Average rate = 0.30 ÷ 20 = 0.015 mol/(L·s)'
       ]
     },
-    prompt: 'What is the average rate of this reaction over its first 10 seconds, in mol/L each second?',
+    prompt: 'What is the average rate of this reaction over the first 10 seconds, in mol/(L·s)?',
     entry: { id: 'rate', label: 'Average rate', unit: 'mol/(L·s)' },
     widget,
     table: rateTable({
@@ -173,8 +176,9 @@ export const STAGES = [
           a0: 0.60,
           tMax: 15,
           mode: 'reactant',
+          readout: '0 s: 0.60  ·  10 s: 0.20',
           w: 112,
-          h: 40,
+          h: 42,
           markedPoints: [
             { t: 0, v: 0.60, label: '(0 s, 0.60)', dx: 2, dy: 2 },
             { t: 10, v: 0.20, label: '(10 s, 0.20)', dx: 2, dy: -2 }
@@ -185,8 +189,8 @@ export const STAGES = [
     }),
     hints: [
       'Press "Run" to trace the curve and read the two marked points.',
-      'Find how much the reactant concentration dropped between 0 s and 10 s.',
-      'Divide that concentration change by the 10 s time interval.'
+      'Find how much the reactant concentration dropped from 0 s to 10 s.',
+      'Divide that drop by the 10 s time span.'
     ],
     check(state) {
       if (!state.table.fixtures.v1.props.ran) {
@@ -196,17 +200,17 @@ export const STAGES = [
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the average rate in mol/(L·s).' };
       if (Math.abs(val - AVG_RATE) <= 0.002) return { ok: true };
       if (Math.abs(val - 0.40) <= 0.02) {
-        return { ok: false, msg: 'At 0.40 mol/(L·s), 10 s would use 4.00 mol/L, more than the 0.60 mol/L present.' };
+        return { ok: false, msg: '0.40 mol/L is the total drop over 10 s. Divide by 10 s to get the rate per second.' };
       }
       if (Math.abs(val - 0.02) <= 0.002) {
-        return { ok: false, msg: 'At 0.020 mol/(L·s), 10 s would leave 0.40 mol/L, not 0.20 mol/L.' };
+        return { ok: false, msg: '0.020 mol/(L·s) over 10 s would only drop the concentration by 0.20 mol/L, not 0.40 mol/L.' };
       }
       return { ok: false, msg: `At ${val} mol/(L·s) over 10 s, concentration would fall by ${(val * 10).toFixed(2)} mol/L instead of 0.40 mol/L.` };
     },
     reward: {
       log: 'Measured average rate = 0.04 mol/(L·s) over 10 s.',
       title: 'Average Rate',
-      body: 'Over 10 seconds the concentration fell 0.40 mol/L, giving an average rate of 0.04 mol/(L·s).'
+      body: 'Concentration dropped by 0.40 mol/L over 10 s, giving an average rate of 0.04 mol/(L·s).'
     }
   },
 
@@ -214,6 +218,10 @@ export const STAGES = [
   {
     id: 's4-slowing-down',
     title: 'Slowing Down',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'This curve slopes downward because it tracks the reactant getting used up.'
+    },
     prompt: 'Where on this curve is the reaction fastest?',
     widget,
     table: rateTable({
@@ -227,7 +235,7 @@ export const STAGES = [
           tMax: 30,
           mode: 'reactant',
           w: 112,
-          h: 40,
+          h: 42,
           tapZones: [
             { x0: 0.0, x1: 0.22, label: '0-5 s' },
             { x0: 0.34, x1: 0.56, label: '10-15 s' },
@@ -238,23 +246,23 @@ export const STAGES = [
       zones: {}
     }),
     hints: [
-      'Press "Run", watch the particles, and tap one of the three stretches on the curve.',
+      'Press "Run" to trace the curve, then tap one of the three time ranges at the bottom.',
       'Compare how steep the curve is at the start versus the end.',
-      'The reaction is fastest where the curve is steepest and most reactant remains.'
+      'A steeper drop means reactant is disappearing faster.'
     ],
     check(state) {
       const f = state.table.fixtures.v1;
       if (!f.props.ran) return { ok: false, notYet: true, msg: 'Press "Run" to trace the curve first.' };
       const z = Math.round(f.dials.zone.value);
-      if (z === 4) return { ok: false, notYet: true, msg: 'Tap one of the three stretches on the curve.' };
-      if (z === 2) return { ok: false, msg: 'Between 10 s and 15 s the curve is already gentler than at 0-5 s.' };
-      if (z === 3) return { ok: false, msg: 'Between 20 s and 30 s the curve is nearly flat and few reactant particles remain.' };
+      if (z === 4) return { ok: false, notYet: true, msg: 'Tap one of the three time ranges on the curve.' };
+      if (z === 2) return { ok: false, msg: 'Between 10 s and 15 s the curve is already flatter than at 0-5 s.' };
+      if (z === 3) return { ok: false, msg: 'Between 20 s and 30 s the curve is nearly flat because little reactant is left.' };
       return { ok: true };
     },
     reward: {
       log: 'Fastest at 0-5 s where most reactant remains.',
       title: 'Rate Over Time',
-      body: 'At the start, most reactant is present and the curve is steepest. As reactant is used up, the curve flattens and the rate falls.'
+      body: 'The curve is steepest at the start, when the most reactant is present. As reactant gets used up, the curve flattens and the reaction slows down.'
     }
   },
 
@@ -262,16 +270,20 @@ export const STAGES = [
   {
     id: 's5-stoich',
     title: 'Two for One',
-    prompt: 'For 2 A → B, how does the rate at which A is used compare with the rate at which B forms?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'In 2 A → B, two particles of A react to make each particle of B.'
+    },
+    prompt: 'For 2 A → B, how fast is A used up compared to how fast B forms?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('same', 'The same', { x: 96, y: 14 }),
-        stmt('twice', 'Twice as fast', { x: 96, y: 30 }),
-        stmt('half', 'Half as fast', { x: 96, y: 46 })
+        stmt('same', 'The same', { x: 90, y: 14 }),
+        stmt('twice', 'Twice as fast', { x: 90, y: 30 }),
+        stmt('half', 'Half as fast', { x: 90, y: 46 })
       ],
       fixtures: [
-        kvesselFixture('v1', { x: 39, y: 28 }, {
+        kvesselFixture('v1', { x: 37, y: 28 }, {
           title: 'Reaction',
           equation: '2 A → B',
           order: 1,
@@ -281,18 +293,18 @@ export const STAGES = [
           stoich: { a: 2, b: 1 },
           mode: 'both',
           showCounts: true,
-          w: 68,
-          h: 40
+          w: 66,
+          h: 42
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Rate of A vs B', at: { x: 132, y: 30 }, size: { w: 28, h: 14 } }]
+        slots: [{ id: 'ans', label: 'Rate of A vs B', at: { x: 129, y: 30 }, size: { w: 36, h: 14 } }]
       }
     }),
     hints: [
       'Press "Run" and watch the counts of A used and B formed.',
-      'Compare the number of A particles lost with the number of B particles gained.',
-      'Each B that forms takes some number of A with it, as the equation says; use that to compare the two changes.'
+      'Compare how many A particles disappear for each B particle that appears.',
+      'The numbers in 2 A → B tell you how many A are consumed for every B made.'
     ],
     check(state) {
       if (!state.table.fixtures.v1.props.ran) {
@@ -300,29 +312,29 @@ export const STAGES = [
       }
       const p = Object.values(state.table.pieces).find(x => x.zone === 'slot:ans');
       if (!p) return { ok: false, notYet: true, msg: 'Place a card in "Rate of A vs B".' };
-      if (p.id === 'same') return { ok: false, msg: 'Compare the two counts: the number of A used is not the number of B formed.' };
-      if (p.id === 'half') return { ok: false, msg: 'The counts show more A used than B formed in the same time, not fewer.' };
+      if (p.id === 'same') return { ok: false, msg: 'Compare the two counts: more A is used up than B is formed.' };
+      if (p.id === 'half') return { ok: false, msg: 'The counts show more A used than B formed in the same time, so A disappears faster.' };
       return { ok: true };
     },
     reward: {
       log: 'For 2 A → B, A is consumed twice as fast as B forms.',
       title: 'Stoichiometry and Rate',
-      body: 'Two A particles are used for each B formed, so A disappears twice as fast as B appears.'
+      body: 'Two A particles are used for every B formed, so A disappears twice as fast as B appears.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     id: 's6-factors',
-    title: 'Three Changes',
-    prompt: 'Which changes make this reaction faster?',
+    title: 'Four Changes',
+    prompt: 'Which changes speed up this reaction, and which slow it down?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('moreA', 'More A', { x: 94, y: 10 }),
-        stmt('hotter', 'Higher T', { x: 94, y: 24 }),
-        stmt('powder', 'Powdered solid', { x: 94, y: 38 }),
-        stmt('bigger', 'Larger vessel', { x: 94, y: 52 })
+        stmt('moreA', 'More A', { x: 92, y: 10 }),
+        stmt('hotter', 'Hotter', { x: 92, y: 24 }),
+        stmt('powder', 'Powdered solid', { x: 92, y: 38 }),
+        stmt('bigger', 'Larger vessel', { x: 92, y: 52 })
       ],
       fixtures: [
         kvesselFixture('v1', { x: 38, y: 28 }, {
@@ -332,8 +344,8 @@ export const STAGES = [
           a0: 0.40,
           tMax: 30,
           mode: 'product',
-          w: 64,
-          h: 40,
+          w: 66,
+          h: 42,
           baseline: { order: 1, k: 0.08, a0: 0.40 },
           changeDial: {
             label: 'Change',
@@ -344,38 +356,37 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          { id: 'faster', label: 'Faster', at: { x: 129, y: 16 }, size: { w: 32, h: 16 }, cellH: 8 },
-          { id: 'slower', label: 'Slower', at: { x: 129, y: 35 }, size: { w: 32, h: 12 }, cellH: 8 },
-          { id: 'same', label: 'No change', at: { x: 129, y: 52 }, size: { w: 32, h: 12 }, cellH: 8 }
+          { id: 'faster', label: 'Faster', at: { x: 130, y: 20 }, size: { w: 38, h: 26 }, cellH: 8 },
+          { id: 'slower', label: 'Slower', at: { x: 130, y: 48 }, size: { w: 38, h: 14 }, cellH: 8 }
         ]
       }
     }),
     hints: [
-      'Pick each setting on the "Change" dial, press "Run", and compare its curve with the dashed baseline.',
-      'See which changes give a steeper curve than the baseline.',
-      'More particles in the same volume, faster particles, and more exposed surface speed collisions; a larger vessel spreads them out.'
+      'Pick each setting on the "Change" dial, press "Run", and compare its curve to the dashed baseline.',
+      'Check which settings climb steeper than the baseline and which climb flatter.',
+      'A steeper curve than the baseline means a faster reaction; a flatter curve means a slower one.'
     ],
     check(state) {
       const pieces = Object.values(state.table.pieces);
       const placed = pieces.filter(p => p.zone && p.zone.startsWith('tray:'));
       if (placed.length < 4) {
-        return { ok: false, notYet: true, msg: 'Sort all four change cards into Faster, Slower, or No change.' };
+        return { ok: false, notYet: true, msg: 'Sort all four change cards into Faster or Slower.' };
       }
       const inTray = id => pieces.filter(p => p.zone === `tray:${id}`).map(p => p.id);
       const f = inTray('faster');
       const s = inTray('slower');
       if (!s.includes('bigger')) {
-        return { ok: false, msg: 'In the larger vessel, the curve climbs more gently than the dashed baseline.' };
+        return { ok: false, msg: 'In the larger vessel, the curve climbs flatter than the dashed baseline.' };
       }
       if (!f.includes('moreA') || !f.includes('hotter') || !f.includes('powder')) {
-        return { ok: false, msg: 'More A, Higher T, and Powdered solid all climb more steeply than the dashed baseline.' };
+        return { ok: false, msg: 'Compare each curve to the dashed baseline: three climb steeper.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Higher concentration, higher T, and powdered solid speed the reaction; larger vessel slows it.',
+      log: 'More A, hotter T, and powdered solid speed the reaction; larger vessel slows it.',
       title: 'Factors Affecting Rate',
-      body: 'More particles in the same volume, higher temperature, and more exposed surface all gave steeper lines. A larger vessel spread particles out and slowed it.'
+      body: 'More A, higher temperature, and powdered solid all climbed steeper than the baseline. A larger vessel climbed flatter.'
     }
   },
 
@@ -385,13 +396,13 @@ export const STAGES = [
     title: 'Rate of Each Substance',
     briefing: {
       speaker: SPEAKER,
-      body: 'One reaction has one rate, but each substance changes by its own amount. A substance with a bigger coefficient changes faster.',
+      body: 'Each substance changes at a speed set by its number in the equation. N₂ is not tracked here, so watch the counts of H₂ used and NH₃ formed.',
       worked: [
-        'Other reaction: 2 A → B, A used at 0.040 mol/(L·s)',
-        'Two A go for each B, so B forms at half that: 0.020 mol/(L·s)'
+        'Example: in 2 A → B, A is used at 0.040 mol/(L·s)',
+        'Two A make one B, so B forms at half that rate: 0.020 mol/(L·s)'
       ]
     },
-    prompt: 'How fast does NH₃ form in N₂ + 3 H₂ → 2 NH₃ while H₂ is used at 0.060 mol/(L·s)?',
+    prompt: 'In N₂ + 3 H₂ → 2 NH₃, how fast does NH₃ form while H₂ is used at 0.060 mol/(L·s)?',
     entry: { id: 'rate_b', label: 'Rate NH₃ forms', unit: 'mol/(L·s)' },
     widget,
     table: rateTable({
@@ -405,18 +416,19 @@ export const STAGES = [
           a0: 0.90,
           tMax: 30,
           stoich: { a: 3, b: 2 },
+          speciesLabels: { a: 'H₂', b: 'NH₃' },
           mode: 'both',
           showCounts: true,
           w: 112,
-          h: 40
+          h: 42
         })
       ],
       zones: {}
     }),
     hints: [
       'Press "Run" and compare how many H₂ are used with how many NH₃ form.',
-      'In the same time, the counts differ by the ratio in the equation.',
-      'Scale the given rate by the same ratio, and check that the answer is smaller or larger as the counts show.'
+      'For every 3 H₂ used, only 2 NH₃ form.',
+      'Since 2 NH₃ form for every 3 H₂ used, NH₃ forms at two thirds the speed of H₂.'
     ],
     check(state) {
       if (!state.table.fixtures.v1.props.ran) {
@@ -425,30 +437,22 @@ export const STAGES = [
       const val = entryNumber(state.table, 'rate_b');
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the rate in mol/(L·s).' };
       if (Math.abs(val - 0.04) <= 0.0015) return { ok: true };
-      if (Math.abs(val - 0.06) <= 0.0015) return { ok: false, msg: 'The counts show fewer NH₃ formed than H₂ used, so the two rates are not equal.' };
-      if (val > 0.06) return { ok: false, msg: 'The counts show NH₃ forming more slowly than H₂ is used, but that value is faster.' };
-      return { ok: false, msg: 'Compare that value with the counts: how many NH₃ form for each H₂ used?' };
+      if (Math.abs(val - 0.06) <= 0.0015) return { ok: false, msg: 'Fewer NH₃ form than H₂ are used, so their rates cannot be equal.' };
+      if (val > 0.06) return { ok: false, msg: 'NH₃ forms more slowly than H₂ is used, so the rate must be below 0.060 mol/(L·s).' };
+      return { ok: false, msg: 'Use the equation ratio: 2 NH₃ form for every 3 H₂ used.' };
     },
     reward: {
       log: 'NH₃ forms at 0.060 × 2/3 = 0.040 mol/(L·s).',
       title: 'Rates and Coefficients',
-      body: 'For every 3 H₂ used, 2 NH₃ form, so NH₃ forms at two thirds of the rate H₂ is used: 0.040 mol/(L·s).'
+      body: 'For every 3 H₂ used, 2 NH₃ form, so NH₃ forms at two thirds the rate of H₂: 0.040 mol/(L·s).'
     }
   }
 ];
 
-applyNotes(STAGES, {
-  1: ['Watch the preview, then drop one prediction card into the slot.'],
-  2: ['Press "Run" on both vessels, then tap the faster one.'],
-  3: ['Press "Run", then type the average rate from 0 s to 10 s.'],
-  4: ['Press "Run", then tap one of the three stretches on the curve.'],
-  5: ['Press "Run" to watch the counts, then place one card in the slot.'],
-  6: ['Test each setting on the "Change" dial with "Run", then sort all four cards.']
-});
 
 export const DEBRIEF = {
   title: 'Manifold Rate Check Complete',
-  body: 'Reaction rate is the steepness of concentration against time, set by stoichiometry, concentration, temperature, and surface area.'
+  body: 'Reaction rate is how steeply concentration changes over time. It depends on stoichiometry, concentration, temperature, and surface area.'
 };
 
 const put = (piece, to) => ({ place: { piece, to } });

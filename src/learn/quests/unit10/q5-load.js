@@ -164,8 +164,8 @@ export const STAGES = [
   {
     id: 's3-zinc',
     title: 'More Zinc Ions',
-    briefing: { speaker: SPEAKER, body: 'Concentration (in M, molarity) tells how crowded the ions are: 0.010 M has few ions; 1.0 M has many.' },
-    prompt: 'How does the cell voltage change when zinc ions increase from 0.010 M to 1.0 M?',
+    briefing: { speaker: SPEAKER, body: 'Concentration is measured in M (moles per liter): 0.010 M has few ions per liter; 1.0 M has many.' },
+    prompt: 'How does the cell voltage change when zinc ion concentration increases from 0.010 M to 1.0 M (moles per liter)?',
     widget,
     table: cellTable({
       fixtures: [
@@ -201,21 +201,21 @@ export const STAGES = [
   {
     id: 's4-balance',
     title: 'The Balance Point',
-    briefing: { speaker: SPEAKER, body: 'The ratio of product ions to reactant ions at any moment is the reaction quotient, Q. K is the balance ratio where the cell stops.' },
+    briefing: { speaker: SPEAKER, body: 'The ratio of product ions to reactant ions at any moment is the reaction quotient, Q (here Sn²⁺ ÷ Pb²⁺). K is the balance ratio where the cell stops.' },
     prompt: 'Why does the cell\'s voltage reach zero?',
     widget,
     table: cellTable({
       fixtures: [
         loadFixture('load', { x: 77, y: 38 }, { ...TL, counts: true, tick: LOAD.maxTick }),
-        plaqueFixture('plate', 'At equilibrium', { x: 176, y: 18 }, [`K = ${fmt(balanceOf(TL.cathode, TL.anode, START).K, 1)}`], { w: 42 })
+        plaqueFixture('plate', 'Ion ratio limit', { x: 176, y: 18 }, ['Q = Sn²⁺ ÷ Pb²⁺', `Balance ratio K = ${fmt(balanceOf(TL.cathode, TL.anode, START).K, 1)}`], { w: 42 })
       ],
       pieces: [
-        note('out', 'The reactant ions ran out', { x: 34, y: 86 }),
-        note('equal', 'The two kinds of ion became equal', { x: 99, y: 86 }),
-        note('eq', 'The cell reached balance (Q matched K)', { x: 164, y: 86 })
+        note('out', 'The reactant ions ran out', { x: 34, y: 90 }),
+        note('equal', 'The two kinds of ion became equal', { x: 99, y: 90 }),
+        note('eq', 'The cell reached balance (Q matched K)', { x: 164, y: 90 })
       ],
-      zones: { slots: [{ id: 'reason', label: 'Why it stopped', at: { x: 176, y: 49 }, size: { w: 42, h: 14 } }] }
-    }, { w: 198, h: 95 }),
+      zones: { slots: [{ id: 'reason', label: 'Why it stopped', at: { x: 176, y: 50 }, size: { w: 42, h: 15 }, single: true }] }
+    }, { w: 198, h: 102 }),
     hints: [
       'Look at the tin and lead ion counts, then drag one reason card into Why it stopped.',
       'Compare the ratio of tin ions to lead ions under the windows with the K value on the plate.',

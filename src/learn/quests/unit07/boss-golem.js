@@ -89,7 +89,7 @@ export const STAGES = [
     title: 'Limiting Feed',
     briefing: {
       speaker: 'Vess',
-      body: 'This golem builds each unit of sodium chloride from one sodium atom and one chlorine atom, using whatever its two hoppers hold.'
+      body: 'This golem builds each unit of sodium chloride from one sodium atom and one chlorine atom, using whatever its two supply trays hold.'
     },
     prompt: 'How many sodium chloride units can the golem build from these two supplies?',
     widget: { type: 'table', label: 'The bench' },
@@ -110,14 +110,14 @@ export const STAGES = [
           id: 'maker', kind: 'maker', label: 'Maker', runLabel: 'Make Unit', at: { x: 54, y: 50 }, size: { w: 36, h: 20 },
           props: { dock: 'container:dock', heaps: { Na: 'heap-na', Cl: 'heap-cl' }, product: 'made' }
         },
-        { id: 'tally', kind: 'tally', label: 'Tally', at: { x: 96, y: 50 }, size: { w: 36, h: 16 }, noRun: true, dials: { n: { min: 0, max: 14, step: 1, value: 0, label: 'Units built' } } }
+        { id: 'tally', kind: 'tally', label: 'Tally', at: { x: 98, y: 50 }, size: { w: 40, h: 18 }, noRun: true, dials: { n: { min: 0, max: 14, step: 1, value: 0, label: 'Units built' } }, props: { tickLabels: true, dialIndent: 5.5, grab: { n: 3.4 } } }
       ]
     }),
     foes: GOLEM_FOE,
     encounter: {
       species: 'recipe golem',
       act: 'Meter Intake',
-      intent: 'The golem opens its twin hopper gates to draw in feed.'
+      intent: 'The golem opens its twin supply trays to draw in feed.'
     },
     check(state) {
       const t = state.table;
@@ -128,7 +128,7 @@ export const STAGES = [
       return { ok: true };
     },
     hints: [
-      'Join one sodium atom and one chlorine atom in the unit pattern, then press "Make Unit" to copy it from the supplies.',
+      'Look at the counts on the Sodium supply and Chlorine supply trays.',
       'Count the atoms in each supply, or watch them shrink as the maker draws on them.',
       'Every unit takes one atom from each supply, so ask which supply runs out first.'
     ],
@@ -153,13 +153,13 @@ export const STAGES = [
           crate('crx', 'Drum', { x: 10, y: 49 }, { content: { type: 'salt', ...GOLEM_DRUM, hide: [GOLEM_DRUM.cat] } }),
           ...DRUM_TOKS.map((n, i) => inTray(chip(`k_${i}`, n, { x: 0, y: 0 }), 'cards'))
         ],
-        fixtures: [win.fixture, lab.fixture, plaqueFixture('names', 'Ion names', { x: 135, y: 44 }, ['NO₃⁻ nitrate', 'SO₄²⁻ sulfate'], { w: 28 })],
+        fixtures: [win.fixture, lab.fixture, plaqueFixture('names', 'Ion names', { x: 133, y: 44 }, ['NO₃⁻ nitrate', 'SO₄²⁻ sulfate', '(II)/(III) = metal charge'], { w: 32 })],
         zones: { trays: [cardsTray()], slots: [win.slot, ...lab.slots] }
       }),
       foes: GOLEM_FOE,
       encounter: { species: 'recipe golem', act: 'Seal Drum', intent: 'The golem stamps a blank drum and sets it on the belt.' },
       hints: [
-        'Dissolve the drum in the particle view, then look at the ion-name plate and the label.',
+        'Dissolve the drum in the particle view and count the copper ions and nitrate groups.',
         'Compare the pieces in the water with the ion names on the plate, and count each kind.',
         'The ions together have no charge, and only the nitrate\'s charge is printed.'
       ],
@@ -186,13 +186,13 @@ export const STAGES = [
     return {
       id: 'phase3',
       title: "The Golem's Board",
-      prompt: "What coefficients balance the equation on the golem's board?",
+      prompt: "Which coefficients balance the ethane fuel equation on the golem's board (tap any track number or drag the knob)?",
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }, { w: 175 }),
       foes: GOLEM_FOE,
       encounter: { species: 'recipe golem', act: 'Set Dials', intent: 'The golem resets the equation dials on its furnace.' },
       hints: [
-        'Turn the four dials on the board and read the atom ledger.',
+        'Compare the Reactants and Products columns in the atom ledger.',
         'Compare the two sides of the ledger one atom at a time as you turn each dial.',
         'Balance the atoms that appear in only one substance on each side first, leaving oxygen for last.'
       ],
@@ -213,30 +213,30 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- Phase 4 */
   (() => {
-    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_THERMITE, seats: 2, out: 'Fe', yieldFrac: GOLEM_KEEPS, window: false, title: 'Furnace' });
-    const b = weighFixture('bal', { x: 108, y: 32 });
+    const r = reactorFixture('pot', { x: 44, y: 24 }, { eq: EQ_THERMITE, seats: 2, out: 'Fe', yieldFrac: GOLEM_KEEPS, window: false, title: 'Furnace' });
+    const b = weighFixture('bal', { x: 105, y: 24 });
     return {
       id: 'phase4',
       title: 'What the Furnace Kept',
-      prompt: 'What is the percent yield of iron from this furnace?',
+      prompt: 'What is the percent yield of iron from this thermite furnace?',
       entry: { id: 'pct', label: 'Percent made', unit: '%' },
       widget,
       table: potTable({
         pieces: [
-          jar('ore', 'Iron ore', { x: 136, y: 36 }, { species: 'Fe2O3', grams: ORE_G, shown: `${ORE_G.toFixed(1)} g` }),
-          jar('al', 'Aluminium', { x: 136, y: 52 }, { species: 'Al', grams: AL_G, shown: `${AL_G.toFixed(1)} g` }),
-          jar('catch', 'Catch jar', { x: 120, y: 52 }, { catchFor: 'Fe' })
+          jar('ore', 'Iron ore', { x: 96, y: 54 }, { species: 'Fe2O3', grams: ORE_G, shown: `${ORE_G.toFixed(1)} g` }),
+          jar('al', 'Aluminum', { x: 117, y: 54 }, { species: 'Al', grams: AL_G, shown: `${AL_G.toFixed(1)} g` }),
+          jar('catch', 'Catch jar', { x: 138, y: 54 }, { catchFor: 'Fe' })
         ],
         fixtures: [
           r.fixture, b.fixture,
-          plaqueFixture('eq', 'Equation and listed masses', { x: 48, y: 56 }, ['Fe₂O₃ + 2 Al → Al₂O₃ + 2 Fe', 'Fe₂O₃ 159.6 · Al 27.0 · Fe 55.8 g/mol'], { w: 80 })
+          plaqueFixture('eq', 'Equation and listed masses', { x: 44, y: 56 }, ['Fe₂O₃ + 2 Al → Al₂O₃ + 2 Fe', 'Fe₂O₃ 159.6 · Al 27.0 · Fe 55.8 g/mol'], { w: 76 })
         ],
         zones: { slots: [...r.slots, b.slot] }
       }),
       foes: GOLEM_FOE,
-      encounter: { species: 'recipe golem', act: 'Charge Furnace', intent: 'The golem feeds its furnace from two hoppers.' },
+      encounter: { species: 'recipe golem', act: 'Charge Furnace', intent: 'The golem feeds its furnace from two supply trays.' },
       hints: [
-        'Use the furnace, the two jars, the catch jar and the balance.',
+        'Compare the moles of Fe₂O₃ (79.8 g) and Al (10.8 g) to find which reactant runs out first.',
         'Compare the iron on the balance with the iron the equation allows from the reactant that runs out first.',
         'Find which reactant runs out first, calculate the theoretical yield of iron, then divide the actual iron mass by it.'
       ],
@@ -245,8 +245,8 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the percent.' };
         if (Math.abs(v - GOLEM_PCT) <= 1) return { ok: true };
         const w = weighRead(state.table, 'bal');
-        const note = w.item && w.grams > 0 ? ` The balance read ${fixed(w.grams, 1)} g of iron.` : ' Run the furnace and weigh the catch jar.';
-        return { ok: false, msg: `${fixed(v, 1)}% does not match the furnace reading.${note}` };
+        const note = w.item && w.grams > 0 ? ` The balance read ${fixed(w.grams, 1)} g of iron — divide by the maximum iron allowed by whichever reactant runs out first.` : ' Run the furnace and weigh the catch jar.';
+        return { ok: false, msg: `${fixed(v, 1)}% is not the percent yield.${note}` };
       },
       reward: {
         title: 'Yield From the Limit',
@@ -258,8 +258,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- Phase 5 */
   (() => {
-    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_ORE, seats: 1, plenty: ['CO'], out: 'Fe', window: false, title: 'Furnace' });
-    const b = weighFixture('bal', { x: 108, y: 32 });
+    const r = reactorFixture('pot', { x: 44, y: 24 }, { eq: EQ_ORE, seats: 1, plenty: ['CO'], out: 'Fe', window: false, title: 'Furnace' });
+    const b = weighFixture('bal', { x: 105, y: 24 });
     return {
       id: 'phase5',
       title: 'The Ledger',
@@ -268,28 +268,28 @@ export const STAGES = [
       widget,
       table: potTable({
         pieces: [
-          jar('ore', 'Iron ore', { x: 136, y: 36 }, { species: 'Fe2O3', grams: ORE_G, shown: `${ORE_G.toFixed(1)} g` }),
-          jar('catch', 'Catch jar', { x: 136, y: 52 }, { catchFor: 'Fe' })
+          jar('ore', 'Iron ore', { x: 104, y: 54 }, { species: 'Fe2O3', grams: ORE_G, shown: `${ORE_G.toFixed(1)} g` }),
+          jar('catch', 'Catch jar', { x: 128, y: 54 }, { catchFor: 'Fe' })
         ],
         fixtures: [
           r.fixture, b.fixture,
-          plaqueFixture('led', 'The golem\'s ledger', { x: 48, y: 56 }, [`Ore in: ${LEDGER.oreTons.toFixed(1)} t   Metal out: ${LEDGER.claimTons.toFixed(1)} t`, 'Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂'], { w: 80 })
+          plaqueFixture('led', 'The golem\'s ledger', { x: 44, y: 55 }, [`Ore in: ${LEDGER.oreTons.toFixed(1)} t · Claimed out: ${LEDGER.claimTons.toFixed(1)} t`, 'Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂ · 1 g bench = 1 t foundry'], { w: 80 })
         ],
         zones: { slots: [...r.slots, b.slot] }
       }),
       foes: GOLEM_FOE,
       encounter: { species: 'recipe golem', act: 'Log Output', intent: 'The golem writes its output into the ledger.' },
       hints: [
-        'Use the furnace, the ore jar, the catch jar and the balance.',
-        'Compare the grams of ore fed with the grams of iron on the balance, and the ledger with what a furnace can make.',
-        'Find how much iron the furnace makes from the ore jar, then scale that iron-to-ore ratio up to 39.9 tons.'
+        'Compare the mass of iron on the balance with the mass of ore fed into the furnace.',
+        'Compare the grams of ore fed with the grams of iron on the balance, and scale that same ratio to tons.',
+        'Find how much iron the furnace makes from the ore jar, then scale that iron-to-ore ratio to 39.9 tons.'
       ],
       check(state) {
         const v = entryNumber(state.table, 't');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the tons of iron.' };
         if (Math.abs(v - LEDGER.possibleTons) <= 0.3) return { ok: true };
         const w = weighRead(state.table, 'bal');
-        const note = w.item && w.grams > 0 ? ` The furnace made ${fixed(w.grams, 1)} g of iron from ${ORE_G.toFixed(1)} g of ore.` : ' Run the furnace and weigh the catch jar.';
+        const note = w.item && w.grams > 0 ? ` Scale the furnace's iron-to-ore ratio up to ${LEDGER.oreTons.toFixed(1)} tons.` : ' Run the furnace and weigh the catch jar.';
         return { ok: false, msg: `${fixed(v, 1)} t does not match the furnace ratio.${note}` };
       },
       reward: {

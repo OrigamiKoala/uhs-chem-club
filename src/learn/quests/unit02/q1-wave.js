@@ -346,11 +346,9 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+/** Reference note printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the lamp into its holder and turn the Colour dial.', 'nm is a nanometre: a billionth of a metre.'],
-  3: ['Stand a lamp and two detectors on the rail, then press Fire Pulse.'],
-  4: ['Drag a source into the ruler\'s holder to read it,', 'then back onto the rail.']
+  1: ['nm is a nanometre: a billionth of a metre.']
 };
 applyNotes(STAGES, NOTES);
 

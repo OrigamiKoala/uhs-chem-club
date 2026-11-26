@@ -40,8 +40,8 @@ function toolNoteFor() {
 
 const DEBRIEF = {
   title: 'Bench 6 cleared',
-  body: 'A catalyst provides an alternate mechanism with a lower activation energy without being consumed or changing ΔH.',
-  filed: 'Filed: the powder in the vent is a catalyst that opens a lower-Ea path and stays intact after every cycle.'
+  body: 'A catalyst opens a new pathway with a lower activation energy. It comes out unchanged and does not change ΔH.',
+  filed: 'Filed: the vent powder is a catalyst that lowers the activation barrier and comes back unchanged after every cycle.'
 };
 
 export const STAGES = [
@@ -50,30 +50,34 @@ export const STAGES = [
     id: 's1-lead',
     title: 'The Shortcut Path',
     predict: true,
-    prompt: 'How can an added powder speed up a reaction without being one of the reactants?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Reactants are the starting substances. An added substance like this yellow dust that speeds up a reaction is called a catalyst.'
+    },
+    prompt: 'What is the yellow dust doing to speed up the burn?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('shortcut', 'It lowers the energy hill', { x: 112, y: 9 }),
-        stmt('usedUp', 'It adds energy to the reactants', { x: 112, y: 24 }),
-        stmt('warms', 'It makes the products lower in energy', { x: 112, y: 39 })
+        stmt('shortcut', 'It lowers the energy hill', { x: 114, y: 10 }),
+        stmt('usedUp', 'It adds energy to the reactants', { x: 114, y: 24 }),
+        stmt('warms', 'It makes the products lower in energy', { x: 114, y: 38 })
       ],
       fixtures: [
-        rateLeadFixture('lead', { x: 46, y: 28 }, {
+        rateLeadFixture('lead', { x: 44, y: 28 }, {
           scene: 'catalyst',
-          title: 'Uncatalysed vs catalysed',
-          w: 78,
-          h: 44
+          title: 'No dust vs yellow dust',
+          w: 74,
+          h: 40
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'How it works', at: { x: 112, y: 52 }, size: { w: 46, h: 8 } }]
+        slots: [{ id: 'ans', label: 'How it works', at: { x: 114, y: 52 }, size: { w: 46, h: 12 } }]
       }
     }),
     hints: [
-      'Watch the particles in the preview; the ringed ones are the added powder.',
-      'Notice whether the ringed particles are changed by the reaction going on around them.',
-      'Think about what a reaction needs before it can start, and what could make that need smaller.'
+      'Compare the two vessels in the preview; the yellow rings are the added dust.',
+      'Notice whether the yellow rings get used up while blue product forms faster.',
+      'Think about what slows a reaction down and how a shortcut could make it easier to cross.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -87,7 +91,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked for the catalyst tests.',
       title: 'Prediction Locked',
-      body: 'You locked in your prediction. The next stages test what a catalyst changes and what it leaves alone.'
+      body: 'Prediction locked. The next stages test what a catalyst changes and what it leaves alone.'
     }
   },
 
@@ -99,12 +103,12 @@ export const STAGES = [
     widget,
     table: rateTable({
       pieces: [
-        stmt('unchanged', 'Unchanged', { x: 116, y: 9 }),
-        stmt('usedUp', 'Used up', { x: 116, y: 24 }),
-        stmt('doubled', 'Doubled', { x: 116, y: 39 })
+        stmt('unchanged', 'Unchanged', { x: 120, y: 10 }),
+        stmt('usedUp', 'Used up', { x: 120, y: 24 }),
+        stmt('doubled', 'Doubled', { x: 120, y: 38 })
       ],
       fixtures: [
-        kvesselFixture('v1', { x: 28, y: 28 }, {
+        kvesselFixture('v1', { x: 26, y: 28 }, {
           title: 'No catalyst',
           order: 1,
           k: 0.03,
@@ -112,10 +116,10 @@ export const STAGES = [
           tMax: 40,
           showCounts: true,
           catalystCount: 0,
-          w: 44,
-          h: 40
+          w: 42,
+          h: 42
         }),
-        kvesselFixture('v2', { x: 74, y: 28 }, {
+        kvesselFixture('v2', { x: 71, y: 28 }, {
           title: 'With 6 catalyst',
           order: 1,
           k: 0.12,
@@ -123,30 +127,30 @@ export const STAGES = [
           tMax: 40,
           showCounts: true,
           catalystCount: 6,
-          w: 44,
-          h: 40
+          w: 42,
+          h: 42
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Catalyst at end', at: { x: 116, y: 52 }, size: { w: 46, h: 8 } }]
+        slots: [{ id: 'ans', label: 'Catalyst at end', at: { x: 120, y: 52 }, size: { w: 44, h: 12 } }]
       }
     }),
     hints: [
-      'Run both vessels and watch the catalyst dots inside "With 6 catalyst".',
-      'Count how many catalyst particles remain after the reactant drops.',
-      'Follow one catalyst particle through the run and ask whether anything permanently removes it.'
+      'Press "Run" on both vessels and watch the Catalyst counter under "With 6 catalyst".',
+      'Compare the Catalyst counter at the start and at the end of the run.',
+      'Watch whether any catalyst rings permanently disappear during the run.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Catalyst at end".' };
-      if (card.id === 'usedUp') return { ok: false, msg: 'Count the catalyst particles in Vessel 2: all 6 are still present at 40 s.' };
-      if (card.id === 'doubled') return { ok: false, msg: 'Catalyst particles are regenerated, not newly created.' };
+      if (card.id === 'usedUp') return { ok: false, msg: 'Check the Catalyst counter under Vessel 2 at the start and at the end.' };
+      if (card.id === 'doubled') return { ok: false, msg: 'Catalyst particles are given back unchanged, not newly created.' };
       return { ok: true };
     },
     reward: {
       log: 'Catalyst amount is unchanged at the end of the reaction.',
       title: 'Regenerated, Not Consumed',
-      body: 'Because the catalyst is regenerated at the end of each cycle, the same 6 particles remain when the run finishes.'
+      body: 'The catalyst participates in a step and comes right back out, so all 6 particles remain when the run finishes.'
     }
   },
 
@@ -164,10 +168,11 @@ export const STAGES = [
           ts: 110,
           catTs: 70,
           products: 15,
+          noProgress: true,
           tapZones: [
-            { id: 'rp', label: 'Reactants level', x0: 0.0, x1: 0.22 },
-            { id: 'cat', label: 'Activation barrier', x0: 0.34, x1: 0.58 },
-            { id: 'end', label: 'Products / ΔH', x0: 0.78, x1: 1.0 }
+            { id: 'rp', label: 'Reactants level', x0: 0.0, x1: 0.26 },
+            { id: 'cat', label: 'Activation barrier', x0: 0.30, x1: 0.66 },
+            { id: 'end', label: 'Products level', x0: 0.72, x1: 1.0 }
           ],
           w: 104,
           h: 44
@@ -175,21 +180,21 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Compare the solid curve and the dashed green catalysed curve.',
-      'Compare the start level, the end level and the height of the peak on the two curves.',
-      'Both routes join the same start and the same end; ask which levels they share and which they do not.'
+      'Compare the solid curve with the dashed green catalysed curve.',
+      'Check the reactant level, the product level, and the peak height on both curves.',
+      'Both paths share the same start and end; see which feature moves.'
     ],
     check(state) {
       const z = Math.round(state.table.fixtures.prof?.dials?.zone?.value ?? 4);
-      if (z === 4) return { ok: false, notYet: true, msg: 'Tap the part of the energy profile that the catalyst changes.' };
+      if (z === 4) return { ok: false, notYet: true, msg: 'Tap the part of the energy profile that changes with the catalyst.' };
       if (z === 1) return { ok: false, msg: 'The starting reactants level (R: 40) is identical with or without a catalyst.' };
-      if (z === 3) return { ok: false, msg: 'The products level (P: 15) and ΔH are unchanged by a catalyst.' };
+      if (z === 3) return { ok: false, msg: 'The products level (P: 15) and energy released are unchanged by a catalyst.' };
       return { ok: true };
     },
     reward: {
       log: 'A catalyst lowers Ea without changing R, P, or ΔH.',
-      title: 'Lower Barrier, Same ΔH',
-      body: 'The catalyst lowers the transition state barrier from 110 to 70 kJ/mol while leaving reactants, products, and ΔH unchanged.'
+      title: 'Lower Barrier, Same Energy Released',
+      body: 'The catalyst lowers the peak from 110 to 70 kJ/mol while leaving reactants, products, and energy released unchanged.'
     }
   },
 
@@ -197,41 +202,45 @@ export const STAGES = [
   {
     id: 's4-catalyst-in-steps',
     title: 'Catalyst vs Intermediate',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A catalyst enters one step and comes back out in a later step. An intermediate is made in one step and used up in a later step.'
+    },
     prompt: 'Which species is the catalyst in this two-step mechanism?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('Cl', 'Cl', { x: 112, y: 9 }),
-        stmt('ClO', 'ClO', { x: 112, y: 24 }),
-        stmt('O3', 'O₃', { x: 112, y: 39 })
+        stmt('Cl', 'Cl', { x: 114, y: 10 }),
+        stmt('ClO', 'ClO', { x: 114, y: 24 }),
+        stmt('O3', 'O₃', { x: 114, y: 38 })
       ],
       fixtures: [
-        plaqueFixture('mech', 'Ozone breakdown', { x: 46, y: 28 }, [
+        plaqueFixture('mech', 'Catalysed breakdown', { x: 46, y: 28 }, [
           'Step 1: Cl + O₃ → ClO + O₂',
           'Step 2: ClO + O → Cl + O₂',
           'Overall: O₃ + O → 2 O₂'
         ], { w: 78 })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Catalyst', at: { x: 112, y: 52 }, size: { w: 46, h: 8 } }]
+        slots: [{ id: 'ans', label: 'Catalyst', at: { x: 114, y: 52 }, size: { w: 46, h: 12 } }]
       }
     }),
     hints: [
-      'List which species each step uses up and which it makes.',
-      'A species that is made and then used up is not left over; a species that is used up and then made again is back where it started.',
-      'Check which species is absent from the overall equation yet is used in the first step.'
+      'Check which species each step uses up and which it produces.',
+      'A catalyst goes in during Step 1 and comes back out in Step 2.',
+      'Look for the species missing from the overall equation that is used in Step 1.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Catalyst".' };
-      if (card.id === 'ClO') return { ok: false, msg: 'ClO is made in Step 1 and used in Step 2 — that is an intermediate, not a catalyst.' };
+      if (card.id === 'ClO') return { ok: false, msg: 'ClO is made in Step 1 and used up in Step 2, which makes it an intermediate, not a catalyst.' };
       if (card.id === 'O3') return { ok: false, msg: 'O₃ is consumed permanently to form O₂.' };
       return { ok: true };
     },
     reward: {
       log: 'Cl is the catalyst; ClO is the intermediate.',
       title: 'Spotting the Catalyst',
-      body: 'Cl enters Step 1 and is regenerated in Step 2, whereas intermediate ClO is created in Step 1 and destroyed in Step 2.'
+      body: 'Cl enters Step 1 and is regenerated in Step 2, so Cl is the catalyst. ClO is made in Step 1 and used in Step 2, so it is the intermediate.'
     }
   },
 
@@ -239,7 +248,11 @@ export const STAGES = [
   {
     id: 's5-surface',
     title: 'On the Solid Surface',
-    prompt: 'Where do gas molecules adsorb and react on a solid catalyst?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Some catalysts are solid metals instead of powders mixed into a gas. Watch where the gas molecule lands and breaks apart.'
+    },
+    prompt: 'Where do gas molecules stick to the surface and react on a solid catalyst?',
     widget,
     table: rateTable({
       fixtures: [
@@ -247,19 +260,19 @@ export const STAGES = [
           title: 'Solid catalyst',
           mode: 'surface',
           tapZones: [
-            { id: 'gas', label: 'Gas above', y0: 0.0, y1: 0.45 },
-            { id: 'surf', label: 'Catalyst surface', y0: 0.48, y1: 0.72 },
-            { id: 'bulk', label: 'Deep inside solid', y0: 0.75, y1: 1.0 }
+            { id: 'gas', label: 'Gas above', y0: 0.0, y1: 0.44 },
+            { id: 'surf', label: 'Top layer of solid', y0: 0.45, y1: 0.72 },
+            { id: 'bulk', label: 'Deep inside solid', y0: 0.73, y1: 1.0 }
           ],
           w: 96,
-          h: 44
+          h: 46
         })
       ]
     }),
     hints: [
-      'Press Play on the Solid catalyst view and watch where the gas molecule lands and stretches.',
-      'Gas molecules cannot reach deep inside the solid metal lattice.',
-      'Think about where a gas molecule can actually reach the solid and be held.'
+      'Press "Play" below the view and watch where the gas molecule lands and stretches.',
+      'Gas molecules cannot reach deep inside the solid metal.',
+      'Look at where the gas can touch the solid and weaken its bond.'
     ],
     check(state) {
       const z = Math.round(state.table.fixtures.view?.dials?.zone?.value ?? 4);
@@ -271,7 +284,7 @@ export const STAGES = [
     reward: {
       log: 'Gas molecules adsorb onto the solid catalyst surface.',
       title: 'Surface Catalysis',
-      body: 'Reactants adsorb onto the exposed catalyst surface, weakening their bonds so new products form and leave.'
+      body: 'Gas molecules stick to (adsorb onto) the exposed surface of a solid catalyst, weakening their bonds so products can form and leave.'
     }
   }
 ];

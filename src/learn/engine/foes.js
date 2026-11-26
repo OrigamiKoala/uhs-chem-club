@@ -166,7 +166,7 @@ export const SPECIES = {
     name: 'Recipe golem',
     counter: 'Trial missed: the reactant mole ratio is unbalanced.',
     knockback: 'Knocked back. The golem draws fresh mass, but the stoichiometry you proved is still logged.',
-    hit: 'The golem starves for unbonded reagents and disperses into inert powder.',
+    hit: 'The golem runs out of feed and crumbles.',
     lines: {
       unmoved: () => 'The reaction vessel holds pressure.',
       balanced: () => 'The stoichiometry balances without excess.',

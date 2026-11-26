@@ -282,7 +282,13 @@ const SPECS = {
       { v: 1, ...ionOf('ag'), n: 4, mode: 'wait' }, { v: 1, color: ION.cl, label: 'Cl−', n: 4, mode: 'wait' }, { v: 1, color: ION.na, label: 'Na+', n: 3, mode: 'wait' },
       { v: 2, color: ION.h, label: 'H+', n: 5, mode: 'to', strip: 1 }, { v: 2, ...ionOf('mg'), n: 3, mode: 'from', strip: 1 },
       { v: 3, color: ION.h, label: 'H+', n: 4, mode: 'wait' }, { v: 3, color: '#8fb0c8', label: 'OH−', n: 4, mode: 'wait' }, { v: 3, color: ION.na, label: 'Na+', n: 3, mode: 'wait' }],
-    bubbles: [{ strip: 1, n: 5 }]
+    bubbles: [{ strip: 1, n: 5 }],
+    texts: [
+      { x: 0.1275, y: 0.04, label: 'Zn + CuSO₄' },
+      { x: 0.3725, y: 0.04, label: 'AgNO₃ + NaCl' },
+      { x: 0.6275, y: 0.04, label: 'Mg + 2 HCl' },
+      { x: 0.8725, y: 0.04, label: 'NaOH + HCl' }
+    ]
   })
 };
 

@@ -13,7 +13,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, rig, box, histCard, markerFixture, boxRead, rigAt, cylRead, markerRead, whereIs, speedBins, toKelvin
 } from '../../table/kits/gas.js';
@@ -370,17 +369,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Place a card in the slot.'],
-  2: ['Turn the Heater dial,', 'then place a card in the slot.'],
-  3: ['Record each setting, lay the straightedge, then set the marker.'],
-  4: ['Turn the Piston dial,', 'then place a card in the slot.'],
-  5: ['Turn the Piston dial,', 'then type your answer in the field at the bottom.'],
-  6: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
-  7: ['Turn Cylinder B\'s Heater dial.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

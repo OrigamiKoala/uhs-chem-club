@@ -54,7 +54,7 @@ export const TERMS = [
   { id: 'oxidation', term: 'oxidation', gloss: 'losing electrons (a rise in oxidation number)', quest: 'q8-kinds', stage: 5, re: /\boxidation\b(?! number)/i },
   { id: 'reduction', term: 'reduction', gloss: 'gaining electrons (a fall in oxidation number)', quest: 'q8-kinds', stage: 5, re: /\breduction\b/i },
   { id: 'redox-reaction', term: 'redox reaction', gloss: 'a reaction in which electrons move from one species to another', quest: 'q8-kinds', stage: 5, re: /\bredox\b/i },
-  { id: 'oxidation-number', term: 'oxidation number', gloss: 'the charge an atom would have if every shared electron went to the atom that pulls harder', quest: 'q8-kinds', stage: 6, re: /\boxidation numbers?\b/i },
+  { id: 'oxidation-number', term: 'oxidation number', gloss: 'the charge an atom would have if every shared electron went to the atom that attracts electrons more', quest: 'q8-kinds', stage: 6, re: /\boxidation numbers?\b/i },
 
   { id: 'electron-cloud', term: 'electron cloud', gloss: 'the region around a nucleus where an ion\'s electrons sit', quest: 'q9-hsab', stage: 1, re: /\belectron clouds?\b/i },
   { id: 'hard-ion', term: 'hard ion', gloss: 'a small, often highly charged ion whose electron cloud keeps its shape near another charge', quest: 'q9-hsab', stage: 1, re: /\bhard ions?\b/i },
@@ -78,12 +78,12 @@ export const STORY_ALLOW = ['pot', 'recipe', 'heap'];
 
 /** What each stage assumes the student can do, and the primer (`engine/primers.js`) offered by the Primer key on that stage. */
 export const NEEDS = {
-  'q6-stoich:3': ['amount'],
-  'q6-stoich:4': ['amount', 'ratio'],
-  'q6-stoich:6': ['amount', 'ratio'],
-  'q6-stoich:7': ['amount', 'ratio'],
+  'q6-stoich:3': ['mole'],
+  'q6-stoich:4': ['mole', 'ratio'],
+  'q6-stoich:6': ['mole', 'ratio'],
+  'q6-stoich:7': ['mole', 'ratio'],
   'q6-stoich:8': ['ratio'],
-  'q7-titrate:1': ['ratio'],
+  'q7-titrate:1': ['amount'],
   'q7-titrate:4': ['amount', 'ratio'],
   'q7-titrate:5': ['amount', 'ratio']
 };

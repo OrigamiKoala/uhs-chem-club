@@ -6,6 +6,7 @@
  */
 
 import { stage } from '../three/stage.js';
+import { isCalculatorOpen } from './calculator.js';
 
 let lastFocused = null;
 let keyHandler = null;
@@ -58,7 +59,7 @@ export function showModal(innerHtml, opts = {}) {
   }
 
   keyHandler = (e) => {
-    if (e.key === 'Escape' && dismissible) close();
+    if (e.key === 'Escape' && dismissible && !isCalculatorOpen()) close();
   };
   document.addEventListener('keydown', keyHandler);
 

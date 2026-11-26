@@ -259,6 +259,9 @@ function paintContainer(ctx, c, state, o) {
   const r = p.rect;
   ctx.fillStyle = '#16140f';
   ctx.fillRect(X(r.x0) + 1, Y(r.y0) + 1, r.w * sc - 2, r.h * sc - 2);
+  // Always print the live count in the bottom-right corner so supply trays and Built tray are readable in 2D and 3D.
+  const countText = p.molecule ? `${p.n} built` : `${p.n}`;
+  plateText(ctx, countText, X(r.x1 - 1.2), Y(r.y1 - 1.2), { size: Math.max(9, Math.round(2.5 * sc)), weight: 700, align: 'right', color: p.n > 0 ? AMBER : PLATE_COLORS.dim });
   if (o.bodies) return true;
   const rad = Math.max(0.9, p.r * sc);
   for (let i = 0; i < p.n; i++) {

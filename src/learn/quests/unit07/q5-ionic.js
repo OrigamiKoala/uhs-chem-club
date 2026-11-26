@@ -20,8 +20,7 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
-import { potTable, stmt } from '../../table/kits/pot.js';
+import { potTable, plaqueFixture, stmt } from '../../table/kits/pot.js';
 import { ionPotFixture, filterFixture, solutionJar, ionPuck, formulaChip, ionPotRead, mixesRun, filterRead } from '../../table/kits/pot-ionic.js';
 import { ionText, pretty } from '../../engine/reactdata.js';
 import { mixOutcome } from '../../engine/reactdata-ionic.js';
@@ -118,7 +117,7 @@ export const STAGES = [
         speaker: SPEAKER,
         body: 'When an ionic compound dissolves in water, its ions separate and move freely. Each jar holds a clear solution of dissolved ions.'
       },
-      prompt: 'Does a new substance form when you mix these two clear solutions?',
+      prompt: 'Mix the two solutions and filter them — what do you find on the paper?',
       widget,
       table: potTable({
         pieces: [
@@ -129,9 +128,9 @@ export const STAGES = [
         zones: { slots: p.slots }
       }),
       hints: [
-        'Put both jars in the reaction vessel, press Mix, then press Filter.',
+        'Watch what happens in the vessel when the two clear solutions meet.',
         'Watch the vessel and the filter paper before and after each step.',
-        'Mix the solutions first so the filter can catch any solid that forms.'
+        'If the liquid turns cloudy, a solid formed — filtering lifts it onto the paper.'
       ],
       check(state) {
         const r = ionPotRead(state.table, 'pot');
@@ -158,10 +157,11 @@ export const STAGES = [
     widget,
     table: potTable({
       pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 38, y: 10 + Math.floor(i / 2) * 16 })),
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 116, y: 30 }, size: { w: 36, h: 14 } }] }
+      fixtures: [plaqueFixture('ions', 'Ions in the two jars', { x: 118, y: 12 }, ['Lead(II) nitrate: Pb²⁺, NO₃⁻', 'Potassium iodide: K⁺, I⁻'], { w: 46 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 36 }, size: { w: 42, h: 16 } }] }
     }),
     hints: [
-      'Look at the five cards and the prediction slot.',
+      'Think about which ions from Pb²⁺, NO₃⁻, K⁺, and I⁻ joined to make the yellow solid.',
       'Think about which of the four ions formed the yellow precipitate, and which could stay dissolved.',
       'Choose which ions you expect to find in the water, then test it next.'
     ],
@@ -183,14 +183,14 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const p = ionPotFixture('pot', { x: 57, y: 26 }, { window: true, lamp: true });
+    const p = ionPotFixture('pot', { x: 46, y: 26 }, { window: true });
     return {
       id: 's3-water',
       title: 'Still Dissolved',
       get prompt() {
         const g = recall(QUEST_KEY);
-        const guess = g && GUESS[g] ? `You guessed: ${GUESS[g]}. ` : '';
-        return `${guess}Which ions are still dissolved after the mixing?`;
+        const guess = g && GUESS[g] ? `Your guess was: ${GUESS[g]}. Test it: ` : '';
+        return `${guess}Which ions are still dissolved after mixing?`;
       },
       widget,
       table: potTable({
@@ -199,12 +199,12 @@ export const STAGES = [
           ...pucks([['pPb', 'Pb2'], ['pNO3', 'NO3'], ['pK', 'K'], ['pI', 'I']], 57, 14, 20)
         ],
         fixtures: [p.fixture],
-        zones: { slots: p.slots, trays: [trayAt('water', 'Still in the water', { x: 131, y: 20 }, { w: 28, h: 28 })] }
+        zones: { slots: p.slots, trays: [trayAt('water', 'Still in the water', { x: 122, y: 26 }, { w: 34, h: 30 })] }
       }),
       hints: [
-        'Press Mix, then drag the ions that stayed dissolved into the tray.',
-        'Compare the circles in BEFORE and AFTER, and check whether the conductivity bulb stays lit.',
-        'Dissolved ions float freely in AFTER instead of packing at the bottom.'
+        'Compare the ions floating before mixing with the ions still floating after mixing.',
+        'Look at which ions stay floating in the upper part of the after panel instead of packing at the bottom.',
+        'Dissolved ions float freely after mixing instead of packing into the solid at the bottom.'
       ],
       check(state) {
         const t = state.table;
@@ -213,8 +213,8 @@ export const STAGES = [
         const have = ionsIn(t, 'water');
         if (!total(have)) return { ok: false, notYet: true, msg: 'The tray is empty.' };
         const want = r.out.after;
-        for (const id of Object.keys(have)) if (!want[id]) return { ok: false, msg: `No ${ionText(id)} ions are floating free in AFTER.` };
-        for (const id of Object.keys(want)) if (!have[id]) return { ok: false, msg: `AFTER still has free ${ionText(id)} ions in the water, but they are missing from your tray.` };
+        for (const id of Object.keys(have)) if (!want[id]) return { ok: false, msg: `No ${ionText(id)} ions are floating free after mixing.` };
+        for (const id of Object.keys(want)) if (!have[id]) return { ok: false, msg: `Free ${ionText(id)} ions are still in the water after mixing, but they are missing from your tray.` };
         return { ok: true };
       },
       get reward() {
@@ -223,7 +223,7 @@ export const STAGES = [
         return {
           log: 'K⁺ and NO₃⁻ were in the water before and after.',
           title: 'Spectator Ions',
-          body: `${verdict}K⁺ and NO₃⁻ stayed dissolved and unchanged, so the bulb stays lit. Ions that do not react are spectator ions.`
+          body: `${verdict}K⁺ and NO₃⁻ stayed dissolved and unchanged — they only watched, so ions that do not react are called spectator ions.`
         };
       }
     };
@@ -237,9 +237,9 @@ export const STAGES = [
       title: 'Only What Reacted',
       briefing: {
         speaker: SPEAKER,
-        body: 'A net ionic equation shows only the ions that actually reacted and writes the solid they formed as one formula.'
+        body: 'A net ionic equation shows only the ions that actually reacted and writes the solid they formed as one formula: reacted ions → solid.'
       },
-      prompt: 'What is the net ionic equation for this reaction?',
+      prompt: 'Which ions reacted and what solid formed in the net ionic equation?',
       widget,
       table: potTable({
         pieces: [
@@ -251,14 +251,14 @@ export const STAGES = [
         ],
         fixtures: [p.fixture],
         zones: {
-          slots: [...p.slots, { id: 'solid', label: 'Solid formed', at: { x: 119, y: 28 }, size: { w: 24, h: 12 } }],
+          slots: [...p.slots, { id: 'solid', label: '→ Solid formed', at: { x: 119, y: 28 }, size: { w: 26, h: 12 } }],
           trays: [trayAt('reacted', 'Ions that reacted', { x: 119, y: 12 }, { w: 56, h: 14 })]
         }
       }),
       hints: [
-        'Press "Mix", then drag the ions that reacted into the tray and the solid\'s card into the slot.',
-        'Compare how many circles of each ion are in BEFORE and in AFTER.',
-        'Count only the ions whose circles left the water, and match the packed solid to one formula card.'
+        'Look at which ions appear before mixing and whether they are still floating free after mixing.',
+        'Compare how many ions of each kind float freely before and after mixing.',
+        'Count only the ions that left the water, and match the packed solid to one formula card.'
       ],
       check(state) {
         const t = state.table;
@@ -270,14 +270,14 @@ export const STAGES = [
         const o = r.out;
         for (const id of Object.keys(have)) if (!o.reacted[id]) return { ok: false, msg: `${ionText(id)} appears unchanged both before and after, so it did not react.` };
         for (const [id, n] of Object.entries(o.reacted)) if ((have[id] || 0) !== n) return { ok: false, msg: `${n} ${ionText(id)} ${plural(n)} left the solution, but your tray holds ${have[id] || 0}.` };
-        if (!chip) return { ok: false, msg: 'Choose a formula card for the solid packed at the bottom of AFTER.' };
-        if (chip.props.f !== o.solid.formula) return { ok: false, msg: 'The solid at the bottom of AFTER does not match that formula card.' };
+        if (!chip) return { ok: false, msg: 'Choose a formula card for the solid packed at the bottom after mixing.' };
+        if (chip.props.f !== o.solid.formula) return { ok: false, msg: 'The solid at the bottom after mixing does not match that formula card.' };
         return { ok: true };
       },
       reward: {
         log: 'Pb²⁺ + 2 I⁻ → PbI₂(s)',
         title: 'Net Ionic Equation',
-        body: 'Pb²⁺(aq) + 2 I⁻(aq) → PbI₂(s). The net ionic equation leaves out the spectator ions.'
+        body: 'Pb²⁺(aq) + 2 I⁻(aq) → PbI₂(s). Here (aq) means dissolved in water and (s) means solid; the net ionic equation leaves out the spectator ions.'
       }
     };
   })(),
@@ -287,14 +287,14 @@ export const STAGES = [
     id: 's5-predict',
     title: 'Ions That Always Stay',
     predict: true,
-    prompt: 'Which ions do you expect to stay dissolved no matter what they are mixed with?',
+    prompt: 'Pick the ions you think stay dissolved no matter what they are mixed with (you will test four mixtures next).',
     widget,
     table: potTable({
-      pieces: pucks(POOL.map(id => [`g${id}`, id]), 18, 14, 16).map((p, i) => ({ ...p, at: { x: 14 + (i % 4) * 20, y: 14 + Math.floor(i / 4) * 20 } })),
-      zones: { trays: [trayAt('guess', 'I think these always stay', { x: 112, y: 28 }, { w: 56, h: 28 })] }
+      pieces: pucks(POOL.map(id => [`g${id}`, id]), 16, 14, 19).map((p, i) => ({ ...p, at: { x: 14 + (i % 4) * 19, y: 16 + Math.floor(i / 4) * 20 } })),
+      zones: { trays: [trayAt('guess', 'I think these always stay', { x: 114, y: 28 }, { w: 58, h: 32 })] }
     }),
     hints: [
-      'Drag the ions you choose into the tray.',
+      'Think about which ions stayed dissolved in the first reaction.',
       'Think about which ions you have seen leave the water to form a precipitate, and which stayed dissolved.',
       'Choose the ions you expect never to form a solid, then test four mixtures next.'
     ],
@@ -328,11 +328,11 @@ export const STAGES = [
       table: potTable({
         pieces: pucks(POOL.map(id => [`p${id}`, id]), 57, 10, 14.5),
         fixtures: [p.fixture],
-        zones: { slots: p.slots, trays: [trayAt('stayed', 'Stayed every time', { x: 121, y: 20 }, { w: 56, h: 28 })] }
+        zones: { slots: p.slots, trays: [trayAt('stayed', 'Stayed every time', { x: 121, y: 22 }, { w: 56, h: 30 })] }
       }),
       hints: [
-        'Turn the "Mixture" dial through all four pairs, press "Mix", and sort the ions into the tray.',
-        'For each mixture, compare the circles in BEFORE with what is packed at the bottom of AFTER.',
+        'Compare before and after for each of the four mixtures.',
+        'For each mixture, check which ions stay floating in water and which pack into a solid at the bottom.',
         'An ion belongs in the tray only if it never packed into a solid in any of the four mixtures.'
       ],
       check(state) {
@@ -348,42 +348,42 @@ export const STAGES = [
             return { ok: false, msg: `${ionText(id)} formed a solid in mixture ${k + 1}.` };
           }
         }
-        for (const id of STAYED) if (!have[id]) return { ok: false, msg: `${ionText(id)} stayed dissolved in every mixture, so include it in the tray.` };
+        for (const id of STAYED) if (!have[id]) return { ok: false, msg: 'One ion that never left the water is missing. Compare before and after across all four mixtures again.' };
         return { ok: true };
       },
       reward: {
         log: 'Na⁺, K⁺, NH₄⁺ and NO₃⁻ never left the water.',
         title: 'Solubility Rules',
-        body: 'Na⁺, K⁺, NH₄⁺, and NO₃⁻ stayed dissolved every time. Solubility rules summarize which ion pairs form a solid and which stay dissolved.'
+        body: 'Na⁺, K⁺, NH₄⁺, and NO₃⁻ stayed dissolved in all four mixtures, while Ag⁺, Pb²⁺, Cl⁻, and SO₄²⁻ formed solids in some pairs. Solubility rules summarize which pairs form solids and which stay dissolved.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const p = ionPotFixture('pot', { x: 57, y: 26 }, { window: true, lamp: true });
+    const p = ionPotFixture('pot', { x: 46, y: 26 }, { window: true });
     return {
       id: 's7-clear',
       title: 'Clear and Still Reacting',
-      prompt: 'What is the net ionic equation when these two clear solutions mix?',
+      prompt: 'Nothing turns cloudy when HCl and NaOH mix — what is the net ionic equation?',
       widget,
       table: potTable({
         pieces: [
           ...jarsSeated(ACID, ['hcl', 'naoh'], { names: ['hydrochloric acid', null] }),
           ...pucks([['pH', 'H'], ['pOH', 'OH'], ['pNa', 'Na'], ['pCl', 'Cl']], 57.5, 12, 20),
-          formulaChip('fH2O', 'H2O', 'l', { x: 92, y: 57.5 }),
-          formulaChip('fNaCl', 'NaCl', 'aq', { x: 113, y: 57.5 })
+          formulaChip('fH2O', 'H2O', 'l', { x: 108, y: 52 }),
+          formulaChip('fNaCl', 'NaCl', 'aq', { x: 132, y: 52 })
         ],
         fixtures: [p.fixture],
         zones: {
-          slots: [...p.slots, { id: 'formed', label: 'Formed', at: { x: 131, y: 43 }, size: { w: 24, h: 12 } }],
-          trays: [trayAt('reacted', 'Ions that reacted', { x: 131, y: 19 }, { w: 28, h: 28 })]
+          slots: [...p.slots, { id: 'formed', label: '→ Formed', at: { x: 122, y: 36 }, size: { w: 26, h: 12 } }],
+          trays: [trayAt('reacted', 'Ions that reacted', { x: 122, y: 15 }, { w: 36, h: 20 })]
         }
       }),
       hints: [
-        'Press "Mix", then drag the ions that reacted into the tray and what they formed into the slot.',
-        'Compare the circles in BEFORE and AFTER, the new molecule drawn in AFTER, and the two bulbs.',
-        'Count only the ions whose circles are gone from AFTER, and pick the card for what they became.'
+        'Compare the ions floating before mixing with the particles drawn after mixing.',
+        'Notice which two ions disappear after mixing and what new molecule appears in their place.',
+        'Count only the ions that are gone after mixing, and pick the card for what they became.'
       ],
       check(state) {
         const t = state.table;
@@ -395,14 +395,14 @@ export const STAGES = [
         const o = r.out;
         for (const id of Object.keys(have)) if (!o.reacted[id]) return { ok: false, msg: `${ionText(id)} appears unchanged both before and after, so it did not react.` };
         for (const [id, n] of Object.entries(o.reacted)) if ((have[id] || 0) !== n) return { ok: false, msg: `${n} ${ionText(id)} ${plural(n)} left the solution, but your tray holds ${have[id] || 0}.` };
-        if (!chip) return { ok: false, msg: 'A new molecule formed in AFTER; place its card in the slot.' };
-        if (chip.props.f !== 'H2O') return { ok: false, msg: 'The new molecule in AFTER does not match that card.' };
+        if (!chip) return { ok: false, msg: 'A new molecule formed after mixing; place its card in the slot.' };
+        if (chip.props.f !== 'H2O') return { ok: false, msg: 'The new molecule after mixing does not match that card.' };
         return { ok: true };
       },
       reward: {
         log: 'H⁺ + OH⁻ → H₂O, with Na⁺ and Cl⁻ standing by.',
         title: 'Clear Does Not Mean Nothing Happened',
-        body: 'H⁺(aq) + OH⁻(aq) → H₂O(l). Na⁺ and Cl⁻ are spectators, so the bulb dims as ions form water but stays lit.'
+        body: 'H⁺(aq) + OH⁻(aq) → H₂O(l). Even though no solid formed, H⁺ and OH⁻ reacted to make water while Na⁺ and Cl⁻ stayed spectators.'
       }
     };
   })(),
@@ -412,16 +412,16 @@ export const STAGES = [
     const p = ionPotFixture('pot', { x: 45, y: 26 }, { window: true });
     return {
       id: 's8-sealed',
-      title: 'Sealed Jars',
+      title: 'Complete Ionic Equation',
       briefing: {
         speaker: SPEAKER,
         body: 'A complete ionic equation lists every dissolved ion before and after mixing, while writing any solid as a single formula.'
       },
-      prompt: 'What is the complete ionic equation for the sealed jars?',
+      prompt: 'What is the complete ionic equation for mixing silver nitrate and potassium bromide?',
       widget,
       table: potTable({
         pieces: [
-          ...jarsSeated(SEALED, ['jar1', 'jar2'], { sealed: true }),
+          ...jarsSeated(SEALED, ['jar1', 'jar2']),
           ...pucks([['pAg', 'Ag'], ['pBr', 'Br'], ['pK1', 'K'], ['pK2', 'K'], ['pN1', 'NO3'], ['pN2', 'NO3']], 57.5, 10, 14),
           formulaChip('fAgBr', 'AgBr', 's', { x: 98, y: 57.5 }),
           formulaChip('fKNO3', 'KNO3', 'aq', { x: 118.5, y: 57.5 }),
@@ -431,16 +431,16 @@ export const STAGES = [
         zones: {
           slots: p.slots,
           trays: [
-            trayAt('before', 'Before mixing', { x: 103, y: 19 }, { w: 28, h: 28 }),
-            trayAt('after', 'After mixing', { x: 135, y: 19 }, { w: 28, h: 28 }),
-            { id: 'solid', label: 'Solid formed', at: { x: 135, y: 45 }, size: { w: 24, h: 14 }, cell: 24, cellH: 14 }
+            { id: 'before', label: 'Before mixing', at: { x: 105, y: 19 }, size: { w: 30, h: 24 }, cell: 13, cellH: 11 },
+            { id: 'after', label: 'After mixing', at: { x: 136, y: 19 }, size: { w: 26, h: 24 }, cell: 12, cellH: 11 },
+            { id: 'solid', label: 'Solid formed', at: { x: 135, y: 44 }, size: { w: 24, h: 12 }, cell: 24, cellH: 12 }
           ]
         }
       }),
       hints: [
-        'Press "Mix", then fill the before tray, the after tray and the solid slot.',
-        'Compare BEFORE and AFTER: every dissolved ion goes in a tray, and the ions packed together are a solid.',
-        'The left tray holds every ion from both jars, and the right tray holds the ions still dissolved afterwards.'
+        'Compare the dissolved ions before mixing with what stays dissolved and what packs into a solid after mixing.',
+        'Compare before and after: every dissolved ion goes in a tray, and the ions packed together are a solid.',
+        'Put every ion from both jars in "Before mixing", and only the ions still dissolved afterwards in "After mixing".'
       ],
       check(state) {
         const t = state.table;
@@ -450,34 +450,22 @@ export const STAGES = [
         const chip = chipIn(t, 'solid');
         if (!total(b) && !total(a) && !chip) return { ok: false, notYet: true, msg: 'The trays and the slot are empty.' };
         const o = r.out;
-        if (!sameCounts(b, o.before)) return { ok: false, msg: `BEFORE shows ${total(o.before)} dissolved ions, but your first tray holds ${total(b)}.` };
-        for (const id of Object.keys(a)) if (!o.after[id]) return { ok: false, msg: `${ionText(id)} is packed into the solid in AFTER, not dissolved in the water.` };
-        if (!sameCounts(a, o.after)) return { ok: false, msg: `AFTER shows ${total(o.after)} dissolved ions, but your second tray holds ${total(a)}.` };
-        if (!chip) return { ok: false, msg: 'Choose a formula card for the solid packed at the bottom of AFTER.' };
-        if (chip.props.f !== o.solid.formula || chip.props.state !== 's') return { ok: false, msg: 'The solid at the bottom of AFTER does not match that formula card.' };
+        if (!sameCounts(b, o.before)) return { ok: false, msg: `Before mixing shows ${total(o.before)} dissolved ions, but your "Before mixing" tray holds ${total(b)}.` };
+        for (const id of Object.keys(a)) if (!o.after[id]) return { ok: false, msg: `${ionText(id)} is packed into the solid after mixing, not dissolved in the water.` };
+        if (!sameCounts(a, o.after)) return { ok: false, msg: `After mixing shows ${total(o.after)} dissolved ions, but your "After mixing" tray holds ${total(a)}.` };
+        if (!chip) return { ok: false, msg: 'Choose a formula card for the solid packed at the bottom after mixing.' };
+        if (chip.props.f !== o.solid.formula || chip.props.state !== 's') return { ok: false, msg: 'The solid at the bottom after mixing does not match that formula card.' };
         return { ok: true };
       },
       reward: {
         log: 'Ag⁺ + NO₃⁻ + K⁺ + Br⁻ → AgBr(s) + K⁺ + NO₃⁻',
         title: 'Complete Ionic Equation',
-        body: 'Ag⁺ + NO₃⁻ + K⁺ + Br⁻ → AgBr(s) + K⁺ + NO₃⁻ is the complete ionic equation. Canceling the ions on both sides leaves the net ionic equation.'
+        body: 'Ag⁺ + NO₃⁻ (silver nitrate) + K⁺ + Br⁻ (potassium bromide) → AgBr(s) + K⁺ + NO₃⁻. Canceling K⁺ and NO₃⁻ from both sides leaves the net ionic equation.'
       }
     };
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag a jar into each seat, press Mix, then press Filter.'],
-  2: ['Drag the card you choose into the slot.'],
-  3: ['Press Mix, then drag the ions into the tray.'],
-  4: ['Press Mix, then fill the tray and the slot.'],
-  5: ['Drag your guesses into the tray.'],
-  6: ['Turn the dial, press Mix,', 'then fill the tray.'],
-  7: ['Fill the tray', 'and the slot.'],
-  8: ['Press Mix, then fill', 'the three trays.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

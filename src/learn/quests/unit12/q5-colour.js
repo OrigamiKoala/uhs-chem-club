@@ -19,7 +19,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { lodeTable, specFixture, specRead, wheelFixture, cfieldFixture, cfieldRead, dsplitFixture, dsplitRead, vial, note, plaqueFixture, lodeLeadFixture } from '../../table/kits/lode.js';
 import { COMPLEXES, BANDS, photonKJ, photonJ } from '../../engine/lodedata.js';
 
@@ -329,17 +328,6 @@ export const STAGES = [
   }
 ];
 
-const NOTES = {
-  1: ['Drag the vial into the holder, then tap a colour.'],
-  2: ['Turn the dial, then tap two orbitals.'],
-  3: ['Tap a colour on the ruler.'],
-  4: ['Drag the card you choose into the slot.'],
-  5: ['Holder, then "Add Ammonia", then tap a colour.'],
-  6: ['Type your answer in the field at the bottom.'],
-  7: ['Vial on the square, "Shine Light", then a tray.'],
-  8: ['Drag the drum you choose into the slot.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

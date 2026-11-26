@@ -7,7 +7,7 @@ import { addTourText } from '../tour.js';
 const f = (title, text) => ({ title, text, dials: false });
 
 addTourText({
-  'cell:cellledger': f('Reaction half', 'Counts atoms and charge; tap amber Model dots to balance.'),
+  'cell:cellledger': f('Reaction half', 'Counts atoms and charge; tap the Model rings to balance.'),
   'cell:celltally': f('Electron tally', 'Shows total electrons given and taken.'),
   'cell:cellscene': f('Model', 'Live atoms and ions; tap highlighted targets when asked.'),
   'cell:cellredox': f('Beaker', 'Compare Before and After: discs are atoms, rings are ions.'),

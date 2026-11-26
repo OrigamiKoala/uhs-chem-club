@@ -19,7 +19,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   thornTable, tbuildFixture, buildRead, buildScript, tmolFixture, molRead, tleadFixture, ttestFixture, resultOf, tcard,
   tchoiceFixture, chosenIndex, note, tmirrorFixture, mirrorRead, turnsToMatch
@@ -316,17 +315,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Tap a dashed ring to add a carbon; tap between two carbons to bond them.'],
-  2: ['Tap a ring to add a carbon, a carbon to take it away; "Record" keeps the board\'s molecule.'],
-  3: ['Drag a card into the Sample slot to test it; tap a statement to answer.'],
-  4: ['Drag a card into the Sample slot to test it, then drag your answer into the slot.'],
-  5: ['Drag the card you choose into the slot.'],
-  6: ['Press the key to turn the image; tap your answer.'],
-  7: ['Drag a card into the Sample slot, then drag your answer into the slot.'],
-  8: ['Tap a carbon to answer.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

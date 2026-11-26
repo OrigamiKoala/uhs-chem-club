@@ -18,7 +18,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { lodeTable, iestripFixture, iestripRead, dshellFixture, lchoiceFixture, chosen, pickOf, elemCard, note, lodeLeadFixture } from '../../table/kits/lode.js';
 import { ELEMENTS, IE, COMMON_IONS, ionOf, jumpAfter } from '../../engine/lodedata.js';
 
@@ -254,15 +253,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Press "Remove an Electron", then tap a gap between bars.'],
-  2: ['Press "Remove an Electron", then tap a gap between bars.'],
-  3: ['Drag the card you choose into the slot.'],
-  4: ['Press each key, then tap the ion you choose.'],
-  5: ['Drag a card onto the square, then to a tray.'],
-  6: ['Drag a card onto the square, or to the answer slot.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

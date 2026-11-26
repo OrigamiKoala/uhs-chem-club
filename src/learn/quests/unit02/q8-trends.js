@@ -29,7 +29,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   trendsTable, gainFixture, gainOf, atomCard, seatedAtom, springFixture, stripFixture, sizerFixture, electronPiece, levelsFixture,
   springRead, stripRead, pullOf, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell,
@@ -466,11 +465,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  3: ['Drag an atom into the holder, and onto the rail to order it.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

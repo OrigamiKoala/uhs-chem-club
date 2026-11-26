@@ -7,7 +7,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   lodeTable, dshellFixture, dshellRead, iestripFixture, iestripRead,
   specFixture, wheelFixture, wheelRead, magnetFixture, vial, numCard, plaqueFixture
@@ -204,14 +203,6 @@ export const STAGES = [
   })()
 ];
 
-const NOTES = {
-  1: ['Tap orbital boxes to remove two 4s electrons.'],
-  2: ['Remove electrons to find the jump, then lay a card.'],
-  3: ['Type the overall charge in the field below.'],
-  4: ['Tap the complementary colour on the wheel.'],
-  5: ['Test both vials on the magnet, then lay the winner.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,

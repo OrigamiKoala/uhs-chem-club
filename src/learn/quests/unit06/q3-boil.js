@@ -22,7 +22,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { matterTable, molCard, probeFixture, selectorFixture, dialAt, whereIs, note, stmt, fixed, probeRead, mleadFixture } from '../../table/kits/matter.js';
 import { flaskFixture, flaskRead, liquidCard, packCard, surfaceFixture, surfaceRows, cellFixture, fmtP } from '../../table/kits/matter-vapour.js';
 import { SUBSTANCES, vaporPressure, boilingPoint, LIQUID_PROPS } from '../../engine/matterdata.js';
@@ -443,8 +442,6 @@ export const STAGES = [
   })()
 ];
 
-/** How-to lines removed from the plate: the prompt is the only instruction; how-to belongs in the Tour. */
-applyNotes(STAGES, {});
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

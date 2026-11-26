@@ -349,7 +349,7 @@ export const STAGES = [
       ]
     }, { w: 186, h: 72 }),
     hints: [
-      'Tap the ions on the Model to scale the iron(II) half and watch the Electron tally.',
+      'Look at the Electron tally and the number of electrons on each half-reaction card.',
       'Compare the electrons needed by one permanganate ion with the electrons given by iron(II).',
       'Scale the iron(II) half until electrons lost equal electrons gained.'
     ],
@@ -366,7 +366,7 @@ export const STAGES = [
       return {
         log: 'Five iron(II) ions matched one permanganate ion.',
         title: 'The Overall Equation',
-        body: `Once electrons match, they cancel out of the overall equation: ${equationText(o.left, o.right)}. Both sides have a total charge of ${o.charge.left}.`
+        body: `${m.electrons} e⁻ on each side cancel out: ${equationText(o.left, o.right)}. Both sides have total charge +${o.charge.left}.`
       };
     }
   },
@@ -375,12 +375,21 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'Four Sealed Reactions',
-    prompt: 'Tap the letters (A–D) on the Model for the reactions that are redox.',
+    prompt: 'Check the four equations, then tap the letters (A–D) on the Model for the reactions that are redox.',
     widget,
     // Four sealed beakers side by side in the model; tapping one marks its reaction as redox (hidden dials `r0` to `r3`).
-    table: cellTable({ fixtures: [] }, { w: 150, h: 6 }),
+    table: cellTable({
+      fixtures: [
+        plaqueFixture('eqs', 'The four reactions', { x: 75, y: 15 }, [
+          'A: Zn + CuSO₄ → ZnSO₄ + Cu',
+          'B: AgNO₃ + NaCl → AgCl + NaNO₃',
+          'C: Mg + 2 HCl → MgCl₂ + H₂',
+          'D: NaOH + HCl → NaCl + H₂O'
+        ], { w: 144 })
+      ]
+    }, { w: 150, h: 30 }),
     hints: [
-      'Tap the letter (A–D) of each reaction that is redox.',
+      'Read the four equations above the Model and look for any pure element (oxidation number 0) becoming a compound or ion.',
       'Check each element\'s Before and After oxidation numbers in each reaction.',
       'A reaction is redox only if at least one element\'s oxidation number changes.'
     ],
@@ -405,7 +414,7 @@ export const STAGES = [
       const rx = id => SORT[id].text;
       const mv = id => movers(id).map(m => m.el).join(' and ');
       return {
-        log: 'Only the reactions whose oxidation numbers changed were redox.',
+        log: 'Reactions A and C logged as redox.',
         title: 'Redox or Not',
         body: `Reactions A and C changed oxidation numbers (${mv('a')} in A; ${mv('c')} in C), while B and D did not. A reaction is redox only when an oxidation number changes.`
       };

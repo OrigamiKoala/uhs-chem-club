@@ -9,7 +9,6 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   rateTable, kvesselFixture, rateslogFixture, rateboardFixture, stmt
 } from '../../table/kits/rate.js';
@@ -41,45 +40,45 @@ export const STAGES = [
     title: 'Doubling A',
     briefing: {
       speaker: SPEAKER,
-      body: 'The initial-rates log records the starting concentrations you set and the initial rate measured for each run.'
+      body: 'The three feeds are A, B, and C, and brackets like [A] mean concentration in mol/L. Initial rate is the reaction speed at the very start, before reactant runs low.'
     },
-    prompt: 'When the concentration of A doubles, what happens to the rate?',
+    prompt: 'When the concentration of feed A doubles, what happens to the initial rate?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('same', 'No change', { x: 18, y: 52 }),
-        stmt('double', 'Doubles', { x: 52, y: 52 }),
-        stmt('four', 'Four times', { x: 86, y: 52 }),
-        stmt('half', 'Halves', { x: 120, y: 52 })
+        stmt('same', 'No change', { x: 18, y: 53 }),
+        stmt('double', 'Doubles', { x: 52, y: 53 }),
+        stmt('four', 'Four times', { x: 86, y: 53 }),
+        stmt('half', 'Halves', { x: 120, y: 53 })
       ],
       fixtures: [
-        kvesselFixture('v1', { x: 30, y: 22 }, {
-          title: 'Manifold A',
+        kvesselFixture('v1', { x: 28, y: 22 }, {
+          title: 'Feed A',
           order: 1,
           k: 0.05,
           a0: 0.40,
           tMax: 20,
-          w: 48,
-          h: 32,
+          w: 50,
+          h: 36,
           logTo: 'log',
           concDials: { A: { values: [0.10, 0.20, 0.40], start: 1 } },
           concRateLaw: { k: 0.05, orders: { A: 1 } }
         }),
-        rateslogFixture('log', { x: 82, y: 22 }, {
+        rateslogFixture('log', { x: 78, y: 22 }, {
           title: 'Initial-rates log',
           species: ['A'],
-          w: 42,
-          h: 32
+          w: 44,
+          h: 36
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Effect of doubling [A]', at: { x: 128, y: 22 }, size: { w: 32, h: 14 } }]
+        slots: [{ id: 'ans', label: 'Effect of doubling [A]', at: { x: 128, y: 22 }, size: { w: 38, h: 14 } }]
       }
     }),
     hints: [
-      'Set "[A]" to 0.10 and 0.20 mol/L, press "Run" for each, and read the log.',
+      'Set "[A]" to 0.10 and press "Run", then set "[A]" to 0.20 and press "Run".',
       'Compare the two initial rates in the log when [A] doubles.',
-      'Dividing the second rate by the first gives the factor.'
+      'Check how many times larger the second rate is than the first.'
     ],
     check(state) {
       const rows = state.table.fixtures.log.props.rows || [];
@@ -88,15 +87,15 @@ export const STAGES = [
       }
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Effect of doubling [A]".' };
-      if (card.id === 'four') return { ok: false, msg: 'From [A] = 0.10 to 0.20, the logged rate rose from 0.005 to 0.010, a factor of 2.' };
-      if (card.id === 'same') return { ok: false, msg: 'Doubling [A] from 0.10 to 0.20 changed the rate from 0.005 to 0.010.' };
-      if (card.id === 'half') return { ok: false, msg: 'The logged rate increased from 0.005 to 0.010 when [A] doubled.' };
+      if (card.id === 'four') return { ok: false, msg: 'Check the two rows in the log: the rate did not jump by 4×.' };
+      if (card.id === 'same') return { ok: false, msg: 'Check the two rows in the log: the rate changed when [A] doubled.' };
+      if (card.id === 'half') return { ok: false, msg: 'Check the two rows in the log: the rate went up, not down.' };
       return { ok: true };
     },
     reward: {
       log: 'Doubling [A] doubled the initial rate.',
       title: 'Doubling [A]',
-      body: 'Doubling [A] doubled the initial rate, so the rate scales 1-for-1 with [A] (first order).'
+      body: 'Doubling [A] doubled the initial rate, so rate rises in step with [A].'
     }
   },
 
@@ -104,15 +103,15 @@ export const STAGES = [
   {
     id: 's2-b-and-c',
     title: 'B and C',
-    prompt: 'What does doubling B do to the rate, and what does doubling C do?',
+    prompt: 'What happens to the rate when you double B, and when you double C?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('B', 'Doubling B', { x: 30, y: 52 }),
-        stmt('C', 'Doubling C', { x: 64, y: 52 })
+        stmt('B', 'Doubling B', { x: 30, y: 53 }),
+        stmt('C', 'Doubling C', { x: 64, y: 53 })
       ],
       fixtures: [
-        kvesselFixture('v1', { x: 31, y: 24 }, {
+        kvesselFixture('v1', { x: 29, y: 22 }, {
           title: 'Feeds B and C',
           equation: 'A + 2 B + C → P',
           order: 1,
@@ -120,7 +119,7 @@ export const STAGES = [
           a0: 0.40,
           tMax: 20,
           w: 52,
-          h: 34,
+          h: 40,
           logTo: 'log',
           concDials: {
             B: { values: [0.10, 0.20], start: 1 },
@@ -128,25 +127,25 @@ export const STAGES = [
           },
           concRateLaw: { k: 1.0, orders: { B: 2, C: 0 } }
         }),
-        rateslogFixture('log', { x: 83, y: 24 }, {
+        rateslogFixture('log', { x: 80, y: 22 }, {
           title: 'Initial-rates log',
           species: ['B', 'C'],
           w: 44,
-          h: 34
+          h: 40
         })
       ],
       zones: {
         trays: [
-          { id: 'same', label: 'No change', at: { x: 128, y: 14 }, size: { w: 32, h: 12 }, cellH: 8 },
-          { id: 'double', label: 'Doubles', at: { x: 128, y: 32 }, size: { w: 32, h: 12 }, cellH: 8 },
-          { id: 'four', label: 'Four times', at: { x: 128, y: 50 }, size: { w: 32, h: 12 }, cellH: 8 }
+          { id: 'same', label: 'No change', at: { x: 129, y: 12 }, size: { w: 38, h: 13 }, cellH: 8 },
+          { id: 'double', label: 'Doubles', at: { x: 129, y: 31 }, size: { w: 38, h: 13 }, cellH: 8 },
+          { id: 'four', label: 'Four times', at: { x: 129, y: 50 }, size: { w: 38, h: 13 }, cellH: 8 }
         ]
       }
     }),
     hints: [
-      'Run two trials changing only "[B]", then two trials changing only "[C]".',
-      'Check how much the logged rate changes when each concentration doubles.',
-      'A rate that becomes four times as large is 2²; an unchanged rate means that reactant has zero effect.'
+      'Change one dial at a time: run the baseline, double only [B] and run, then reset [B] and double only [C].',
+      'Compare each new row in the log with the baseline row.',
+      'See how many times larger the rate gets when [B] doubles, and whether doubling [C] changes it at all.'
     ],
     check(state) {
       const pieces = Object.values(state.table.pieces);
@@ -156,17 +155,17 @@ export const STAGES = [
       }
       const zoneOf = id => pieces.find(p => p.id === id)?.zone;
       if (zoneOf('B') !== 'tray:four') {
-        return { ok: false, msg: 'When [B] doubled from 0.10 to 0.20 with [C] fixed, the rate rose from 0.010 to 0.040.' };
+        return { ok: false, msg: 'Compare two rows in the log where only [B] doubles and [C] stays the same.' };
       }
       if (zoneOf('C') !== 'tray:same') {
-        return { ok: false, msg: 'When [C] doubled from 0.10 to 0.20 with [B] fixed, the rate stayed 0.010.' };
+        return { ok: false, msg: 'Compare two rows in the log where only [C] doubles and [B] stays the same.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'Doubling B quadrupled the rate; doubling C had no effect.',
       title: 'Measured Effects',
-      body: 'Doubling B made the rate four times as large and doubling C changed nothing. The equation does not tell you this; only the runs do.'
+      body: 'Doubling B made the rate four times as fast (2² = 4), while doubling C changed nothing. Only testing the feeds reveals this.'
     }
   },
 
@@ -176,7 +175,7 @@ export const STAGES = [
     title: 'Writing the Law',
     briefing: {
       speaker: SPEAKER,
-      body: 'A rate law writes the rate as a rate constant, k, times each concentration raised to a power called its order: 1 if doubling doubles the rate, 2 if four times, 0 if no change.'
+      body: 'A rate law has the form rate = k[A]^a[B]^b[C]^c, where k is the rate constant and each exponent is a feed\'s order. Doubling a feed gives 1× rate for order 0, 2× for order 1, and 4× for order 2.'
     },
     prompt: 'What is the rate law for this reaction?',
     widget,
@@ -187,7 +186,7 @@ export const STAGES = [
           title: 'Measured log',
           species: ['A', 'B', 'C'],
           w: 66,
-          h: 42,
+          h: 44,
           initialRows: [
             { A: 0.10, B: 0.10, C: 0.10, rate: 0.005 },
             { A: 0.20, B: 0.10, C: 0.10, rate: 0.010 },
@@ -198,16 +197,17 @@ export const STAGES = [
         rateboardFixture('board', { x: 112, y: 30 }, {
           title: 'Rate-law board',
           species: ['A', 'B', 'C'],
+          maxOrder: 2,
           w: 68,
-          h: 28
+          h: 44
         })
       ],
       zones: {}
     }),
     hints: [
-      'Turn the power dials on the rate-law board to match the log.',
-      'Match each reactant\'s doubling factor to its power: 1× → 0, 2× → 1, 4× → 2.',
-      'Use 2¹ = 2, 2² = 4, and 2⁰ = 1 to set the powers on A, B, and C.'
+      'Tap 0, 1, or 2 on each reactant\'s row on the rate-law board.',
+      'Pick two rows in the log where only one concentration changes.',
+      'Match each doubling effect to its order: 1× is order 0, 2× is order 1, and 4× is order 2.'
     ],
     check(state) {
       const d = state.table.fixtures.board.dials;
@@ -217,15 +217,15 @@ export const STAGES = [
       if (o0 === 0 && o1 === 0 && o2 === 0) {
         return { ok: false, notYet: true, msg: 'Set the order dials on the rate-law board.' };
       }
-      if (o0 !== 1) return { ok: false, msg: 'In rows 1-2, doubling [A] doubled the rate from 0.005 to 0.010.' };
-      if (o1 !== 2) return { ok: false, msg: 'In rows 2-3, doubling [B] multiplied the rate by 4 (0.010 to 0.040).' };
-      if (o2 !== 0) return { ok: false, msg: 'In rows 3-4, doubling [C] left the rate unchanged at 0.040.' };
+      if (o0 !== 1 || o1 !== 2 || o2 !== 0) {
+        return { ok: false, msg: 'At least one order does not match the log. Pick two rows where only one feed changes and check how much the rate scales.' };
+      }
       return { ok: true };
     },
     reward: {
       log: 'Rate law = k[A][B]²; orders 1, 2, 0.',
       title: 'Rate Law & Orders',
-      body: 'rate = k[A][B]². The reaction is first order in A, second order in B, and zero order in C, with rate constant k.'
+      body: 'The rate law is rate = k[A][B]²: first order in A, second order in B, zero order in C, with rate constant k.'
     }
   },
 
@@ -235,7 +235,7 @@ export const STAGES = [
     title: 'Finding k',
     briefing: {
       speaker: SPEAKER,
-      body: 'To find the rate constant k, plug one row from the log into the rate law.',
+      body: 'Plug any row from the log into the rate law to solve for k. Its units, L²/(mol²·s), make the rate come out in mol/(L·s).',
       worked: [
         'Example: rate = 0.020 = k × 0.10 × 0.20²',
         '0.10 × 0.04 = 0.0040',
@@ -253,7 +253,7 @@ export const STAGES = [
           species: ['NO', 'O₂'],
           rateLawText: 'rate = k[NO]²[O₂]',
           w: 96,
-          h: 38,
+          h: 40,
           initialRows: [
             { NO: 0.10, 'O₂': 0.10, rate: 0.0020 },
             { NO: 0.20, 'O₂': 0.10, rate: 0.0080 }
@@ -263,9 +263,9 @@ export const STAGES = [
       zones: {}
     }),
     hints: [
-      'Read row 1\'s concentrations and initial rate from the log, then type k.',
-      'Square [NO] before multiplying by [O₂].',
-      'The law says rate = k times the concentrations to their powers, so one row holds everything except k.'
+      'Read row 1\'s concentrations and initial rate from the log.',
+      'Square [NO] first, then multiply by [O₂].',
+      'Since rate = k[NO]²[O₂], one row gives you every number except k.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'k');
@@ -277,7 +277,7 @@ export const STAGES = [
     reward: {
       log: 'Rate constant k = 2.0 L²/(mol²·s).',
       title: 'Rate Constant k',
-      body: 'Dividing row 1\'s rate by 0.10² × 0.10 gives k = 2.0 L²/(mol²·s). Row 2 gives the exact same k.'
+      body: 'Row 1 gives k = 0.0020 ÷ (0.10² × 0.10) = 2.0 L²/(mol²·s). Row 2 gives the exact same k.'
     }
   },
 
@@ -285,6 +285,10 @@ export const STAGES = [
   {
     id: 's5-predict-rate',
     title: 'A Run Not Made',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Use the rate law at the top of the log with run 3\'s concentrations to predict its rate.'
+    },
     prompt: 'What will the rate be in run 3?',
     entry: { id: 'rate', label: 'Run 3 rate', unit: 'mol/(L·s)' },
     widget,
@@ -296,7 +300,7 @@ export const STAGES = [
           species: ['NO', 'O₂'],
           rateLawText: 'rate = 2.0 [NO]²[O₂]',
           w: 96,
-          h: 40,
+          h: 42,
           initialRows: [
             { NO: 0.10, 'O₂': 0.10, rate: 0.0020 },
             { NO: 0.20, 'O₂': 0.10, rate: 0.0080 },
@@ -307,9 +311,9 @@ export const STAGES = [
       zones: {}
     }),
     hints: [
-      'Use the rate law and k from runs 1-2 with run 3\'s concentrations, then type the rate.',
-      'Remember [NO] is squared while [O₂] is to the first power.',
-      'Run 3 has its own concentrations; the law and the constant from runs 1 and 2 still hold.'
+      'Read the rate law at the top of the log and run 3\'s concentrations.',
+      'Remember that [NO] is squared while [O₂] is to the first power.',
+      'The same rate law and k = 2.0 apply to run 3\'s concentrations.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'rate');
@@ -319,29 +323,22 @@ export const STAGES = [
         return { ok: false, msg: '0.12 treats [NO] as first order instead of squared.' };
       }
       if (Math.abs(val - 0.018) <= 0.002) {
-        return { ok: false, msg: '0.018 uses [O₂] = 0.10 rather than 0.20.' };
+        return { ok: false, msg: '0.018 uses [O₂] = 0.10 instead of 0.20.' };
       }
       return { ok: false, msg: `${val} mol/(L·s) does not match 2.0 × 0.30² × 0.20.` };
     },
     reward: {
       log: 'Predicted run 3 rate = 0.036 mol/(L·s).',
       title: 'Predicting a Rate',
-      body: 'With k = 2.0, run 3 gives 0.036 mol/(L·s). A rate law summarizes the runs so you can predict unmeasured ones.'
+      body: 'With k = 2.0, run 3 gives 0.036 mol/(L·s). A rate law lets you predict rates for runs you have not measured yet.'
     }
   }
 ];
 
-applyNotes(STAGES, {
-  1: ['Vary "[A]" and press "Run" to fill the log, then place one card in the slot.'],
-  2: ['Vary "[B]" and "[C]" with "Run", then sort both cards into the trays.'],
-  3: ['Turn the three order dials on the rate-law board.'],
-  4: ['Type the rate constant k from the logged runs.'],
-  5: ['Type the predicted rate for run 3.']
-});
 
 export const DEBRIEF = {
   title: 'Rate Law Complete',
-  body: 'Initial-rate experiments reveal each reactant\'s order and the rate constant k, letting you predict rates for new runs.'
+  body: 'Initial-rate runs reveal each reactant\'s order and the rate constant k, letting you predict rates for new mixtures.'
 };
 
 const put = (piece, to) => ({ place: { piece, to } });

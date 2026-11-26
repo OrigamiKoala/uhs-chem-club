@@ -22,7 +22,6 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, block, charge, note, tag, cupFixture, plaqueFixture, markerFixture, leadFixture, curveFixture, cupRead, markerRead, fixed,
   SPECIFIC_HEAT_WATER, heatTransfer, blockSpecificHeat
@@ -379,17 +378,6 @@ export const STAGES = [
   }
 ];
 
-/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
-const NOTES = {
-  1: ['Drag your prediction into the slot.'],
-  2: ['Adjust the "Heater" dial on the iron panel.'],
-  3: ['Type your answer in the box below.'],
-  4: ['Drag the mix onto the cup, then type your answer.'],
-  5: ['Drag the fitting onto the cup;', 'drag a metal card into the slot.'],
-  6: ['Drag along the graph to move the burner, then type your answer.'],
-  7: ['Drag along the graph to move the burner, then type your answer.']
-};
-applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

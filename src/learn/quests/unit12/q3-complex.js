@@ -19,7 +19,6 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { applyNotes } from '../../table/notes.js';
 import { lodeTable, beakerFixture, beakerRead, cplxFixture, cplxRead, lchoiceFixture, chosen, note, plaqueFixture, lodeLeadFixture } from '../../table/kits/lode.js';
 import { LIGANDS, fitCount } from '../../engine/lodedata.js';
 
@@ -280,17 +279,6 @@ export const STAGES = [
   }
 ];
 
-const NOTES = {
-  1: ['Press "Add Ammonia", then tap your answer.'],
-  2: ['Drag the card you choose into the slot.'],
-  3: ['Press "Bond", then tap your answer.'],
-  4: ['Press the "Add" key on the bench.'],
-  5: ['Press the "Add" key on the bench.'],
-  6: ['Tap a ring to choose what bonds there.'],
-  7: ['Press the "Add" key on the bench.'],
-  8: ['Tap a ring to choose what bonds there.']
-};
-applyNotes(STAGES, NOTES);
 
 export const DEBRIEF = {
   speaker: SPEAKER,
