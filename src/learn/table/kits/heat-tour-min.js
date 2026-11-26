@@ -93,5 +93,7 @@ demo('pc_shift', 'q6-entropy', 3, { max: 3 });
 demo('pc_phase', 'q6-entropy', 5, { max: 3 });
 addTourDemo('heat:fx_plot', () => dialDemo('q7-gibbs', 2, 'plot', 'temp', [0, 0.5, 1]));
 demo('pc_gcard', 'q7-gibbs', 3, { max: 3 });
+addTourDemo('heat:fx_warm', () => dialDemo('q6-entropy', 4, 'warmer', 'temp', [0, 0.5, 1]));
 addTourDemo('*:rail', () => stageDemo(unit('q3-enthalpy'), 5, { max: 3 }));
 addTourDemo('heat:predict', () => stageDemo(unit('q4-bonds'), 0, { max: 1 }));
+addTourDemo('heat:predict_slot', () => stageDemo(unit('q4-bonds'), 0, { max: 1 }));

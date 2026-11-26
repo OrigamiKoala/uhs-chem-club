@@ -42,8 +42,8 @@ export function checkKettleData() {
   eq('Mg+O is not Mg2O2', ionicFormula('Mg', 'O').formula, 'MgO');
   eq('needle: Mg + 2 Cl', netCharge({ Mg: 1, Cl: 2 }), 0);
   eq('needle: Mg + Cl', netCharge({ Mg: 1, Cl: 1 }), 1);
-  eq('charge text', chargeText(-1), '−');
-  eq('charge text 2+', chargeText(2), '²+');
+  eq('charge text', chargeText(-1), '⁻');
+  eq('charge text 2+', chargeText(2), '²⁺');
 
   // Names.
   eq('name NaCl', nameIonic('Na', 'Cl'), 'sodium chloride');
@@ -102,7 +102,7 @@ export function checkKettleData() {
   const pb = mix(['Pb2', 'NO3'], ['K', 'I']);
   eq('PbI2 forms', pb.solids.map(s => s.formula), ['PbI2']);
   eq('Pb/I spectators', pb.spectators.sort(), ['K', 'NO3']);
-  eq('Pb/I net', netIonicText(pb.net), 'Pb²+(aq) + 2 I−(aq) → PbI₂(s)');
+  eq('Pb/I net', netIonicText(pb.net), 'Pb²⁺(aq) + 2 I⁻(aq) → PbI₂(s)');
   eq('NaCl+KNO3 nothing', mix(['Na', 'Cl'], ['K', 'NO3']).reacts, false);
   eq('AgCl', mix(['Ag', 'NO3'], ['Na', 'Cl']).solids.map(s => s.formula), ['AgCl']);
   eq('BaSO4', mix(['Ba', 'Cl'], ['Na', 'SO4']).solids.map(s => s.formula), ['BaSO4']);
@@ -110,7 +110,7 @@ export function checkKettleData() {
   const ab = mix(['H', 'Cl'], ['Na', 'OH']);
   eq('acid + base water', ab.water, true);
   eq('acid + base spectators', ab.spectators.sort(), ['Cl', 'Na']);
-  eq('acid + base net', netIonicText(ab.net), 'H+(aq) + OH−(aq) → H₂O(l)');
+  eq('acid + base net', netIonicText(ab.net), 'H⁺(aq) + OH⁻(aq) → H₂O(l)');
   eq('two solids (BaSO4 and Fe(OH)3)', mix(['Ba', 'OH'], ['Fe3', 'SO4']).solids.length, 2);
   eq('CuCO3', mix(['Cu2', 'NO3'], ['Na', 'CO3']).solids.map(s => s.formula), ['CuCO3']);
   eq('Fe(OH)3', mix(['Fe3', 'Cl'], ['Na', 'OH']).solids.map(s => s.formula), ['Fe(OH)3']);

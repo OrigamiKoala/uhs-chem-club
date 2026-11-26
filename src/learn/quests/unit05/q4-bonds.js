@@ -88,11 +88,12 @@ export const STAGES = [
     widget,
     table: heatTable({
       pieces: [
-        note('in', 'Absorbs energy', { x: 28, y: 18 }),
-        note('out', 'Releases energy', { x: 75, y: 18 }),
-        note('none', 'Needs no energy', { x: 122, y: 18 })
+        note('in', 'Absorbs energy', { x: 24, y: 16 }),
+        note('out', 'Releases energy', { x: 70, y: 16 }),
+        note('none', 'Needs no energy', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 75, y: 45 }, size: { w: 50, h: 20 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'bond', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
     }),
     hints: [
       'Think about what holds two bonded hydrogen atoms together.',

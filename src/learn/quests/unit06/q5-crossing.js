@@ -124,7 +124,7 @@ export const STAGES = [
         if (have < FLAT_END) return { ok: false, msg: `You have added ${fixed(have, 1)} kJ so far. Keep pressing "Heat" until the curve flattens out and starts climbing again.` };
         const v = markerRead(t, 'mk');
         if (Math.abs(v - FLAT_END) <= 0.6) return { ok: true };
-        const where = v < FLAT_START ? 'is still warming the solid ice' : v < FLAT_END ? 'is still on the flat melting stretch' : 'is already climbing again as liquid water';
+        const where = v < FLAT_START ? 'is still warming the solid ice' : v < FLAT_END ? 'is still on the flat plateau' : 'is already climbing again as liquid water';
         return { ok: false, msg: `At ${v} kJ, the curve ${where}. Set the dial to where the flat stretch ends.` };
       },
       reward: {

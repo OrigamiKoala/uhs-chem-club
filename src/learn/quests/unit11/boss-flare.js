@@ -259,10 +259,10 @@ export const STAGES = [
     widget,
     table: rateTable({
       pieces: [
-        stmt('mech1', '1 (slow): X + Y → XY; 2 (fast): XY + X → Z', { x: 96, y: 9 }),
-        stmt('mech2', '1 (fast): 2 X ⇌ X₂; 2 (slow): X₂ + Y → Z', { x: 96, y: 22.5 }),
-        stmt('mech3', '1 (slow): X + X → X₂; 2 (fast): X₂ + Y → Z', { x: 96, y: 36 }),
-        stmt('mech4', '1 (fast): 2 Y ⇌ Y₂; 2 (slow): X + Y₂ → Z', { x: 96, y: 49.5 })
+        stmt('mech1', '1 (slow): X + Y → XY; 2 (fast): XY + X → Z', { x: 96, y: 8 }),
+        stmt('mech2', '1 (fast): 2 X ⇌ X₂; 2 (slow): X₂ + Y → Z', { x: 96, y: 23 }),
+        stmt('mech3', '1 (slow): X + X → X₂; 2 (fast): X₂ + Y → Z', { x: 96, y: 38 }),
+        stmt('mech4', '1 (fast): 2 Y ⇌ Y₂; 2 (slow): X + Y₂ → Z', { x: 96, y: 53 })
       ],
       fixtures: [
         plaqueFixture('obs', p5.species, { x: 34, y: 20 }, [

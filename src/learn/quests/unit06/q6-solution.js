@@ -305,7 +305,7 @@ export const STAGES = [
         const v = entryNumber(t, 'n');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter your answer in the field at the bottom.' };
         if (Math.abs(v - N_ASKED) <= 0.01) return { ok: true };
-        if (Math.abs(v - MOLES) <= 0.01) return { ok: false, msg: `${v} mol assumes one particle per CaCl₂ unit, but the window shows each unit splitting into multiple ions.` };
+        if (Math.abs(v - MOLES) <= 0.01) return { ok: false, msg: `${v} mol assumes one particle per CaCl₂ unit, but the window shows each unit splitting into more than one particle.` };
         return { ok: false, msg: `${v} mol does not match 0.100 mol of CaCl₂ based on the particles shown in the window.` };
       },
       get reward() {
@@ -362,7 +362,7 @@ export const STAGES = [
       reward: {
         log: 'Salt and sugar dissolved in water, wax in oil, and acetone in both.',
         title: 'Like Dissolves Like',
-        body: 'Like dissolves like: substances with similar intermolecular attractions dissolve in each other. Polar salt and sugar dissolve in water, nonpolar wax dissolves in oil, and acetone is miscible with both.'
+        body: 'Like dissolves like: solubility depends on matching intermolecular attractions. Polar salt and sugar are soluble in water, nonpolar wax in oil, and acetone is miscible with both.'
       }
     };
   })(),

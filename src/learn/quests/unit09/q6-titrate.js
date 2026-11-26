@@ -270,7 +270,7 @@ export const STAGES = [
     table: phTable({
       fixtures: [
         buretteAt({ samples: [{ title: 'Sulfurous acid', sub: sub(SULFUROUS), ...SULFUROUS, meter: true }], cap: 30, steps: [20, 10, 5], stepLabels: ['2 mL', '1 mL', '0.5 mL'] }, 24),
-        curveFixture('curve', { x: 112, y: 38 }, { burette: 'bur', series: [{ sample: 0, name: 'Sulfurous acid', short: 'pH' }], xMax: 30, xTick: 5, log: true, w: 124, h: 66 }),
+        curveFixture('curve', { x: 112, y: 34 }, { burette: 'bur', series: [{ sample: 0, name: 'Sulfurous acid', short: 'pH' }], xMax: 30, xTick: 5, log: true, w: 124, h: 58 }),
         selectorFixture('pick', 'Protons per molecule', { x: 112, y: 84 }, { options: ['One', 'Two', 'Three', ' '], start: 4, w: 56 })
       ]
     }, { w: 178, h: 100 }),

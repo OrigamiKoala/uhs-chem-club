@@ -277,7 +277,7 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the mass of salt in grams.' };
         if (within(v, NACL_ASKED, 0.6)) return { ok: true };
         const w = weighed(t, 'bal');
-        const trial = w != null && w > 0 ? ` Check your conversion from ${CL2_ASKED.toFixed(1)} g Cl₂ through moles.` : ' Run the vessel and weigh the catch jar, or convert through moles.';
+        const trial = w != null && w > 0 ? ` Compare the ${fixed(w, 1)} g weighed from ${CL2_TRIAL.toFixed(1)} g Cl₂ with ${CL2_ASKED.toFixed(1)} g Cl₂.` : ' Run the vessel and weigh the catch jar first.';
         return { ok: false, msg: `${fixed(v, 1)} g does not match.${trial}` };
       },
       reward: {
@@ -372,7 +372,7 @@ export const STAGES = [
         const v = typedValue(t, 'g');
         if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the mass of hydrogen in grams.' };
         if (within(v, H2_LEFT, 0.06)) return { ok: true };
-        return { ok: false, msg: `Check: the leftover hydrogen is not ${fixed(v, 1)} g. Convert both starting masses to moles first.` };
+        return { ok: false, msg: `${fixed(v, 1)} g does not match what is left over from 12.0 g H₂ and 64.0 g O₂.` };
       },
       reward: {
         log: 'Oxygen ran out; 4.0 g of hydrogen was left.',
@@ -413,7 +413,7 @@ export const STAGES = [
         if (within(v, CO2_ASKED, 0.2)) return { ok: true };
         const runs = runsOf(t, 'pot');
         if (!runs.length) return { ok: false, msg: 'Heat the limestone in the vessel first.' };
-        return { ok: false, msg: `The gas volume for ${LIME_ASKED.toFixed(1)} g of limestone is not ${fixed(v, 1)} L. Convert ${LIME_ASKED.toFixed(1)} g to moles using the plaque.` };
+        return { ok: false, msg: `The gas volume for ${LIME_ASKED.toFixed(1)} g of limestone is not ${fixed(v, 1)} L; compare with the ${LIME_TRIAL.toFixed(1)} g trial.` };
       },
       reward: {
         log: '50.0 g of limestone gives 12.2 L of carbon dioxide.',
@@ -459,7 +459,7 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the percent.' };
         if (within(v, YIELD_PCT, 1)) return { ok: true };
         const w = weighed(t, 'bal');
-        const trial = w != null && w > 0 ? ` ${fixed(w, 1)} g is the mass of iron the furnace made — compare it to the theoretical yield from ${ORE_G.toFixed(1)} g of ore.` : ' Run the furnace and weigh the catch jar.';
+        const trial = w != null && w > 0 ? ` ${fixed(w, 1)} g is the mass of iron the furnace made — compare it to the maximum iron allowed from ${ORE_G.toFixed(1)} g of ore.` : ' Run the furnace and weigh the catch jar.';
         return { ok: false, msg: `${fixed(v, 1)}% is not the percent yield.${trial}` };
       },
       reward: {

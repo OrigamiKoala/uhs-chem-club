@@ -133,7 +133,7 @@ export const STAGES = [
     reward: {
       log: 'The particles almost always ended up spread across both boxes.',
       title: 'Statistically Spread Out',
-      body: 'There are 16 possible ways to distribute 4 particles among the two boxes (left and right), and only 1 way for all the particles to end up in the left box. Statistically, it is much more likely for the particles to be spread out.'
+      body: 'There are 16 ways to distribute 4 particles across the two boxes, and only 1 way for all four to land in the left box. Statistically, it is much more likely for the particles to be spread out.'
     }
   },
 

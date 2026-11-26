@@ -485,7 +485,7 @@ export function buildCurveChamber3d(w, d, { mats: m, own }) {
   const coldC = new THREE.Color('#6f8fb0');
   const warmC = new THREE.Color('#d97834');
 
-  g.userData.set = st => { stateRef = st; };
+  g.userData.set = st => { stateRef = st; g.userData.tick(0, true); };
   g.userData.tick = (dt, still) => {
     if (!still && dt > 0) clock += Math.min(dt, 0.04);
     const { T, phase, kind, mix } = stateRef;

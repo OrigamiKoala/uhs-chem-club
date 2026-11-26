@@ -312,7 +312,7 @@ export const STAGES = [
         if (card === 'inside') {
           if (readCount < 2) return { ok: false, msg: 'Read the ice jar at two different temperatures in the analyzer first.' };
           const n = (t.pieces.ja.props.reads || {})['5'] || Object.values(t.pieces.ja.props.reads || {})[0];
-          return { ok: false, msg: `The analyzer still read ${n} after melting, so the bonds inside each molecule never broke.` };
+          return { ok: false, msg: `The analyzer still read ${n} after melting, so each molecule stayed intact.` };
         }
         return { ok: false, msg: 'The motion streaks are nearly as long at −10 °C as at 5 °C, so slow motion alone cannot lock ice in place.' };
       },
@@ -352,7 +352,7 @@ export const STAGES = [
         if (order.join() === S6_ORDER.join()) return { ok: true };
         const k = cards.findIndex((p, i) => i > 0 && cards[i - 1].props.mass < p.props.mass);
         const a = cards[k - 1]; const b = cards[k];
-        return { ok: false, msg: `${jarName(a)} (${fmt(a.props.mass)} g) is left of ${jarName(b)} (${fmt(b.props.mass)} g), so ${jarName(b)} has more molecules packed into the same volume.` };
+        return { ok: false, msg: `${jarName(a)} (${fmt(a.props.mass)} g) is left of ${jarName(b)} (${fmt(b.props.mass)} g), even though ${jarName(b)} has a larger mass in the same volume.` };
       },
       reward: {
         log: 'Ice (917 g) was less dense than liquid water (1000 g), and steam was nearly empty.',
@@ -385,7 +385,7 @@ export const STAGES = [
         if (Math.abs(v - TIMES) <= TIMES * 0.05) return { ok: true };
         const w = t.pieces.jw.props.mass; const s = t.pieces.js.props.mass;
         if (w == null || s == null) return { ok: false, msg: 'Weigh both jars on the balance first.' };
-        return { ok: false, msg: `The water jar is ${fmt(w)} g and the steam jar is ${fmt(s)} g, so ${fixed(v, v < 10 ? 2 : 0)}× does not match their ratio.` };
+        return { ok: false, msg: `The water jar is ${fmt(w)} g and the steam jar is ${fmt(s)} g, which does not match ${fixed(v, v < 10 ? 2 : 0)}×.` };
       },
       reward: {
         log: 'A liter of liquid water holds about 1,700 times as many molecules as a liter of steam.',

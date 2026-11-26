@@ -63,7 +63,7 @@ const Q_BATH = 5021;
 const FITTING = { m: 50, c: 0.385, T: 65.4 };
 // Stage 6: 10.0 g of ice starting at -20 °C heated to water at 40 °C so the player sees solid warming, melting at 0 °C, and liquid warming.
 // Warming ice (-20 -> 0): 418 J; melting at 0 °C: 3,340 J (cumulative 3,758 J); warming water (0 -> 40): 1,674 J (total 5,432 J).
-const MELT = { m: 10, from: -20, to: 40, steps: 41 };
+const MELT = { m: 10, from: -20, to: 40, steps: 49 };
 const L_ICE = 334;
 /** Where a given heat (J) leaves the 10.0 g of stage 6, in words: read from the curve's own path. */
 function meltReached(q) {

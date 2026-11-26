@@ -285,7 +285,7 @@ export const STAGES = [
         if (ids.some(id => t.pieces[id].props.grip == null)) return { ok: false, msg: 'Separate all four molecules in the probe first.' };
         const bad = ids.find(id => whereIs(t, id) !== want[id]);
         if (!bad) return { ok: true };
-        return { ok: false, msg: `${t.pieces[bad].label} is in "${t.zones.trays[whereIs(t, bad)].label}". Compare the probe readings: H₂O (40.7 kJ) and NH₃ (23.4 kJ) need far more heat than heavier H₂S (18.7 kJ) and PH₃ (14.6 kJ).` };
+        return { ok: false, msg: `${t.pieces[bad].label} is in "${t.zones.trays[whereIs(t, bad)].label}". Compare the probe readings: H₂O (40.7 kJ) and NH₃ (23.4 kJ) need far more heat than H₂S (18.7 kJ) and PH₃ (14.6 kJ).` };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
@@ -351,7 +351,7 @@ export const STAGES = [
         speaker: SPEAKER,
         body: 'Neopentane and n-pentane have the same C₅H₁₂ formula, but neopentane is a compact ball while n-pentane is a long chain.'
       },
-      prompt: 'Both n-pentane and neopentane are C₅H₁₂. Which needs more heat to separate a mole?',
+      prompt: 'Both n-pentane and neopentane are C₅H₁₂—which needs more heat to separate a mole?',
       widget,
       table: matterTable({
         pieces: [...cards, ...choices],

@@ -74,7 +74,7 @@ Read these before designing anything; a rebuilt world needs each of these proper
 | There is a far country | Spires, a natural arch, a smelter, a power line and a dragline beyond the walk | `ligar/vista.js`, `ligar/industry.js` |
 | The site has levels | Bench ground from -2.6 m (the sump, down a decline) to +0.9 m | `world-data/ligar.json` (`sublevel`, `mine`) |
 
-Build records: `docs/plans/tallow-ligar-world.md` section 4 ("What made it read as a toy") and
+Build records: `docs/archive/2026-11-26/plans/tallow-ligar-world.md` section 4 ("What made it read as a toy") and
 `docs/archive/2026-11-06/passes/bench-integration.md` (how the hosts and the mine were laid out).
 
 ---
@@ -261,7 +261,7 @@ shed is two rooms (the head house where the belt delivers, and the bagging shed 
 crystalliser built for it (the outdoor row stays the pre-evaporators); the loose crate stacks were removed. For the next world: a
 building on a pan that varies by centimetres needs a slab and a floor in the height field, or the crust comes up through it and every
 host moves; a belt or pipe through a wall wants its slot sized from the other object's part boxes, measured, not guessed. Spec, build
-record and the owner's viewing list: `docs/plans/tallow-ligar-world.md` section 5.
+record and the owner's viewing list: `docs/archive/2026-11-26/plans/tallow-ligar-world.md` section 5.
 
 **Lanternfall, 2026-11-18 (branch `site/lanternfall`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground
 0.00 to 15.40 m (15.4 m, eight floor levels), relief 16.8 m, housed 10 of 10 (R7 R7 R6 R7 R7 R8 R7 R7 R7 R7), no cloned coordinates,
@@ -275,7 +275,7 @@ loop round the lake; Bench 5's plate faces across the tent because at heading pi
 one card (a near miss in the table's pick, unfixed). The walk is a loop round a lake, as Mirrowen's is round a basin: told apart by a
 natural shore and moraine against built quays, and by the glacier crossing. For the next world: a term `max(y, k * v)` whose mask `k`
 is nought clamps any ground below 0 m up to 0 (it lifted the lake's bed to the ice); a feature narrower than the terrain's grid is drawn,
-not carved. Spec, build record and the owner's viewing list: `docs/plans/lanternfall-world.md`, "Site rebuild (2026-11-18)".
+not carved. Spec, build record and the owner's viewing list: `docs/archive/2026-11-26/plans/lanternfall-world.md`, "Site rebuild (2026-11-18)".
 
 **Bellows, 2026-11-18 (branch `site/bellows`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -8.00 to 12.00 m
 (20.0 m, six floor levels), relief 58.0 m (it counts the cloud sea under the gaps between decks), housed 6 of 6 (R7 R7 R7 R7 R7 R8), no cloned
@@ -287,7 +287,7 @@ looks past every side of every open volume a quarter metre at a time and rails a
 reachable cell is in a volume" is the check that holds it. Departures: none from the row; the walk is a hub with five arms, which no other row
 uses. For the next world: a round structure round a rectangular room leaves an unreachable ring between them that is seen from inside, so
 cover the whole structure, not only the room; a room hung in the air (the gondola) needs no legs and must have none. Spec, build record and the
-owner's viewing list: `docs/plans/bellows-world.md`, "Site rebuild (2026-11-18)".
+owner's viewing list: `docs/archive/2026-11-26/plans/bellows-world.md`, "Site rebuild (2026-11-18)".
 
 **Mirrowen, 2026-11-18 (branch `site/mirrowen`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -7.00 to
 1.20 m (8.2 m, seven floor levels), relief 15.0 m, housed 7 of 7 (R7 R8 R7 R8 R6 R7 R8), no cloned coordinates, no plate in view from
@@ -300,9 +300,9 @@ row also walks round water, so the two are told apart by built quay edges agains
 next world: a room aboard a ship is a volume inside the hull's plan with the deck cut away round it; a passage sloping down under a deck
 needs a roof that follows its floor and then runs flat under the deck, or the deck is holed at its low end; a host that sets `side` or a
 colour on a material from the world's `M` changes every body that shares it. Spec, build record and the owner's viewing list:
-`docs/plans/mirrowen-world.md`, "Site rebuild (2026-11-18)".
+`docs/archive/2026-11-26/plans/mirrowen-world.md`, "Site rebuild (2026-11-18)".
 
-**Ember Reach, 2026-11-18 (branch `site/ember`).** Built as the row says: the north-facing inside wall of a volcanic caldera stepping down 24 m across five levels (6 m per step) in a four-ramp switchback road with four hairpins toward a lava lake 20 m below Level 4; six rock-cut geothermal galleries (five distinct open-sided rock/sinter/brick/gantry/baffle architectures, two oriented sideways with 7.6 m railed lake-viewing bays) plus the enclosed gabled Turbine Hall at the foot. `world-shape.mjs`: bench ground 0.00 to 18.00 m (18.0 m, four levels), relief 24.15 m, housed 7 of 7 (R7 R7 R7 R7 R7 R7 R7), no cloned coordinates, 0 plates in view from spawn. `perf-worlds.mjs`: 369 draws, 141k triangles, 166 ms build (before: 464 draws, 250k triangles, 388 ms). Uses `lib/workings.js` (28 volumes: 14 open road/ramp/yard volumes, 7 doors, 7 rooms; `pass: false` 1.05 m railings along every lake-facing drop) and `lib/cover.js` (14 boxes, per-room sky residual 0.20–0.42). Departures: terrace steps were raised from 5 m to 6 m (1-in-5 ramps) so every gallery roof tucks cleanly below the terrace rail above it; `ember/terrain.js` retains `{ fbm2, buildRibbon, buildDisc }` exports for Mirrowen. Spec, build record and owner's viewing list: `docs/plans/ember-reach-world.md` ("Site rebuild (2026-11-18)").
+**Ember Reach, 2026-11-18 (branch `site/ember`).** Built as the row says: the north-facing inside wall of a volcanic caldera stepping down 24 m across five levels (6 m per step) in a four-ramp switchback road with four hairpins toward a lava lake 20 m below Level 4; six rock-cut geothermal galleries (five distinct open-sided rock/sinter/brick/gantry/baffle architectures, two oriented sideways with 7.6 m railed lake-viewing bays) plus the enclosed gabled Turbine Hall at the foot. `world-shape.mjs`: bench ground 0.00 to 18.00 m (18.0 m, four levels), relief 24.15 m, housed 7 of 7 (R7 R7 R7 R7 R7 R7 R7), no cloned coordinates, 0 plates in view from spawn. `perf-worlds.mjs`: 369 draws, 141k triangles, 166 ms build (before: 464 draws, 250k triangles, 388 ms). Uses `lib/workings.js` (28 volumes: 14 open road/ramp/yard volumes, 7 doors, 7 rooms; `pass: false` 1.05 m railings along every lake-facing drop) and `lib/cover.js` (14 boxes, per-room sky residual 0.20–0.42). Departures: terrace steps were raised from 5 m to 6 m (1-in-5 ramps) so every gallery roof tucks cleanly below the terrace rail above it; `ember/terrain.js` retains `{ fbm2, buildRibbon, buildDisc }` exports for Mirrowen. Spec, build record and owner's viewing list: `docs/archive/2026-11-26/plans/ember-reach-world.md` ("Site rebuild (2026-11-18)").
 
 **Quicklight, 2026-11-17 (branch `site/quicklight`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -4.00 to
 5.00 m (9.0 m, five levels), relief 13.6 m, housed 6 of 6 (R8 R7 R7 R7 R7 R8), no cloned coordinates, no plate in view from the spawn.
@@ -312,7 +312,7 @@ cellar in the sunk tank bund, which the row does not name; the Flare's mark is d
 arena table's collider as an axis-aligned box. For the next world: a roof member at 4.4 to 4.6 m across a plate's line stands in the
 lean-in camera's box (it reaches 4.6 m); `verify:arena` only passes a boss mark that faces along z; a unit packer needs a finer second
 pass along the alleys or the blocks read open at eye height. Spec, build record and the owner's viewing list:
-`docs/plans/quicklight-world.md` section 7.
+`docs/archive/2026-11-26/plans/quicklight-world.md` section 7.
 
 **Brinewire, 2026-11-17 (branch `site/brinewire`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground 0.00 to
 12.00 m (12.0 m, three levels), relief 12.6 m, housed 6 of 6 (R7 R7 R8 R8 R8 R7), no cloned coordinates, no plate in view from the
@@ -323,7 +323,7 @@ side are kerbs and railings, not parapets (a solid parapet hid the drop from a p
 through south windows (a west window's light landed past the door). For the next world: a parapet on a raised walk must not reach
 the eye, and a drop is only seen over a railing; test a view by ray from the eye at the edge before claiming it. The row's "needs
 a yes" on lore: the run was sent with this row as its brief, and `saga.js`'s marsh pools, cells and pylons fit the barrage
-unchanged. Spec, build record and the owner's viewing list: `docs/plans/brinewire-world.md` section 9.
+unchanged. Spec, build record and the owner's viewing list: `docs/archive/2026-11-26/plans/brinewire-world.md` section 9.
 
 **Verdigris, 2026-11-16 (branch `site/verdigris`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -3.60 to
 4.40 m (8.0 m), relief 8.0 m, housed 8 of 8 (R8 R7 R7 R7 R8 R7 R7 R8), no cloned coordinates (before: Teeter's first site's), no plate in
@@ -333,7 +333,7 @@ openings). Departures: the twin cistern's still-full cell is sunk 2 m deeper tha
 the sun comes in only at doors that face it and open onto a deck (a stair's foot is under a roof). For the next world: cut a water sheet away
 over anything hollow below it; a door's sun opening needs open ground on its far side; the strip behind a plate set 3 m from the wall is
 0.65 m deep. The standard in section 3 was not re-read against the owner's view (section 7): the owner has not yet seen Kettle, Lodestone or
-Teeter. Spec, build record and the owner's viewing list: `docs/plans/verdigris-world.md` section 8.
+Teeter. Spec, build record and the owner's viewing list: `docs/archive/2026-11-26/plans/verdigris-world.md` section 8.
 
 **Teeter, 2026-11-16 (branch `site/teeter`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground 0.00 to 16.50 m
 (16.5 m), relief 22.0 m, housed 8 of 8 (R7 R8 R7 R7 R7 R7 R7 R7), no cloned coordinates (before: Verdigris's), no plate in view from the
@@ -343,7 +343,7 @@ Departures: the walk shape is a comb (one stair, level dikes branching off), so 
 the sun comes into the rooms through their doors, not down a shaft (the sun is 14 degrees up). For the next world: a fixture placed from
 a room's middle lands on the plate; test height as well as plan wherever ground runs under a body. The standard in section 3 was not
 re-read against the owner's view (section 7) because the owner has not yet seen Kettle, Lodestone or Teeter. Spec, build record and the
-owner's viewing list: `docs/plans/teeter-world.md` section 9.
+owner's viewing list: `docs/archive/2026-11-26/plans/teeter-world.md` section 9.
 
 **Cinder Halo, 2026-11-14 (branch `world/unit14`).** Built new as the row says. `world-shape.mjs`: bench ground -12.50 to -2.00 m (10.5 m),
 relief 20.58 m, housed 6 of 6 (R8 R8 R8 R8 R8 R8), no cloned coordinates, no plate in view from the spawn. `perf-worlds.mjs`: 142 draws,
@@ -351,13 +351,13 @@ relief 20.58 m, housed 6 of 6 (R8 R8 R8 R8 R8 R8), no cloned coordinates, no pla
 `tools/lib/world-shape-checks.mjs`; `lib/workings.js` was not needed (each cell is its host's own body on a crater floor). New and
 world-local: a height field that is the lowest of the plain and every crater floor's and cutting's wall rise, so floors are flat and
 every wall rises from the walk; a dog-leg vestibule on every cell, checked by a ray from outside the vestibule to the plate. Spec,
-build record and the owner's viewing list: `docs/plans/cinderhalo-world.md` section 8.
+build record and the owner's viewing list: `docs/archive/2026-11-26/plans/cinderhalo-world.md` section 8.
 
 **Thornmere, 2026-11-14 (branch `world/unit13`).** Built new, not rebuilt: there was no site before. `world-shape.mjs`: bench
 ground 1.00 to 4.80 m (3.8 m), relief 6.40 m, housed 6 of 6 (R7 R8 R6 R7 R4 R7), no cloned coordinates. `perf-worlds.mjs`:
 172 draws, 150k triangles. It uses its own cover mask (`thornmere/cover.js`) and shape checks (`tools/lib/thornmere/`), written
 before the shared G2 and G3 layers reached its branch; moving onto them is a follow-up. Spec and build record:
-`docs/plans/thornmere-world.md` section 6 and 8.
+`docs/archive/2026-11-26/plans/thornmere-world.md` section 6 and 8.
 
 **Lodestone, 2026-11-14 (branch `site/lodestone`).** Built as the row says. `world-shape.mjs`: bench ground -13.0 to -2.0 m
 (11 m), relief 29.7 m, housed 6 of 6 (R6 R6 R6 R5 R6 R6), no cloned coordinates, no plate in view from the spawn.
@@ -369,7 +369,7 @@ squares), and rock coloured by height in the world. For the next world: keep 7 m
 (thinner, and the faces' lips land in the other part), hold the ground at the floor for longer than a grid cell's diagonal
 past the walk's edge, and turn a host's box colliders as boxes when it faces along an axis. `tools/glsl-check.mjs` compiles a
 world's patched shaders offline (`glslangValidator`); the cover mask's GLSL now has that evidence. Spec, departures and the
-owner's viewing list: `docs/plans/lodestone-world.md` section 7.
+owner's viewing list: `docs/archive/2026-11-26/plans/lodestone-world.md` section 7.
 
 **Groundwork, 2026-11-13 (branch `site/kettle`).** G1 `src/three/lib/workings.js`, G2 `src/three/lib/cover.js`,
 G3 `tools/lib/world-shape-checks.mjs` are built; G4 was already done; G5 is the "Shared site layers" entry in
@@ -401,5 +401,5 @@ Kettle then used all of it: `makeCover` (17 boxes, 4 openings) and the workings 
 because the built sky's sun stands 25 degrees up in the west-south-west and a roof slot's light would land on a wall;
 (2) a second closed heap, the ore stock, stands east of the works; (3) the bench housing is eight named bays
 (the row's "casting bays" are the stores, scale, pickling and refining bays). Measurements and the owner's viewing list:
-`docs/plans/kettle-world.md` sections 11.10 to 11.12. For the next world: the shared layers held without change after the
+`docs/archive/2026-11-26/plans/kettle-world.md` sections 11.10 to 11.12. For the next world: the shared layers held without change after the
 pilot's opt-ins; the things that cost time were ramps (entered only at their ends), the arena's clear ring, and door jambs.

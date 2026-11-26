@@ -120,7 +120,7 @@ export const STAGES = [
     title: 'Two Domains',
     briefing: {
       speaker: SPEAKER,
-      body: 'An electron domain is a bond or a lone pair on the central atom. Domains repel each other and spread as far apart as they can. Click an outer atom, the central atom, and a second outer atom to measure the angle.'
+      body: 'An electron domain is a bond or a lone pair on the central atom, and domains repel each other to spread as far apart as they can. Click an outer atom, the central atom, and a second outer atom to measure the angle.'
     },
     prompt: 'What is the angle between two electron domains?',
     widget: { type: 'table', label: 'The bench' },

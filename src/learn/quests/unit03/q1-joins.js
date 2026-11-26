@@ -225,7 +225,7 @@ export const STAGES = [
     title: 'Where the Electron Went',
     briefing: {
       speaker: SPEAKER,
-      body: 'Electronegativity (the number on each atom) measures how strongly an atom pulls on shared electrons. In an ionic bond, one atom takes electrons from the other and the opposite ions attract. In a covalent bond, atoms share electron pairs.'
+      body: 'Electronegativity (the number on each atom) measures how strongly an atom pulls on shared electrons. In an ionic bond, one atom takes electrons from the other so opposite ions attract, while in a covalent bond, atoms share electron pairs.'
     },
     prompt: 'Which pairs form an ionic bond, and which form a covalent bond?',
     widget: { type: 'table', label: 'The bench' },

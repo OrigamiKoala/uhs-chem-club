@@ -95,7 +95,7 @@ function missMsg(t, fid, shown, unit) {
   const r = titratorRead(t, fid);
   if (!r.rows.length) return { ok: false, msg: 'Open the tap to titrate the flask first.' };
   const seen = firstChange(t, fid);
-  const tail = seen == null ? 'the flask has not changed color yet.' : 'check the burette reading where the flask first changed color and convert to moles.';
+  const tail = seen == null ? 'the flask has not changed color yet.' : 'check the burette reading where the flask first changed color.';
   return { ok: false, msg: `${shown} ${unit} does not match the burette: ${tail}` };
 }
 

@@ -103,7 +103,7 @@ export const STAGES = [
       const want = r.rows[0].de;
       if (Math.abs(r.marker - want) <= 12) return { ok: true };
       return r.marker < want
-        ? { ok: false, msg: `A line ${r.marker} kJ/mol below zero sits above the lowest point of the curve, so the bond is deeper than that.` }
+        ? { ok: false, msg: `A line ${r.marker} kJ/mol below zero sits above the lowest point of the curve.` }
         : { ok: false, msg: `A line ${r.marker} kJ/mol below zero sits below the lowest point of the curve; the pair never reaches energy that low.` };
     },
     reward: {

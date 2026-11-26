@@ -387,7 +387,7 @@ export const STAGES = [
           'D: NaOH + HCl → NaCl + H₂O'
         ], { w: 144 })
       ]
-    }, { w: 150, h: 30 }),
+    }, { w: 150, h: 38 }),
     hints: [
       'Read the four equations above the Model and look for any pure element (oxidation number 0) becoming a compound or ion.',
       'Check each element\'s Before and After oxidation numbers in each reaction.',

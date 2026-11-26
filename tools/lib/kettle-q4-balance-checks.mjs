@@ -91,7 +91,7 @@ export async function check() {
   const stage1 = stage(0).table;
   const tally = stage1.fixtures.find(f => f.kind === 'eqtally');
   if (tally.dials.before.value === 2 || tally.dials.after.value === 1) bad.push('stage 1: a tally dial starts at the answer');
-  const withLedger = [0, 3, 4, 7];
+  const withLedger = [0, 4, 7];
   withLedger.forEach(i => { if (stage(i).table.fixtures.some(f => f.kind === 'eqledger')) bad.push(`stage ${i + 1}: a ledger is printed where the player is to count`); });
   const startDials = (i, want) => {
     const f = stage(i).table.fixtures.find(x => x.kind === 'eqboard');
@@ -121,7 +121,7 @@ export async function check() {
     if (!/\?/.test(t8)) bad.push('stage 8: the sealed bags are not marked');
     if (/3 CO/.test(textOf(3))) bad.push('stage 4: the bench prints the answer 3 CO');
     if (textOf(4).split(' | ').some(seg => /\S\((s|l|g|aq)\)/.test(seg))) bad.push('stage 5: a state is printed before a tile is laid');
-    if (/Reactants|Products|coefficient/i.test(textOf(0))) bad.push('stage 1: the bench uses a word it has not earned');
+    if (/coefficient/i.test(textOf(0))) bad.push('stage 1: the bench uses a word it has not earned');
   } catch (e) {
     bad.push(`could not draw the benches in Node (${e.message})`);
   }

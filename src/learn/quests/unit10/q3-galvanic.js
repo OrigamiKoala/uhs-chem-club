@@ -350,9 +350,9 @@ export const STAGES = [
       const at = [[24, 33], [50, 33], [76, 33], [102, 33], [37, 45], [63, 45], [89, 45]];
       return cellTable({
         pieces: order.map((k, i) => chip(`k${k}`, chips[k], { x: at[i][0], y: at[i][1] })),
-        fixtures: [plaqueFixture('plate', 'The zinc–copper cell', { x: 78, y: 14 }, ['Zinc strip in Zn²⁺ solution, copper strip in Cu²⁺ solution.', 'Use one bar | between a solid and its ions; two bars || for the salt bridge.'], { w: 144 })],
-        zones: { rail: { at: { x: 78, y: 88 }, size: { w: 146, h: 12 }, first: 'Left end', last: 'Right end', items: [], start: [], slots: 7 } }
-      }, { w: 156, h: 98 });
+        fixtures: [plaqueFixture('plate', 'The zinc–copper cell', { x: 74, y: 14 }, ['Zinc strip in Zn²⁺ solution, copper strip in Cu²⁺ solution.', 'Use one bar | between a solid and its ions; two bars || for the salt bridge.'], { w: 138 })],
+        zones: { rail: { at: { x: 74, y: 78 }, size: { w: 138, h: 12 }, first: 'Left end', last: 'Right end', items: [], start: [], slots: 7 } }
+      }, { w: 148, h: 92 });
     })(),
     hints: [
       'Drag the seven symbols onto the rail and put them in order.',

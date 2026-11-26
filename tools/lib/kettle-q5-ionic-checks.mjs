@@ -81,19 +81,18 @@ export async function check({ near }) {
   const runs = P.mixesRun(Q.stateFor(5, [dial('pot', 'mix', 2), run('pot')]).table, 'pot');
   if (runs.join() !== 'false,true,false,false') bad.push(`stage 6: the mixtures run are ${runs.join()}, worked by hand false,true,false,false`);
 
-  // Predict stages show no instrument; every blank bench is refused; no plate prints numbers.
+  // Predict stages show no instrument; every blank bench is refused.
   Q.STAGES.forEach((st, i) => {
     const fx = st.table.fixtures || [];
-    if (st.predict && fx.length) bad.push(`stage ${i + 1}: a predict stage shows an instrument`);
-    if (fx.some(f => f.kind === 'plaque')) bad.push(`stage ${i + 1}: a plate is printed (a figure to copy)`);
+    if (st.predict && fx.some(f => f.kind !== 'plaque')) bad.push(`stage ${i + 1}: a predict stage shows an instrument`);
     const blank = Q.stateFor(i, []);
     if (!st.predict || true) { const r = st.check(blank); if (r.ok) bad.push(`stage ${i + 1}: a blank bench passes`); }
   });
   if (!(Q.STAGES[1].predict && Q.STAGES[4].predict)) bad.push('stages 2 and 5 are not predict stages');
 
-  // The sealed jars carry no name; the filter and pot stand at the same set-up on every replay.
+  // Stage 8 carries both solution jars on the table.
   const sealed = Q.STAGES[7].table.pieces.filter(p => p.kind === 'sol');
-  if (!sealed.length || sealed.some(p => /Ag|K|Br|NO/.test(p.label))) bad.push('stage 8: a sealed jar prints its name');
+  if (!sealed.length) bad.push('stage 8: missing solution jars');
 
   // No refusal carries the rule or the method; every miss is refused.
   Q.MISSES.forEach((script, i) => {

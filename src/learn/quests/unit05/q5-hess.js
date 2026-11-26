@@ -19,7 +19,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import {
-  heatTable, eqn, note, tag, plaqueFixture, stackFixture, stackRead, whereIs, FORMATION_TABLE
+  heatTable, eqn, note, tag, plaqueFixture, stackFixture, leadFixture, stackRead, whereIs, FORMATION_TABLE
 } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 6 };
@@ -77,11 +77,12 @@ export const STAGES = [
     widget,
     table: heatTable({
       pieces: [
-        note('one', 'The one-step route', { x: 28, y: 18 }),
-        note('two', 'The two-step route', { x: 75, y: 18 }),
-        note('same', 'Both release the same', { x: 122, y: 18 })
+        note('one', 'The one-step route', { x: 24, y: 16 }),
+        note('two', 'The two-step route', { x: 70, y: 16 }),
+        note('same', 'Both release the same', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 75, y: 45 }, size: { w: 50, h: 20 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'routes', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
     }),
     hints: [
       'One route goes straight from carbon to CO₂, while the other stops at CO first.',

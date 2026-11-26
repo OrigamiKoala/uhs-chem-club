@@ -206,16 +206,16 @@ export const STAGES = [
     widget,
     table: cellTable({
       fixtures: [
-        loadFixture('load', { x: 77, y: 38 }, { ...TL, counts: true, tick: LOAD.maxTick }),
-        plaqueFixture('plate', 'Ion ratio limit', { x: 176, y: 18 }, ['Q = Sn²⁺ ÷ Pb²⁺', `Balance ratio K = ${fmt(balanceOf(TL.cathode, TL.anode, START).K, 1)}`], { w: 42 })
+        loadFixture('load', { x: 76, y: 38 }, { ...TL, counts: true, tick: LOAD.maxTick }),
+        plaqueFixture('plate', 'Ion ratio limit', { x: 174, y: 18 }, ['Q = Sn²⁺ ÷ Pb²⁺', `Balance ratio K = ${fmt(balanceOf(TL.cathode, TL.anode, START).K, 1)}`], { w: 42 })
       ],
       pieces: [
-        note('out', 'The reactant ions ran out', { x: 34, y: 90 }),
-        note('equal', 'The two kinds of ion became equal', { x: 99, y: 90 }),
-        note('eq', 'The cell reached balance (Q matched K)', { x: 164, y: 90 })
+        note('out', 'The reactant ions ran out', { x: 33, y: 85 }),
+        note('equal', 'The two kinds of ion became equal', { x: 98, y: 85 }),
+        note('eq', 'The cell reached balance (Q matched K)', { x: 163, y: 85 })
       ],
-      zones: { slots: [{ id: 'reason', label: 'Why it stopped', at: { x: 176, y: 50 }, size: { w: 42, h: 15 }, single: true }] }
-    }, { w: 198, h: 102 }),
+      zones: { slots: [{ id: 'reason', label: 'Why it stopped', at: { x: 174, y: 50 }, size: { w: 42, h: 15 }, single: true }] }
+    }, { w: 196, h: 96 }),
     hints: [
       'Look at the tin and lead ion counts, then drag one reason card into Why it stopped.',
       'Compare the ratio of tin ions to lead ions under the windows with the K value on the plate.',

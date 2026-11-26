@@ -1112,16 +1112,16 @@ console.log('The foes — spoil standing in the wells\n');
   /** A look, a step, `[E]`, a field point, the carry slot. */
   async function behaviours(bench, camera, vw, vh, tag) {
     camera.updateMatrixWorld(true);
-    // An empty spot is a look: nothing is grabbed, the view swings and settles back.
+    // Leaned in: a drag on empty table does nothing so a slipped grab never tilts or spins the bench camera.
     const e0 = { ...px(bench, camera, vw, vh, { x: 66, y: 28.5 }), pointerId: 91, preventDefault() {} };
     bench._onPointerDown(e0);
     if (bench.grabbing) fail(`${tag}: a press on empty table took hold of something`);
     bench._onPointerMove({ ...e0, clientX: e0.clientX + 40, clientY: e0.clientY + 10 });
-    if (!bench.lean || bench.lean.look.yaw === 0) fail(`${tag}: a drag on empty table is not a look`);
+    if (bench.lean && (bench.lean.look.yaw !== 0 || bench.lean.look.pitch !== 0)) fail(`${tag}: a drag on empty table tilted the leaned-in view`);
     bench._onPointerUp({ ...e0, clientX: e0.clientX + 40, clientY: e0.clientY + 10 });
     for (let i = 0; i < 90; i++) bench.update(1 / 30);
-    if (bench.lean && (bench.lean.look.yaw !== 0 || bench.lean.look.pitch !== 0)) fail(`${tag}: the look did not settle back to the framing`);
-    if (bench.playerControlled) fail(`${tag}: a look handed the camera to the player`);
+    if (bench.lean && (bench.lean.look.yaw !== 0 || bench.lean.look.pitch !== 0)) fail(`${tag}: the leaned-in framing drifted after release`);
+    if (bench.playerControlled) fail(`${tag}: a drag on empty table handed the camera to the player`);
 
     // A step stands the player up; [E] at the bench leans in again; Escape / Stand does the same as a step.
     bench.leaveLean({ walked: true });
@@ -1372,7 +1372,20 @@ console.log('The foes — spoil standing in the wells\n');
           const p = new THREE.Vector3(pl.x, b2.groundY, pl.z);
           const g = onId && b2.entries.get(onId)?.group;
           if (g && g.position.y > b2.groundY + 0.1) p.copy(g.position);
-          b2.root.localToWorld(p);
+          let hotWorld = null;
+          if (!onId && b2.fixtureRoot) {
+            b2.root.updateMatrixWorld(true);
+            b2.fixtureRoot.traverse(obj => {
+              if (hotWorld || !obj.visible) return;
+              const hu = obj.userData?.hotUnits;
+              if (hu && Math.hypot(hu.x - u.x, hu.y - u.y) < 0.05) {
+                hotWorld = new THREE.Vector3();
+                obj.getWorldPosition(hotWorld);
+              }
+            });
+          }
+          if (hotWorld) p.copy(hotWorld);
+          else b2.root.localToWorld(p);
           p.project(camera);
           return { clientX: (p.x + 1) / 2 * 1920, clientY: (1 - p.y) / 2 * 1080 };
         };

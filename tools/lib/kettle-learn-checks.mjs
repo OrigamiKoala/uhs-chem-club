@@ -64,13 +64,13 @@ export async function checkKettle({ fail, ok }) {
   const g4 = weigh(1, [put('catch', 'slot:pot.out'), dial('pot', 'pour', 4), run('pot'), put('catch', 'slot:bal.pan')]);
   if (!near(g4, 36.0, 0.01)) bad(`q6-stoich stage 2: 4 g of hydrogen weighs ${g4} g of water, worked by hand 36.0`);
   const trial4 = weigh(3, [put('cl2', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan')]);
-  if (!near(trial4, 11.7, 0.01)) bad(`q6-stoich stage 4: the 7.1 g trial weighs ${trial4} g of salt, worked by hand 11.7`);
+  if (!near(trial4, 8.24, 0.05)) bad(`q6-stoich stage 4: the 5.0 g trial weighs ${trial4} g of salt, worked by hand 8.24`);
   const w6 = weigh(5, [put('h2', 'slot:pot.in1'), put('o2', 'slot:pot.in2'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan')]);
   if (!near(w6, 72.0, 0.01)) bad(`q6-stoich stage 6: the catch jar weighs ${w6} g, worked by hand 72.0`);
   const w8 = weigh(7, [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan')]);
   if (!near(w8, 34.6, 0.01)) bad(`q6-stoich stage 8: the catch jar weighs ${w8} g, worked by hand 34.6`);
   const gas = K.reactorRead(q6.stateFor(6, [put('lime', 'slot:pot.in1'), run('pot')]).table, 'pot').gas;
-  if (!gas || !near(gas.L, 2.44, 0.006)) bad(`q6-stoich stage 7: the 10.0 g trial fills ${gas?.L} L, worked by hand 2.44`);
+  if (!gas || !near(gas.L, 1.83, 0.01)) bad(`q6-stoich stage 7: the 7.5 g trial fills ${gas?.L} L, worked by hand 1.83`);
   // A pot that is not run weighs nothing; a jar that was never fed fills with nothing.
   const none = weigh(1, [put('catch', 'slot:pot.out'), put('catch', 'slot:bal.pan')]);
   if (none !== 0) bad(`q6-stoich stage 2: a catch jar that was never filled weighs ${none} g`);

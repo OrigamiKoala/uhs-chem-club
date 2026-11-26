@@ -186,7 +186,7 @@ export const STAGES = [
     title: 'Same Atoms',
     // A PREDICT STAGE: the tester is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Quartz and glass are both made of silicon and oxygen. How will each behave when heated?',
+    prompt: 'Quartz and glass are both made of silicon and oxygen—how will each behave when heated?',
     widget,
     table: matterTable({
       pieces: [

@@ -30,7 +30,6 @@ export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bbuffer\b/i, introducedAt: 2 },
-  { term: /\bconjugate base\b/i, introducedAt: 3 },
   { term: /\bHenderson.Hasselbalch\b/i, introducedAt: 5 }
 ];
 

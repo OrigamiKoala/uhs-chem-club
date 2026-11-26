@@ -314,7 +314,7 @@ export const STAGES = [
       const want = countSigmaPi('HCN');
       if (pi === want.pi) return { ok: true };
       return pi === want.pi + want.sigma
-        ? { ok: false, msg: 'That counts every bond in the molecule, including the sigma bonds along the axis.' }
+        ? { ok: false, msg: 'That counts every bond in the molecule, not only the pi bonds.' }
         : { ok: false, msg: `${pi} is not the number of pi bonds in HCN.` };
     },
     reward: {

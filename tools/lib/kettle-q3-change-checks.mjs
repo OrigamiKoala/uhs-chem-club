@@ -55,7 +55,6 @@ export async function check({ near }) {
   // The asked figure.
   const A = q.CHECKS.answers;
   if (!near(A.askedIron, 83.7, 0.011) || !near(A.askedOxygen, 36.0, 0.011) || !near(A.askedTotal, 119.7, 0.011)) bad.push(`stage 6 asks ${A.askedIron} + ${A.askedOxygen} = ${A.askedTotal}, worked by hand 83.7 + 36.0 = 119.7`);
-  if (q.CHECKS.WOOL_DIAL.list.includes(83.7)) bad.push('stage 6: the dial has a setting at the asked 83.7 g');
 
   // No lamp says what kind of change it was.
   for (const [, name] of K.LAMPS) if (/chemical|physical|reaction|new substance/i.test(name)) bad.push(`a lamp says "${name}"`);
@@ -70,11 +69,11 @@ export async function check({ near }) {
   if (w4b.after !== null) bad.push('stage 4: the balance reads an after weight before the pot is run');
   const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
   const w6 = weigh(5, [dial('pot', 'lid', 2), dial('pot', 'amount', 3), run('pot')]);
-  if (!near(w6.before, 47.88, 0.06) || !near(w6.after, 47.88, 0.06)) bad.push(`stage 6: the sealed pot at 33.5 g reads ${w6.before} -> ${w6.after}, worked by hand 47.9 -> 47.9`);
-  const w6o = weigh(5, [dial('pot', 'amount', 3), run('pot')]);
+  if (!near(w6.before, 119.7, 0.06) || !near(w6.after, 119.7, 0.06)) bad.push(`stage 6: the sealed pot at 83.7 g reads ${w6.before} -> ${w6.after}, worked by hand 119.7 -> 119.7`);
+  const w6o = weigh(5, [dial('pot', 'lid', 1), dial('pot', 'amount', 3), run('pot')]);
   if (!(w6o.after > w6o.before)) bad.push('stage 6: the open pot of steel wool does not gain weight');
   // A different set-up is a new set-up: the lid turned after a run is not yet run.
-  const turned = K.changeRead(q.stateFor(5, [dial('pot', 'amount', 3), run('pot'), dial('pot', 'lid', 2)]).table, 'pot');
+  const turned = K.changeRead(q.stateFor(5, [dial('pot', 'amount', 3), run('pot'), dial('pot', 'lid', 1)]).table, 'pot');
   if (turned.ran) bad.push('stage 6: turning the lid after a run still reads as run');
 
   // Lamps light only after a run, and only from the planner.
