@@ -197,14 +197,54 @@ function bondLedger(ctx, w, h, t) {
   line(ctx, 60, markY, 720, markY, C.amber, 1, [3, 5]);
   text(ctx, `${Math.round(level) >= 0 ? '+' : '−'}${Math.abs(Math.round(level))}`, 740, markY, { size: 28, color: C.amber, align: 'left', weight: 700 });
   text(ctx, 'kJ so far', 740, markY + 28, { size: 16, color: C.dim, align: 'left' });
-  // The molecules at each stage, so the sums are of something: H₂ + Cl₂, then four separate atoms, then two HCl.
-  const iconY = 478;
+  // Animated molecules placed in the open space between the 0 dashed line (y=250) and the bottom bar (y=440),
+  // directly synchronized with each bar: H-H breaks, Cl-Cl breaks, first H-Cl forms, second H-Cl forms (no text labels).
+  const iconY = 352;
   const r = (x, y, rad, fill) => disc(ctx, x, y, rad, fill, C.steel);
-  const stage = t < 0.2 ? 0 : t < 0.44 ? 1 : 2;
-  if (stage === 0) { r(190, iconY, 14, C.pale); r(222, iconY, 14, C.pale); line(ctx, 190, iconY, 222, iconY, C.text, 3); r(320, iconY, 22, '#5b7a32'); r(370, iconY, 22, '#5b7a32'); line(ctx, 320, iconY, 370, iconY, C.text, 3); }
-  if (stage === 1) { [180, 230].forEach(x => r(x, iconY, 14, C.pale)); [320, 380].forEach(x => r(x, iconY, 22, '#5b7a32')); }
-  if (stage === 2) { [[190, 230], [330, 370]].forEach(([a, b], i) => { r(a, iconY, 22, '#5b7a32'); r(b, iconY, 14, C.pale); line(ctx, a, iconY, b, iconY, C.text, 3); }); }
-  text(ctx, stage === 0 ? 'H₂ + Cl₂' : stage === 1 ? 'four separate atoms' : '2 HCl', 540, iconY, { size: 24, color: C.dust, align: 'left' });
+  const bHH = ease(win(t, 0.06, 0.20));
+  const bCl = ease(win(t, 0.22, 0.36));
+  const f1 = ease(win(t, 0.46, 0.60));
+  const f2 = ease(win(t, 0.62, 0.76));
+
+  // Starting positions (H1, H2 on left; Cl1, Cl2 on right) -> break apart -> pair into two HCl molecules
+  let h1x = lerp(240, 200, bHH);
+  let h2x = lerp(276, 316, bHH);
+  let c1x = lerp(490, 440, bCl);
+  let c2x = lerp(546, 596, bCl);
+  let h1y = iconY, h2y = iconY, c1y = iconY, c2y = iconY;
+
+  // Pair 1 forms: H1 moves to meet Cl1 around x=310
+  h1x = lerp(h1x, 290, f1);
+  c1x = lerp(c1x, 330, f1);
+  // Pair 2 forms: H2 moves to meet Cl2 around x=520
+  h2x = lerp(h2x, 500, f2);
+  c2x = lerp(c2x, 540, f2);
+
+  // Draw bonds as they break / form
+  if (bHH < 0.75) {
+    ctx.globalAlpha = 1 - bHH / 0.75;
+    line(ctx, h1x, h1y, h2x, h2y, C.text, 3);
+    ctx.globalAlpha = 1;
+  }
+  if (bCl < 0.75) {
+    ctx.globalAlpha = 1 - bCl / 0.75;
+    line(ctx, c1x, c1y, c2x, c2y, C.text, 3);
+    ctx.globalAlpha = 1;
+  }
+  if (f1 > 0.55) {
+    ctx.globalAlpha = (f1 - 0.55) / 0.45;
+    line(ctx, h1x, h1y, c1x, c1y, C.cold, 3.5);
+    ctx.globalAlpha = 1;
+  }
+  if (f2 > 0.55) {
+    ctx.globalAlpha = (f2 - 0.55) / 0.45;
+    line(ctx, h2x, h2y, c2x, c2y, C.cold, 3.5);
+    ctx.globalAlpha = 1;
+  }
+  r(h1x, h1y, 14, C.pale);
+  r(h2x, h2y, 14, C.pale);
+  r(c1x, c1y, 22, '#5b7a32');
+  r(c2x, c2y, 22, '#5b7a32');
   if (t > 0.8) {
     const a = ease(win(t, 0.8, 0.92));
     ctx.globalAlpha = a;
@@ -218,7 +258,8 @@ function bondLedger(ctx, w, h, t) {
 const SPREAD = crowdOf(8, 61, 0.4);
 function spreadCount(ctx, w, h, t) {
   ground(ctx, w, h);
-  const open = ease(win(t, 0.18, 0.4));
+  // Wall lifts quickly and completely out of the box!
+  const open = ease(win(t, 0.14, 0.22));
   const bx = 60; const by = 140; const bw = 380; const bh = 260;
   box(ctx, bx, by, bw, bh, '#100f0c', C.steel, 2);
   const reach = lerp(0.5, 1, open);
@@ -229,10 +270,11 @@ function spreadCount(ctx, w, h, t) {
     if (x < 0.5) left++;
     disc(ctx, bx + 12 + x * (bw - 24), by + 12 + v * (bh - 24), 9, C.pale);
   });
-  // The partition lifts away.
-  const lift = open;
-  ctx.fillStyle = C.iron;
-  ctx.fillRect(bx + bw / 2 - 3, by - lift * 50, 6, bh);
+  // Partition lifts quickly and completely out of the way.
+  if (open < 0.99) {
+    ctx.fillStyle = C.iron;
+    ctx.fillRect(bx + bw / 2 - 3, by - open * (bh + 20), 6, bh * (1 - open));
+  }
   text(ctx, t < 0.18 ? 'all 8 in the left half' : `${left} left, ${8 - left} right`, bx + bw / 2, by + bh + 36, { size: 24, color: C.text });
   // How many ways each split can happen: the middle splits are the many, "all on one side" is one.
   const ways = Array.from({ length: 9 }, (_, i) => microstateWays(8, i));

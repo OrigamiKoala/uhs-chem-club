@@ -1019,40 +1019,40 @@ export const QUEST_STORY = {
   'unit05/q1-flow': {
     scene: 'frost-manifold',
     role: 'Station Fix',
-    mystery: 'The shelters are freezing on top of a volcano, and this pipe is coated in frost. Why is warmth leaving the shelters?',
+    mystery: 'People live beside a hot volcano, yet their homes are freezing and the pipes are frosted. Why is warmth leaving?',
     beats: [
-      { to: 0.25, say: 'Heat flows from a hotter object to a colder one until both reach the same temperature.' },
-      { to: 0.5, say: 'A thermometer measures the surroundings: when a water bath cools down, heat is flowing into the reaction, making it endothermic.' },
-      { to: 0.75, say: 'Just like the cold pack in your cup, an endothermic process inside the Fifth Guild\'s pipe is pulling heat away from the colony shelters.' }
+      { to: 0.34, say: 'Heat always flows from a hotter object to a colder one until both reach the same temperature.' },
+      { to: 0.66, say: 'A thermometer measures the surroundings: when a water bath cools down, heat is flowing into the process, making it endothermic.' },
+      { to: 0.95, say: 'Just like the cold pack in your cup, an endothermic process inside the Fifth Guild\'s pipe is pulling heat away from the colony shelters.' }
     ],
-    pin: 'An endothermic process inside the Fifth Guild\'s volcano pipe is pulling heat away from the shelters.'
+    pin: 'An endothermic process inside the Fifth Guild\'s pipe is pulling heat away from the shelters.'
   },
   'unit05/q2-calorimetry': {
     scene: 'heat-swap',
     role: 'Direct Clue',
-    mystery: 'The Fifth Guild installed an unmarked metal pipe in the volcano. How can we tell which metal it is made of?',
+    mystery: 'We found an unmarked metal pipe fitting near the shelters. How can we figure out which metal it is made of just by measuring temperature?',
     beats: [
       { to: 0.3, say: 'Drop a hot copper fitting into cool water, and heat flows from the metal into the water until both reach the same temperature.' },
       { to: 0.64, say: 'The heat lost by the metal equals the heat gained by the water. No energy is created or lost.' },
-      { to: 0.86, say: 'Using q = m × c × ΔT, the water\'s temperature rise identifies the metal, while melting and boiling absorb heat without raising temperature.' }
+      { to: 0.86, say: 'Using q = C × ΔT (with C = m × c), the water\'s temperature rise identifies the metal, while melting and boiling absorb heat without raising temperature.' }
     ],
-    pin: 'Specific heat capacity identifies the metal: the pipe fitting\'s c (0.385 J/(g·°C)) matches copper.'
+    pin: 'Heat capacity identifies the metal: the pipe fitting\'s specific heat capacity (0.385 J/(g·°C)) matches copper.'
   },
   'unit05/q3-enthalpy': {
     scene: 'fuel-bars',
     role: 'Station Fix',
-    mystery: 'The rescue skiff has a strict weight limit. Which fuel releases the most heat per gram?',
+    mystery: 'A rescue craft can only carry a limited weight of fuel. Which fuel gives the most heat for every gram you load on board?',
     beats: [
       { to: 0.3, say: 'The heat a reaction releases scales directly with the amount reacting: twice the moles, twice the heat.' },
       { to: 0.6, say: 'Per mole, methane releases the most heat of these four fuels and hydrogen releases the least.' },
       { to: 0.85, say: 'Per gram, hydrogen wins by a wide margin. Because one mole of hydrogen weighs only 2 g, every gram packs far more moles.' }
     ],
-    pin: 'Hydrogen powers the rescue skiff because it releases the most heat per gram.'
+    pin: 'Hydrogen powers the rescue craft because it releases the most heat per gram.'
   },
   'unit05/q4-bonds': {
     scene: 'bond-ledger',
     role: 'Direct Clue',
-    mystery: 'The Fifth Guild\'s machine splits molecules into atoms. Does breaking bonds absorb or release energy, and does any come back?',
+    mystery: 'Why do some chemical reactions release heat while others absorb heat when atoms rearrange into new molecules?',
     beats: [
       { to: 0.2, say: 'Breaking a bond always absorbs energy. Pulling H–H apart costs 436 kJ per mole.' },
       { to: 0.4, say: 'Splitting Cl–Cl costs another 242 kJ, bringing the total energy put in to 678 kJ.' },
@@ -1060,38 +1060,38 @@ export const QUEST_STORY = {
     ],
     pin: 'Breaking bonds absorbs energy and forming bonds releases it: HCl releases 184 kJ overall.'
   },
-  'unit05/q6-entropy': {
-    scene: 'spread-count',
-    role: 'Station Fix',
-    mystery: 'When a valve opens in the silencer bay, why does steam fill the whole pipe instead of staying on one side?',
-    beats: [
-      { to: 0.4, say: 'Open the wall and gas spreads across the entire box, even though no force drives it there.' },
-      { to: 0.7, say: 'Eight particles can split evenly 4–4 between two halves in 70 ways, but all eight land on one side in only 1 way.' },
-      { to: 0.9, say: 'Entropy measures that count of arrangements. Gas spreads out simply because spread-out arrangements vastly outnumber crowded ones.' }
-    ],
-    pin: 'Steam fills the pipe because spread-out arrangements vastly outnumber crowded ones.'
-  },
   'unit05/q5-hess': {
     scene: 'two-routes',
     role: 'Direct Clue',
-    mystery: 'The Fifth Guild sealed its main shaft so we cannot test it directly. How can we combine measured reactions to find its heat?',
+    mystery: 'We need to design chemical steps to warm the community shelters. Can we combine measured reactions to predict a new process?',
     beats: [
-      { to: 0.25, say: 'A reaction\'s enthalpy change depends only on where it starts and ends, so known steps can be reversed, doubled, and added together.' },
-      { to: 0.5, say: 'Each substance sits at a fixed energy level, so any path connecting the same reactants and products has the same total ΔH.' },
-      { to: 0.75, say: 'Even with the main shaft sealed, adding the open side steps between carbon and CO₂ gives the exact same total: −393.5 kJ per mole.' }
+      { to: 0.25, say: 'A reaction\'s total enthalpy change depends only on its reactants and products, never the steps in between: this is Hess\'s Law.' },
+      { to: 0.5, say: 'Because enthalpy is a state function, you can reverse, duplicate, and add known reactions together to find an unmeasured reaction\'s ΔH.' },
+      { to: 0.75, say: 'Whether carbon burns directly to CO₂ or goes through CO in two steps, both routes release the exact same total heat: −393.5 kJ per mole.' }
     ],
-    pin: 'Combining the open side steps gives the sealed shaft\'s heat: −393.5 kJ per mole of carbon.'
+    pin: 'By Hess\'s Law, combining measured steps gives the exact total enthalpy (−393.5 kJ/mol).'
+  },
+  'unit05/q6-entropy': {
+    scene: 'spread-count',
+    role: 'Station Fix',
+    mystery: 'Open a container of gas into an empty room and it fills the whole space, never gathering back. Why?',
+    beats: [
+      { to: 0.35, say: 'Remove the barrier and the gas spreads across the entire box, even though no force pushes it.' },
+      { to: 0.65, say: 'There are 70 ways for 8 particles to split evenly (4 left, 4 right), compared to only 1 way for all 8 to stay on one side — so statistically, spreading out is far more likely.' },
+      { to: 0.92, say: 'Entropy tracks how many ways particles and their energy can be arranged. With billions of real-world molecules, the odds of them all gathering back on one side are effectively zero.' }
+    ],
+    pin: 'Gas spreads out because spread-out arrangements overwhelmingly outnumber crowded ones.'
   },
   'unit05/q7-gibbs': {
     scene: 'seal-crossing',
     role: 'Direct Clue',
-    mystery: 'The Fifth Guild\'s underground limestone process absorbs heat, yet it still runs. At what temperature does it start on its own?',
+    mystery: 'Ice melts on a warm table even though melting absorbs heat, yet water freezes in a freezer. What decides?',
     beats: [
-      { to: 0.25, say: 'Two factors decide whether a reaction runs on its own: the heat it exchanges (ΔH) and how much entropy it gains (ΔS).' },
-      { to: 0.5, say: 'Free energy (ΔG = ΔH − TΔS) combines both. Higher temperature boosts TΔS until even an endothermic reaction becomes spontaneous.' },
-      { to: 0.75, say: 'Ice melts at 273 K where ΔH and TΔS balance, and the Fifth Guild\'s limestone process (ΔH +178.3 kJ, ΔS +160.2 J/K) starts above 1,113 K.' }
+      { to: 0.25, say: 'Two factors compete to decide whether a process happens on its own: heat change (ΔH) and entropy change (ΔS).' },
+      { to: 0.5, say: 'Gibbs free energy (ΔG = ΔH − TΔS) combines both. Raising the temperature makes the TΔS term larger until even an endothermic process happens on its own.' },
+      { to: 0.75, say: 'Ice melts above 273 K (0 °C) where TΔS overtakes ΔH, and heating limestone (ΔH +178.3 kJ, ΔS +160.2 J/K) starts above 1,113 K.' }
     ],
-    pin: 'The limestone process absorbs heat and starts above 1,113 K, where TΔS overtakes ΔH.'
+    pin: 'Gibbs free energy decides spontaneity: limestone decomposes above 1,113 K, where TΔS overtakes ΔH.'
   },
   'unit05/boss-crucible': {
     scene: 'crucible-open',

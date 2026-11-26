@@ -21,9 +21,9 @@
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS, contentTop, wrap, wrapN, noteLines } from './heat-draw.js';
 import { buildIngot, buildTin, buildCupWall, buildThermometer } from '../../engine/heat-props.js';
-import { buildBathDress, buildPairDress, buildBondChip, buildPhaseCard, buildCellsDress, buildChamberDress, buildParticle } from '../../engine/heat-solids.js';
+import { buildBathDress, buildPairDress, buildBondChip, buildPhaseCard, buildCellsDress, buildChamberDress, buildParticle, buildLeadChamber3d, buildCurveChamber3d, buildRxn3d } from '../../engine/heat-solids.js';
 import { cupRead, wellRead, plotRead, warmRead, cellsOpen, occupiedCells, loggedArrangements, shakesOf, shakeCells, targetMap, BOND_ENTHALPIES, cardTerms, fmtEqn, seatedIn } from './heat-read.js';
-import { paintMotion, isLive, replayHeat, contentTopOf } from './heat-motion.js';
+import { paintMotion, isLive, replayHeat, contentTopOf, curvePath, curveAt, curveU } from './heat-motion.js';
 import { dressRecorded } from './pans-3d.js';
 import { revealTable, gateRun, isCommitted } from './commit-gate.js';
 import './heat-tour.js';
@@ -126,7 +126,7 @@ function dress3d(f, state, c) {
   g.userData.counts = crowd.userData.counts;
   return g;
 }
-const MOTION_DRESS = new Set(['cup', 'lattice', 'rxn', 'curve', 'shelves', 'plot', 'stack', 'lead']);
+const MOTION_DRESS = new Set(['cup', 'lattice']);
 let MOTION_CROWD = null;
 
 function solidDress3d(f, state, c) {
@@ -180,7 +180,7 @@ function solidDress3d(f, state, c) {
 
   if (f.kind === 'chamber') {
     const p = f.props;
-    const cw = 8.2;
+    const cw = p.cells <= 2 ? (f.size.w - 6) / p.cells : 8.2;
     const dress = buildChamberDress(p.cells, p.particles, cw * s, 9 * s, { mats: c.mats, own: c.own });
     put(dress, box.x0 + 3 + (p.cells * cw - 0.8) / 2, box.y0 + top + 1 + 4.5, 0.002);
     group.userData.update = (fx, st) => {
@@ -188,6 +188,50 @@ function solidDress3d(f, state, c) {
       dress.userData.set({ cells: k[k.length - 1] || [] });
     };
     return group;
+  }
+
+  if (f.kind === 'curve') {
+    const bw = 22;
+    const bh = f.size.h - top - (f.props.readout ? 9 : 5);
+    const dress = buildCurveChamber3d(bw * s, bh * s, { mats: c.mats, own: c.own });
+    put(dress, box.x0 + 3 + bw / 2, box.y0 + top + 1 + bh / 2, 0.002);
+    const path = curvePath(f.props);
+    group.userData.update = fx => {
+      const u = curveU(fx, true);
+      dress.userData.set(curveAt(path, u));
+    };
+    group.userData.tick = (dt, still) => dress.userData.tick(dt, still);
+    group.userData.update(f);
+    return group;
+  }
+
+  if (f.kind === 'rxn') {
+    const rw = f.size.w - 6;
+    const rh = f.size.h - top - 3;
+    const dress = buildRxn3d(f.props.lhs, f.props.rhs, f.props.dH || 0, rw * s, rh * s, { mats: c.mats, own: c.own });
+    put(dress, box.x0 + f.size.w / 2, box.y0 + top + 1 + rh / 2, 0.002);
+    group.userData.tick = (dt, still) => dress.userData.tick(dt, still);
+    return group;
+  }
+
+  if (f.kind === 'lead') {
+    const sc = f.props.scene;
+    if (sc === 'react') {
+      const rw = f.size.w - 6;
+      const rh = f.size.h - 9;
+      const dress = buildRxn3d(f.props.lhs, f.props.rhs, f.props.dH || 0, rw * s, rh * s, { mats: c.mats, own: c.own });
+      put(dress, box.x0 + f.size.w / 2, box.y0 + 6 + rh / 2, 0.002);
+      group.userData.tick = (dt, still) => dress.userData.tick(dt, still);
+      return group;
+    }
+    if (sc === 'shut' || sc === 'salt' || sc === 'air' || sc === 'meet' || sc === 'heater') {
+      const rw = f.size.w - 6;
+      const rh = f.size.h - 10.5;
+      const dress = buildLeadChamber3d(sc, rw * s, rh * s, { mats: c.mats, own: c.own, asymmetric: Boolean(f.props.asymmetric) });
+      put(dress, box.x0 + f.size.w / 2, box.y0 + 6 + rh / 2, 0.002);
+      group.userData.tick = (dt, still) => dress.userData.tick(dt, still);
+      return group;
+    }
   }
 
   return null;
@@ -254,8 +298,8 @@ export const HEAT_KIT = {
   kinds: {
     block: { r: 8, rect: RECTS.block, split: true },
     charge: rect(7, 'charge'),
-    eqn: rect(6.3, 'eqn', { flip: true, scale: true }),
-    bond: rect(6.3, 'bond', { scale: true }),
+    eqn: rect(6.3, 'eqn', { flip: true, duplicate: true }),
+    bond: rect(6.3, 'bond', { duplicate: true }),
     shelf: rect(10, 'shelf'),
     phase: rect(10, 'phase'),
     stmt: rect(7, 'stmt'),
@@ -268,6 +312,7 @@ export const HEAT_KIT = {
     ptc: { r: 6.3, nojoin: true }
   },
   maxScale: 4,
+  maxCopies: 6,
   planJoin,
   pairable: (a, b) => a.kind === 'block' && b.kind === 'block',
   run,
@@ -456,8 +501,8 @@ export function cellsFixture(id, at, { cells = 8, leftCells = 4, particles = 2, 
   };
 }
 
-/** A chamber that is shaken: each Shake puts the particles in a new set of cells, and the board tallies how many stood on the left. */
-export function chamberFixture(id, at, { cells = 8, particles = 4, title = 'Chamber', runLabel = 'Shake', w = 74 } = {}) {
+/** A chamber that is shaken: each Shake puts the particles randomly into the boxes, and the board tallies how many landed in the left box. */
+export function chamberFixture(id, at, { cells = 2, particles = 4, title = 'Chamber', runLabel = 'Shake', w = 74 } = {}) {
   return { id, kind: 'chamber', label: title, at: { ...at }, size: { w, h: 42 }, dials: {}, runLabel, props: { cells, particles } };
 }
 
@@ -466,7 +511,7 @@ export function plotFixture(id, at, o = {}) {
   const { dH, dS, Ts, tempStart = 1, hideDG = false, hideTug = false, hideCrossing = true, title = 'Free energy', w = 60, record = false, runLabel = 'Record', eq = '', words = false, bars = false } = o;
   return {
     id, kind: 'plot', label: title, at: { ...at }, size: { w, h: Math.round((contentTop(1) + 28) * 10) / 10 },
-    dials: { temp: { min: 1, max: Ts.length, step: 1, value: tempStart, label: 'Temperature', labels: Ts.map(T => `${T} K`) } },
+    dials: { temp: { min: 1, max: Ts.length, step: 1, value: tempStart, label: 'Temperature', labels: Ts.map(() => ' ') } },
     ...(record ? { runLabel } : { noRun: true }),
     props: { dH, dS, Ts, hideDG, hideTug, hideCrossing, eq, words, bars }
   };
@@ -540,13 +585,13 @@ export function markerFixture(id, label, at, { min = 0, max = 8, step = 0.5, w =
   };
 }
 
-/** A dial with named positions: set it to the one the table shows. */
-export function selectorFixture(id, label, at, { options, start = 1, w = 46, list = false, dialLabel = null } = {}) {
+/** A dial with named positions (or a direct-click list when `hideDial` is true): set it to the one the table shows. */
+export function selectorFixture(id, label, at, { options, start = 1, w = 46, list = false, hideDial = false, dialLabel = null } = {}) {
   const shown = options.filter(o => o.trim()).length;
   return {
-    id, kind: 'selector', label, at: { ...at }, size: { w, h: list ? Math.round((15.5 + shown * 3.9) * 10) / 10 : 16 }, noRun: true,
+    id, kind: 'selector', label, at: { ...at }, size: { w, h: list ? Math.round(((hideDial ? 10.5 : 15.5) + shown * 3.9) * 10) / 10 : 16 }, noRun: true,
     dials: { value: { min: 1, max: options.length, step: 1, value: start, label: dialLabel || (list ? 'Pick one' : 'Set to'), labels: options } },
-    props: { options, ...(list ? { list: true } : {}) }
+    props: { options, ...(list ? { list: true } : {}), ...(hideDial ? { hidden: ['value'] } : {}) }
   };
 }
 

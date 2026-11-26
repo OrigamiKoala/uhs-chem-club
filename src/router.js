@@ -89,7 +89,7 @@ const ROUTE_NAV = {
   '/drills': 'drills',
   '/leaderboard': 'leaderboard',
   '/comms': 'leaderboard',
-  '/casefile': 'bridge',
+  '/casefile': 'casefile',
   '/inventory': 'inventory',
   '/cargo': 'inventory',
   '/quarters': 'quarters',

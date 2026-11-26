@@ -155,23 +155,28 @@ export function buildLandingPad(ctx, field) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   ctx.own(tex);
-  const mat = ctx.own(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.05 }));
-  const geo = ctx.own(new THREE.CylinderGeometry(R, R + 0.4, field.PAD_TOP + 0.1, 8));
+  const mat = ctx.own(new THREE.MeshStandardMaterial({
+    map: tex, roughness: 0.9, metalness: 0.05,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+  }));
+  const deckTop = field.PAD_TOP + 0.06;
+  const padH = deckTop + 0.14;
+  const geo = ctx.own(new THREE.CylinderGeometry(R, R + 0.45, padH, 8));
   geo.rotateY(Math.PI / 8);
   const pos = geo.attributes.position, uv = geo.attributes.uv;
   for (let i = 0; i < pos.count; i++) uv.setXY(i, 0.5 + pos.getX(i) / (R * 2.2), 0.5 + pos.getZ(i) / (R * 2.2));
   const plate = new THREE.Mesh(geo, mat);
-  plate.position.y = (field.PAD_TOP + 0.1) / 2 - 0.1;
+  plate.position.y = deckTop - padH / 2;
   plate.receiveShadow = ctx.t4;
   plate.userData.phys = 'ground';
   g.add(plate);
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-    const lamp = part(ctx, new THREE.BoxGeometry(0.24, 0.06, 0.24), ctx.M.lantern, Math.cos(a) * (R - 0.6), field.PAD_TOP + 0.02, Math.sin(a) * (R - 0.6));
+    const lamp = part(ctx, new THREE.BoxGeometry(0.24, 0.06, 0.24), ctx.M.lantern, Math.cos(a) * (R - 0.6), deckTop + 0.03, Math.sin(a) * (R - 0.6));
     lamp.userData.phys = 'ground';
     g.add(lamp);
     const mark = new THREE.Object3D();
-    mark.position.set(Math.cos(a) * (R - 0.6), field.PAD_TOP + 0.4, Math.sin(a) * (R - 0.6));
+    mark.position.set(Math.cos(a) * (R - 0.6), deckTop + 0.4, Math.sin(a) * (R - 0.6));
     mark.userData.lamp = { color: 0xe6a443, intensity: 3, distance: 9, decay: 1.6 };
     g.add(mark);
     ctx.lamps.push(mark);

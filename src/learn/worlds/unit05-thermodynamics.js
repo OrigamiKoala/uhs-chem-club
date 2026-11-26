@@ -65,18 +65,18 @@ export const UNIT_05 = {
     {
       id: 'q5-hess',
       title: "Hess's Law and Formation",
-      line: 'Combine measured steps to find the heat of an unmeasured reaction using Hess\'s law and formation enthalpies.',
+      line: 'Combine measured steps to find the heat of a multi-step heating process using Hess\'s law and formation enthalpies.',
       arena: 'bench',
-      stageCount: 4,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit05/q5-hess.js')
     },
     {
       id: 'q6-entropy',
       title: 'Entropy',
-      line: 'See why particles spread out and how entropy changes during phase changes and reactions.',
+      line: 'See why particles spread out, how energy levels and the Third Law work, and how entropy changes.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit05/q6-entropy.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_05 = {
       title: 'Free Energy',
       line: 'Combine heat and entropy as free energy to predict when a change happens on its own.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit05/q7-gibbs.js')
     },

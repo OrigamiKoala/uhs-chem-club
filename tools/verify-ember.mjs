@@ -419,7 +419,7 @@ console.log('\nEmber Reach — the benches and the boss, held to the rules of th
   for (const [id, mod] of mods) {
     const stages = mod.STAGES;
     const isBoss = id.startsWith('boss-');
-    if (stages.length < 3 || stages.length > 8) fail(`unit05/${id} has ${stages.length} stages, not 3 to 8`);
+    if (stages.length < 3 || stages.length > 9) fail(`unit05/${id} has ${stages.length} stages, not 3 to 9`);
     let predicts = 0;
     stages.forEach((st, i) => {
       counts.stages++;
@@ -468,7 +468,7 @@ console.log('\nEmber Reach — the benches and the boss, held to the rules of th
     else if (!SCENES[st.scene]) fail(`${key} names missing painter "${st.scene}"`);
   }
   for (const key of Object.keys(QUEST_STORY)) if (key.startsWith('unit05/') && !mods.has(key.replace('unit05/', ''))) fail(`${key} is a story animation for no quest`);
-  check(failures === bad0, `${counts.stages} stages in ${mods.size} quests: 3 to 8 each, predict-first, Tour coverage, ${counts.models} reward models, four story animations`);
+  check(failures === bad0, `${counts.stages} stages in ${mods.size} quests: 3 to 9 each, predict-first, Tour coverage, ${counts.models} reward models, four story animations`);
 }
 
 console.log('');

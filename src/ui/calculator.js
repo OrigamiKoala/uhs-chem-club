@@ -20,15 +20,15 @@ export const CALC_ICON = '<svg class="lq-calc-icon" width="16" height="16" viewB
 
 /** Essential constants in chemistry */
 export const CONSTANTS = [
-  { sym: 'R (J)', val: '8.314', desc: '8.314 J/(mol·K)' },
-  { sym: 'R (atm)', val: '0.08206', desc: '0.08206 L·atm/(mol·K)' },
-  { sym: 'N_A', val: '6.022e23', desc: '6.022 × 10²³ mol⁻¹' },
-  { sym: 'F', val: '96485', desc: '96,485 C/mol' },
-  { sym: 'h', val: '6.626e-34', desc: '6.626 × 10⁻³⁴ J·s' },
-  { sym: 'c', val: '2.998e8', desc: '2.998 × 10⁸ m/s' },
-  { sym: 'k_B', val: '1.381e-23', desc: '1.381 × 10⁻²³ J/K' },
-  { sym: 'atm', val: '101325', desc: '101,325 Pa' },
-  { sym: 'K_w', val: '1.0e-14', desc: '1.0 × 10⁻¹⁴' }
+  { sym: 'R (J)', label: 'R (J)', val: '8.314', desc: '8.314 J/(mol·K)' },
+  { sym: 'R (atm)', label: 'R (atm)', val: '0.08206', desc: '0.08206 L·atm/(mol·K)' },
+  { sym: 'N_A', label: 'N<sub>A</sub>', val: '6.022e23', desc: '6.022 × 10²³ mol⁻¹' },
+  { sym: 'F', label: 'F', val: '96485', desc: '96,485 C/mol' },
+  { sym: 'h', label: 'h', val: '6.626e-34', desc: '6.626 × 10⁻³⁴ J·s' },
+  { sym: 'c', label: 'c', val: '2.998e8', desc: '2.998 × 10⁸ m/s' },
+  { sym: 'k_B', label: 'k<sub>B</sub>', val: '1.381e-23', desc: '1.381 × 10⁻²³ J/K' },
+  { sym: 'atm', label: 'atm', val: '101325', desc: '101,325 Pa' },
+  { sym: 'K_w', label: 'K<sub>w</sub>', val: '1.0e-14', desc: '1.0 × 10⁻¹⁴' }
 ];
 
 /** Clean number formatting removing IEEE 754 float jitter */
@@ -342,11 +342,10 @@ class DigitalCalculator {
 
       <!-- Chemistry Constants Strip -->
       <div class="scoured-calc-const-bar" role="toolbar" aria-label="Chemistry Constants">
-        <span class="scoured-calc-const-tag">CONST</span>
         <div class="scoured-calc-const-scroll">
           ${CONSTANTS.map(c => `
             <button type="button" class="scoured-const-chip" data-const-val="${c.val}" data-const-sym="${c.sym}" title="${c.desc}">
-              <span class="scoured-const-sym">${c.sym}</span>
+              <span class="scoured-const-sym">${c.label || c.sym}</span>
             </button>
           `).join('')}
         </div>

@@ -13,26 +13,26 @@ import { addTourDemo, stageDemo } from '../tour-demo.js';
 const T = (title, text) => ({ title, text, dials: false });
 
 addTourText({
-  'heat:cup': T('Cup and thermometer', 'Dots are water; rings are the sample. Hotter particles move faster.'),
-  'heat:lattice': T('Particles in the blocks', 'Each box shows the particles in the block above. Hotter particles vibrate faster.'),
-  'heat:rxn': T('Reaction view', 'Old bonds break, atoms rearrange, and new bonds form.'),
-  'heat:curve': T('Heating curve', 'Drag along the graph to add heat and watch the phase change.'),
-  'heat:lead': T('Preview', 'Watch this similar example play first.'),
+  'heat:cup': T('Cup and thermometer', 'Drop a sample into the insulated cup and watch the water temperature change.'),
+  'heat:lattice': T('Particles in the blocks', 'Each box shows the particles in the block above. Hotter particles jiggle faster.'),
+  'heat:rxn': T('Reaction view', 'Molecules collide, old bonds break, and new bonds snap together.'),
+  'heat:curve': T('Heating curve', 'Slide the Burner dial to warm, melt, and boil the sample.'),
+  'heat:lead': T('Preview', 'Watch this example play first.'),
   'heat:shelves': T('Energy diagram', 'Drag the right level up or down, or turn the ΔH dial.'),
   'heat:well': T('Bond puller', 'Slide the Pull knob or drag the atoms apart to read the energy.'),
-  'heat:ledger': T('Bond table', 'Totals the bonds in each tray. Move a card to update both totals.'),
+  'heat:ledger': T('Bond table', 'Totals the bonds in each tray. Move or duplicate a card to update both totals.'),
   'heat:stack': T('Reaction stack', 'Adds the cards in the tray. Matching substances cancel, and the ladder tracks ΔH.'),
   'heat:cells': T('Cells and gate', 'Drag a particle into a cell, then press "Log".'),
-  'heat:chamber': T('Shaking chamber', 'Press "Shake". The bars count how many particles land in the left half.'),
-  'heat:plot': T('Temperature plot', 'Drag the ball along the line or turn the Temperature dial.'),
+  'heat:chamber': T('Shaking chamber', 'Press "Shake". The bars track the overall distribution across all shakes.'),
+  'heat:plot': T('Temperature plot', 'Slide the Temperature dial to compare heat and entropy at each temperature.'),
   'heat:warm': T('Warmed sample', 'Turn the "Heater" dial to warm the sample and speed up its particles.'),
   'heat:marker': T('Number dial', 'Drag the knob to select your number.'),
-  'heat:selector': T('Answer list', 'Tap an option directly, or drag the dial knob.')
+  'heat:selector': T('Answer list', 'Tap an option directly to select it.')
 }, {
   block: ['Metal block', 'Drag one block onto another to join them. Tap the gap to separate.'],
   charge: ['Sample', 'Drag a sample onto the cup mouth to test it in the water.'],
-  eqn: ['Reaction card', 'Drag into the stack. Tap a card to Flip it or press Larger to double.'],
-  bond: ['Bond card', 'Drag into a tray. Tap a card and press Larger to increase its count.'],
+  eqn: ['Reaction card', 'Drag into the stack. Tap to Flip, Duplicate, or Remove.'],
+  bond: ['Bond card', 'Drag into a tray. Tap to Duplicate or Remove.'],
   shelf: ['Energy diagram', 'Drag it into the matching slot or tray.'],
   phase: ['Particle box', 'Drag it into order along the rail.'],
   stmt: ['Statement', 'Drag it into the matching slot or tray.'],
@@ -89,8 +89,9 @@ demo('fx_stack', 'q5-hess', 2, { max: 4 });
 demo('pc_eqn', 'q5-hess', 2, { max: 4 });
 addTourDemo('heat:fx_selector', () => dialDemo('q4-bonds', 1, 'after', 'value', [0.4, 1]));
 demo('fx_chamber', 'q6-entropy', 1, { max: 3 });
-demo('pc_shift', 'q6-entropy', 2, { max: 3 });
-demo('pc_phase', 'q6-entropy', 3, { max: 3 });
-addTourDemo('heat:fx_plot', () => dialDemo('q7-gibbs', 1, 'plot', 'temp', [0, 0.5, 1]));
-demo('pc_gcard', 'q7-gibbs', 2, { max: 3 });
+demo('pc_shift', 'q6-entropy', 3, { max: 3 });
+demo('pc_phase', 'q6-entropy', 5, { max: 3 });
+addTourDemo('heat:fx_plot', () => dialDemo('q7-gibbs', 2, 'plot', 'temp', [0, 0.5, 1]));
+demo('pc_gcard', 'q7-gibbs', 3, { max: 3 });
 addTourDemo('*:rail', () => stageDemo(unit('q3-enthalpy'), 5, { max: 3 }));
+addTourDemo('heat:predict', () => stageDemo(unit('q4-bonds'), 0, { max: 1 }));

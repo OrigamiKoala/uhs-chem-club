@@ -88,16 +88,15 @@ export const STAGES = [
     widget,
     table: heatTable({
       pieces: [
-        note('in', 'Absorbs energy', { x: 24, y: 16 }),
-        note('out', 'Releases energy', { x: 70, y: 16 }),
-        note('none', 'Needs no energy', { x: 116, y: 16 })
+        note('in', 'Absorbs energy', { x: 28, y: 18 }),
+        note('out', 'Releases energy', { x: 75, y: 18 }),
+        note('none', 'Needs no energy', { x: 122, y: 18 })
       ],
-      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'bond', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 75, y: 45 }, size: { w: 50, h: 20 } }] }
     }),
     hints: [
-      'Watch the clip showing two hydrogen atoms held together by a bond.',
-      'Notice how the bond stretches as the two hydrogen atoms are pulled apart.',
+      'Think about what holds two bonded hydrogen atoms together.',
+      'A chemical bond is an attraction between atoms.',
       'Think about whether separating attracted atoms requires putting energy in, or whether they fly apart on their own.'
     ],
     check(state) {
@@ -126,7 +125,7 @@ export const STAGES = [
     table: heatTable({
       fixtures: [
         wellFixture('crank', { x: 34, y: 30 }, { bond: 'H-H', atoms: ['H', 'H'], bondLabel: 'H–H', title: 'H–H bond', pullLabel: 'Pull' }),
-        selectorFixture('after', 'When the atoms bond again', { x: 114, y: 32 }, { options: FORM_OPTIONS, start: 1, w: 60, list: true })
+        selectorFixture('after', 'When the atoms bond again', { x: 114, y: 32 }, { options: FORM_OPTIONS, start: 1, w: 60, list: true, hideDial: true })
       ]
     }),
     hints: [
@@ -170,16 +169,20 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const want = { ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' };
+      const countOf = (baseId, trayId) => Object.values(t.pieces)
+        .filter(p => !p.hidden && (p.id === baseId || p.props?.cloneOf === baseId) && whereIs(t, p.id) === trayId)
+        .reduce((s, p) => s + (p.props.scale || 1), 0);
       if (Object.keys(want).some(k => !['broken', 'formed'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Sort all four bond cards into the trays.' };
-      const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
+      const wrong = Object.entries(want).find(([k, v]) => Object.values(t.pieces).some(p => !p.hidden && (p.id === k || p.props?.cloneOf === k) && whereIs(t, p.id) !== v));
       if (!wrong) {
-        const off = CH4_CHIPS.find(([id, , n]) => (t.pieces[id].props.scale || 1) !== n);
+        const off = CH4_CHIPS.find(([id, , n, , tr]) => countOf(id, tr) !== n);
         if (!off) return { ok: true };
-        const k = t.pieces[off[0]].props.scale || 1;
-        return { ok: false, msg: `The bond table currently counts ${k} ${off[1]} bond${k === 1 ? '' : 's'} for ${off[3]}; check the equation count (tap the card and press Larger).` };
+        const k = countOf(off[0], off[4]);
+        return { ok: false, msg: `The bond table currently counts ${k} ${off[1]} bond${k === 1 ? '' : 's'} for ${off[3]}; check the equation count (tap the card and press Duplicate or Remove).` };
       }
-      const tray = t.zones.trays[whereIs(t, wrong[0])];
-      return { ok: false, msg: `The "${tray.label}" tray has a bond from a molecule on the ${wrong[1] === 'broken' ? 'left' : 'right'} side of the arrow.` };
+      const badPiece = Object.values(t.pieces).find(p => !p.hidden && (p.id === wrong[0] || p.props?.cloneOf === wrong[0]) && whereIs(t, p.id) !== wrong[1]);
+      const tray = t.zones.trays[whereIs(t, badPiece.id)];
+      return { ok: false, msg: `The "${tray?.label || 'wrong'}" tray has a bond from a molecule on the ${wrong[1] === 'broken' ? 'left' : 'right'} side of the arrow.` };
     },
     reward: {
       log: 'Burning methane released more energy than breaking its bonds cost.',
@@ -293,7 +296,7 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Sort the three bond cards into Broken and Formed, set the H–Cl count to 2 with Larger, and read both totals.',
+      'Sort the three bond cards into Broken and Formed, tap the H–Cl card and press Duplicate so there are 2 H–Cl bonds, and read both totals.',
       'Compare the energy absorbed by broken bonds with the energy released by formed bonds.',
       'Calculate bonds broken minus bonds formed; when more energy is released than absorbed, ΔH is negative.'
     ],
@@ -302,7 +305,7 @@ export const STAGES = [
       const v = entryNumber(t, 'dH');
       if (v == null || Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Enter your calculated ΔH, including its sign.' };
       const r = ledgerRead(t, 'ledger');
-      if (r.nBroken + r.nFormed < 4) return { ok: false, notYet: true, msg: 'Sort all bond cards into trays and set the H–Cl count to 2 first.' };
+      if (r.nBroken + r.nFormed < 4) return { ok: false, notYet: true, msg: 'Sort all bond cards into trays and duplicate H–Cl so there are 2 first.' };
       if (Math.abs(v - HCL_SUMS.net) <= 2 && r.net === HCL_SUMS.net) return { ok: true };
       return { ok: false, msg: `The bond table shows ${r.broken} kJ absorbed (broken) and ${r.formed} kJ released (formed); check the difference and sign.` };
     },
@@ -336,13 +339,15 @@ const put = (piece, to) => ({ place: { piece, to } });
 const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
 const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tray}`));
 
+const dup = (piece, times) => Array.from({ length: times - 1 }, () => ({ duplicate: piece }));
+
 export const SOLUTIONS = [
   [put('in', 'slot:guess')],
   [dial('crank', 'pull', 7), dial('after', 'value', FORM_RIGHT)],
-  [...sort({ ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' }), ...CH4_CHIPS.map(([id, , n]) => ({ scale: { piece: id, factor: n } }))],
+  [...sort({ ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' }), ...CH4_CHIPS.flatMap(([id, , n]) => dup(id, n))],
   [put('cool', 'slot:guess')],
   [put('cool', 'slot:answer')],
-  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), { scale: { piece: 'hc', factor: 2 } }, { type: { entry: 'dH', value: '-184' } }]
+  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), ...dup('hc', 2), { type: { entry: 'dH', value: '-184' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */

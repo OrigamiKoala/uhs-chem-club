@@ -183,7 +183,6 @@ export function renderLearnWorld(container, params = {}) {
             ${world.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} complete` : ''}
           </div>
           <div style="display: flex; gap: 0.4rem; align-items: center;">
-            <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="text-decoration: none;">Case Board</a>
             ${practiceKey(world)}
           </div>
         </div>
@@ -274,9 +273,6 @@ function renderWalkHud(container, world) {
           <button type="button" class="btn-secondary quest-btn-sm learn-sites-trigger m-tap" id="learn-sites-trigger">
             Sites (${prog.questsComplete}/${total})
           </button>
-          <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="text-decoration: none;">
-            Case Board
-          </a>
           ${practiceKey(world)}
         </div>
       </div>

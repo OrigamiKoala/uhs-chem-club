@@ -135,9 +135,12 @@ export class EmberReachWorld {
     M.sinterWet.roughness = 0.42;
     M.sulphur = buildMaterial(sulphurCrust({ size: texSize(256), seed: 5 }), { repeat: 2, roughness: 1.0 });
     M.sulphurPale = std({ color: 0xeadc98, roughness: 0.6, metalness: 0 });
-    M.rock = buildMaterial(blackGlass({ size: texSize(512), seed: 11 }), { repeat: 2, roughness: 0.92 });
-    M.rock.normalScale.set(1.2, 1.2);
-    M.rock.envMapIntensity = 0.9;
+    M.rock = buildMaterial(blackGlass({ size: texSize(512), seed: 11 }), { repeat: 2, roughness: 0.96 });
+    M.rock.roughnessMap = null;
+    M.rock.metalness = 0.02;
+    M.rock.color.set(0x4a423b);
+    M.rock.normalScale.set(0.85, 0.85);
+    M.rock.envMapIntensity = 0.22;
     M.concrete = buildMaterial(ventConcrete({ size: texSize(512), seed: 9 }), { repeat: 2, roughness: 1.0 });
 
     const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => buildMaterial(

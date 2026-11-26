@@ -31,7 +31,8 @@ import { curvePath, curveAt } from '../../table/kits/heat-motion.js';
 export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
-  { term: /\bspecific heat capacity\b/i, introducedAt: 2 },
+  { term: /\bheat capacity\b/i, introducedAt: 2 },
+  { term: /\bspecific heat capacity\b/i, introducedAt: 3 },
   { term: /\bcalorimeter\b/i, introducedAt: 4 },
   { term: /\bheat of fusion\b/i, introducedAt: 6 },
   { term: /\bheat of vaporization\b/i, introducedAt: 7 }
@@ -46,7 +47,7 @@ const SPEAKER = 'Vess';
 export function toolNoteFor() { return null; }
 
 const widget = { type: 'table', label: 'The bench' };
-const FORMULA = 'q = m × c × ΔT';
+const FORMULA = 'q = C × ΔT   (C = m × c)';
 const MOUTH = 'slot:cup.mouth';
 
 const QUEST_KEY = 'unit05/q2-calorimetry';
@@ -60,15 +61,17 @@ const BATH_3 = 150;
 const Q_BATH = 5021;
 // Stage 5: 100 g of water at 20 and a 50.0 g fitting of copper (c = 0.385) at 65.4 degrees.
 const FITTING = { m: 50, c: 0.385, T: 65.4 };
-// Stage 6: 10.0 g of ice at 0 degrees heated to water at 40 degrees. The burner's 31 settings are equal shares of the heat, and the
-// 21st is where the last ice has gone (3340 J of 5014 J), so the heat of fusion can be read there: 334 J for every gram.
-const MELT = { m: 10, from: 0, to: 40, steps: 31 };
+// Stage 6: 10.0 g of ice starting at -20 °C heated to water at 40 °C so the player sees solid warming, melting at 0 °C, and liquid warming.
+// Warming ice (-20 -> 0): 418 J; melting at 0 °C: 3,340 J (cumulative 3,758 J); warming water (0 -> 40): 1,674 J (total 5,432 J).
+const MELT = { m: 10, from: -20, to: 40, steps: 41 };
 const L_ICE = 334;
 /** Where a given heat (J) leaves the 10.0 g of stage 6, in words: read from the curve's own path. */
 function meltReached(q) {
   const path = curvePath({ m: MELT.m, from: MELT.from, to: MELT.to });
-  if (q >= path.total) return 'as water above 40 °C';
-  const at = curveAt(path, q / path.total);
+  const qWarmIce = MELT.m * 2.09 * 20;
+  const totalQ = qWarmIce + q;
+  if (totalQ >= path.total) return 'as water above 40 °C';
+  const at = curveAt(path, totalQ / path.total);
   return at.kind === 'melt' ? `at 0 °C with ${fixed(MELT.m * (1 - at.mix), 1)} g of ice still solid` : `as water at ${fixed(at.T, 0)} °C`;
 }
 // Stage 7: 10.0 g of ice at 0 degrees to steam at 100 degrees: 3.34 + 4.18 + 22.6 kJ.
@@ -136,14 +139,14 @@ export const STAGES = [
     return {
       id: 's2-test',
       title: 'Equal Rises',
-      briefing: { speaker: SPEAKER, body: 'Heat is measured in joules (J). Warming 1 g of water by 1 °C takes 4.184 J, which is its specific heat capacity (c).' },
+      briefing: { speaker: SPEAKER, body: 'Heat is measured in joules (J). An object\'s heat capacity (C) is the heat needed to raise its temperature by 1 °C: q = C × ΔT.' },
       prompt: 'The water rose 5.0 °C using 2,092 J, so how much heat does the iron need for the same rise?',
       widget,
       table: heatTable({ fixtures: [w.fixture, i.fixture], zones: { slots: [w.slot, i.slot] } }),
       hints: [
         'Compare RISE and HEAT on both panels, then adjust the "Heater" dial on the iron panel to match the water\'s RISE.',
         'At 449 J the iron rises twice as much as the water, so compare how much heat gives half that rise.',
-        'Both samples weigh 100 g, so a substance with a lower specific heat capacity needs less heat for the same temperature rise.'
+        'An object with a lower heat capacity (C) needs less heat for the same temperature rise.'
       ],
       check(state) {
         const t = state.table;
@@ -153,8 +156,8 @@ export const STAGES = [
       },
       reward: {
         log: 'Iron needed about a ninth of the water\'s heat.',
-        title: 'Specific Heat Capacity',
-        body: 'Iron rose 5.0 °C on 225 J while water needed 2,092 J, about nine times as much. Water needs 4.184 J per gram per °C, while iron needs only 0.449 J.'
+        title: 'Heat Capacity',
+        body: 'The 100 g iron sample rose 5.0 °C on 225 J (C = 44.9 J/°C), while 100 g of water needed 2,092 J (C = 418.4 J/°C). Water has a much higher heat capacity.'
       }
     };
   })(),
@@ -167,13 +170,12 @@ export const STAGES = [
       title: 'The Heat Equation',
       briefing: {
         speaker: SPEAKER,
-        body: 'The heat a sample absorbs equals its mass times its specific heat capacity times its temperature change: q = m × c × ΔT. Here is an example; your bench has a different bath.',
+        body: 'Heat absorbed is q = C × ΔT, where heat capacity C = m × c uses specific heat capacity (c). Here is a worked example for a different bath.',
         worked: [
           '50 g of water warms from 20 °C to 24 °C.',
+          'C = m × c = 50 g × 4.184 J/(g·°C) = 209.2 J/°C',
           'ΔT = 24 − 20 = 4 °C',
-          'q = m × c × ΔT',
-          'q = 50 g × 4.184 J/(g·°C) × 4 °C',
-          'q = 837 J'
+          'q = C × ΔT = 209.2 J/°C × 4 °C = 837 J'
         ]
       },
       prompt: 'How much heat did the water bath absorb?',
@@ -183,11 +185,10 @@ export const STAGES = [
         fixtures: [
           w.fixture,
           plaqueFixture('ref', 'Reference', { x: 106, y: 19 }, [
-            FORMULA,
-            'q: heat (joules, J)',
-            'm: mass (grams, g)',
-            'c: specific heat capacity (J/(g·°C))',
-            'ΔT: temperature change (°C)',
+            'q = C × ΔT',
+            'C = m × c',
+            'q: heat (J)   C: heat capacity (J/°C)',
+            'm: mass (g)   ΔT: temp change (°C)',
             'c of water = 4.184 J/(g·°C)'
           ], { w: 68 }),
         ],
@@ -195,8 +196,8 @@ export const STAGES = [
       }),
       hints: [
         'Read the bath\'s mass on the cup and its RISE beside the thermometer.',
-        'Match the mass, RISE, and water\'s specific heat capacity from the reference plate to m, ΔT, and c.',
-        'Substitute your bath\'s mass, c, and temperature rise into q = m × c × ΔT, just like the worked example.'
+        'Find the bath\'s heat capacity first using C = m × c, then pair it with ΔT.',
+        'Multiply C by ΔT (q = C × ΔT), just like the worked example.'
       ],
       check(state) {
         const t = state.table;
@@ -207,9 +208,9 @@ export const STAGES = [
         return { ok: false, msg: `${v.toLocaleString('en-US')} J would warm the ${BATH_3} g bath by ${fixed(v / (BATH_3 * SPECIFIC_HEAT_WATER), 1)} °C, but the bath rose ${fixed(r.dT, 1)} °C.` };
       },
       reward: {
-        log: 'q = m × c × ΔT gave the bath\'s heat.',
-        title: 'The Heat Equation',
-        body: 'The 150 g bath rose 8.0 °C, absorbing 5,021 J (within 50 J is accepted). More water or a larger temperature rise requires more heat.'
+        log: 'q = C × ΔT (with C = m × c) gave the bath\'s heat.',
+        title: 'Specific Heat Capacity and q = C × ΔT',
+        body: 'Using water\'s specific heat capacity (4.184 J/(g·°C)), the 150 g bath has C = 627.6 J/°C and rose 8.0 °C, absorbing 5,021 J (within 50 J is accepted).'
       }
     };
   })(),
@@ -220,7 +221,7 @@ export const STAGES = [
     return {
       id: 's5-reaction',
       title: 'Catching a Reaction',
-      briefing: { speaker: SPEAKER, body: 'A calorimeter is an insulated cup of water with a thermometer. Heat released by a reaction goes straight into the water, so the heat the water absorbs equals the heat the reaction released.' },
+      briefing: { speaker: SPEAKER, body: 'A calorimeter is any insulated device that measures heat flow. There are several types (such as bomb calorimeters); one common type is a coffee-cup calorimeter, where reaction heat goes into the water bath.' },
       prompt: 'How much heat did the reaction release?',
       entry: { id: 'joules', label: 'Heat released', unit: 'J' },
       widget,
@@ -313,7 +314,7 @@ export const STAGES = [
   {
     id: 's6-melt',
     title: 'Heat With No Rise',
-    briefing: { speaker: SPEAKER, body: 'The heat needed to melt 1 g of a solid is its heat of fusion. Drag the burner along the graph and watch what happens to the temperature while the ice melts.' },
+    briefing: { speaker: SPEAKER, body: 'The heat needed to melt 1 g of a solid at its melting point is its heat of fusion. Watch the ice warm from −20 °C to 0 °C, hold steady while melting, then warm as liquid water.' },
     prompt: 'What is the heat of fusion of ice, in joules per gram?',
     entry: { id: 'jg', label: 'Heat of fusion', unit: 'J/g' },
     widget,
@@ -321,21 +322,21 @@ export const STAGES = [
       fixtures: [curveFixture('heating', { x: 62, y: 30 }, { ...MELT, w: 100, h: 44, readout: 'both', title: 'Heating 10.0 g of ice' })]
     }),
     hints: [
-      'Drag the burner along the graph and watch the particles, temperature, and heat added.',
-      'Find the exact point where the last ice melts and the temperature is about to rise.',
-      'That total heat melted all 10.0 g of ice, so divide by 10.0 g to find the heat per gram.'
+      'Slide the Burner dial and note the heat added when melting begins at 0 °C (~418 J) and when the last ice melts (~3,758 J).',
+      'Subtract those two values to find the heat absorbed during the flat melting plateau alone.',
+      'That plateau heat melted all 10.0 g of ice, so divide by 10.0 g to find the heat of fusion per gram.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'jg');
       if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the heat per gram in joules.' };
-      if (Math.abs(v - L_ICE) <= 9) return { ok: true };
+      if (Math.abs(v - L_ICE) <= 12) return { ok: true };
       const q = v * MELT.m;
-      return { ok: false, msg: `At ${fixed(v, 0)} J/g, 10.0 g would take ${Math.round(q).toLocaleString('en-US')} J, leaving the sample ${meltReached(q)}.` };
+      return { ok: false, msg: `At ${fixed(v, 0)} J/g, melting 10.0 g would take ${Math.round(q).toLocaleString('en-US')} J, leaving the sample ${meltReached(q)}.` };
     },
     reward: {
       log: 'Melting 10.0 g of ice took 3,340 J at 0 °C.',
       title: 'Heat of Fusion',
-      body: 'The ice absorbed 3,340 J while staying at 0 °C until it all melted, or 334 J/g. Only after melting finished did the water warm up.'
+      body: 'After warming to 0 °C (418 J), the ice absorbed 3,340 J while staying at 0 °C until it all melted — 334 J/g. Only after melting finished did the water warm up.'
     }
   },
 
@@ -343,7 +344,13 @@ export const STAGES = [
   {
     id: 's7-curve',
     title: 'Ice to Steam',
-    briefing: { speaker: SPEAKER, body: 'Boiling works like melting: temperature stays at 100 °C while heat separates the liquid particles into gas. The heat needed to boil 1 g of a liquid is its heat of vaporization.' },
+    briefing: {
+      speaker: SPEAKER,
+      body: [
+        'Turning ice at 0 °C into steam at 100 °C splits into three separate steps: (1) melting ice at 0 °C, (2) warming liquid water from 0 °C to 100 °C, and (3) boiling water into steam at 100 °C.',
+        'Slide the burner dial to see all three stages on the graph, calculate each step separately, and add them together. The heat to boil 1 g is the heat of vaporization.'
+      ]
+    },
     prompt: 'How much heat, in kilojoules (kJ), turns 10.0 g of ice at 0 °C into steam at 100 °C?',
     entry: { id: 'kj', label: 'Heat needed', unit: 'kJ' },
     widget,
@@ -407,7 +414,7 @@ export const SOLUTIONS = [
   [{ type: { entry: 'joules', value: '5020' } }],
   [put('mix', MOUTH), { type: { entry: 'joules', value: '3350' } }],
   [put('fitting', MOUTH), put('cu', 'slot:answer')],
-  [dial('heating', 'heat', 21), { type: { entry: 'jg', value: '334' } }],
+  [dial('heating', 'heat', 28), { type: { entry: 'jg', value: '334' } }],
   [{ type: { entry: 'kj', value: '30.1' } }]
 ];
 
@@ -418,7 +425,7 @@ export const MISSES = [
   [{ type: { entry: 'joules', value: '3300' } }],
   [put('mix', MOUTH), { type: { entry: 'joules', value: '2800' } }],
   [put('fitting', MOUTH), put('fe', 'slot:answer')],
-  [dial('heating', 'heat', 22), { type: { entry: 'jg', value: '351' } }],
+  [dial('heating', 'heat', 30), { type: { entry: 'jg', value: '376' } }],
   [{ type: { entry: 'kj', value: '7.5' } }]
 ];
 

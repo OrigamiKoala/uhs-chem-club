@@ -310,8 +310,8 @@ export function buildCalderaShells(ctx, plan) {
 
     // Roof + distinct architectural ceiling per shell type (all structural ribs stay >= top - 0.35 >= 4.8 m).
     if (rm.shell === 'ribs') {
-      // Room 1: Rock-cut gallery with rolled steel arch ribs and corrugated lagging overhead.
-      addBox(buckets, 'rock', W + 1.4, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
+      // Room 1: Rock-cut gallery with rolled steel arch ribs and weathered corrugated roof overhead.
+      addBox(buckets, 'roofSheet', W + 1.4, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
       for (let x = r.minX + 1.4; x <= r.maxX - 1.2; x += 2.8) {
         addBox(buckets, 'darkSteel', 0.28, top, 0.34, x, y0 + top / 2, r.maxZ - 0.18);
         addBox(buckets, 'darkSteel', 0.28, 0.32, D - 0.2, x, y0 + top - 0.16, cz);
@@ -332,7 +332,7 @@ export function buildCalderaShells(ctx, plan) {
       }
     } else if (rm.shell === 'brickVault') {
       // Room 3: Refractory brick barrel vault (faceted 5-chord arch above y0 + top - 0.4).
-      addBox(buckets, 'rock', W + 1.4, 0.8, D + 1.4, cx, y0 + top + 0.8, cz);
+      addBox(buckets, 'roofSheet', W + 1.4, 0.8, D + 1.4, cx, y0 + top + 0.8, cz);
       const segs = 5;
       for (let i = 0; i < segs; i++) {
         const a0 = Math.PI * (i / segs), a1 = Math.PI * ((i + 1) / segs);
@@ -349,7 +349,7 @@ export function buildCalderaShells(ctx, plan) {
       addBox(buckets, 'brick', 0.9, top, 0.9, d1 + 0.45, y0 + top / 2, r.minZ - 0.25);
     } else if (rm.shell === 'overhang') {
       // Room 4: Rough-hewn stepped basalt overhang with wide 8 m colonnade facing the caldera.
-      addBox(buckets, 'rock', W + 1.6, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
+      addBox(buckets, 'roofSheet', W + 1.6, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
       // Stepped rock soffit ledges along the back and sides.
       addBox(buckets, 'rock', W - 0.4, 0.45, 2.2, cx, y0 + top - 0.22, r.maxZ - 1.1);
       addBox(buckets, 'rock', 1.6, 0.45, D - 0.4, r.minX + 0.8, y0 + top - 0.22, cz);
@@ -401,6 +401,14 @@ export function buildCalderaShells(ctx, plan) {
   }
 
   /* 2. RETAINING WALLS & KERBS along the switchback roads and ramps */
+  // Collect room wall bands so road retaining walls never overlap room facades (prevents z-fighting inside & out).
+  const roomVols = plan.volumes.filter(v => v.kind === 'room');
+  const overlapsRoomWall = (x0, x1, z0, z1) => roomVols.some(rv => {
+    const r = rv.room.rect;
+    return x1 > r.minX - WALL_T - 0.15 && x0 < r.maxX + WALL_T + 0.15 &&
+           z1 > r.minZ - WALL_T - 0.15 && z0 < r.maxZ + WALL_T + 0.15;
+  });
+
   for (const v of plan.openVols) {
     for (const seg of plan.wallSegments(v)) {
       const ya = plan.floorOf(v, seg.ax, seg.az);
@@ -411,17 +419,42 @@ export function buildCalderaShells(ctx, plan) {
       const my = (ya + yb) / 2;
       // Low concrete kerb + rock retaining face rising 1.4 m on the uphill / closed side.
       const h = 1.6;
-      const ox = -seg.dirX * 0.3;
-      const oz = -seg.dirZ * 0.3;
+      const ox = -seg.dirX * 0.34;
+      const oz = -seg.dirZ * 0.34;
       if (Math.abs(ya - yb) < 0.05) {
         if (seg.side === 'minX' || seg.side === 'maxX') {
-          addBox(buckets, 'concrete', 0.6, h, len + 0.4, mx + ox, my + h / 2 - 0.3, mz);
+          const xMin = mx + ox - 0.3, xMax = mx + ox + 0.3;
+          const zMin = mz - (len + 0.4) / 2, zMax = mz + (len + 0.4) / 2;
+          if (!overlapsRoomWall(xMin, xMax, zMin, zMax)) {
+            addBox(buckets, 'concrete', 0.6, h, len + 0.2, mx + ox, my + h / 2 - 0.3, mz);
+          }
         } else {
-          addBox(buckets, 'concrete', len + 0.4, h, 0.6, mx, my + h / 2 - 0.3, mz + oz);
+          // Split along X to skip any span directly against a room's facade wall.
+          const ax = Math.min(seg.ax, seg.bx), bx = Math.max(seg.ax, seg.bx);
+          const zBand = mz + oz;
+          let spans = [[ax, bx]];
+          for (const rv of roomVols) {
+            const r = rv.room.rect;
+            if (zBand + 0.35 > r.minZ - WALL_T - 0.15 && zBand - 0.35 < r.maxZ + WALL_T + 0.15) {
+              const cut0 = r.minX - WALL_T - 0.15, cut1 = r.maxX + WALL_T + 0.15;
+              const next = [];
+              for (const [s0, s1] of spans) {
+                if (s1 <= cut0 || s0 >= cut1) { next.push([s0, s1]); continue; }
+                if (s0 < cut0) next.push([s0, cut0]);
+                if (s1 > cut1) next.push([cut1, s1]);
+              }
+              spans = next;
+            }
+          }
+          for (const [s0, s1] of spans) {
+            if (s1 - s0 > 0.35) {
+              addBox(buckets, 'concrete', s1 - s0, h, 0.6, (s0 + s1) / 2, my + h / 2 - 0.3, zBand);
+            }
+          }
         }
       } else {
         // Graded retaining wall along a ramp's uphill edge.
-        addBeam(buckets, 'concrete', [seg.ax + ox, ya + 0.5, seg.az + oz], [seg.bx + ox, yb + 0.5, seg.bz + oz], 0.6, 1.5);
+        addBeam(buckets, 'concrete', [seg.ax + ox, ya + 0.55, seg.az + oz], [seg.bx + ox, yb + 0.55, seg.bz + oz], 0.58, 1.45);
       }
     }
   }
@@ -432,8 +465,8 @@ export function buildCalderaShells(ctx, plan) {
     const dx = rseg.bx - rseg.ax, dz = rseg.bz - rseg.az;
     const len = Math.hypot(dx, dz);
     if (len < 0.1) continue;
-    // Low concrete toe-kerb (0.22 m) so the road edge reads crisp without blocking the downward view.
-    addBeam(buckets, 'concrete', [rseg.ax, rseg.ya + 0.05, rseg.az], [rseg.bx, rseg.yb + 0.05, rseg.bz], 0.32, 0.30);
+    // Low concrete toe-kerb lifted cleanly above the road edge so it never z-fights with the cliff drop.
+    addBeam(buckets, 'concrete', [rseg.ax, rseg.ya + 0.11, rseg.az], [rseg.bx, rseg.yb + 0.11, rseg.bz], 0.28, 0.20);
     // Top and middle steel rails (yellow-painted safety steel).
     addBeam(buckets, 'paintYellow', [rseg.ax, rseg.ya + RAIL_H, rseg.az], [rseg.bx, rseg.yb + RAIL_H, rseg.bz], 0.06, 0.06);
     addBeam(buckets, 'paintYellow', [rseg.ax, rseg.ya + RAIL_H * 0.52, rseg.az], [rseg.bx, rseg.yb + RAIL_H * 0.52, rseg.bz], 0.045, 0.045);
@@ -496,11 +529,6 @@ export function buildCalderaVista(ctx, plan) {
   addBox(buckets, 'concrete', 10, 4, 10, 8, sY + 1, 205);
   addCyl(buckets, 'darkSteel', 0.45, 1.4, 38, 8, 8, sY + 21, 205);
   addBox(buckets, 'steel', 12, 0.8, 0.8, 8, sY + 31, 205);
-
-  // 4. West: stepped basalt buttress framing the WSW sun gap
-  const wY = plan.height(-185, 38);
-  addBox(buckets, 'rock', 36, 42, 28, -185, wY + 18, 38, 0, 0.25, 0);
-  addBox(buckets, 'rock', 22, 26, 18, -170, wY + 10, 22, 0, -0.2, 0);
 
   for (const [matKey, geos] of buckets) {
     const merged = mergeGeometries(geos, false);

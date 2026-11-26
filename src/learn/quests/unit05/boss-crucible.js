@@ -53,7 +53,7 @@ const NH3 = bondEnthalpySum(
 const T_SEAL = crossingTemperature(176, 160); // 1100
 const DS_STEAM = 2 * FORMATION_TABLE['H2(g)'].S0 + FORMATION_TABLE['O2(g)'].S0 - 2 * FORMATION_TABLE['H2O(g)'].S0; // +89.0
 
-const STACK_TRAY = { id: 'stack', label: 'The stack', at: { x: 76, y: 25 }, size: { w: 52, h: 26 }, cell: 50, cellH: 13 };
+const STACK_TRAY = { id: 'stack', label: '', at: { x: 76, y: 25 }, size: { w: 52, h: 26 }, cell: 50, cellH: 13 };
 
 /** The reward card of each stage: the idea just worked out, named. No new word is introduced here. */
 const S0 = id => FORMATION_TABLE[id].S0;
@@ -82,7 +82,7 @@ export const STAGES = [
       table: heatTable({
         fixtures: [
           c.fixture,
-          plaqueFixture('ref', 'Reference', { x: 88, y: 24 }, ['q = m × c × ΔT', 'c of water = 4.184 J/(g·°C)', '1 kJ = 1,000 J'], { w: 52 })
+          plaqueFixture('ref', 'Reference', { x: 88, y: 24 }, ['q = C × ΔT   (C = m × c)', 'c of water = 4.184 J/(g·°C)', '1 kJ = 1,000 J'], { w: 54 })
         ],
         zones: { slots: [c.slot] }
       }),
@@ -174,7 +174,7 @@ export const STAGES = [
           eqn('c3', { x: 25.5, y: 47 }, [[1, 'C(s)'], [1, O2]], [[1, CO2]], -393.5)
         ],
         fixtures: [
-          stackFixture('wanted', { x: 124, y: 42 }, { tray: 'stack', target: { lhs: [[1, S]], rhs: [[2, FE], [1.5, O2]] }, hideSum: true, w: 44, h: 34, ladder: { lo: -900, hi: 900 } })
+          stackFixture('wanted', { x: 124, y: 42 }, { tray: 'stack', target: { lhs: [[1, S]], rhs: [[2, FE], [1.5, O2]] }, hideSum: true, title: '', w: 44, h: 34, ladder: { lo: -900, hi: 900 } })
         ],
         zones: { trays: [STACK_TRAY] }
       }),
@@ -266,7 +266,7 @@ export const STAGES = [
         hit: 'The Crucible splits along its firebrick seams and cools into dark slag.'
       },
       hints: [
-        'Drag the ball along the line to find the two temperatures where ΔG switches from positive to negative.',
+        'Slide the Temperature dial to find the two temperatures where ΔG switches from positive to negative.',
         'The seal starts to break down at the exact temperature between them where ΔG equals zero.',
         'At that crossing temperature, ΔH and TΔS are equal once both are in the same units.'
       ],

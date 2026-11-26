@@ -14,8 +14,8 @@ import { addTourText } from '../tour.js';
 
 const FIXTURES = {
   'heat:cup': {
-    title: 'Cup and thermometer', dials: false,
-    text: 'An insulated cup holds a water bath with a thermometer. Drag a sample or hot block onto the cup mouth to see how the water temperature changes. A dial on the cup adjusts settings like heater energy, and any dashed boundary separates the chemicals being studied from the water bath around them.'
+    title: 'Calorimeter cup', dials: false,
+    text: 'There are several kinds of calorimeters — this one is a coffee-cup calorimeter, an insulated cup holding a water bath and a thermometer. Drag a sample or hot block onto the cup mouth to see how the water temperature changes.'
   },
   'heat:shelves': {
     title: 'Energy diagram', dials: false,
@@ -39,11 +39,11 @@ const FIXTURES = {
   },
   'heat:chamber': {
     title: 'Shaking chamber', dials: false,
-    text: 'Press "Shake" to place the particles randomly into the cells. The bars below count how many particles landed in the left half after each shake.'
+    text: 'Press "Shake" to randomly place each particle into either the left box or the right box. Every time you shake, the bar chart adds 1 to the matching column, building up the overall distribution of how many particles land in the left box across all shakes.'
   },
   'heat:plot': {
     title: 'Temperature plot', dials: false,
-    text: 'The line shows how the net balance changes with temperature, with the shaded area marking values below zero. Drag the ball or turn the "Temperature" dial to read ΔH, TΔS, and ΔG at each point.'
+    text: 'The line shows how the net balance changes with temperature, with values below zero meaning the process runs on its own. Slide the Temperature dial to compare heat (ΔH) and the entropy drive (TΔS) at each temperature.'
   },
   'heat:warm': {
     title: 'Warmed sample', dials: false,
@@ -62,10 +62,10 @@ const FIXTURES = {
 const PIECES = {
   block: ['Metal blocks', 'Each block shows its mass and temperature. Drag one block onto another to join them, or tap the gap between joined blocks to separate them.'],
   charge: ['Samples', 'Drag a sample onto the cup mouth to test it in the water bath. Once tested, the sample remembers how much the bath warmed or cooled.'],
-  eqn: ['Reaction cards', 'Each card shows a measured reaction and its energy change. Drag cards into the stack, or tap a card to Flip it (reversing its arrow and sign) or press Larger to double it.'],
-  bond: ['Bond cards', 'Each card shows one type of bond, its count, and its energy. Drag cards into the Broken or Formed trays, and tap a card to press Larger if you need more of that bond.'],
+  eqn: ['Reaction cards', 'Each card shows a measured reaction and its energy change. Drag cards into the stack, or tap a card to Flip it (reversing its arrow and sign), Duplicate it to add another copy, or Remove an extra copy.'],
+  bond: ['Bond cards', 'Each card shows one type of bond and its energy. Drag cards into the Broken or Formed trays. Tap a card and press Duplicate to add another copy of that bond, or Remove to delete an extra copy.'],
   shelf: ['Energy diagrams', 'Each small diagram shows energy before on the left and energy after on the right. Drag it into the matching tray.'],
-  phase: ['Particle boxes', 'Each box holds twelve particles with motion trails showing their speed. Drag the boxes onto the rail in order.'],
+  phase: ['Particle boxes', 'Each box holds moving particles showing their state and speed. Drag the boxes onto the rail in order.'],
   stmt: ['Statement cards', 'Drag a card to the matching slot or tray, or tap to mark it when asked.'],
   shift: ['Change cards', 'Each card shows the particles before a change on the left and after on the right. Drag it into the matching tray.'],
   tag: ['Name cards', 'Drag a card to the answer slot, or tap it once and then tap the slot.'],

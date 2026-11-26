@@ -78,6 +78,45 @@
 
 Throughout, on the subject of entropy, the game continually says "there are a lot more ways to arrange molecules in this configuration over this configuration". however, it doesn't make the last jump - that this means, statistically, the molecules are more likely to spread out. Also, there isn't a stage briefly going over the law of large numbers, so the player still thinks it is possible for entropy to decrease - there should be a stage in the entropy quest that points out that for real world situations, that as the number of particles increases, the distribution concentrates around the center, so at real-world scales entropy basically doesn't decrease. Introduce this in a way that is super friendly to people who suck at math.
 
+![alt text](image-232.png) This opening question doesn't make any sense whatsoever. Why is this a contradiction? What does it mean "run on its own"? Isn't the process already running on its own? Why does absorbing heat have anything to do with this? As a newcomer who doesn't understand much yet, the player would not be confused by these contradictions. Rewrite this question to introduce a weirder contradiction that actually makes sense for people who haven't learned the chemistry content yet.
+
+![alt text](image-233.png) Again, for this sort of kit all across Ember Reach, the particles behave strangely - I want the particles to visibly display the traits of their state of matter, as well as behave normally - and be in 3D space, instead of being a 2D image on a bench. There should also be well-defined container walls. Make sure to make this edit for ALL types of these kits across Ember Reach. For this specific animation, I have no clue what the salt is or which ones are water molecules - don't label them (absolutely no text or legends or anything), but the movement of the particles should make it obvious. Right now, the salt looks pretty dissolved to me. There should be more particles so the salt is more obvious.
+
+![alt text](image-234.png) There has got to be a better term then "SPREAD" - find that term and switch out "SPREAD". Also, explain what T delta S physically represents in the tour.
+
+![alt text](image-235.png) Remove the  "drag the ball on the line". Just say "slide the dial". Again, for ALL similar kits in Ember Reach (make the change across all of them), there shouldn't be random particles floating and vanishing around the graph. On this graph specifically, there is a ton of overlap and unnecessary labels - remove the labels on the temperature slider, and restructure the layout so it is more intuitive. Basically, instead of the "150 K" label on the bottom left corner, make that a sliding display that slides along with the vertical yellow line. Move the "Heat" and "Spread" numbers next to their respective bars and only display the label once - i.e. don't have two "Heat" labels. Just a bar with a number and ONE label. Move the bars lower down, and make their changes more exaggerated so it is easier to see. Also, this tour introuduces the idea of spontaneity too early - I don't get what that has to do with "heat" or "spread". Save that for later. This tour explanation also moved too fast - I don't know what G is or what it has to do with sponatneity. There should be an entire separate stage introducing G and its relation to spontaneity before the current first stage, so the user can have a sense for what "heat" and "spread" have to do with anything.
+
+![alt text](image-236.png) "up" and "down" are not terms used to describe entropy - it is "increases" and "decreases".
+
+![alt text](image-237.png) This explainer is too confusing. I can't wrap my head around it. Please rewrite the explainer for clarity and flow and make this bench more visual. Or add another stage before this that introduces the visual aspect.
+
+![alt text](image-238.png) I don't like the fact that this tour is spouting out exactly what to do and giving commands "divide by 1000" - the tour should explain that units need to be the same, so make sure T Delta S is in units of kJ, not J.
+
+![alt text](image-239.png) Again, this kit doesn't make any sense because the particles move weirdly and don't appear bounded in molecules. Also, remove the Delta G = Delta H - T Delta S, that should have been introduced in an earlier stage. Also remove the conversion of kJ to J.
+
+![alt text](image-240.png) Somewhere earlier in Ember Reach should introduce state functions, so for this stage tour it makes sense why the formula about Delta G is true. 
+
+![alt text](image-241.png) For this visual, "net balance of melting ice" makes no sense - rephrase. 
+
+![alt text](image-242.png) Move the health bar below the "The crucible dumps..." div (keep it on the right side) - make sure there is a small gap so it looks aesthetically pleasing and doesn't feel like overlapped mistake.
+
+![alt text](image-243.png) Remove the "Case Board" button for all of the learn worlds. Instead, add a "Briefing" button in the navbar that opens up this case board.
+
+![alt text](image-244.png) The ship's pad is z-fighting again. Please fix this issue for ALL the learn worlds - it keeps popping up.
+
+![alt text](image-245.png) Whatever that gigantic shining block is looks out of place - please make it look more realistic and update the textures so it fits with the world and doesn't feel like the lighting is off.
+
+![alt text](image-246.png) The gigantic black l-shaped thing doesn't feel like it should be there - either remove it or update it to make it feel more natural in this world.
+
+![alt text](image-247.png) The edge of the cliff is z-fighting.
+
+
+
+
+
+
+
+
 
 
 

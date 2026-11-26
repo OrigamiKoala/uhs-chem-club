@@ -149,13 +149,16 @@ export function buildLandingPad(ctx) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   ctx.own(tex);
-  const mat = ctx.own(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.35 }));
-  const geo = ctx.own(new THREE.CylinderGeometry(R, R, 0.06, 8));
+  const mat = ctx.own(new THREE.MeshStandardMaterial({
+    map: tex, roughness: 0.7, metalness: 0.35,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+  }));
+  const geo = ctx.own(new THREE.CylinderGeometry(R, R + 0.15, 0.12, 8));
   geo.rotateY(Math.PI / 8);
   const pos = geo.attributes.position, uv = geo.attributes.uv;
   for (let i = 0; i < pos.count; i++) uv.setXY(i, 0.5 + pos.getX(i) / (R * 2.2), 0.5 + pos.getZ(i) / (R * 2.2));
   const plate = new THREE.Mesh(geo, mat);
-  plate.position.y = 0.03;
+  plate.position.y = 0.06;
   plate.receiveShadow = ctx.t4;
   plate.userData.phys = 'ground';
   g.add(plate);
@@ -164,7 +167,7 @@ export function buildLandingPad(ctx) {
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
     const ring = new THREE.Mesh(ringGeo, ctx.M.darkSteel);
-    ring.position.set(Math.cos(a) * (R - 0.8), 0.07, Math.sin(a) * (R - 0.8));
+    ring.position.set(Math.cos(a) * (R - 0.8), 0.13, Math.sin(a) * (R - 0.8));
     ring.rotation.x = -Math.PI / 2;
     ring.userData.phys = 'ground';
     g.add(ring);

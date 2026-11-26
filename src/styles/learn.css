@@ -4289,16 +4289,16 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
   .learn-quest-overworld .lq.lq-table-mode .lq-dock-bar { display: flex !important; }
 }
 
-/* At a bench the host bar and prompt strip stand under the header; keep the boss plate on the right edge below the prompt strip so it never covers the stage prompt. */
+/* At a bench the host bar and prompt strip stand under the header; keep the boss plate on the right edge below the prompt and foe strip with a clean gap. */
 body.bench-deployed .boss-hud {
-  top: calc(var(--hud-h, 56px) + 104px);
+  top: calc(var(--hud-h, 56px) + 120px);
   left: auto;
   right: 14px;
   transform: none;
   width: min(260px, calc(100vw - 24px));
 }
 body.bench-leaning .boss-hud {
-  top: 104px;
+  top: 120px;
   left: auto;
   right: 14px;
   transform: none;

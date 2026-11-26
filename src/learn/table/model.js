@@ -546,6 +546,49 @@ const HANDLERS = {
     return { scale: f };
   },
 
+  duplicate(s, kit, id) {
+    const p = s.pieces[id];
+    if (!p || p.hidden || p.fixed) return fail('no such piece');
+    const baseId = p.props.cloneOf || p.id;
+    const copies = Object.values(s.pieces).filter(q => !q.hidden && (q.id === baseId || q.props?.cloneOf === baseId));
+    const cap = kit.maxCopies || 6;
+    if (copies.length >= cap) return fail('maximum copies reached');
+    let idx = 2;
+    while (s.pieces[`${baseId}__c${idx}`]) idx++;
+    const newId = `${baseId}__c${idx}`;
+    const clone = {
+      ...p,
+      id: newId,
+      at: { x: Math.min(s.bounds.w - 6, p.at.x + 2.5), y: Math.min(s.bounds.h - 4, p.at.y + 2.5) },
+      home: { ...p.home },
+      zone: null,
+      joinedTo: [],
+      props: { ...p.props, cloneOf: baseId }
+    };
+    s.pieces[newId] = clone;
+    s.carry.held = null;
+    if (p.zone && p.zone.startsWith('tray:')) {
+      const trayId = p.zone.slice(5);
+      const res = drop(s, kit, newId, { kind: 'tray', id: trayId });
+      if (!res?.ok) {
+        clone.at = { x: Math.min(s.bounds.w - 6, p.at.x + 3), y: Math.min(s.bounds.h - 4, p.at.y + 3) };
+      }
+    }
+    return { duplicated: newId };
+  },
+
+  remove(s, kit, id) {
+    const p = s.pieces[id];
+    if (!p || p.hidden || p.fixed) return fail('no such piece');
+    const baseId = p.props.cloneOf || p.id;
+    const copies = Object.values(s.pieces).filter(q => !q.hidden && (q.id === baseId || q.props?.cloneOf === baseId));
+    if (copies.length <= 1) return fail('keep at least one card');
+    leaveZone(s, id);
+    delete s.pieces[id];
+    if (s.carry.held === id) s.carry.held = null;
+    return { removed: id };
+  },
+
   predict(s, kit, tokenId) {
     if (!s.prediction) return fail('this table asks for no prediction');
     s.carry.held = null;

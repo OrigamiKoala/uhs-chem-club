@@ -143,14 +143,14 @@ export const STAGES = [
     widget,
     table: heatTable({
       pieces: [
-        block('spark', 'Welding spark', { x: 24, y: 14 }, { m: 0.001, c: FE, T: 1200, mat: 'Fe', mass: '0.001 g iron' }),
-        block('tank', 'Warm tank', { x: 126, y: 14 }, { m: 2000, c: WATER, T: 40, mat: 'H₂O', mass: '2000 g water' }),
-        block('valve', 'Frozen valve', { x: 75, y: 14 }, { m: 500, c: FE, T: 0, mat: 'Fe', mass: '500 g iron' }),
+        block('spark', 'Welding spark', { x: 24, y: 12 }, { m: 0.001, c: FE, T: 1200, mat: 'Fe', mass: '0.001 g iron' }),
+        block('tank', 'Warm tank', { x: 126, y: 12 }, { m: 2000, c: WATER, T: 40, mat: 'H₂O', mass: '2000 g water' }),
+        block('valve', 'Frozen valve', { x: 75, y: 12 }, { m: 500, c: FE, T: 0, mat: 'Fe', mass: '500 g iron' }),
         tag('pick-spark', 'Welding spark', { x: 24, y: 55 }),
         tag('pick-tank', 'Warm tank', { x: 54, y: 55 })
       ],
-      fixtures: [latticeFixture('atoms', { x: 75, y: 36 }, { blocks: ['spark', 'valve', 'tank'], w: 122, h: 16, gate: { slot: 'answer' }, gateMsg: 'Place your answer in the slot before joining the blocks.' })],
-      zones: { slots: [{ id: 'answer', label: 'My answer', at: { x: 118, y: 51 }, size: { w: 32, h: 14 } }] }
+      fixtures: [latticeFixture('atoms', { x: 75, y: 31 }, { blocks: ['spark', 'valve', 'tank'], w: 122, h: 15, gate: { slot: 'answer' }, gateMsg: 'Place your answer in the slot before joining the blocks.' })],
+      zones: { slots: [{ id: 'answer', label: 'My answer', at: { x: 118, y: 53 }, size: { w: 32, h: 12 } }] }
     }),
     hints: [
       'Check the thermometer on the frozen valve and the particle boxes under the spark and the tank.',
@@ -182,12 +182,12 @@ export const STAGES = [
       briefing: {
         speaker: SPEAKER,
         body: [
-          'The sample inside the dashed line is the system.',
+          'The reaction or process inside the dashed line is the system.',
           'The water bath around it, where the thermometer sits, is the surroundings.',
-          'An exothermic change releases heat to the surroundings; an endothermic change absorbs heat from them.'
+          'An exothermic process releases heat to the surroundings; an endothermic process absorbs heat from them.'
         ]
       },
-      prompt: 'Which samples are exothermic and which are endothermic?',
+      prompt: 'Which processes are exothermic and which are endothermic?',
       widget,
       table: heatTable({
         pieces: [
@@ -200,8 +200,8 @@ export const STAGES = [
         zones: {
           slots: [c.slot],
           trays: [
-            { id: 'out', label: 'Exothermic', at: { x: 124, y: 17 }, size: { w: 48, h: 22 }, cell: 22, cellH: 11 },
-            { id: 'in', label: 'Endothermic', at: { x: 124, y: 48 }, size: { w: 48, h: 22 }, cell: 22, cellH: 11 }
+            { id: 'out', label: 'Exothermic', labelBelow: true, at: { x: 124, y: 15 }, size: { w: 48, h: 20 }, cell: 22, cellH: 11 },
+            { id: 'in', label: 'Endothermic', labelBelow: true, at: { x: 124, y: 44 }, size: { w: 48, h: 20 }, cell: 22, cellH: 11 }
           ]
         }
       }),

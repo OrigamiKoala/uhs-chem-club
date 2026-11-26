@@ -67,7 +67,12 @@ export function contextKeys(state, kit) {
   if (held && canFlip(kit, held)) {
     keys.push({ id: 'flip', label: 'Flip', action: { flip: held.id }, enabled: true });
   }
-  if (held && canScale(kit, held)) {
+  if (held && kit.kinds?.[held.kind]?.duplicate) {
+    const baseId = held.props?.cloneOf || held.id;
+    const copies = Object.values(state.pieces).filter(q => !q.hidden && (q.id === baseId || q.props?.cloneOf === baseId)).length;
+    keys.push({ id: 'duplicate', label: 'Duplicate', action: { duplicate: held.id }, enabled: copies < (kit.maxCopies || 6) });
+    keys.push({ id: 'remove', label: 'Remove', action: { remove: held.id }, enabled: copies > 1 });
+  } else if (held && canScale(kit, held)) {
     const cur = held.props.scale || 1;
     keys.push({ id: 'smaller', label: 'Smaller', action: { scale: { piece: held.id, factor: cur - 1 } }, enabled: cur > 1 });
     keys.push({ id: 'larger', label: 'Larger', action: { scale: { piece: held.id, factor: cur + 1 } }, enabled: cur < (kit.maxScale || 1) });

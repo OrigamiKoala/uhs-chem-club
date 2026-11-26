@@ -16,21 +16,21 @@ const LEAKS = {
     5: [/\b1100\b/, /zero/i]
   },
   'q7-gibbs': {
-    2: [/\b238\b/, /zero/i, /equal/i],
-    3: [/cross/i, /flips?/i],
-    4: [/32\.7/, /\b59\.3\b/, /convert/i],
-    5: [/\b273\b/, /zero/i, /divid/i]
+    3: [/\b238\b/, /zero/i, /equal/i],
+    4: [/cross/i, /flips?/i],
+    5: [/32\.7/, /\b59\.3\b/, /convert/i],
+    6: [/\b273\b/, /zero/i, /divid/i]
   },
   'q6-entropy': {
     2: [/outnumber/i, /\bmost\b/i, /\bspread\b/i, /\b70\b|\b68\b/],
-    3: [/\bgas\b/i, /\bmoles?\b/i, /room/i],
-    4: [/room|faster|motion|streak/i],
-    5: [/\b160\b/, /subtract|minus|less/i, /\bproducts?\b.*\breactants?\b/i]
+    4: [/\bgas\b/i, /\bmoles?\b/i, /room/i],
+    6: [/room|faster|motion|streak/i],
+    9: [/\b160\b/, /subtract|minus|less/i, /\bproducts?\b.*\breactants?\b/i]
   },
   'q5-hess': {
     2: [/state function/i, /\bsame total\b/i, /path|route.*(cannot|never)/i],
     3: [/\bflip|turn|double|scale|larger/i, /cancel/i],
-    4: [/products? (less|minus)/i, /\bsubtract/i, /elements/i]
+    5: [/products? (less|minus)/i, /\bsubtract/i, /elements/i]
   },
   'q4-bonds': {
     // The meter prints the 436 kJ/mol by design (2026-11-11): the stage asks what forming the bond does, so a refusal may not say that.
@@ -190,14 +190,14 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       same(e2.STAGES[4].check(e2.stateFor(4, e2.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
     }
     {
-      // The heat of fusion is measured on the curve: one burner setting stands where the last ice has gone, and the heat there is 334 J a gram.
+      // The heat of fusion is measured on the curve (starting at -20 °C): the flat melting plateau absorbs 334 J/g.
       const M = await import('../../src/learn/table/kits/heat-motion.js');
       const { MELT, L_ICE } = e2.CHECKS;
       const path = M.curvePath({ m: MELT.m, from: MELT.from, to: MELT.to });
-      const end = path.list.find(x => x.kind === 'melt').u1;
-      const k = 1 + Math.round(end * (MELT.steps - 1));
-      near((k - 1) / (MELT.steps - 1) * path.total / MELT.m, L_ICE, 1, `${q} stage 6 (the heat read where the ice has gone, for each gram)`);
-      holds(Math.abs(M.curveAt(path, (k - 1) / (MELT.steps - 1)).T) < 0.5 && M.curveAt(path, k / (MELT.steps - 1)).T > 2, `${q} stage 6: the temperature does not start to rise at that setting`);
+      const meltSeg = path.list.find(x => x.kind === 'melt');
+      near(meltSeg.heat / MELT.m, L_ICE, 1, `${q} stage 6 (the heat read across the melting plateau, for each gram)`);
+      const k = 1 + Math.round(meltSeg.u1 * (MELT.steps - 1));
+      holds(M.curveAt(path, (k - 1) / (MELT.steps - 1)).T <= 1 && M.curveAt(path, Math.min(1, (k + 1) / (MELT.steps - 1))).T > 2, `${q} stage 6: the temperature does not start to rise after melting`);
       const f = start(e2, 5).fixtures.heating;
       holds(f.props.readout === 'both' && f.dials.heat.max === MELT.steps, `${q} stage 6: the curve does not print the heat added`);
       same(e2.STAGES[5].check(e2.stateFor(5, e2.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
@@ -339,14 +339,15 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(r.dH, TD.FORMATION_TABLE['CH4(g)'].dHf, 0.1, `${q} stage 3 (building methane)`);
       holds(!t.fixtures.answer, `${q} stage 3: a second decision (an answer dial) is back on the bench`);
       same(e5.STAGES[2].check(e5.stateFor(2, e5.MISSES[2])).ok, false, `${q} stage 3 (the miss)`);
-      holds(t.pieces.c3.props.flipped && t.pieces.c2.props.scale === 2, `${q} stage 3: the solution does not turn one card and double another`);
+      const c2Copies = Object.values(t.pieces).filter(p => !p.hidden && (p.id === 'c2' || p.props?.cloneOf === 'c2')).reduce((s, p) => s + (p.props.scale || 1), 0);
+      holds(t.pieces.c3.props.flipped && c2Copies === 2, `${q} stage 3: the solution does not turn one card and duplicate another`);
     }
     {
-      const t = done(e5, 3);
+      const t = done(e5, 4);
       const r = HK.stackRead(t, 'wanted');
-      holds(r.matches, `${q} stage 4: the solution's stack does not add up to the reaction wanted`);
-      near(r.dH, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'dHf'), 0.05, `${q} stage 4 (products less reactants)`);
-      same(e5.STAGES[3].check(e5.stateFor(3, e5.MISSES[3])).ok, false, `${q} stage 4 (the miss)`);
+      holds(r.matches, `${q} stage 5: the solution's stack does not add up to the reaction wanted`);
+      near(r.dH, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'dHf'), 0.05, `${q} stage 5 (products less reactants)`);
+      same(e5.STAGES[4].check(e5.stateFor(4, e5.MISSES[4])).ok, false, `${q} stage 5 (the miss)`);
     }
   }
 
@@ -357,40 +358,40 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     const P = await import('../../src/learn/table/kits/heat-parts.js');
     holds(Boolean(e6.STAGES[0].predict) && !Object.values(start(e6, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
-      // After many shakes the particles are spread over both halves far more often than crowded into one.
+      // After many shakes of 2 boxes (4 particles, 16 microstates), particles are spread across both boxes far more often than all in one.
       const t = run(start(e6, 1), Array.from({ length: 60 }, () => ({ run: 'chamber' })));
       const counts = [0, 0, 0, 0, 0];
-      for (const sh of HK.shakesOf(t, 'chamber')) counts[sh.filter(c => c <= 4).length]++;
-      holds(counts[2] > counts[4] * 2 && counts[2] > counts[0] * 2 && counts[1] + counts[2] + counts[3] >= 54, `${q} stage 2: the shakes do not favour the spread-out arrangements (${counts.join(' ')})`);
-      near(e6.CHECKS.TOTAL_WAYS, HK.waysOf(8, 4), 0, `${q} stage 2 (the arrangements of four in eight)`);
+      for (const sh of HK.shakesOf(t, 'chamber')) counts[sh.filter(c => c === 1).length]++;
+      holds(counts[2] > counts[4] && counts[2] > counts[0] && counts[1] + counts[2] + counts[3] >= 44, `${q} stage 2: the shakes do not favour the spread-out arrangements (${counts.join(' ')})`);
+      near(e6.CHECKS.TOTAL_WAYS, 16, 0, `${q} stage 2 (the 16 arrangements of four in two boxes)`);
       holds(e6.STAGES[1].check(e6.stateFor(1, e6.SOLUTIONS[1])).ok === true, `${q} stage 2: the solution does not pass`);
     }
     {
-      // The gas decides: the equations on the cards, counted.
+      // Stage 4 (index 3): The gas decides: the equations on the cards, counted.
       const gas = eq => (eq.match(/\(g\)/g) || []).length;
-      const t = start(e6, 2);
-      holds(gas('CaO(s) + CO₂(g)') > gas('CaCO₃(s)') && gas('2 NH₃(g)') < gas('N₂(g) + 3 H₂(g)'), `${q} stage 3: the gas count does not decide the signs`);
+      const t = start(e6, 3);
+      holds(gas('CaO(s) + CO₂(g)') > gas('CaCO₃(s)') && gas('2 NH₃(g)') < gas('N₂(g) + 3 H₂(g)'), `${q} stage 4: the gas count does not decide the signs`);
       const dots = (c, side, ph) => c.props[side].filter(([x]) => x === ph).reduce((n, [, k]) => n + k, 0);
-      holds(dots(t.pieces.lime, 'after', 'gas') > dots(t.pieces.lime, 'before', 'gas') && dots(t.pieces.haber, 'after', 'gas') < dots(t.pieces.haber, 'before', 'gas'), `${q} stage 3: the particles drawn on the cards are not the ones the equations count`);
-      holds(t.pieces.melt.props.before[0][0] === 'solid' && t.pieces.melt.props.after[0][0] === 'liquid' && t.pieces.dew.props.before[0][0] === 'gas' && t.pieces.dew.props.after[0][0] === 'liquid', `${q} stage 3: the melting and condensing cards do not draw the phases they name`);
-      holds(TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0') > 0 && TD.standardReactionChange([{ id: 'NH3(g)', n: 2 }], [{ id: 'N2(g)' }, { id: 'H2(g)', n: 3 }], 'S0') < 0, `${q} stage 3: the entropy table disagrees with the gas count`);
+      holds(dots(t.pieces.lime, 'after', 'gas') > dots(t.pieces.lime, 'before', 'gas') && dots(t.pieces.haber, 'after', 'gas') < dots(t.pieces.haber, 'before', 'gas'), `${q} stage 4: the particles drawn on the cards are not the ones the equations count`);
+      holds(t.pieces.melt.props.before[0][0] === 'solid' && t.pieces.melt.props.after[0][0] === 'liquid' && t.pieces.dew.props.before[0][0] === 'gas' && t.pieces.dew.props.after[0][0] === 'liquid', `${q} stage 4: the melting and condensing cards do not draw the phases they name`);
+      holds(TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0') > 0 && TD.standardReactionChange([{ id: 'NH3(g)', n: 2 }], [{ id: 'N2(g)' }, { id: 'H2(g)', n: 3 }], 'S0') < 0, `${q} stage 4: the entropy table disagrees with the gas count`);
     }
     {
-      // The four boxes are ranked by the room each particle has and by its motion, and the real entropies agree.
-      const t = done(e6, 3);
-      same(t.zones.rail.order.join(), 'ice,cold,hot,steam', `${q} stage 4`);
+      // Stage 6 (index 5): The four boxes are ranked by the room each particle has and by its motion, and the real entropies agree.
+      const t = done(e6, 5);
+      same(t.zones.rail.order.join(), 'ice,cold,hot,steam', `${q} stage 6`);
       const vol = (ph, T) => { const d = P.phaseDots(ph, T); const span = k => Math.max(...d.map(p => p[k])) - Math.min(...d.map(p => p[k])); return span('u') * span('v') * span('w'); };
-      holds(vol('solid', -10) < vol('liquid', 10) && vol('liquid', 10) < vol('gas', 110), `${q} stage 4: the boxes do not give more room from solid to liquid to gas`);
-      holds(P.phaseDots('liquid', 10)[0].tail < P.phaseDots('liquid', 80)[0].tail, `${q} stage 4: the hot water's particles do not move faster than the cold water's`);
-      holds(P.phaseDots('solid', -10).length === 12 && P.phaseDots('gas', 110).length === 12, `${q} stage 4: the boxes do not hold the same twelve particles`);
+      holds(vol('solid', -10) < vol('liquid', 10) && vol('liquid', 10) < vol('gas', 110), `${q} stage 6: the boxes do not give more room from solid to liquid to gas`);
+      holds(P.phaseDots('liquid', 10)[0].tail < P.phaseDots('liquid', 80)[0].tail, `${q} stage 6: the hot water's particles do not move faster than the cold water's`);
+      holds(P.phaseDots('solid', -10).length === 12 && P.phaseDots('gas', 110).length === 12, `${q} stage 6: the boxes do not hold the same twelve particles`);
       const S = TD.FORMATION_TABLE;
-      holds(S['H2O(s)'].S0 < S['H2O(l)'].S0 && S['H2O(l)'].S0 < S['H2O(g)'].S0, `${q} stage 4: the entropy table disagrees with the order`);
-      holds(TD.entropyOfHeating(100, 4.184, 10, 80) > 0, `${q} stage 4: warming does not raise the entropy`);
+      holds(S['H2O(s)'].S0 < S['H2O(l)'].S0 && S['H2O(l)'].S0 < S['H2O(g)'].S0, `${q} stage 6: the entropy table disagrees with the order`);
+      holds(TD.entropyOfHeating(100, 4.184, 10, 80) > 0, `${q} stage 6: warming does not raise the entropy`);
     }
     {
-      near(e6.CHECKS.DS_LIME, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0'), 1e-9, `${q} stage 5 (ΔS from the table)`);
-      same(e6.STAGES[4].check(e6.stateFor(4, e6.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
-      same(e6.STAGES[4].check(e6.stateFor(4, e6.MISSES[4])).ok, false, `${q} stage 5 (the miss)`);
+      near(e6.CHECKS.DS_LIME, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0'), 1e-9, `${q} stage 9 (ΔS from the table)`);
+      same(e6.STAGES[8].check(e6.stateFor(8, e6.SOLUTIONS[8])).ok, true, `${q} stage 9 (the solution)`);
+      same(e6.STAGES[8].check(e6.stateFor(8, e6.MISSES[8])).ok, false, `${q} stage 9 (the miss)`);
     }
   }
 
@@ -399,52 +400,51 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   if (e7) {
     const q = 'unit05/q7-gibbs';
     const { SALT, ICE, T_ICE, GF_DG } = e7.CHECKS;
-    // Six stages: Stage 6 computes ΔG°rxn from ΔGf° values (CED 9.3.A.3).
-    holds(e7.STAGES.length === 6, `${q} should have six stages`);
+    holds(e7.STAGES.length === 7, `${q} should have seven stages`);
     holds(Boolean(e7.STAGES[0].predict) && !Object.values(start(e7, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
-      // The salt takes heat in at every setting, and still ΔG goes below zero once it is warm enough; one setting stands where it is zero.
-      const t = start(e7, 1);
+      // Stage 3 (index 2): The salt takes heat in at every setting, and still ΔG goes below zero once it is warm enough; one setting stands where it is zero.
+      const t = start(e7, 2);
       const dGs = SALT.Ts.map((T, k) => HK.plotAt(t, 'plot', k + 1));
-      holds(dGs.every(r => r.dH > 0), `${q} stage 2: the salt does not take heat in at every setting`);
-      holds(dGs[0].dG > 0 && dGs[dGs.length - 1].dG < 0, `${q} stage 2: ΔG does not change sign across the dial`);
-      holds(dGs.filter(r => Math.abs(r.dG) < 0.05).length === 1, `${q} stage 2: not exactly one setting reads zero`);
-      near(HK.plotRead(done(e7, 1), 'plot').T, TD.crossingTemperature(SALT.dH, SALT.dS), 0.5, `${q} stage 2 (the setting placed)`);
+      holds(dGs.every(r => r.dH > 0), `${q} stage 3: the salt does not take heat in at every setting`);
+      holds(dGs[0].dG > 0 && dGs[dGs.length - 1].dG < 0, `${q} stage 3: ΔG does not change sign across the dial`);
+      holds(dGs.filter(r => Math.abs(r.dG) < 0.05).length === 1, `${q} stage 3: not exactly one setting reads zero`);
+      near(HK.plotRead(done(e7, 2), 'plot').T, TD.crossingTemperature(SALT.dH, SALT.dS), 0.5, `${q} stage 3 (the setting placed)`);
       const brief2 = Array.isArray(e7.STAGES[1].briefing?.body) ? e7.STAGES[1].briefing.body.join(' ') : String(e7.STAGES[1].briefing?.body || '');
       holds(Boolean(brief2) && /ΔG = ΔH − TΔS/.test(brief2), `${q} stage 2: the equation is not taught before the stage`);
-      same(e7.STAGES[1].check(e7.stateFor(1, e7.MISSES[1])).ok, false, `${q} stage 2 (the miss)`);
+      same(e7.STAGES[2].check(e7.stateFor(2, e7.MISSES[2])).ok, false, `${q} stage 3 (the miss)`);
     }
     {
-      const t = start(e7, 2);
+      const t = start(e7, 3);
       for (const [id, want] of Object.entries({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })) {
         const { dH, dS } = t.pieces[id].props;
         const lo = TD.gibbsFreeEnergy(dH, dS, 100) < 0; const hi = TD.gibbsFreeEnergy(dH, dS, 600) < 0;
-        same(lo && hi ? 'always' : !lo && !hi ? 'never' : hi ? 'high' : 'low', want, `${q} stage 3 (${id})`);
+        same(lo && hi ? 'always' : !lo && !hi ? 'never' : hi ? 'high' : 'low', want, `${q} stage 4 (${id})`);
       }
     }
     {
-      // ΔG at 298 K from ΔH and ΔS in different units: the right option is the one the units agree on, and every slip is a real slip.
+      // Stage 5 (index 4): ΔG at 298 K from ΔH and ΔS in different units.
       const { HABER } = e7.CHECKS;
       const dG = HABER.dH - HABER.T * HABER.dS / 1000;
-      near(dG, -32.7, 0.1, `${q} stage 4 (ΔG at 298 K)`);
-      near(Number(done(e7, 3).entries.dg), dG, 0.1, `${q} stage 4 (the figure typed)`);
-      near(HABER.dH + HABER.T * HABER.dS / 1000, -151.3, 0.1, `${q} stage 4 (the sign slip)`);
-      near(HABER.dH - HABER.T * HABER.dS, 59210, 1, `${q} stage 4 (the unit slip)`);
-      same(e7.STAGES[3].check(e7.stateFor(3, e7.SOLUTIONS[3])).ok, true, `${q} stage 4 (the solution)`);
-      same(e7.STAGES[3].check(e7.stateFor(3, e7.MISSES[3])).ok, false, `${q} stage 4 (the miss)`);
-    }
-    {
-      near(T_ICE, 273, 1, `${q} stage 5 (the melting point)`);
-      near(Number(done(e7, 4).entries.T), T_ICE, 2, `${q} stage 5 (the figure typed)`);
-      holds(!ICE.Ts.includes(273) && ICE.Ts.some(T => T < 273) && ICE.Ts.some(T => T > 273), `${q} stage 5: the dial hands over the melting point, or does not straddle it`);
+      near(dG, -32.7, 0.1, `${q} stage 5 (ΔG at 298 K)`);
+      near(Number(done(e7, 4).entries.dg), dG, 0.1, `${q} stage 5 (the figure typed)`);
+      near(HABER.dH + HABER.T * HABER.dS / 1000, -151.3, 0.1, `${q} stage 5 (the sign slip)`);
+      near(HABER.dH - HABER.T * HABER.dS, 59210, 1, `${q} stage 5 (the unit slip)`);
+      same(e7.STAGES[4].check(e7.stateFor(4, e7.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
       same(e7.STAGES[4].check(e7.stateFor(4, e7.MISSES[4])).ok, false, `${q} stage 5 (the miss)`);
     }
     {
-      const want = TD.FORMATION_TABLE['CO2(g)'].dGf + 2 * TD.FORMATION_TABLE['H2O(l)'].dGf - (TD.FORMATION_TABLE['CH4(g)'].dGf + 2 * TD.FORMATION_TABLE['O2(g)'].dGf);
-      near(GF_DG, want, 0.1, `${q} stage 6 (ΔG° from ΔGf°)`);
-      near(Number(done(e7, 5).entries.dgf), want, 0.1, `${q} stage 6 (the figure typed)`);
-      same(e7.STAGES[5].check(e7.stateFor(5, e7.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
+      near(T_ICE, 273, 1, `${q} stage 6 (the melting point)`);
+      near(Number(done(e7, 5).entries.T), T_ICE, 2, `${q} stage 6 (the figure typed)`);
+      holds(!ICE.Ts.includes(273) && ICE.Ts.some(T => T < 273) && ICE.Ts.some(T => T > 273), `${q} stage 6: the dial hands over the melting point, or does not straddle it`);
       same(e7.STAGES[5].check(e7.stateFor(5, e7.MISSES[5])).ok, false, `${q} stage 6 (the miss)`);
+    }
+    {
+      const want = TD.FORMATION_TABLE['CO2(g)'].dGf + 2 * TD.FORMATION_TABLE['H2O(l)'].dGf - (TD.FORMATION_TABLE['CH4(g)'].dGf + 2 * TD.FORMATION_TABLE['O2(g)'].dGf);
+      near(GF_DG, want, 0.1, `${q} stage 7 (ΔG° from ΔGf°)`);
+      near(Number(done(e7, 6).entries.dgf), want, 0.1, `${q} stage 7 (the figure typed)`);
+      same(e7.STAGES[6].check(e7.stateFor(6, e7.SOLUTIONS[6])).ok, true, `${q} stage 7 (the solution)`);
+      same(e7.STAGES[6].check(e7.stateFor(6, e7.MISSES[6])).ok, false, `${q} stage 7 (the miss)`);
     }
   }
 

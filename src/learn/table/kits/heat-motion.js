@@ -206,18 +206,17 @@ function paintCupMotion(ctx, f, state, b) {
     }
     return;
   }
-  // The sample, as rings under the mouth. A hot block's atoms begin at the block's temperature and calm to the bath's. Chemicals that
-  // give out heat are drawn fast at first and ones that take heat in slow at first, because that is the only way they can warm or cool
-  // the water that touches them; both end at the bath's temperature.
+  // The sample particles intermingle throughout the water bath so they are seen colliding with water molecules.
   if (g.sample) {
     const isBlock = r.item.kind === 'block';
     const began = isBlock ? r.item.props.T : r.q > 1e-6 ? r.T0 + 90 : r.q < -1e-6 ? r.T0 - 60 : r.T0;
     const Ts = lerp(began, r.Tf, ease(p));
     const v = vigour(Ts);
     for (let i = 0; i < 10; i++) {
-      const gx = i % 5; const gy = Math.floor(i / 5);
-      const x = g.cx0 + 3 + gx * ((W - 6) / 4) + Math.sin(clock * 8 + i * 1.9) * 0.6 * v;
-      const y = g.cy0 + 1.3 + gy * 2 + Math.cos(clock * 9.3 + i * 2.7) * 0.6 * v;
+      const ux = tri(hash('sx', i) * 2 + clock * (isBlock ? 0.015 : 0.055) * (0.7 + hash('svx', i)));
+      const uy = tri(hash('sy', i) * 2 + clock * (isBlock ? 0.015 : 0.048) * (0.7 + hash('svy', i)));
+      const x = clamp(g.cx0 + 2.0 + (W - 4.0) * ux + Math.sin(clock * 11 + i * 2.3) * 0.45 * v, g.cx0 + 1.0, g.cx1 - 1.0);
+      const y = clamp(g.wy0 + 1.5 + (H - 3.0) * uy + Math.cos(clock * 13.7 + i * 3.1) * 0.45 * v, g.wy0 + 1.0, g.wy1 - 1.0);
       ring(ctx, F.x(x), F.y(y), F.len(0.72), tempInk(Ts), 1);
     }
   }
@@ -299,18 +298,23 @@ function paintLattice(ctx, f, state, b) {
       const d = q.contact.left && q.contact.right ? Math.min(u, 1 - u) * 2 : q.contact.left ? u : q.contact.right ? 1 - u : 0;
       const Ta = spreadT(key, clock, d, T, BLOCK_GLIDE_S);
       const v = vigour(Ta);
-      const ink = tempInk(Ta);
-      const swing = Math.min(cell * 0.4, cell * (0.05 + 0.26 * v));
-      let px = q.x + sx * (gx + 0.5) + Math.sin(clock * 8 + hash(q.id, a) * 6.28) * swing;
-      let py = q.y + sy * (gy + 0.5) + Math.cos(clock * 9.1 + hash(q.id, a + 50) * 6.28) * swing;
+      // Keep very hot sparks glowing bright orange-amber rather than greying out mid-glide.
+      const ink = Ta > 200 ? '#e07a32' : tempInk(Ta);
+      const swing = Math.min(cell * 0.38, cell * (0.04 + 0.24 * v));
+      // Multi-harmonic thermal jostling (bumping back and forth rather than smooth circular spirals).
+      const h1 = hash(q.id, a) * 6.28;
+      const h2 = hash(q.id, a + 50) * 6.28;
+      const bumpX = (Math.sin(clock * 13 + h1) * 0.65 + Math.sin(clock * 23 + h2) * 0.35) * swing;
+      const bumpY = (Math.sin(clock * 17 + h2) * 0.65 + Math.cos(clock * 29 + h1) * 0.35) * swing;
+      let px = q.x + sx * (gx + 0.5) + bumpX;
+      let py = q.y + sy * (gy + 0.5) + bumpY;
       if (q.water) {
-        // A liquid: the molecules also wander a little at a fixed pace, where a solid's atoms keep their places.
-        px += Math.sin(clock * 0.6 + hash(q.id, a + 7) * 6.28) * cell * 0.18;
-        py += Math.cos(clock * 0.5 + hash(q.id, a + 9) * 6.28) * cell * 0.18;
-        dot(ctx, F.x(px), F.y(py), F.len(rad), ink, 0.95);
-        dot(ctx, F.x(px - rad * 0.95), F.y(py - rad * 0.8), F.len(rad * 0.5), '#e6e0d2', 0.95);
-        dot(ctx, F.x(px + rad * 0.95), F.y(py - rad * 0.8), F.len(rad * 0.5), '#e6e0d2', 0.95);
-      } else dot(ctx, F.x(px), F.y(py), F.len(rad), ink, 0.95);
+        px = q.x + 1.8 + (q.w - 3.6) * tri(hash(q.id, a + 7) * 2 + clock * 0.14 * (0.6 + v * 0.5)) + bumpX * 0.5;
+        py = q.y + 1.6 + (q.h - 3.2) * tri(hash(q.id, a + 9) * 2 + clock * 0.12 * (0.6 + v * 0.5)) + bumpY * 0.5;
+        dot(ctx, F.x(clamp(px, q.x + 1.2, q.x + q.w - 1.2)), F.y(clamp(py, q.y + 1.2, q.y + q.h - 1.2)), F.len(rad), ink, 0.95);
+        dot(ctx, F.x(clamp(px - rad * 0.9, q.x + 0.8, q.x + q.w - 0.8)), F.y(clamp(py - rad * 0.75, q.y + 0.8, q.y + q.h - 0.8)), F.len(rad * 0.5), '#e6e0d2', 0.95);
+        dot(ctx, F.x(clamp(px + rad * 0.9, q.x + 0.8, q.x + q.w - 0.8)), F.y(clamp(py - rad * 0.75, q.y + 0.8, q.y + q.h - 0.8)), F.len(rad * 0.5), '#e6e0d2', 0.95);
+      } else dot(ctx, F.x(clamp(px, q.x + 1.0, q.x + q.w - 1.0)), F.y(clamp(py, q.y + 1.0, q.y + q.h - 1.0)), F.len(rad), ink, 0.95);
     }
   }
 }
@@ -472,60 +476,26 @@ function paintCurve(ctx, f, state, b) {
   const path = curvePath(f.props);
   const u = curveShown(f, b);
   const at = curveAt(path, u);
-  // The box of particles, on the left: a lattice that shakes (solid), a heap that slides (liquid), a gas that flies.
+  // 2D fallback particle chamber: 24 particles warming from solid lattice -> melting -> liquid -> boiling -> gas.
   const bx = 3; const by = top + 1; const bw = 22; const bh = f.size.h - top - curveFoot(f);
   ctx.strokeStyle = DIM; ctx.lineWidth = 1;
   ctx.strokeRect(Math.round(F.x(bx)) + 0.5, Math.round(F.y(by)) + 0.5, Math.round(F.len(bw)), Math.round(F.len(bh)));
-  const N = 12; const ink = tempInk(at.T);
+  const N = 24; const ink = tempInk(at.T);
   for (let i = 0; i < N; i++) {
-    const col = i % 4; const row = Math.floor(i / 4);
-    const lx = bx + 3.5 + col * 5; const ly = by + bh - 3 - row * 4.2;
+    const col = i % 6; const row = Math.floor(i / 6);
+    const lx = bx + 3.2 + col * 3.1; const ly = by + bh - 2.4 - row * 2.8;
     const v = vigour(at.T);
-    const jx = Math.sin(clock * 8 + i * 1.9); const jy = Math.cos(clock * 9.1 + i * 2.7);
-    // One rate of shaking and one pace of wandering whatever the temperature: only the width of the swing follows the reading, so a
-    // particle never jumps while the burner is being dragged.
-    const solid = { x: lx + jx * (0.12 + 0.7 * v), y: ly + jy * (0.12 + 0.7 * v) };
-    const liquid = { x: bx + 2.4 + (bw - 4.8) * tri(hash('lx', i) * 2 + clock * 0.11) + jx * (0.2 + 0.7 * v), y: by + bh - 2.4 - (bh * 0.45 - 1) * tri(hash('ly', i) * 2 + clock * 0.09) + jy * (0.2 + 0.7 * v) };
-    const gas = { x: bx + 1.6 + (bw - 3.2) * tri(hash('gx', i) * 2 + clock * 0.75), y: by + 1.6 + (bh - 3.2) * tri(hash('gy', i) * 2 + clock * 0.62) };
-    // Each particle leaves the lattice at its own point along the melt and the boil, so a plateau is a crowd changing over, not a switch.
+    const jx = Math.sin(clock * 12 + i * 1.9); const jy = Math.cos(clock * 14 + i * 2.7);
+    const solid = { x: lx + jx * (0.08 + 0.55 * v), y: ly + jy * (0.08 + 0.55 * v) };
+    const liquid = { x: bx + 2.0 + (bw - 4.0) * tri(hash('lx', i) * 2 + clock * (0.12 + 0.2 * v)) + jx * 0.25, y: by + bh - 2.0 - (bh * 0.42 - 1) * tri(hash('ly', i) * 2 + clock * (0.1 + 0.16 * v)) + jy * 0.25 };
+    const gas = { x: bx + 1.5 + (bw - 3.0) * tri(hash('gx', i) * 2 + clock * 0.85), y: by + 1.5 + (bh - 3.0) * tri(hash('gy', i) * 2 + clock * 0.72) };
     const mine = hash('ph', i);
     let pos;
     if (at.kind === 'melt') pos = at.mix > mine ? liquid : solid;
     else if (at.kind === 'boil') pos = at.mix > mine ? gas : liquid;
     else pos = at.phase === 'solid' ? solid : at.phase === 'liquid' ? liquid : gas;
-    dot(ctx, F.x(pos.x), F.y(pos.y), F.len(0.95), ink, 0.95);
+    dot(ctx, F.x(pos.x), F.y(pos.y), F.len(0.75), ink, 0.95);
   }
-  // The trace of temperature against heat added: a faint guide for the full path and a solid line up to the burner's position.
-  const gx = 29; const gw = f.size.w - gx - 4; const gy = top + 1; const gh = bh;
-  const lo = Math.min(...path.list.map(q => Math.min(q.a, q.b))); const hi = Math.max(...path.list.map(q => Math.max(q.a, q.b)));
-  const px = uu => F.x(gx + uu * gw);
-  const py = T => F.y(gy + gh - ((T - lo) / Math.max(1, hi - lo)) * (gh - 2) - 1);
-  ctx.strokeStyle = DUST; ctx.lineWidth = 1.2;
-  ctx.beginPath(); ctx.moveTo(F.x(gx), F.y(gy)); ctx.lineTo(F.x(gx), F.y(gy + gh)); ctx.lineTo(F.x(gx + gw), F.y(gy + gh)); ctx.stroke();
-  // Faint full heating curve guide.
-  ctx.strokeStyle = DIM; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
-  ctx.beginPath();
-  path.list.forEach((q, idx) => {
-    if (idx === 0) ctx.moveTo(px(q.u0), py(q.a));
-    ctx.lineTo(px(q.u1), py(q.b));
-  });
-  ctx.stroke();
-  ctx.setLineDash([]);
-  // Solid traced curve up to current heat added `u`.
-  ctx.strokeStyle = PHOS; ctx.lineWidth = Math.max(1.8, F.len(0.55));
-  ctx.beginPath();
-  let started = false;
-  for (const q of path.list) {
-    if (q.u0 > u) break;
-    const endU = Math.min(u, q.u1);
-    const k = q.u1 > q.u0 ? (endU - q.u0) / (q.u1 - q.u0) : 0;
-    const endT = lerp(q.a, q.b, clamp(k, 0, 1));
-    if (!started) { ctx.moveTo(px(q.u0), py(q.a)); started = true; }
-    ctx.lineTo(px(endU), py(endT));
-  }
-  ctx.stroke();
-  ctx.lineWidth = 1;
-  dot(ctx, px(u), py(at.T), F.len(1.15), AMBER, 1);
 }
 
 /* ------------------------------------------------------------------
@@ -774,9 +744,6 @@ export function paintMotion(ctx, f, state, b) {
   else if (f.kind === 'lattice') paintLattice(ctx, f, state, b);
   else if (f.kind === 'rxn') paintRxn(ctx, f, state, b);
   else if (f.kind === 'curve') paintCurve(ctx, f, state, b);
-  else if (f.kind === 'shelves') paintShelvesMotion(ctx, f, state, b);
-  else if (f.kind === 'plot') paintPlotMotion(ctx, f, state, b);
-  else if (f.kind === 'stack') paintStackMotion(ctx, f, state, b);
   else if (f.kind === 'lead') paintLead(ctx, f, state, b);
 }
 

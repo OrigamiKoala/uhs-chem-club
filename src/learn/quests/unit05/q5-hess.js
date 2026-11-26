@@ -16,16 +16,18 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import {
-  heatTable, eqn, note, leadFixture, stackFixture, stackRead, FORMATION_TABLE
+  heatTable, eqn, note, tag, plaqueFixture, stackFixture, stackRead, whereIs, FORMATION_TABLE
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
+  { term: /\bstate function\b/i, introducedAt: 2 },
   { term: /\bhess's law\b/i, introducedAt: 2 },
+  { term: /\bstandard state\b/i, introducedAt: 4 },
   { term: /\bstandard enthalpy of formation\b/i, introducedAt: 4 }
 ];
 
@@ -46,11 +48,11 @@ const GUESS_LABEL = { one: '"The one-step route"', two: '"The two-step route"', 
 const C = 'C(s)'; const O2 = 'O₂(g)'; const CO = 'CO(g)'; const CO2 = 'CO₂(g)';
 const H2 = 'H₂(g)'; const H2O = 'H₂O(l)'; const CH4 = 'CH₄(g)'; const CA = 'Ca(s)'; const CAO = 'CaO(s)'; const CACO3 = 'CaCO₃(s)';
 
-/** Where the loose cards stand, the stack's tray, its readout and the answer dial on every stack stage. */
+/** Where the loose cards stand, the stack's tray, and its readout on every stack stage. */
 const CARD_AT = i => ({ x: 25.5, y: 10 + i * 13 });
-const STACK_TRAY = { id: 'stack', label: 'The stack', at: { x: 78, y: 33 }, size: { w: 52, h: 52 }, cell: 50, cellH: 13 };
+const STACK_TRAY = { id: 'stack', label: '', at: { x: 78, y: 33 }, size: { w: 52, h: 52 }, cell: 50, cellH: 13 };
 /** The stack with its energy ladder (hideSum hides the live ΔH total on puzzle stages until Submit). */
-const stackAt = (target, ladder) => stackFixture('wanted', { x: 128, y: 27 }, { tray: 'stack', target, hideSum: true, w: 44, h: 44, ladder });
+const stackAt = (target, ladder) => stackFixture('wanted', { x: 128, y: 27 }, { tray: 'stack', target, hideSum: true, title: '', w: 44, h: 44, ladder });
 
 /** A stage whose answer is the stack itself: refuse an empty or mismatched stack by what the stack prints. */
 function stackAnswer(state) {
@@ -75,15 +77,14 @@ export const STAGES = [
     widget,
     table: heatTable({
       pieces: [
-        note('one', 'The one-step route', { x: 24, y: 16 }),
-        note('two', 'The two-step route', { x: 70, y: 16 }),
-        note('same', 'Both release the same', { x: 116, y: 16 })
+        note('one', 'The one-step route', { x: 28, y: 18 }),
+        note('two', 'The two-step route', { x: 75, y: 18 }),
+        note('same', 'Both release the same', { x: 122, y: 18 })
       ],
-      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'routes', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 46 }, size: { w: 48, h: 20 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 75, y: 45 }, size: { w: 50, h: 20 } }] }
     }),
     hints: [
-      'Watch the clip: one route goes straight from carbon to CO₂, while the other stops at CO first.',
+      'One route goes straight from carbon to CO₂, while the other stops at CO first.',
       'Notice that both routes start with the exact same carbon and oxygen and finish with the same CO₂.',
       'Think of walking between two floors: does taking one long staircase or two short ones change your total height climbed?'
     ],
@@ -154,8 +155,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Both routes ended at the same total.',
-      title: 'Hess\'s Law',
-      body: 'Both routes released 393.5 kJ and ended at the exact same level. A reaction\'s total enthalpy change depends only on its start and end, never the steps in between: this is Hess\'s law.'
+      title: 'Hess\'s Law and State Functions',
+      body: 'A reaction\'s total enthalpy change depends only on its reactants and products, never the steps in between: this is Hess\'s Law. Enthalpy is a state function.'
     }
   },
 
@@ -163,8 +164,8 @@ export const STAGES = [
   {
     id: 's3-methane',
     title: 'Building Methane',
-    briefing: { speaker: SPEAKER, body: 'Tap any card to Flip it (reversing its arrow and ΔH sign) or press Larger to double it. Using Hess\'s law, we can combine known steps to find an unmeasured reaction.' },
-    prompt: 'Which steps, flipped or doubled as needed, add up to C(s) + 2 H₂(g) → CH₄(g)?',
+    briefing: { speaker: SPEAKER, body: 'Tap any card to Flip it (reversing its arrow and ΔH sign), Duplicate it to add another copy, or Remove an extra copy. Using Hess\'s Law, combine known steps to design the target heating reaction.' },
+    prompt: 'Which steps, flipped or duplicated as needed, add up to C(s) + 2 H₂(g) → CH₄(g)?',
     widget,
     table: heatTable({
       pieces: [
@@ -177,22 +178,78 @@ export const STAGES = [
     }),
     hints: [
       'Compare the target reaction at the top with the combined reaction printed below it.',
-      'Spot any substance that is on the wrong side of the arrow, or has the wrong coefficient.',
-      'Flip a card to move a substance to the opposite side, and press Larger to double its amounts.'
+      'Spot any substance that is on the wrong side of the arrow, or needs two copies.',
+      'Flip a card to move a substance to the opposite side, and press Duplicate to add a second copy of a step.'
     ],
     check(state) { return stackAnswer(state); },
     reward: {
       log: 'Three cards canceled to leave methane.',
       title: 'Canceling Steps',
-      body: 'Flipping the methane card changed its ΔH from −890.3 kJ to +890.3 kJ, and doubling the hydrogen card doubled its ΔH. CO₂ and H₂O canceled out, leaving ΔH = −74.8 kJ.'
+      body: 'Flipping the methane card changed its ΔH from −890.3 kJ to +890.3 kJ, and duplicating the hydrogen card doubled its ΔH. CO₂ and H₂O canceled out, leaving ΔH = −74.8 kJ.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    id: 's4-formation',
+    id: 's4-standard-states',
+    title: 'Elements in Standard States',
+    briefing: {
+      speaker: SPEAKER,
+      body: [
+        'Every element has a standard state — its most stable physical form at room temperature (25 °C) and 1 atm, such as C(s), O₂(g), H₂(g), and Ca(s).',
+        'A compound\'s standard enthalpy of formation (ΔH°f) is the heat change for making 1 mole of that compound directly from its pure elements in their standard states. Pure elements in standard states have ΔH°f = 0.'
+      ]
+    },
+    prompt: 'Sort each substance: is it an element in its standard state (ΔH°f = 0) or a compound?',
+    widget,
+    table: heatTable({
+      pieces: [
+        tag('o2', 'O₂(g)', { x: 24, y: 16 }),
+        tag('co2', 'CO₂(g)', { x: 24, y: 31 }),
+        tag('c', 'C(s) graphite', { x: 24, y: 46 }),
+        tag('h2o', 'H₂O(l)', { x: 54, y: 16 }),
+        tag('ca', 'Ca(s)', { x: 54, y: 31 }),
+        tag('caco3', 'CaCO₃(s)', { x: 54, y: 46 })
+      ],
+      zones: {
+        trays: [
+          { id: 'elem', label: 'Element in standard state (ΔH°f = 0)', labelBelow: true, at: { x: 112, y: 16 }, size: { w: 62, h: 20 }, cell: 20, cellH: 10 },
+          { id: 'comp', label: 'Compound (formed from elements)', labelBelow: true, at: { x: 112, y: 45 }, size: { w: 62, h: 20 }, cell: 20, cellH: 10 }
+        ]
+      }
+    }),
+    hints: [
+      'Look at how many different elements appear in each formula.',
+      'A pure element in its standard state contains only one kind of atom in its normal 25 °C form.',
+      'O₂(g), C(s), and Ca(s) are pure elements in standard states (ΔH°f = 0); CO₂, H₂O, and CaCO₃ are compounds.'
+    ],
+    check(state) {
+      const t = state.table;
+      const want = { o2: 'elem', c: 'elem', ca: 'elem', co2: 'comp', h2o: 'comp', caco3: 'comp' };
+      if (Object.keys(want).some(k => !['elem', 'comp'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Sort all six cards into the two trays.' };
+      const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
+      if (!wrong) return { ok: true };
+      const pc = t.pieces[wrong[0]];
+      return { ok: false, msg: `${pc.label} is ${wrong[1] === 'elem' ? 'a pure element in its standard state (ΔH°f = 0)' : 'a compound made of multiple elements'}.` };
+    },
+    reward: {
+      log: 'Pure elements in standard states have ΔH°f = 0.',
+      title: 'Standard States and Formation',
+      body: 'Every element in its standard state (like O₂(g), C(s), and Ca(s)) has ΔH°f = 0. A compound\'s standard enthalpy of formation (ΔH°f) is ΔH for forming 1 mole from those elements.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 5 */
+  {
+    id: 's5-formation',
     title: 'Down to the Elements and Back',
-    briefing: { speaker: SPEAKER, body: 'The standard enthalpy of formation of a compound is ΔH for forming one mole of it from its pure elements (like carbon and oxygen).' },
+    briefing: {
+      speaker: SPEAKER,
+      body: [
+        'Because enthalpy is a state function (Hess\'s Law), we can imagine ANY reaction taking a two-part detour:',
+        'First, break every reactant down into its pure elements in standard states (reversing their formation steps). Second, build the products from those elements.'
+      ]
+    },
     prompt: 'Which formation steps, flipped as needed, add up to CaCO₃(s) → CaO(s) + CO₂(g)?',
     widget,
     table: heatTable({
@@ -206,14 +263,57 @@ export const STAGES = [
     }),
     hints: [
       'Compare the target reaction at the top with the combined reaction printed below it.',
-      'Check which substance appears on the wrong side of the arrow compared to the target.',
-      'A reactant must be broken down into its elements, which is its formation step run in reverse.'
+      'CaCO₃ is a reactant, so we need to break it down into its pure elements.',
+      'Flip the CaCO₃ formation card so CaCO₃ is on the left, then add the CaO and CO₂ formation cards.'
     ],
     check(state) { return stackAnswer(state); },
     reward: {
       log: 'Broken down to elements and rebuilt into CaO and CO₂.',
-      title: 'Formation Steps',
-      body: 'The stack broke CaCO₃ into its elements and built CaO and CO₂ from them, giving ΔH = +178.3 kJ. Overall, ΔH equals the standard enthalpy of formation of products minus reactants.'
+      title: 'Detour Through Elements',
+      body: 'Breaking CaCO₃ into elements (+1206.9 kJ) and forming CaO (−635.1 kJ) and CO₂ (−393.5 kJ) gives ΔH° = +178.3 kJ: always Σ ΔH°f(products) − Σ ΔH°f(reactants).'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    id: 's6-formation-calc',
+    title: 'Calculating ΔH° From Formation Values',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Use ΔH°rxn = Σ ΔH°f(products) − Σ ΔH°f(reactants). Multiply each ΔH°f by its coefficient in the balanced equation, and remember elements in standard states have ΔH°f = 0.'
+    },
+    prompt: 'Using the formation enthalpies on the bench, what is ΔH° for CH₄(g) + 2 O₂(g) → CO₂(g) + 2 H₂O(l)?',
+    entry: { id: 'dh', label: 'Reaction ΔH°', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('eq', 'Target Heating Reaction', { x: 46, y: 28 }, [
+          'CH₄(g) + 2 O₂(g) → CO₂(g) + 2 H₂O(l)',
+          'ΔH°rxn = Σ ΔH°f(products) − Σ ΔH°f(reactants)'
+        ], { w: 74 }),
+        plaqueFixture('tbl', 'Standard Enthalpies of Formation (ΔH°f)', { x: 116, y: 28 }, [
+          'CH₄(g):  −74.8 kJ/mol',
+          'O₂(g):    0.0 kJ/mol  (standard state)',
+          'CO₂(g):  −393.5 kJ/mol',
+          'H₂O(l):  −285.8 kJ/mol'
+        ], { w: 62 })
+      ]
+    }),
+    hints: [
+      'Sum the products first: 1 × ΔH°f(CO₂) + 2 × ΔH°f(H₂O).',
+      'Sum the reactants: 1 × ΔH°f(CH₄) + 2 × 0 (since O₂(g) is an element in its standard state).',
+      'Subtract reactants from products: (−393.5 + 2 × −285.8) − (−74.8).'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'dh');
+      if (v == null || Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Enter ΔH° in kJ (include the sign).' };
+      if (Math.abs(v - (-890.3)) <= 1.5) return { ok: true };
+      return { ok: false, msg: `Check your coefficients and signs: products total −965.1 kJ and reactants total −74.8 kJ; subtract reactants from products.` };
+    },
+    reward: {
+      log: 'Calculated ΔH° = −890.3 kJ for burning methane.',
+      title: 'Formation Enthalpies in Action',
+      body: 'Products (−965.1 kJ) minus reactants (−74.8 kJ) gives ΔH° = −890.3 kJ. Because enthalpy is a state function, formation tables let you calculate ΔH° for almost any reaction.'
     }
   }
 ];
@@ -227,7 +327,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'By Hess\'s law, a reaction\'s enthalpy change is the same no matter which steps it takes, so you can combine measured reactions to find an unmeasured one. Using formation enthalpies, ΔH always equals products minus reactants.'
+      body: 'Because enthalpy is a state function, Hess\'s Law lets you combine measured reactions to design multi-step heating processes. Using standard enthalpies of formation, ΔH°rxn always equals Σ ΔH°f(products) − Σ ΔH°f(reactants).'
     }
   ]
 };
@@ -237,15 +337,15 @@ export const DEBRIEF = {
    ------------------------------------------------------------------ */
 
 const put = (piece, to) => ({ place: { piece, to } });
-const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
 const stack = (...ids) => ids.map(id => put(id, 'tray:stack'));
-const scale = (piece, factor) => ({ scale: { piece, factor } });
 
 export const SOLUTIONS = [
   [put('same', 'slot:guess')],
   [put('a1', 'tray:routeA'), put('b1', 'tray:routeB'), put('b2', 'tray:routeB')],
-  [...stack('c1', 'c2', 'c3'), scale('c2', 2), { flip: 'c3' }],
-  [...stack('f1', 'f2', 'f3'), { flip: 'f1' }]
+  [...stack('c1', 'c2', 'c3'), { duplicate: 'c2' }, { flip: 'c3' }],
+  [put('o2', 'tray:elem'), put('c', 'tray:elem'), put('ca', 'tray:elem'), put('co2', 'tray:comp'), put('h2o', 'tray:comp'), put('caco3', 'tray:comp')],
+  [...stack('f1', 'f2', 'f3'), { flip: 'f1' }],
+  [{ type: { entry: 'dh', value: '-890.3' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -253,7 +353,9 @@ export const MISSES = [
   [],
   [put('a1', 'tray:routeA'), put('b1', 'tray:routeB')],
   [...stack('c1', 'c2', 'c3'), { flip: 'c3' }],
-  [...stack('f1', 'f2', 'f3')]
+  [put('o2', 'tray:comp'), put('c', 'tray:elem'), put('ca', 'tray:elem'), put('co2', 'tray:comp'), put('h2o', 'tray:comp'), put('caco3', 'tray:comp')],
+  [...stack('f1', 'f2', 'f3')],
+  [{ type: { entry: 'dh', value: '-604.5' } }]
 ];
 
 function blankState() { return {}; }

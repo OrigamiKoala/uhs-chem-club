@@ -295,9 +295,14 @@ export function loggedArrangements(state, fid) {
 /** How many arrangements `particles` identical particles can make across `cells` cells. */
 export const waysOf = (cells, particles) => microstateWays(cells, particles, false);
 
-/** One shake of a chamber: `n` distinct cells of `cells`, chosen by the shake's own number. */
+/** One shake of a chamber: when `cells <= 2` (left/right boxes), each particle independently lands in box 1 or 2; otherwise `n` distinct cells. */
 export function shakeCells(fid, k, cells, n) {
   const rnd = seededRng(`${fid}|${k}`);
+  if (cells <= 2 || cells < n) {
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(1 + Math.floor(rnd() * cells));
+    return out.sort((a, b) => a - b);
+  }
   const pool = Array.from({ length: cells }, (_, i) => i + 1);
   const out = [];
   for (let i = 0; i < n; i++) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]);

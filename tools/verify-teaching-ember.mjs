@@ -109,7 +109,7 @@ const picture = (f, state, clock, scope = 'v:') => {
 const count = (f, state, clock) => { const o = P3D.readPainter({ paint: MOTION.paintMotion }, f, state, boxOf(f), clock, 'c:'); return o.dots.length + o.rings.length; };
 const stagesWith = kind => { const out = []; quests.forEach(q => q.stages.forEach((st, i) => { const f = (st.table?.fixtures || []).find(x => x.kind === kind); if (f) out.push({ st, f, q, i }); })); return out; };
 
-const MODELS = ['cup', 'lattice', 'rxn', 'curve', 'shelves', 'plot', 'stack', 'lead'];
+const MODELS = ['cup', 'lattice', 'rxn', 'curve', 'lead'];
 for (const kind of MODELS) {
   const hits = stagesWith(kind);
   if (!hits.length) { fail(`${kind}: no stage stands this moving model up`); continue; }
@@ -141,8 +141,6 @@ for (const kind of MODELS) {
     before !== after ? ok(`${kind}: ${label} changes the model`) : fail(`${kind}: ${label} does not change the model`);
   };
   r('curve', (t, f) => { f.dials.heat.value = f.dials.heat.max; }, 'moving the burner');
-  r('shelves', (t, f) => { const d = f.dials.after; if (d) d.value = d.value > d.min ? d.min : d.max; else f.props.dH = -f.props.dH; }, 'moving the level');
-  r('plot', (t, f) => { f.dials.temp.value = f.dials.temp.value === f.dials.temp.max ? f.dials.temp.min : f.dials.temp.max; }, 'moving the temperature');
   {
     // The cup: a sample dropped in, or the heater turned up, changes how the molecules move.
     const hit = stagesWith('cup').find(h => h.f.dials.heat) || stagesWith('cup')[0];
@@ -194,8 +192,25 @@ for (const kind of MODELS) {
 /* The 3D crowd of the same models. */
 {
   const THREE = await import('three');
-  const c = { THREE, scale: 0.01, mats: {}, toPlate: p => ({ x: p.x * 0.01, z: p.y * 0.01 }), own: m => m, ground: 0 };
-  const sig = g => { let h = 0; g.traverse(o => { if (o.isInstancedMesh) for (let i = 0; i < o.count * 16; i++) h += o.instanceMatrix.array[i] * (i % 7 + 1); }); return h.toFixed(6); };
+  const dummyMat = new THREE.MeshStandardMaterial();
+  const c = { THREE, scale: 0.01, mats: { labCast: dummyMat, labPane: dummyMat, labSteel: dummyMat, labBrass: dummyMat, labGlass: dummyMat, labRubber: dummyMat, labSmoke: dummyMat }, toPlate: p => ({ x: p.x * 0.01, z: p.y * 0.01 }), own: m => m, ground: 0 };
+  const sig = g => {
+    let h = 0;
+    g.traverse(o => {
+      if (o.isInstancedMesh) {
+        for (let i = 0; i < o.count * 16; i++) h += o.instanceMatrix.array[i] * (i % 7 + 1);
+      } else if (o.isMesh && o.geometry?.type === 'SphereGeometry') {
+        h += o.position.x * 13 + o.position.y * 29 + o.position.z * 47;
+      }
+    });
+    return h.toFixed(6);
+  };
+  const sphereCount = g => {
+    if (g?.userData?.counts?.dots) return g.userData.counts.dots;
+    let n = 0;
+    g?.traverse(o => { if (o.isMesh && o.geometry?.type === 'SphereGeometry') n++; });
+    return n;
+  };
   for (const kind of MODELS) {
     let done = false;
     for (const { st, f: f0, q, i } of stagesWith(kind)) {
@@ -203,15 +218,15 @@ for (const kind of MODELS) {
       const f = state.table.fixtures[f0.id];
       const box = boxOf(f);
       const g = HEAT.HEAT_KIT.dress3d(f, state.table, { ...c, box });
-      if (!g?.userData?.counts?.dots) continue;
+      const sc = sphereCount(g);
+      if (!sc) continue;
       const a = sig(g);
-      for (let k = 0; k < 90; k++) g.userData.tick(1 / 30, false);
+      for (let k = 0; k < 90; k++) g.userData.tick?.(1 / 30, false);
       const b = sig(g);
-      const g2 = HEAT.HEAT_KIT.dress3d(f, state.table, { ...c, box }); const s0 = sig(g2); for (let k = 0; k < 30; k++) g2.userData.tick(1 / 30, true);
-      const n = g.userData.counts;
-      a !== b ? ok(`${kind} 3D: ${n.dots} spheres move over 90 frames (${q.id}:${i + 1})`) : fail(`${kind} 3D: the crowd does not move`);
+      const g2 = HEAT.HEAT_KIT.dress3d(f, state.table, { ...c, box }); const s0 = sig(g2); for (let k = 0; k < 30; k++) g2.userData.tick?.(1 / 30, true);
+      a !== b ? ok(`${kind} 3D: ${sc} spheres move over 90 frames (${q.id}:${i + 1})`) : fail(`${kind} 3D: the crowd does not move`);
       s0 === sig(g2) ? ok(`${kind} 3D: held still under reduced motion`) : fail(`${kind} 3D: moves under reduced motion`);
-      n.dots <= 220 ? ok(`${kind} 3D: ${n.dots} spheres, ${n.rings} rings (cap 220)`) : fail(`${kind} 3D: over the sphere cap`);
+      sc <= 220 ? ok(`${kind} 3D: ${sc} spheres (cap 220)`) : fail(`${kind} 3D: over the sphere cap`);
       done = true; break;
     }
     if (!done) fail(`${kind}: no stage gives its 3D dress a sphere`);

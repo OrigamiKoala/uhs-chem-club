@@ -224,6 +224,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null, 
     if (kind === 'cjar' && hasFixture('changepot')) continue;
     if ((kind === 'pot:ionchip' || kind === 'ionchip') && allPieces.filter(q => q.kind === 'ionchip').every(q => q.fixed)) continue;
     if (kind === 'charge' && hasFixture('cup')) continue;
+    if (kind === 'block' && allPieces.filter(q => q.kind === 'block').length < 2) continue;
     if (kind === 'ptc' && hasFixture('cells')) continue;
     if (kind === 'specimen' && allPieces.filter(q => q.kind === 'specimen').every(q => q.fixed)) continue;
     if (ligarSkip(table, p)) continue;
