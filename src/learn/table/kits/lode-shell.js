@@ -116,12 +116,12 @@ function paintDshell(ctx, f, state, b) {
   const right = F.x(f.size.w - 2.2);
   if (!f.props.hideCount) {
     const nm = cap(ELEMENTS[r.el].name);
-    const line = f.props.mode === 'remove' ? `${nm}: charge ${signed(charge)}` : f.props.mode === 'build' ? `Electrons: ${r.n} of ${ELEMENTS[r.el].s + ELEMENTS[r.el].d}` : `${nm}${ELEMENTS[r.el].exception ? ' (an exception)' : ''}`;
+    const line = f.props.mode === 'remove' ? `${nm}: charge ${signed(charge)}` : f.props.mode === 'build' ? `Electrons: ${r.n} of ${ELEMENTS[r.el].s + ELEMENTS[r.el].d}` : nm;
     say(ctx, line, right, F.y(3.2), F.size(2.6, 8), { align: 'right', color: C.text, weight: 600, maxW: F.len(f.size.w * 0.45) });
   }
   // The result of the last test, while the boxes are as they were tested.
   if (test) {
-    const words = test.lowest ? 'Lowest energy' : `${test.moves.length} electron${test.moves.length > 1 ? 's' : ''} can move lower`;
+    const words = test.lowest ? 'Lowest energy' : `${test.moves.length} electron${test.moves.length > 1 ? 's' : ''} can move lower (follow arcs)`;
     const runW = Math.max(9, 'Test Energy'.length * 1.9 + 3);
     say(ctx, words, F.x(g.lx + 1), F.y(f.size.h - 3.6), F.size(2.0, 6.5), { color: test.lowest ? C.phosphor : C.amber, weight: 600, maxW: F.len(f.size.w - runW - 6 - g.lx) });
   }
@@ -242,8 +242,9 @@ function paintStrip(ctx, f, state, b) {
   const yD = 9 * lk; const yS = yD + 7 * lk; const yP = f.size.h - 15;
   // A sealed strip shows no ladder: the atom's own electrons would name it.
   if (p.sealed) {
-    say(ctx, 'The atom is sealed:', F.x(lx), F.y(yS - 2), F.size(1.9, 6), { color: C.dim });
-    say(ctx, 'only the costs are shown', F.x(lx), F.y(yS + 2), F.size(1.9, 6), { color: C.dim });
+    const leftW = F.len(Math.max(12, g.bx0 - lx - 3));
+    say(ctx, 'Sealed atom:', F.x(lx), F.y(yS - 2), F.size(1.9, 6.2), { color: C.dim, maxW: leftW });
+    say(ctx, 'costs only', F.x(lx), F.y(yS + 2), F.size(1.9, 6.2), { color: C.dim, maxW: leftW });
   } else {
     say(ctx, '3d', F.x(lx), F.y(yD + bhh / 2), F.size(2.1 * lk, 6.5), { color: C.d3, weight: 700 });
     left.d.forEach((v, i) => orbital(ctx, F, lx + 4.2 * lk + i * pitch, yD, bs, bhh, v, { colour: C.d3 }));
@@ -254,12 +255,12 @@ function paintStrip(ctx, f, state, b) {
     say(ctx, 'inner shell', F.x(lx), F.y(yP + bhh + 2.2), F.size(1.8, 6), { color: C.p3 });
   }
   // The electron just removed, rising out of the ladder.
-  glide(`${f.id}:rm`, b, 0, p.removed, 0.8);
+  glide(`${f.id}:rm`, b, 0, p.removed, 0.35);
   const k = since(`${f.id}:rm`, b);
-  if (p.removed && k < 1.2 && !p.sealed) {
+  if (p.removed && k < 0.45 && !p.sealed) {
     const sub = r.from[p.removed - 1];
     const y0 = sub === '3d' ? yD : sub === '4s' ? yS : yP;
-    const t = Math.min(1, k / 1.2);
+    const t = Math.min(1, k / 0.45);
     ctx.globalAlpha = 1 - t;
     ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(F.x(lx + 12 * lk + t * 8), F.y(y0 - t * 6), Math.max(2.2, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
@@ -267,20 +268,21 @@ function paintStrip(ctx, f, state, b) {
   // The axis and the bars.
   ctx.strokeStyle = C.steel;
   ctx.beginPath(); ctx.moveTo(F.x(g.bx0 - 1), F.y(g.top)); ctx.lineTo(F.x(g.bx0 - 1), F.y(g.bottom)); ctx.lineTo(F.x(g.bx1), F.y(g.bottom)); ctx.stroke();
-  say(ctx, 'kJ/mol', F.x(g.bx0 - 1.5), F.y(g.top - 2.4), F.size(1.9, 6), { color: C.steel });
+  say(ctx, 'kJ/mol', F.x(g.bx0 - 1.5), F.y(g.top - 2.4), F.size(2.2, 7), { color: C.steel, weight: 600 });
   const H = g.bottom - g.top - 3;
   r.costs.forEach((v, i) => {
     const sub = r.from[i];
-    const hh = Math.max(0.6, (v / p.scale) * H);
+    const hh = Math.max(1.8, (v / p.scale) * H);
     const x = g.bx0 + i * g.bw + g.bw * 0.15;
-    const grow = i === p.removed - 1 ? Math.min(1, k / 0.6) : 1;
+    const grow = i === p.removed - 1 ? Math.min(1, k / 0.25) : 1;
     ctx.fillStyle = p.sealed ? C.dust : sub === '3p' ? C.p3 : sub === '4s' ? C.s4 : C.d3;
     ctx.fillRect(F.x(x), F.y(g.bottom - hh * grow), F.len(g.bw * 0.7), F.len(hh * grow));
-    if (grow >= 1) say(ctx, Math.round(v).toLocaleString('en-US'), F.x(x + g.bw * 0.35), F.y(g.bottom - hh - 1.6), F.size(Math.min(2.2, g.bw * 0.24), 5.5), { align: 'center', color: C.text, maxW: F.len(g.bw * 1.0) });
-    say(ctx, String(i + 1), F.x(x + g.bw * 0.35), F.y(g.bottom + 2), F.size(2, 6), { align: 'center', color: C.dust });
+    if (grow >= 1) say(ctx, Math.round(v).toLocaleString('en-US'), F.x(x + g.bw * 0.35), F.y(g.bottom - hh - 1.6), F.size(Math.min(2.2, g.bw * 0.26), 6), { align: 'center', color: C.text, maxW: F.len(g.bw * 1.05) });
+    if (p.n > 1) say(ctx, String(i + 1), F.x(x + g.bw * 0.35), F.y(g.bottom + 2), F.size(2, 6.2), { align: 'center', color: C.dust });
+    else say(ctx, `${ionName(p.el, p.q0)} → ${ionName(p.el, p.q0 + 1)}`, F.x(x + g.bw * 0.35), F.y(g.bottom + 2.4), F.size(1.9, 6.5), { align: 'center', color: C.dust, sans: true });
   });
-  say(ctx, 'electron removed', F.x(g.bx0), F.y(g.bottom + 5), F.size(1.9, 6), { color: C.dust });
-  if (!r.removed) say(ctx, 'Press "Remove an Electron"', F.x((g.bx0 + g.bx1) / 2), F.y((g.top + g.bottom) / 2), F.size(1.9, 6.2), { align: 'center', color: C.dim });
+  if (p.n > 1) say(ctx, 'electron removed', F.x(g.bx0), F.y(g.bottom + 5), F.size(1.9, 6.2), { color: C.dust });
+  if (!r.removed) say(ctx, 'Press "Remove an Electron"', F.x((g.bx0 + g.bx1) / 2), F.y((g.top + g.bottom) / 2), F.size(1.9, 6.2), { align: 'center', color: C.dim, maxW: F.len(g.bx1 - g.bx0 - 2) });
   // The mark: where the player says the cost jumps.
   if (r.mark > 0) {
     const x = g.bx0 + r.mark * g.bw;
@@ -298,7 +300,7 @@ function stripTaps(f) {
   const out = [];
   for (let k = 1; k < f.props.n; k++) {
     const x = g.bx0 + k * g.bw;
-    out.push({ x0: x - g.bw * 0.5, x1: x + g.bw * 0.5, y0: g.top, y1: g.bottom, dial: 'mark', value: k });
+    out.push({ x0: x - g.bw * 0.5, x1: x + g.bw * 0.5, y0: g.top - 2, y1: g.bottom + 4, dial: 'mark', value: k });
   }
   return out;
 }
@@ -314,17 +316,17 @@ registerFixture('iestrip', { paint: paintStrip, run: runStrip, tapZones: stripTa
 
 /* ================================================================== lchoice */
 
-/** The answer given by tapping an instrument: a hidden dial (`value`), its options' words, and a blank start. */
+/** The answer given by tapping an instrument (or tapping an option directly inside this box): a hidden dial (`value`), its options' words, and a blank start. */
 export function lchoiceFixture(id, label, at, { options, w = 44, list = false, row = false } = {}) {
-  const h = list ? 7 + options.length * 7 : row ? 13 : 9;
-  // A list (or a row) is tapped where it stands: each option is a box that sets the answer.
+  const h = list ? 7 + options.length * 7 : row ? 13 : 11;
+  // Every lchoice box is directly tappable (in addition to any `pickOf` instrument above it).
   const cw = (w - 2) / options.length;
   const taps = list ? options.map((_, i) => ({ x0: 1, x1: w - 1, y0: 5.5 + i * 7, y1: 11.5 + i * 7, dial: 'value', value: i + 1 }))
-    : row ? options.map((_, i) => ({ x0: 1 + i * cw, x1: 1 + (i + 1) * cw, y0: 5, y1: 12.5, dial: 'value', value: i + 1 })) : undefined;
+    : options.map((_, i) => ({ x0: 1 + i * cw, x1: 1 + (i + 1) * cw, y0: 4.5, y1: h - 0.5, dial: 'value', value: i + 1 }));
   return {
     id, kind: 'lchoice', label, at: { ...at }, size: { w, h }, noRun: true,
     dials: { value: { min: 0, max: options.length, step: 1, value: 0, label: 'Chosen' } },
-    props: { options, hidden: ['value'], list, row, ...(taps ? { taps } : {}) }
+    props: { options, hidden: ['value'], list, row: row || !list, taps }
   };
 }
 export const chosen = (state, id) => { const v = Math.round(state.fixtures[id]?.dials?.value?.value ?? 0); return v ? state.fixtures[id].props.options[v - 1] : null; };

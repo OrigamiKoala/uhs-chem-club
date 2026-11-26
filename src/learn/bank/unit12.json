@@ -7,11 +7,11 @@
         {
           "id": "q1-dblock#b1",
           "quest": "q1-dblock",
-          "question": "Manganese has seven electrons outside its argon core. How are they arranged at the lowest energy?",
+          "question": "Manganese has seven outer electrons beyond its argon core. How are they arranged at the lowest energy?",
           "options": [
             {
               "id": "a",
-              "label": "4s² 3d⁵, each 3d electron alone in its own orbital"
+              "label": "4s² 3d⁵, with one electron in each 3d orbital"
             },
             {
               "id": "b",
@@ -27,12 +27,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "4s fills first in the neutral atom, then 3d takes one electron per orbital: five 3d electrons fill all five orbitals singly, with no pair."
+          "explanation": "In a neutral atom, 4s fills first and 3d fills singly before pairing. Five 3d electrons put one unpaired electron in each of the five 3d orbitals."
         },
         {
           "id": "q1-dblock#b2",
           "quest": "q1-dblock",
-          "question": "Nickel's outer electrons are 4s² 3d⁸. Which arrangement does the Ni²⁺ ion have?",
+          "question": "Neutral nickel has outer electrons 4s² 3d⁸. What is the electron arrangement of the Ni²⁺ ion?",
           "options": [
             {
               "id": "a",
@@ -52,7 +52,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Once the atom carries a charge its 3d level lies below 4s, so the two 4s electrons leave first and Ni²⁺ keeps all eight 3d electrons."
+          "explanation": "Once a metal becomes a positive ion, 3d drops below 4s, so the two 4s electrons leave first and Ni²⁺ keeps all eight 3d electrons."
         }
       ]
     },
@@ -61,7 +61,7 @@
         {
           "id": "q2-charges#b1",
           "quest": "q2-charges",
-          "question": "Magnesium's first three ionization energies are 738, 1451 and 7733 kJ/mol. Which ion does magnesium form?",
+          "question": "Magnesium's first three ionization energies are 738, 1451, and 7733 kJ/mol. Which ion does magnesium form?",
           "options": [
             {
               "id": "a",
@@ -81,12 +81,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "The cost jumps more than fivefold at the third electron, which would come from the full inner shell, so magnesium loses two electrons and forms Mg²⁺."
+          "explanation": "The ionization energy jumps more than fivefold at the third electron because it comes from a full inner shell, so magnesium loses two electrons to form Mg²⁺."
         },
         {
           "id": "q2-charges#b2",
           "quest": "q2-charges",
-          "question": "Scandium forms only the Sc³⁺ ion, and its outer electrons are 4s² 3d¹. Is scandium a transition metal by the definition used on this bench?",
+          "question": "Neutral scandium is 4s² 3d¹, and its only common ion is Sc³⁺. Is scandium a transition metal by the definition used here?",
           "options": [
             {
               "id": "a",
@@ -94,11 +94,11 @@
             },
             {
               "id": "b",
-              "label": "Yes: its atom has a 3d electron"
+              "label": "Yes: its neutral atom has a 3d electron"
             },
             {
               "id": "c",
-              "label": "Yes: it forms an ion with a charge of 3+"
+              "label": "Yes: it forms a 3+ ion"
             },
             {
               "id": "d",
@@ -106,7 +106,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Sc³⁺ has lost all three outer electrons, so its 3d subshell is empty. On this bench a transition metal must form an ion with a partly filled 3d subshell. Some books also count elements whose atoms have a partly filled d subshell, and by that rule scandium counts."
+          "explanation": "Sc³⁺ has lost all three outer electrons, leaving its 3d subshell empty. Under our definition, a transition metal must form at least one ion with a partly filled 3d subshell (though some textbooks also count elements whose neutral atoms have partly filled d subshells)."
         }
       ]
     },
@@ -115,7 +115,7 @@
         {
           "id": "q3-complex#b1",
           "quest": "q3-complex",
-          "question": "What is the charge of the complex ion made of one Co³⁺ ion, four NH₃ molecules and two Cl− ions?",
+          "question": "What is the overall charge of a complex ion made of one Co³⁺ ion, four NH₃ molecules, and two Cl− ions?",
           "options": [
             {
               "id": "a",
@@ -135,12 +135,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "Ammonia carries no charge, so the charge of the whole is the metal's +3 plus two −1 chloride ions: +3 − 2 = +1, [Co(NH₃)₄Cl₂]⁺."
+          "explanation": "Ammonia is neutral (0), so the overall charge is +3 from Co³⁺ plus two −1 chloride ions: +3 − 2 = +1, giving [Co(NH₃)₄Cl₂]⁺."
         },
         {
           "id": "q3-complex#b2",
           "quest": "q3-complex",
-          "question": "Oxalate, C₂O₄²−, bonds to a metal ion through two oxygen atoms. How many oxalate ions fill all six places round Fe³⁺, and what is the charge of the whole?",
+          "question": "Oxalate (C₂O₄²−) bonds to a metal ion through two oxygen atoms. How many oxalate ions fill six spots around Fe³⁺, and what is the overall charge?",
           "options": [
             {
               "id": "a",
@@ -160,7 +160,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Each oxalate takes two places, so three fill six. Three ions of −2 bring +3 to +3 − 6 = −3: [Fe(C₂O₄)₃]³−."
+          "explanation": "Each oxalate takes two spots, so three fill all six. Three −2 ions combined with Fe³⁺ give +3 − 6 = −3, forming [Fe(C₂O₄)₃]³−."
         }
       ]
     },
@@ -169,7 +169,7 @@
         {
           "id": "q4-shapes#b1",
           "quest": "q4-shapes",
-          "question": "Round an octahedron, how many different arrangements are there of five NH₃ and one Cl−?",
+          "question": "In an octahedral complex with five NH₃ and one Cl−, how many different arrangements exist?",
           "options": [
             {
               "id": "a",
@@ -189,20 +189,20 @@
             }
           ],
           "answer": "a",
-          "explanation": "All six places of an octahedron are alike: any one can be turned into any other, so a single Cl− can sit in only one distinct place."
+          "explanation": "All six positions on an octahedron are identical. Rotating the complex turns any single Cl− placement into any other, so there is only one arrangement."
         },
         {
           "id": "q4-shapes#b2",
           "quest": "q4-shapes",
-          "question": "Why is there no cis and trans form of a tetrahedral complex with two NH₃ and two Cl−?",
+          "question": "Why does a tetrahedral complex with two NH₃ and two Cl− have no cis or trans isomers?",
           "options": [
             {
               "id": "a",
-              "label": "Every pair of places in a tetrahedron is the same distance apart"
+              "label": "Every pair of positions in a tetrahedron is the same angle apart"
             },
             {
               "id": "b",
-              "label": "A tetrahedron has only two places"
+              "label": "A tetrahedron only holds two ligands"
             },
             {
               "id": "c",
@@ -210,11 +210,11 @@
             },
             {
               "id": "d",
-              "label": "Its ligands are all in one plane"
+              "label": "All four ligands lie in one flat plane"
             }
           ],
           "answer": "a",
-          "explanation": "In a tetrahedron each place is 109.5° from every other place, so no pair is 'side by side' rather than 'opposite': all placements are one model turned."
+          "explanation": "Every position in a tetrahedron is 109.5° from every other position, so there is no difference between side by side and opposite. Every placement is the same molecule rotated."
         }
       ]
     },
@@ -223,7 +223,7 @@
         {
           "id": "q5-colour#b1",
           "quest": "q5-colour",
-          "question": "A solution of a nickel(II) complex takes out red light. What colour does the solution look?",
+          "question": "A nickel(II) complex solution absorbs red light. What colour does the solution look?",
           "options": [
             {
               "id": "a",
@@ -243,12 +243,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "The colour seen is what is left of white light. Green sits opposite red on the colour wheel, so a solution that takes out red looks green."
+          "explanation": "You see the light that passes through. Green sits opposite red on the colour wheel, so a solution that absorbs red looks green."
         },
         {
           "id": "q5-colour#b2",
           "quest": "q5-colour",
-          "question": "Ligand X gives a metal ion a wider gap than ligand Y. Which complex takes out light of shorter wavelength?",
+          "question": "Ligand X creates a wider d-orbital gap than ligand Y. Which complex absorbs shorter-wavelength light?",
           "options": [
             {
               "id": "a",
@@ -260,49 +260,49 @@
             },
             {
               "id": "c",
-              "label": "Both the same"
+              "label": "Both absorb the same wavelength"
             },
             {
               "id": "d",
-              "label": "Neither takes out light"
+              "label": "Neither absorbs light"
             }
           ],
           "answer": "a",
-          "explanation": "A wider gap is matched by photons of more energy, and photons of more energy have a shorter wavelength."
+          "explanation": "A wider gap requires higher-energy photons, and higher-energy photons have shorter wavelengths."
         }
       ],
       "worked": {
         "id": "q5-colour#w",
         "quest": "q5-colour",
         "title": "The gap from a wavelength",
-        "setup": "A chromium(III) complex takes out light of 575 nm. Find its gap in kJ for each mole of photons. Use h = 6.63 × 10⁻³⁴ J s, c = 3.00 × 10⁸ m/s and Nₐ = 6.02 × 10²³ /mol.",
+        "setup": "A chromium(III) complex absorbs 575 nm light. Find its d-orbital gap in kJ/mol. Use h = 6.63 × 10⁻³⁴ J s, c = 3.00 × 10⁸ m/s, and Nₐ = 6.02 × 10²³ /mol.",
         "steps": [
           {
-            "say": "What is the energy of one photon of 575 nm, in units of 10⁻¹⁹ J?",
+            "say": "What is the energy of one 575 nm photon, in units of 10⁻¹⁹ J?",
             "kind": "number",
             "answer": 3.459,
             "unit": "× 10⁻¹⁹ J",
             "calc": "6.63e-34 * 3.00e8 / 575e-9 / 1e-19",
-            "hint": "E = hc ÷ λ, with λ in metres: 575 nm is 575 × 10⁻⁹ m.",
+            "hint": "Use E = hc ÷ λ with λ in metres: 575 nm = 575 × 10⁻⁹ m.",
             "explain": "(6.63 × 10⁻³⁴ × 3.00 × 10⁸) ÷ (575 × 10⁻⁹) = 3.46 × 10⁻¹⁹ J."
           },
           {
-            "say": "What is the energy of a mole of these photons, in joules?",
+            "say": "What is the energy of one mole of these photons, in J/mol?",
             "kind": "number",
             "answer": 208240,
             "unit": "J/mol",
             "calc": "6.63e-34 * 3.00e8 / 575e-9 * 6.02e23",
             "hint": "Multiply one photon's energy by Avogadro's number.",
-            "explain": "3.46 × 10⁻¹⁹ × 6.02 × 10²³ = 208,000 J."
+            "explain": "3.46 × 10⁻¹⁹ × 6.02 × 10²³ = 208,000 J/mol."
           },
           {
-            "say": "What is that in kJ for each mole?",
+            "say": "Convert that energy to kJ/mol.",
             "kind": "number",
             "answer": 208.2,
             "unit": "kJ/mol",
             "calc": "6.63e-34 * 3.00e8 / 575e-9 * 6.02e23 / 1000",
-            "hint": "There are 1000 J in 1 kJ.",
-            "explain": "208,000 J ÷ 1000 = 208 kJ for each mole."
+            "hint": "Divide by 1000 since 1 kJ = 1000 J.",
+            "explain": "208,000 J/mol ÷ 1000 = 208 kJ/mol."
           },
           {
             "say": "Titanium's gap is 239 kJ/mol. How does this chromium complex's gap compare?",
@@ -322,11 +322,11 @@
               }
             ],
             "answer": "a",
-            "hint": "Compare 208 with 239.",
-            "explain": "208 kJ/mol is less than 239, so the gap is narrower and the light taken out has a longer wavelength."
+            "hint": "Compare 208 kJ/mol with 239 kJ/mol.",
+            "explain": "208 kJ/mol is smaller than 239 kJ/mol, so the gap is narrower and it absorbs longer-wavelength light."
           }
         ],
-        "finish": "A gap is the energy of the photon it takes out: hc ÷ λ for one photon, times Avogadro's number for a mole."
+        "finish": "A complex's energy gap matches the absorbed photon's energy: E = hc ÷ λ for one photon, multiplied by Avogadro's number for one mole."
       }
     },
     "q6-spin": {
@@ -334,7 +334,7 @@
         {
           "id": "q6-spin#b1",
           "quest": "q6-spin",
-          "question": "When the crystal field gap between the lower three and upper two d orbitals is wider than the pairing cost, how do six d electrons arrange themselves?",
+          "question": "When the crystal field gap is wider than the pairing cost, how do six d electrons arrange themselves?",
           "options": [
             {
               "id": "a",
@@ -350,16 +350,16 @@
             },
             {
               "id": "d",
-              "label": "All six leave the ion, since the gap is too wide to hold them."
+              "label": "All six leave the ion because the gap is too wide."
             }
           ],
           "answer": "a",
-          "explanation": "Each electron takes the arrangement that costs less energy: when crossing the gap costs more than pairing, all six pair in the lower three orbitals."
+          "explanation": "Electrons take the lowest-energy arrangement. When crossing the gap costs more than pairing, all six pair up in the lower three orbitals."
         },
         {
           "id": "q6-spin#b2",
           "quest": "q6-spin",
-          "question": "A manganese(II) complex with water has five unpaired d electrons, while a nickel(II) complex with water has two. How do their magnetic pulls compare?",
+          "question": "A manganese(II) water complex has five unpaired d electrons, while a nickel(II) water complex has two. How do their magnetic pulls compare?",
           "options": [
             {
               "id": "a",
@@ -371,15 +371,15 @@
             },
             {
               "id": "c",
-              "label": "Both are pulled by the same amount because both are +2 ions."
+              "label": "Both are pulled equally because both are +2 ions."
             },
             {
               "id": "d",
-              "label": "Neither is pulled because water ligands cancel unpaired electrons."
+              "label": "Neither is pulled because water cancels unpaired electrons."
             }
           ],
           "answer": "a",
-          "explanation": "Magnetic pull grows with the number of unpaired electrons, so five unpaired electrons give a stronger pull than two."
+          "explanation": "Magnetic pull grows stronger with more unpaired electrons, so five unpaired electrons produce a stronger pull than two."
         }
       ]
     },
@@ -388,7 +388,7 @@
         {
           "id": "boss-coil#b1",
           "quest": "boss-coil",
-          "question": "What is the overall charge of the complex ion formed by a Co³⁺ ion, five neutral NH₃ molecules, and one Cl− ion?",
+          "question": "What is the overall charge of a complex ion formed by Co³⁺, five neutral NH₃ molecules, and one Cl− ion?",
           "options": [
             {
               "id": "a",
@@ -413,7 +413,7 @@
         {
           "id": "boss-coil#b2",
           "quest": "boss-coil",
-          "question": "Both [Fe(H₂O)₆]³⁺ and [Fe(CN)₆]³− hold Fe³⁺ (five d electrons). Why is [Fe(H₂O)₆]³⁺ pulled harder by a magnet?",
+          "question": "Both [Fe(H₂O)₆]³⁺ and [Fe(CN)₆]³− contain Fe³⁺ (five d electrons). Why is [Fe(H₂O)₆]³⁺ pulled harder by a magnet?",
           "options": [
             {
               "id": "a",
@@ -421,7 +421,7 @@
             },
             {
               "id": "b",
-              "label": "Water adds extra electrons to iron(III), increasing the count to six."
+              "label": "Water adds an extra electron to iron(III), raising the count to six."
             },
             {
               "id": "c",
@@ -429,7 +429,7 @@
             },
             {
               "id": "d",
-              "label": "Water ligands are themselves paramagnetic."
+              "label": "Water ligands are themselves magnetic."
             }
           ],
           "answer": "a",

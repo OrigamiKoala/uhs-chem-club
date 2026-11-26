@@ -13,25 +13,26 @@ import { EL, pairPlace, pairsOf } from '../../engine/thorndata.js';
 
 export const C = Object.freeze({
   ...PLATE_COLORS,
-  e: '#efe6cf',           // an electron pair
-  pi: '#d07a4a',          // the second pair of a double bond
-  bond: '#8a8174',
-  win: '#100f0c',
-  orange: '#c9772e',      // bromine water
+  e: '#efe6cf',           // a shared bond electron pair
+  lone: '#f2c97d',        // a lone (non-bonding) electron pair
+  pi: '#e8844c',          // the second pair of a double bond
+  bond: '#b5ac9e',
+  win: '#1c1a16',
+  orange: '#d48032',      // bromine water
   clear: '#3b3a36',
-  plus: '#6f8fb0',
-  minus: '#c0652b'
+  plus: '#7fa4cc',
+  minus: '#d9783e'
 });
 
 export const ATOM_INK = Object.freeze({
-  C: { fill: '#3a3632', text: '#e8e2d6', ring: '#8a8174' },
-  H: { fill: '#d6cebd', text: '#14100c', ring: '#d6cebd' },
-  O: { fill: '#a8502f', text: '#f4ead8', ring: '#c0652b' },
-  N: { fill: '#4f6f92', text: '#f0ece2', ring: '#6f8fb0' },
-  Br: { fill: '#8a5a2a', text: '#f4ead8', ring: '#b07a3a' },
-  Cl: { fill: '#6c7a3c', text: '#f4ead8', ring: '#8f9c52' },
-  F: { fill: '#7a8a5a', text: '#14100c', ring: '#9aa870' },
-  Na: { fill: '#77706a', text: '#f0ece2', ring: '#a39a90' }
+  C: { fill: '#565049', text: '#f5f0e6', ring: '#b8b0a2' },
+  H: { fill: '#ded7c7', text: '#14100c', ring: '#ded7c7' },
+  O: { fill: '#b55633', text: '#f8f0e0', ring: '#d4744e' },
+  N: { fill: '#5278a0', text: '#f4f0e8', ring: '#7ca2c8' },
+  Br: { fill: '#96622e', text: '#f8f0e0', ring: '#c08848' },
+  Cl: { fill: '#4a6e38', text: '#f4ead8', ring: '#78a360' },
+  F: { fill: '#b4c47a', text: '#14100c', ring: '#d4e29c' },
+  Na: { fill: '#827b74', text: '#f4f0e8', ring: '#b0a79d' }
 });
 
 export const frameOf = b => ({
@@ -52,11 +53,11 @@ export function say(ctx, text, x, y, size, o = {}) {
 }
 
 export function title(ctx, f, F, b, text) {
-  say(ctx, text ?? f.label, F.x(2.2), F.y(3.2), F.size(2.6, 8), { color: C.dust, weight: 600, maxW: F.len(f.size.w * 0.62) });
+  say(ctx, text ?? f.label, F.x(2.2), F.y(3.2), F.size(2.8, 9), { color: C.dust, weight: 600, maxW: F.len(f.size.w * 0.65) });
 }
 /** The line at the foot of a fixture: what the last action showed. */
 export function foot(ctx, f, F, text, color = C.dust, right = 0) {
-  say(ctx, text, F.x(2.2), F.y(f.size.h - 3.2), F.size(1.95, 6.4), { color, weight: 600, maxW: F.len(f.size.w - 4.4 - right) });
+  say(ctx, text, F.x(2.2), F.y(f.size.h - 3.2), F.size(2.15, 7.5), { color, weight: 600, maxW: F.len(f.size.w - 4.4 - right) });
 }
 
 export const ease = k => { const c = Math.max(0, Math.min(1, k)); return c * c * (3 - 2 * c); };
@@ -146,8 +147,8 @@ export function drawScene(ctx, F, G, scene, o = {}) {
   const line = (a, b, order, alpha, hot) => {
     const p = pos(a); const q = pos(b);
     const dx = q.x - p.x; const dy = q.y - p.y; const L = Math.hypot(dx, dy) || 1;
-    const nx = (-dy / L) * u * 0.085; const ny = (dx / L) * u * 0.085;
-    ctx.globalAlpha = alpha; ctx.strokeStyle = hot ? C.amber : C.bond; ctx.lineWidth = Math.max(1.4, u * (hot ? 0.075 : 0.055));
+    const nx = (-dy / L) * u * 0.105; const ny = (dx / L) * u * 0.105;
+    ctx.globalAlpha = alpha; ctx.strokeStyle = hot ? C.amber : C.bond; ctx.lineWidth = Math.max(1.8, u * (hot ? 0.085 : 0.065));
     const draw = (ox, oy) => { ctx.beginPath(); ctx.moveTo(p.x + ox, p.y + oy); ctx.lineTo(q.x + ox, q.y + oy); ctx.stroke(); };
     if (order >= 2) { draw(nx, ny); draw(-nx, -ny); } else draw(0, 0);
     ctx.globalAlpha = 1; ctx.lineWidth = 1;
@@ -168,13 +169,30 @@ export function drawScene(ctx, F, G, scene, o = {}) {
     const hide = new Set(o.hide || []);
     const src = k < 0.5 ? scene : to;
     const alpha = o.to ? Math.abs(1 - 2 * k) : 1;
+    const interactive = Boolean(o.interactivePairs);
+    const srcSet = o.srcSet || null;
     for (const p of pairPoints(src)) {
       if (hide.has(p.id)) continue;
       const x = F.x(G.X(p.x)); const y = F.y(G.Y(p.y));
       // Along a bond the two dots straddle the line; a lone pair's dots lie across the direction it points.
       const across = { x: -p.ay, y: p.ax };
-      dotPair(ctx, x, y, across.x, -across.y, Math.max(1.5, u * 0.062), p.kind === 'p' ? C.pi : C.e, alpha);
-      if (lit.has(p.id)) { ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, Math.max(5, u * 0.2), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
+      const isSpecial = p.kind === 'p' || p.kind === 'l';
+      const selectable = interactive && (!srcSet || srcSet.has(p.id));
+      const dotR = isSpecial
+        ? Math.max(selectable ? 3.2 : 2.5, u * (selectable ? 0.105 : 0.085))
+        : Math.max(2.0, u * 0.072);
+      const col = p.kind === 'p' ? C.pi : p.kind === 'l' ? C.lone : C.e;
+      if (selectable && isSpecial && !lit.has(p.id)) {
+        ctx.save();
+        ctx.strokeStyle = p.kind === 'p' ? C.pi : C.lone;
+        ctx.globalAlpha = alpha * 0.55;
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([2.5, 2.5]);
+        ctx.beginPath(); ctx.arc(x, y, Math.max(7, u * 0.24), 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+      dotPair(ctx, x, y, across.x, -across.y, dotR, col, alpha);
+      if (lit.has(p.id)) { ctx.strokeStyle = C.amber; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(x, y, Math.max(8, u * 0.26), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
     }
   }
 
@@ -182,25 +200,26 @@ export function drawScene(ctx, F, G, scene, o = {}) {
   for (const [id, a] of Object.entries(scene.atoms)) {
     const p = pos(id);
     const ink = ATOM_INK[a.el] || ATOM_INK.C;
-    const r = a.label ? u * 0.3 : a.el === 'H' ? u * 0.17 : u * 0.24;
+    const r = a.label ? u * 0.3 : a.el === 'H' ? u * 0.18 : u * 0.25;
     const b2 = to.atoms[id] || a;
     const q = k < 0.5 ? (a.q || 0) : (b2.q || 0);
     if (a.label) {
-      ctx.fillStyle = C.win; ctx.fillRect(p.x - r * 1.25, p.y - r * 0.8, r * 2.5, r * 1.6);
-      say(ctx, a.label, p.x, p.y, Math.max(7, u * 0.3), { align: 'center', color: C.text, weight: 700, sans: true });
+      ctx.fillStyle = C.win; ctx.fillRect(p.x - r * 1.35, p.y - r * 0.85, r * 2.7, r * 1.7);
+      ctx.strokeStyle = C.steel; ctx.strokeRect(p.x - r * 1.35, p.y - r * 0.85, r * 2.7, r * 1.7);
+      say(ctx, a.label, p.x, p.y, Math.max(8, u * 0.32), { align: 'center', color: C.text, weight: 700, sans: true });
     } else {
       ctx.fillStyle = ink.fill; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
-      say(ctx, a.el, p.x, p.y + 0.5, Math.max(6.5, a.el === 'H' ? u * 0.22 : u * 0.3), { align: 'center', color: ink.text, weight: 800, sans: true });
+      say(ctx, a.el, p.x, p.y + 0.5, Math.max(7.5, a.el === 'H' ? u * 0.24 : u * 0.32), { align: 'center', color: ink.text, weight: 800, sans: true });
     }
     if (q) {
-      // A charge, in a small disc clear of the atom's pairs.
-      const qx = p.x + r * 1.55; const qy = p.y - r * 1.55; const qr = Math.max(4.5, u * 0.15);
-      ctx.fillStyle = C.win; ctx.beginPath(); ctx.arc(qx, qy, qr, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = q > 0 ? C.plus : C.minus; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(qx, qy, qr, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
-      say(ctx, q > 0 ? '+' : '−', qx, qy + 0.5, Math.max(8, u * 0.3), { align: 'center', color: q > 0 ? C.plus : C.minus, weight: 800, sans: true });
+      // A charge badge drawn as a square plate (not a circle) so solids.js never turns it into a 3D black sphere.
+      const qx = p.x + r * 1.55; const qy = p.y - r * 1.55; const qr = Math.max(6, u * 0.18);
+      ctx.fillStyle = C.win; ctx.fillRect(qx - qr, qy - qr, qr * 2, qr * 2);
+      ctx.strokeStyle = q > 0 ? C.plus : C.minus; ctx.lineWidth = 1.5; ctx.strokeRect(qx - qr, qy - qr, qr * 2, qr * 2); ctx.lineWidth = 1;
+      say(ctx, q > 0 ? '+' : '−', qx, qy + 0.5, Math.max(9.5, u * 0.34), { align: 'center', color: q > 0 ? C.plus : C.minus, weight: 800, sans: true });
     }
     if ((o.marks || []).includes(id)) { ctx.strokeStyle = C.dust; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.5, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
-    if (lit.has(`a:${id}`)) { ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.45, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
+    if (lit.has(`a:${id}`)) { ctx.strokeStyle = C.amber; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.48, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
   }
 }
 

@@ -20,6 +20,6 @@ export const INTROS = {
   },
   'q6-spin': {
     prop: { kind: 'magnet', effects: [{ kind: 'glow', part: 'disc', max: 0.9 }] },
-    steps: happens('voice:lodestone-crane', 'It does it every time. It grabs that drum and leaves the one beside it on the line.', { walk: true })
+    steps: happens('voice:lodestone-crane', 'It does it every time. It pulls that drum right off the line and leaves the one beside it.', { walk: true })
   }
 };

@@ -58,7 +58,8 @@ export function tmolFixture(id, at, { scene = null, play = null, mode = 'show', 
     props: {
       scene: first, play, mode, pick, arrow, pairs, skeletal, meter, marks, loop, under, srcList, dstList, pickList, bondsCC,
       hidden: ['pick', 'src', 'dst', 'step', 'meter'],
-      last: { n: 0, ok: null, msg: '', src: null, dst: null, from: 0, to: 0 }
+      last: { n: 0, ok: null, msg: '', src: null, dst: null, from: 0, to: 0 },
+      meteredSet: [], prevSrc: 0, prevDst: 0, prevMeter: 0
     }
   };
 }
@@ -73,14 +74,39 @@ export function molRead(state, id) {
   const dst = p.arrow?.dstFixed || (dial(f, 'dst') ? p.dstList[dial(f, 'dst') - 1] : null);
   const pk = dial(f, 'pick') ? p.pickList[dial(f, 'pick') - 1] : null;
   const m = dial(f, 'meter') ? p.bondsCC[dial(f, 'meter') - 1] : null;
+  const S = sceneOf(p.scene);
+  const meteredSet = p.meteredSet || [];
+  const meteredOrders = [...new Set(meteredSet.map(idx => {
+    const pair = p.bondsCC[idx - 1];
+    if (!pair) return null;
+    const b = S.bonds.find(([a, b2]) => (a === pair[0] && b2 === pair[1]) || (a === pair[1] && b2 === pair[0]));
+    return b ? b[2] : null;
+  }).filter(Boolean))];
   return {
     picked: pk, src, dst, step: dial(f, 'step'),
     done: p.last.ok === true,
     tried: p.last.n > 0,
     last: p.last,
     metered: m,
+    meteredCount: meteredSet.length,
+    meteredOrders,
     pm: m ? bondLengthPm(p.scene, m[0], m[1]) : null
   };
+}
+
+function settleMol(state) {
+  for (const f of Object.values(state.fixtures)) {
+    if (f.kind !== 'tmol') continue;
+    const p = f.props;
+    const sv = dial(f, 'src'); const dv = dial(f, 'dst'); const mv = dial(f, 'meter');
+    if ((sv !== (p.prevSrc ?? 0) || dv !== (p.prevDst ?? 0)) && p.last.ok === false) {
+      p.last = { ...p.last, ok: null, msg: '' };
+    }
+    if (mv > 0 && !(p.meteredSet || []).includes(mv)) {
+      p.meteredSet = [...(p.meteredSet || []), mv];
+    }
+    p.prevSrc = sv; p.prevDst = dv; p.prevMeter = mv;
+  }
 }
 
 function runMol(state, fid) {
@@ -90,7 +116,7 @@ function runMol(state, fid) {
   if (p.mode === 'steps') {
     const at = dial(f, 'step'); const end = P.scenes.length - 1;
     if (at >= end) {
-      if (!p.loop) return { noop: 'There is no further step.' };
+      if (!p.loop) return { noop: 'No more steps left.' };
       f.dials.step.value = 0;
       p.last = { ...p.last, n: p.last.n + 1, ok: true, from: end, to: 0, msg: '' };
       return { stamp: {} };
@@ -101,9 +127,10 @@ function runMol(state, fid) {
   }
   if (p.mode !== 'arrow') return null;
   const r = molRead(state, fid);
-  if (r.done) return { noop: 'The electrons have moved.' };
-  if (!r.src) return { noop: 'Tap a pair of electrons first.' };
-  if (!r.dst) return { noop: 'Tap the atom the pair moves to.' };
+  if (r.done) return { noop: 'That electron pair has already moved.' };
+  if (!r.src && !r.dst) return { noop: 'Tap an electron pair and a target atom first.' };
+  if (!r.src) return { noop: 'Tap an electron pair first.' };
+  if (!r.dst) return { noop: 'Tap the atom the pair should move to.' };
   const S = sceneOf(p.scene);
   const j = judgeArrow(S, r.src, r.dst, p.arrow.right, p.arrow.wrongs || []);
   if (j.ok) {
@@ -141,21 +168,30 @@ function molTaps(f) {
   const G = geomOf(f);
   const S = restScene(f);
   const zones = [];
-  const zr = Math.max(2.4, G.unit * 0.26);
+  const zr = Math.max(3.4, G.unit * 0.34);
+  const br = Math.max(3.6, G.unit * 0.36);
   const atomZone = (id, dialName, value) => { const a = S.atoms[id]; if (!a) return; zones.push({ x0: G.X(a.x) - zr, x1: G.X(a.x) + zr, y0: G.Y(a.y) - zr, y1: G.Y(a.y) + zr, dial: dialName, value }); };
   if (p.mode === 'pick' && p.pick.kind === 'atom') p.pickList.forEach((id, i) => atomZone(id, 'pick', i + 1));
   if (p.mode === 'pick' && p.pick.kind === 'bond') {
     p.pickList.forEach(([a, b], i) => {
       const A = S.atoms[a]; const B = S.atoms[b];
       const mx = G.X((A.x + B.x) / 2); const my = G.Y((A.y + B.y) / 2);
-      zones.push({ x0: mx - zr, x1: mx + zr, y0: my - zr, y1: my + zr, dial: 'pick', value: i + 1 });
+      zones.push({ x0: mx - br, x1: mx + br, y0: my - br, y1: my + br, dial: 'pick', value: i + 1 });
     });
   }
   if (p.mode === 'arrow' && p.last.ok !== true) {
     const pts = pairPoints(sceneOf(p.scene));
-    const pairZones = [];
-    const pr = Math.max(2.2, G.unit * 0.22);
-    if (!p.arrow.srcFixed) p.srcList.forEach((id, i) => { const q = pts.find(x => x.id === id); if (q) pairZones.push({ x0: G.X(q.x) - pr, x1: G.X(q.x) + pr, y0: G.Y(q.y) - pr, y1: G.Y(q.y) + pr, dial: 'src', value: i + 1 }); });
+    const specialPairZones = [];
+    const bondPairZones = [];
+    const pr = Math.max(3.6, G.unit * 0.34);
+    if (!p.arrow.srcFixed) p.srcList.forEach((id, i) => {
+      const q = pts.find(x => x.id === id);
+      if (!q) return;
+      const z = { x0: G.X(q.x) - pr, x1: G.X(q.x) + pr, y0: G.Y(q.y) - pr, y1: G.Y(q.y) + pr, dial: 'src', value: i + 1 };
+      if (q.kind === 'l' || q.kind === 'p') specialPairZones.push(z);
+      else bondPairZones.push(z);
+    });
+    const pairZones = [...specialPairZones, ...bondPairZones];
     const atomZones = [];
     if (!p.arrow.dstFixed) p.dstList.forEach((id, i) => { const a = sceneOf(p.scene).atoms[id]; atomZones.push({ x0: G.X(a.x) - zr, x1: G.X(a.x) + zr, y0: G.Y(a.y) - zr, y1: G.Y(a.y) + zr, dial: 'dst', value: i + 1 }); });
     // Until a pair is chosen a tap near both takes the pair; once one is, it takes the atom.
@@ -165,7 +201,7 @@ function molTaps(f) {
     p.bondsCC.forEach(([a, b], i) => {
       const A = S.atoms[a]; const B = S.atoms[b];
       const mx = G.X((A.x + B.x) / 2); const my = G.Y((A.y + B.y) / 2);
-      zones.push({ x0: mx - zr, x1: mx + zr, y0: my - zr, y1: my + zr, dial: 'meter', value: i + 1 });
+      zones.push({ x0: mx - br, x1: mx + br, y0: my - br, y1: my + br, dial: 'meter', value: i + 1 });
     });
   }
   return zones;
@@ -235,7 +271,7 @@ function paintMol(ctx, f, state, b) {
       if (r.src && !(p.last.ok === false && k < 1)) chosen.push(r.src);
       if (r.dst) chosen.push(`a:${r.dst}`);
       const flying = p.last.ok === false && k < 1;
-      drawScene(ctx, F, G, S, { ...base, lit: chosen, hide: flying ? [p.last.src] : [] });
+      drawScene(ctx, F, G, S, { ...base, interactivePairs: !p.arrow.srcFixed, srcSet: new Set(p.srcList), lit: chosen, hide: flying ? [p.last.src] : [] });
       const from = r.src ? pointOf(F, G, S, r.src) : null;
       const to = r.dst ? { x: F.x(G.X(S.atoms[r.dst].x)), y: F.y(G.Y(S.atoms[r.dst].y)) } : null;
       // The arrow as drawn so far; a move that failed sends the pair out and brings it back.
@@ -272,7 +308,7 @@ function paintMol(ctx, f, state, b) {
   else if (p.under) foot(ctx, f, F, p.under, C.dust, right);
 }
 
-registerFixture('tmol', { paint: paintMol, run: runMol, tapZones: molTaps, live: () => true });
+registerFixture('tmol', { paint: paintMol, run: runMol, settle: settleMol, tapZones: molTaps, live: () => true });
 
 /** Script actions for an arrow view: choose the pair, choose the atom. */
 export function arrowScript(fixtureSpec, src, dst) {

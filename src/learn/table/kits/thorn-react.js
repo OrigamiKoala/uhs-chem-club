@@ -94,7 +94,7 @@ addTest('reach', {
     const ion = P(r, a0);
     if (reached && after > 0) bondLine(ctx, F, ion, { x: cx, y: cy }, after);
     disc(ctx, F, ion.x, ion.y, ION_R * u, 'O', 'OH', { q: reached && after > 0.5 ? 0 : -1 });
-    say(ctx, 'Dashes: the way in, opposite the bromine', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
+    say(ctx, 'Dashes: the way in, opposite the bromine', F.x(wx + 1.5), F.y(wy + wh - 2.4), F.size(1.9, 7.5), { color: C.dust, maxW: F.len(ww - 3) });
   }
 });
 
@@ -129,8 +129,8 @@ addTest('react', {
     if (!show) { say(ctx, 'The reaction, atom by atom', F.x(wx + ww / 2), F.y(wy + wh / 2), F.size(1.8, 6), { align: 'center', color: C.dim }); return; }
     const S = substance(show);
     const P = playOf(S.play);
-    const G = fitScenes(P.scenes.map(sceneOf), { x: wx + 1, y: wy + 4, w: ww - 2, h: wh - 6 }, 9);
+    const G = fitScenes(P.scenes.map(sceneOf), { x: wx + 1, y: wy + 4.5, w: ww - 2, h: wh - 6.5 }, 13);
     drawPlay(ctx, F, G, P, sub ? clamp(k / 0.85, 0, 1) * (P.scenes.length - 1) : 0, { pairs: false });
-    say(ctx, S.formula, F.x(wx + 1.5), F.y(wy + 2.4), F.size(1.6, 6), { color: C.dust, maxW: F.len(ww - 3) });
+    say(ctx, S.formula, F.x(wx + 1.5), F.y(wy + 2.6), F.size(2.1, 8), { color: C.text, weight: 600, maxW: F.len(ww - 3) });
   }
 });

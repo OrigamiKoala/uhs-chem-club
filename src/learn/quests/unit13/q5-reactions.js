@@ -46,32 +46,32 @@ export function toolNoteFor() { return null; }
 
 const inSlot = (state, slot) => Object.values(state.table.pieces).find(p => p.zone === `slot:${slot}`) || null;
 
-const FOUR = 'That carbon has four bonds and none of them gave way: the pair returned.';
+const FOUR = 'That carbon already has four full bonds and none broke, so the pair bounced back.';
 const ARROW2 = {
   right: { src: 'l:o:0', dst: 'c' }, srcFixed: 'l:o:0', dstAmong: ['c', 'br', 'm', 'h1', 'h2'],
-  wrongs: [{ dst: 'br', msg: 'Bromine already holds four pairs of electrons round it: the pair returned.' }]
+  wrongs: [{ dst: 'br', msg: 'Bromine already has a full set of electrons, so the pair bounced back.' }]
 };
 const ARROW4 = {
   right: { src: 'l:oe:0', dst: 'c' },
   srcAmong: pairsOf(sceneOf('est-0')).map(p => p.id).filter(id => id !== 'l:oe:1'),
   wrongs: [
-    { src: 'l:oe:0', dst: 'h2', msg: 'A proton could only pass between the two oxygens, and no bond to carbon would form: the pair returned.' },
+    { src: 'l:oe:0', dst: 'h2', msg: 'Moving to that hydrogen only passes a proton between oxygens without bonding to carbon, so the pair bounced back.' },
     { dst: 'm', msg: FOUR }
   ]
 };
 const ARROW6 = {
   right: { src: 'l:ox:0', dst: 'c' }, srcFixed: 'l:ox:0', dstAmong: ['m', 'c', 'o1', 'oe', 'e'],
-  wrongs: [{ dst: 'e', msg: 'That carbon shares one pair with oxygen, and the C=O carbon three: the pair returned.' }, { dst: 'm', msg: FOUR }]
+  wrongs: [{ dst: 'e', msg: 'That carbon only shares one bond with oxygen, while the C=O carbon shares three bonds with oxygens, so the pair bounced back.' }, { dst: 'm', msg: FOUR }]
 };
 
 const V2 = tmolFixture('view', { x: 75, y: 31 }, { play: 'sub-oh', mode: 'arrow', arrow: ARROW2, pairs: true, title: 'Bromoethane and a hydroxide ion', w: 124, h: 56 });
-const V4 = tmolFixture('view', { x: 75, y: 31 }, { play: 'ester-make', mode: 'arrow', arrow: ARROW4, pairs: true, under: 'Proton moves between oxygens are left out of this picture.', title: 'Ethanoic acid and ethanol', w: 124, h: 56 });
-const V6 = tmolFixture('view', { x: 75, y: 31 }, { play: 'ester-break', mode: 'arrow', arrow: ARROW6, pairs: true, under: 'Drawn as one move; proton moves are left out.', title: 'Ethyl ethanoate and a hydroxide ion', w: 124, h: 56 });
+const V4 = tmolFixture('view', { x: 75, y: 31 }, { play: 'ester-make', mode: 'arrow', arrow: ARROW4, pairs: true, title: 'Ethanoic acid and ethanol', w: 124, h: 56 });
+const V6 = tmolFixture('view', { x: 75, y: 31 }, { play: 'ester-break', mode: 'arrow', arrow: ARROW6, pairs: true, title: 'Ethyl ethanoate and a hydroxide ion', w: 124, h: 56 });
 
 function arrowCheck(state) {
   const r = molRead(state.table, 'view');
   if (r.done) return { ok: true };
-  if (!r.tried) return { ok: false, notYet: true, msg: 'No pair has been moved yet.' };
+  if (!r.tried) return { ok: false, notYet: true, msg: 'Move an electron pair first.' };
   return { ok: false, msg: r.last.msg };
 }
 
@@ -87,7 +87,8 @@ export const STAGES = [
     id: 's1-predict',
     title: 'Where It Goes',
     predict: true,
-    prompt: 'A hydroxide ion, OH⁻, meets bromoethane: which atom do you expect its spare pair of electrons to move to?',
+    briefing: { speaker: SPEAKER, body: 'To see how hydroxide (OH⁻) reacts with carbon links, start with a simpler molecule: bromoethane, a carbon chain carrying a bromine atom.' },
+    prompt: 'When hydroxide (OH⁻) meets bromoethane, which atom do you expect its spare electron pair to move to?',
     widget,
     table: thornTable({
       pieces: [
@@ -96,22 +97,22 @@ export const STAGES = [
         note('g-h', 'A hydrogen', { x: 30, y: 52 })
       ],
       fixtures: [tleadFixture('lead', { x: 112, y: 44 }, { play: 'nh3-hcl', caption: 'Ammonia\'s lone pair moves to the hydrogen of H–Cl.', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 16 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip shows a lone pair moving to the electron-poor end of H–Cl, and chlorine leaving with the pair it shared.',
-      'Bromine attracts the pair it shares with carbon more strongly than carbon does.',
-      'Ask which atom of bromoethane is left short of electrons, the way hydrogen was in H–Cl.'
+      'The clip shows a lone pair moving to the electron-poor end of H–Cl while chlorine leaves with the shared pair.',
+      'Bromine pulls the electrons it shares with carbon much more strongly than carbon does.',
+      'Find which atom in bromoethane is left short of electrons, just like hydrogen was in H–Cl.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it in the electron view.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Next, move hydroxide\'s spare pair onto bromoethane in the electron view.' }
   },
 
   /* ---------------------------------------------------------------- 2 */
@@ -120,13 +121,13 @@ export const STAGES = [
     return {
       id: 's2-in-out',
       title: 'One In, One Out',
-      get prompt() { const g = guess(); return `Which atom of bromoethane does the hydroxide ion's spare pair move to?${g ? ` You predicted ${g}.` : ''}`; },
+      get prompt() { const g = guess(); return `Which atom of bromoethane does hydroxide's spare electron pair move to?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: thornTable({ pieces: [], fixtures: [V2] }),
       hints: [
-        'Tap an atom and press "Move Electrons": the hydroxide ion\'s pair is the one that moves.',
-        'Look at where the pair shared by carbon and bromine sits along their bond.',
-        'A pair moves to the electron-poor atom, and a carbon that gains a bond must let one of its four go.'
+        'Look at the highlighted spare pair on hydroxide and the shared pair between carbon and bromine.',
+        'Check which way the shared electron pair sits along the C–Br bond.',
+        'The pair moves to the electron-poor atom, and a carbon that gains a bond must release one of its four.'
       ],
       check: arrowCheck,
       get reward() {
@@ -134,7 +135,7 @@ export const STAGES = [
         return {
           log: 'Hydroxide bonded to carbon; bromide left.',
           title: 'Substitution',
-          body: `The carbon${g ? ` (you predicted ${g})` : ''}: bromine pulls their shared pair, leaving carbon electron-poor, and the C–Br pair left with bromine. One group in, one out: a substitution reaction.`
+          body: `The carbon bonded to bromine: bromine pulls their electrons away, leaving carbon electron-poor, so the C–Br pair leaves as Br⁻. Swapping one group for another is a substitution reaction${g ? ` (you predicted ${g})` : ''}.`
         };
       }
     };
@@ -147,33 +148,34 @@ export const STAGES = [
     return {
       id: 's3-crowding',
       title: 'Crowding',
-      prompt: 'How easily does a hydroxide ion reach the carbon bonded to bromine in each of these four molecules?',
+      briefing: { speaker: SPEAKER, body: 'To bond with carbon, hydroxide must approach from the side opposite bromine. Test which groups around carbon leave the path open and which block it.' },
+      prompt: 'Rank these four molecules from easiest to hardest for hydroxide to reach the carbon bonded to bromine.',
       widget,
       table: thornTable({
         pieces: [card('c-m', 'bromomethane', 'CH₃Br'), card('c-e', 'bromoethane', 'CH₃CH₂Br'), card('c-p', 'bromopropane2', '(CH₃)₂CHBr'), card('c-t', 'tbutylbromide', '(CH₃)₃CBr')],
         fixtures: [T.fixture],
         zones: {
           slots: [T.slot],
-          rail: { at: { x: 75, y: 52 }, size: { w: 140, h: 12 }, first: 'Reached most easily', last: 'Hardest to reach', items: RANK, start: ['c-p', 'c-m', 'c-t', 'c-e'] }
+          rail: { at: { x: 75, y: 52 }, size: { w: 140, h: 12 }, first: 'Easiest to reach', last: 'Hardest to reach', items: RANK, start: ['c-p', 'c-m', 'c-t', 'c-e'] }
         }
       }),
       hints: [
-        'Lay a card in the Sample slot and press "Send In OH⁻"; only two of the four are in store.',
-        'Compare what stands round the carbon in the two that can be tested.',
-        'A CH₃ group is far larger than a hydrogen, so ask how much of the way in each carbon\'s neighbours fill.'
+        'Test the two available samples in the Approach test, then arrange all four cards on the rail.',
+        'Compare the size of the groups around the carbon in the two samples you can test.',
+        'A CH₃ group is much bulkier than a single hydrogen, so more CH₃ groups block more of the path.'
       ],
       check(state) {
         const order = state.table.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four cards on the rail.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Place all four cards on the rail.' };
         if (order.join() === RANK.join()) return { ok: true };
         const k = order.findIndex((id, i) => i > 0 && CROWD[order[i - 1]] > CROWD[id]);
         const a = state.table.pieces[order[k - 1]]; const b = state.table.pieces[order[k]];
-        return { ok: false, msg: `${a.props.text} sits before ${b.props.text}, and its carbon carries more CH₃ groups.` };
+        return { ok: false, msg: `${a.props.text} is placed before ${b.props.text}, even though its carbon has more bulky CH₃ groups.` };
       },
       reward: {
         log: 'Each CH₃ group blocks more of the way in.',
         title: 'Crowding Blocks the Way',
-        body: 'From CH₃Br to (CH₃)₃CBr: hydrogens left the way open, and each CH₃ group round the carbon blocked more of it.'
+        body: 'From CH₃Br to (CH₃)₃CBr: small hydrogens leave the path open, while each bulky CH₃ group blocks more of it, slowing or stopping substitution.'
       }
     };
   })(),
@@ -182,48 +184,49 @@ export const STAGES = [
   {
     id: 's4-acid-alcohol',
     title: 'Acid Meets Alcohol',
-    prompt: 'Which pair of electrons starts the reaction between ethanol and ethanoic acid, and where does it go?',
+    briefing: { speaker: SPEAKER, body: 'Now combine an acid and an alcohol: ethanoic acid meets ethanol to form an armor link.' },
+    prompt: 'Which electron pair starts the reaction between ethanol and ethanoic acid, and where does it go?',
     widget,
     table: thornTable({ pieces: [], fixtures: [V4] }),
     hints: [
-      'Tap a pair of electrons, then the atom it moves to, and press "Move Electrons".',
-      'Compare where each molecule holds spare pairs, and where each of the acid\'s shared pairs sits along its bond.',
-      'A pair moves from an electron-rich site to an electron-poor carbon, and the C=O pair can move out onto its oxygen so the carbon keeps four bonds.'
+      'Look at the gold lone pairs on ethanol\'s oxygen and the C=O carbon of ethanoic acid.',
+      'Check which molecule has an exposed lone pair and which carbon has its electrons pulled away by oxygens.',
+      'The lone pair moves to the electron-poor C=O carbon, while the C=O pair shifts onto oxygen so carbon keeps four bonds.'
     ],
     check: arrowCheck,
     reward: {
       log: 'Ethanol\'s oxygen bonded to the acid\'s carbon; water left.',
       title: 'Joined, Water Out',
-      body: 'Ethanol\'s oxygen pair moved to the electron-poor carbon of C=O. When that carbon\'s pair came back, the acid\'s –OH left with a hydrogen as water.'
+      body: 'Ethanol\'s oxygen pair bonded to the acid\'s electron-poor C=O carbon, and the acid\'s –OH left with a hydrogen as water.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const V = tmolFixture('mol', { x: 75, y: 31 }, { scene: 'est-2', mode: 'pick', pick: { kind: 'bond', among: [['c', 'oe'], ['c', 'o1'], ['m', 'c'], ['oe', 'e']] }, marks: ['oe', 'e'], under: 'Ringed: the atoms that came from ethanol.', title: 'The products', w: 110, h: 56 });
+    const V = tmolFixture('mol', { x: 75, y: 31 }, { scene: 'est-2', mode: 'pick', pick: { kind: 'bond', among: [['c', 'oe'], ['c', 'o1'], ['m', 'c'], ['oe', 'e']] }, marks: ['oe', 'e'], under: 'Ringed: atoms that came from ethanol.', title: 'The products', w: 110, h: 56 });
     return {
       id: 's5-new-bond',
       title: 'The New Bond',
-      prompt: 'Which bond of the product was made in the reaction between ethanol and ethanoic acid?',
+      prompt: 'Which bond in this product was newly formed between ethanol and ethanoic acid?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       hints: [
-        'Tap a bond of the product to choose it.',
-        'Compare the ringed atoms that came from ethanol with the atoms that came from the acid.',
-        'The new bond joins an atom that came from one molecule to an atom that came from the other.'
+        'Look at which atoms are ringed (from ethanol) and which are unringed (from the acid).',
+        'Trace the border between the ringed ethanol atoms and the unringed acid atoms.',
+        'The new bond connects one atom from the acid directly to one atom from the alcohol.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
         if (!r.picked) return { ok: false, notYet: true, msg: 'Tap a bond.' };
         const [a, b] = r.picked;
         if (a === 'c' && b === 'oe') return { ok: true };
-        if (a === 'oe') return { ok: false, msg: 'Both atoms of that bond are ringed: it was in the ethanol before the reaction.' };
-        return { ok: false, msg: 'Neither atom of that bond is ringed: it was in the acid before the reaction.' };
+        if (a === 'oe') return { ok: false, msg: 'Both atoms of that bond are ringed, so it was already in ethanol before the reaction.' };
+        return { ok: false, msg: 'Neither atom of that bond is ringed, so it was already in the acid before the reaction.' };
       },
       reward: {
         log: 'The ester link: acid carbon to alcohol oxygen.',
         title: 'Ester and Condensation',
-        body: 'The C–O bond from the acid\'s carbon to the alcohol\'s oxygen. The product is an ester, and joining two molecules while a small one leaves is a condensation reaction.'
+        body: 'The C–O bond from the acid\'s carbon to the alcohol\'s oxygen forms an ester. Joining two molecules while releasing a small one like water is a condensation reaction.'
       }
     };
   })(),
@@ -232,56 +235,57 @@ export const STAGES = [
   {
     id: 's6-break',
     title: 'Water Breaks It',
-    briefing: { speaker: SPEAKER, body: 'The ester link was made as water left. Here a hydroxide ion, made from water, meets the ester.' },
-    prompt: 'Which atom of the ester does the hydroxide ion\'s spare pair move to?',
+    briefing: { speaker: SPEAKER, body: 'The ester formed when water left. Here hydroxide (OH⁻, water minus one proton) meets the ester to reverse that link.' },
+    prompt: 'Which atom of the ester does hydroxide\'s spare electron pair move to?',
     widget,
     table: thornTable({ pieces: [], fixtures: [V6] }),
     hints: [
-      'Tap an atom and press "Move Electrons": the hydroxide ion\'s pair is the one that moves.',
-      'Compare the two carbons bonded to the link\'s oxygen: how many pairs each shares with oxygen.',
-      'The pair goes where carbon is shortest of electrons, and the link\'s pair can leave with its oxygen.'
+      'Look at the highlighted pair on hydroxide and the two carbons next to the ester\'s oxygen.',
+      'Compare how many bonds to oxygen each of those two carbons has.',
+      'The pair moves to the most electron-poor carbon, letting the ester\'s C–O bond break.'
     ],
     check: arrowCheck,
     reward: {
       log: 'Hydroxide broke the ester link.',
       title: 'Hydrolysis',
-      body: 'To the carbon of C=O, and the link\'s C–O pair left with the alcohol\'s oxygen. A link made by losing water, broken by adding it back: hydrolysis.'
+      body: 'To the C=O carbon, breaking the C–O link so the alcohol\'s oxygen leaves. Breaking a link by adding water back across it is called hydrolysis.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
     const T = ttestFixture('rig', { x: 96, y: 20 }, { test: 'react', w: 92, h: 36 });
-    const tray = (id, label, x) => ({ id, label, at: { x, y: 50 }, size: { w: 36, h: 11 }, cell: 22, cellH: 11 });
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 50 }, size: { w: 40, h: 13 }, cell: 24, cellH: 13 });
     return {
       id: 's7-kinds',
       title: 'Three Kinds',
-      prompt: 'Which of these three reactions is an addition, which a substitution, and which a condensation?',
+      briefing: { speaker: SPEAKER, body: 'Addition joins atoms across a double bond with nothing left over, substitution swaps one group for another, and condensation joins two molecules while releasing a small one.' },
+      prompt: 'Sort these three reactions into addition, substitution, and condensation.',
       widget,
       table: thornTable({
         pieces: [tcard('c-a', 'rxA', { x: 14, y: 8 }), tcard('c-b', 'rxB', { x: 14, y: 22.5 }), tcard('c-c', 'rxC', { x: 14, y: 37 })],
         fixtures: [T.fixture],
-        zones: { slots: [T.slot], trays: [tray('add', 'Addition', 48), tray('sub', 'Substitution', 88), tray('cond', 'Condensation', 128)] }
+        zones: { slots: [T.slot], trays: [tray('add', 'Addition', 46), tray('sub', 'Substitution', 88), tray('cond', 'Condensation', 130)] }
       }),
       hints: [
-        'Lay a reaction card in the Sample slot and press "Run Reaction".',
-        'Watch which atoms join and which leave, and count the separate molecules before and after.',
-        'Addition leaves nothing over; substitution swaps one group for another; condensation joins two molecules and lets a small one go.'
+        'Run each card in the Reaction viewer to see which atoms join and which leave.',
+        'Count how many separate molecules exist before and after each reaction.',
+        'Addition leaves nothing over, substitution swaps one group for another, and condensation joins two molecules while releasing water.'
       ],
       check(state) {
         const pieces = Object.values(state.table.pieces).filter(p => KINDS[p.id]);
         const placed = pieces.filter(p => String(p.zone || '').startsWith('tray:'));
-        if (placed.length < 3) return { ok: false, notYet: true, msg: 'Lay each reaction card in a tray.' };
+        if (placed.length < 3) return { ok: false, notYet: true, msg: 'Place all three reaction cards into trays.' };
         const wrong = placed.find(p => p.zone !== `tray:${KINDS[p.id]}`);
         if (!wrong) return { ok: true };
         const seen = resultOf(state.table, wrong.id, 'react');
-        if (seen === undefined) return { ok: false, msg: `${wrong.label} has not been run yet.` };
-        return { ok: false, msg: `${wrong.label} ran ${seen} in separate molecules and ions, and does not belong in that tray.` };
+        if (seen === undefined) return { ok: false, msg: `Run ${wrong.label} in the viewer first.` };
+        return { ok: false, msg: `${wrong.label} went ${seen} in separate molecules and ions, so it belongs in a different tray.` };
       },
       reward: {
         log: 'Addition, substitution, condensation.',
         title: 'Three Kinds',
-        body: 'A is an addition, with nothing left over; B a substitution, one group in and one out; C a condensation, two molecules joined as water left.'
+        body: 'A is addition (nothing left over), B is substitution (one group swaps for another), and C is condensation (two molecules join while water leaves).'
       }
     };
   })(),
@@ -296,21 +300,21 @@ export const STAGES = [
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       hints: [
-        'Tap a carbon to choose it.',
-        'Compare which carbons have a pair pulled toward bromine, and what stands round each of those.',
-        'The ion needs a carbon that is electron-poor and that it can get to from the side opposite the bromine.'
+        'Find both carbons bonded to bromine and check the groups around each one.',
+        'Compare how crowded the two bromine-bonded carbons are.',
+        'Hydroxide needs a carbon that is both electron-poor and open enough to reach from the side opposite bromine.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
         if (!r.picked) return { ok: false, notYet: true, msg: 'Tap a carbon.' };
         if (r.picked === 'c1') return { ok: true };
-        if (r.picked === 'c2') return { ok: false, msg: 'Two CH₃ groups and a carbon stand round that one.' };
-        return { ok: false, msg: 'No bromine pulls that group\'s pairs.' };
+        if (r.picked === 'c2') return { ok: false, msg: 'Two bulky CH₃ groups and another carbon crowd that carbon and block hydroxide.' };
+        return { ok: false, msg: 'That carbon has no bromine pulling its electrons away.' };
       },
       reward: {
         log: 'The CH₂ carbon is the one hydroxide reaches.',
         title: 'Rich to Poor, Unblocked',
-        body: 'The carbon with two hydrogens: bromine leaves it electron-poor, and its hydrogens leave the way open. The other is just as poor, but crowded.'
+        body: 'The carbon with two hydrogens: bromine makes it electron-poor, and its small hydrogens leave the path open. The other carbon is just as electron-poor, but too crowded.'
       }
     };
   })()
@@ -319,7 +323,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'A reaction is a pair of electrons moving from an electron-rich site to an electron-poor carbon; a carbon that gains a bond lets one go; crowding blocks the way. An ester link made by losing water is broken by adding it back.' }]
+  sections: [{ heading: 'What You Found', body: 'Reactions happen when an electron-rich pair moves to an electron-poor carbon, pushing out another bond if the path is not crowded. Ester links formed by losing water can be broken by adding water back.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */

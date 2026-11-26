@@ -59,25 +59,26 @@ export const STAGES = [
     return {
       id: 's1-ethane',
       title: 'Four Bonds Each',
-      briefing: { speaker: SPEAKER, body: 'A carbon atom has four valence electrons and forms four covalent bonds; a hydrogen atom forms one. A compound made of carbon and hydrogen only is a hydrocarbon.' },
+      briefing: { speaker: SPEAKER, body: 'Swamp tar is made of hydrocarbons, which are molecules built from carbon and hydrogen only. Every carbon atom forms four bonds, and every hydrogen atom forms one.' },
       prompt: 'How many hydrogen atoms can two carbon atoms joined by a single bond hold?',
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       hints: [
-        'Tap a carbon to give it a hydrogen, and keep going until its dashed outline turns solid.',
-        'Compare the bonds each carbon already uses with the four it can form.',
-        'Each carbon spends one bond on the other carbon, so count what is left of four on each.'
+        'Look at the dashed open bonds around each carbon on the board.',
+        'Compare the bond each carbon already uses with the four bonds it can form.',
+        'Each carbon uses one bond to connect to the other carbon, so count how many of its four bonds are left.'
       ],
       check(state) {
         const r = buildRead(state.table, 'board');
-        if (r.nH === 0) return { ok: false, notYet: true, msg: 'Neither carbon holds a hydrogen yet.' };
+        if (r.nH === 0) return { ok: false, notYet: true, msg: 'Add hydrogens to the carbons first.' };
         if (r.full) return { ok: true };
-        return { ok: false, msg: `The ${whereOn(state.table, 'board', r.open[0])} carbon still has an unused bond.` };
+        const s = r.open[0];
+        return { ok: false, msg: `Each carbon needs four bonds; the ${whereOn(state.table, 'board', s)} carbon only has ${r.hOn(s) + 1}.` };
       },
       reward: {
         log: 'Ethane, C₂H₆: six hydrogens.',
         title: 'Ethane',
-        body: 'Six: each carbon uses one bond on the other carbon and three on hydrogens. This is ethane, C₂H₆, a hydrocarbon.'
+        body: 'Six hydrogens: each carbon uses one bond on the other carbon and three on hydrogens. This molecule is ethane, C₂H₆, a hydrocarbon.'
       }
     };
   })(),
@@ -87,7 +88,7 @@ export const STAGES = [
     id: 's2-predict',
     title: 'One More Carbon',
     predict: true,
-    prompt: 'A third carbon joins the chain of two: how many more hydrogen atoms can the molecule then hold?',
+    prompt: 'If a third carbon joins the chain of two, how many more hydrogen atoms can the molecule hold?',
     widget,
     table: thornTable({
       pieces: [
@@ -95,23 +96,23 @@ export const STAGES = [
         note('g-three', 'Three more', { x: 30, y: 33 }),
         note('g-two', 'Two more', { x: 30, y: 52 })
       ],
-      fixtures: [tleadFixture('lead', { x: 112, y: 44 }, { play: 'methane-still', pairs: false, caption: 'One carbon alone holds four hydrogens: methane.', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 16 } }] }
+      fixtures: [tleadFixture('lead', { x: 112, y: 44 }, { play: 'methane-still', pairs: false, caption: 'One carbon alone holds four hydrogens (methane).', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The picture shows a carbon with all four of its bonds used by hydrogens.',
-      'A new carbon has to bond to a carbon that is already in the chain.',
-      'Ask what a carbon whose four bonds are all used must give up before it can bond to one more atom.'
+      'Look at the picture: a single carbon uses all four of its bonds to hold hydrogens.',
+      'A new carbon has to connect to a carbon that is already full.',
+      'If a carbon already has four bonds, what must it give up to form a new bond?'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it on the model board.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Next, add a third carbon to ethane on the board and count the hydrogens.' }
   },
 
   /* ---------------------------------------------------------------- 3 */
@@ -121,27 +122,27 @@ export const STAGES = [
     return {
       id: 's3-third',
       title: 'The Third Carbon',
-      get prompt() { const g = guess(); return `How many hydrogen atoms does a chain of three carbons hold?${g ? ` You predicted ${g}.` : ''}`; },
+      get prompt() { const g = guess(); return `With a third carbon added and filled, how many more hydrogens than ethane does the chain hold?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       hints: [
-        'Tap a dashed ring beside a carbon to set a third carbon there, then tap carbons to give them hydrogens.',
-        'Watch what happens to the hydrogens of the carbon the new one bonds to.',
-        'Count what the molecule held before, what it lost, and what the new carbon took.'
+        'Look at the dashed plus rings next to the two carbons on the board.',
+        'Watch what happens to a carbon\'s hydrogens when the new carbon bonds to it.',
+        'Start with ethane\'s 6 hydrogens, subtract the one that left, and add the hydrogens on the new carbon.'
       ],
       check(state) {
         const r = buildRead(state.table, 'board');
-        if (r.nC < 3) return { ok: false, notYet: true, msg: 'The chain still has two carbons.' };
-        if (r.nC > 3) return { ok: false, msg: `The board holds ${r.nC} carbons.` };
+        if (r.nC < 3) return { ok: false, notYet: true, msg: 'Add a third carbon to the chain first.' };
+        if (r.nC > 3) return { ok: false, msg: `Your board has ${r.nC} carbons instead of three.` };
         if (r.full) return { ok: true };
-        return { ok: false, msg: `The ${whereOn(state.table, 'board', r.open[0])} carbon still has an unused bond.` };
+        return { ok: false, msg: `The ${whereOn(state.table, 'board', r.open[0])} carbon still has an open bond.` };
       },
       get reward() {
         const g = guess();
         return {
           log: 'Propane, C₃H₈: eight hydrogens.',
           title: 'Two More, Not Four',
-          body: `Eight, two more than ethane${g ? ` (you predicted ${g})` : ''}: one hydrogen left to free a bond and the new carbon took three. Chains with single bonds only are alkanes.`
+          body: `Two more than ethane, for 8 total${g ? ` (you predicted ${g})` : ''}: one hydrogen left the middle carbon to make room, and the new carbon brought three. Single-bond chains like this are alkanes.`
         };
       }
     };
@@ -155,33 +156,31 @@ export const STAGES = [
       title: 'Twenty Carbons',
       briefing: {
         speaker: SPEAKER,
-        body: 'Every carbon inside a chain holds two hydrogens, and each end carbon holds one more. For a chain of ten:',
-        worked: ['2 × 10 = 20 hydrogens on the ten carbons', '20 + 2 = 22, one more at each end: C₁₀H₂₂']
+        body: 'Build chains of two, three, and four carbons on the board and watch how the hydrogen count grows.'
       },
       prompt: 'How many hydrogen atoms does an alkane chain of twenty carbons hold?',
       entry: { id: 'h', label: 'Hydrogen atoms', unit: '' },
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       hints: [
-        'Build chains of two, three and four carbons on the board and read the formula under it.',
-        'Compare how many hydrogens each added carbon brings with how many the end carbons hold.',
-        'Use two hydrogens for every carbon, then add the extra one at each end of the chain.'
+        'Watch the formula under the board as you build chains of two, three, and four carbons.',
+        'Compare how many hydrogens a middle carbon holds with how many an end carbon holds.',
+        'Give every carbon two hydrogens, then check how many extra hydrogens sit on the two ends.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'h');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the number of hydrogen atoms.' };
         if (v === alkaneH(20)) return { ok: true };
-        if (v === 80) return { ok: false, msg: 'On the board a carbon inside the chain holds two hydrogens, not four.' };
-        if (v === 40) return { ok: false, msg: 'On the board the two end carbons each hold one more hydrogen than the carbons between them.' };
-        if (v === 60) return { ok: false, msg: 'On the board a carbon inside the chain holds two hydrogens, not three.' };
-        if (v === 22) return { ok: false, msg: 'C₁₀H₂₂ is the chain of ten; this chain is twice as long.' };
-        if (v === 41 || v === 43) return { ok: false, msg: 'Every chain on the board holds an even number of hydrogens.' };
-        return { ok: false, msg: `A chain of three holds 8 on the board and a chain of four holds 10; ${v} does not follow that step.` };
+        if (v === 80) return { ok: false, msg: 'Look at the board: each carbon inside the chain holds two hydrogens, not four.' };
+        if (v === 40) return { ok: false, msg: 'Look at the board: each end carbon holds one extra hydrogen compared with the middle carbons.' };
+        if (v === 60) return { ok: false, msg: 'Look at the board: each carbon inside the chain holds two hydrogens, not three.' };
+        if (v === 41 || v === 43) return { ok: false, msg: 'Every alkane chain on the board has an even number of hydrogens.' };
+        return { ok: false, msg: `On the board, three carbons hold 8 hydrogens and four hold 10, so ${v} does not fit that pattern.` };
       },
       reward: {
         log: 'C₂₀H₄₂: 42 hydrogens.',
         title: 'CₙH₂ₙ₊₂',
-        body: '42: two for each of the twenty carbons and one more at each end. An alkane of n carbons is CₙH₂ₙ₊₂.'
+        body: '42 hydrogens: two for each of the twenty carbons, plus one extra at each end. Any alkane chain of n carbons has the formula CₙH₂ₙ₊₂.'
       }
     };
   })(),
@@ -189,31 +188,31 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   (() => {
     const V = tmolFixture('draw', { x: 36, y: 30 }, { scene: 'skel-pentane', mode: 'show', skeletal: true, title: 'Skeletal formula', w: 60, h: 40 });
-    const B = tbuildFixture('board', { x: 108, y: 31 }, { cols: 5, rows: 2, auto: true, maxOrder: 1, title: 'Model board', w: 74, h: 50 });
+    const B = tbuildFixture('board', { x: 108, y: 31 }, { cols: 5, rows: 2, auto: true, formula: true, maxOrder: 1, title: 'Model board', w: 74, h: 50 });
     return {
       id: 's5-skeletal',
       title: 'Drawing It Quickly',
-      briefing: { speaker: SPEAKER, body: 'A skeletal formula draws only the bonds between carbons, as a zigzag line. Every corner and every end of the line is a carbon, and the hydrogens are left out.' },
-      prompt: 'Which molecule does this skeletal formula stand for?',
+      briefing: { speaker: SPEAKER, body: 'A skeletal formula shows only the bonds between carbons as a zigzag line. Every corner and every end represents one carbon, and the hydrogens are hidden.' },
+      prompt: 'Which molecule does this skeletal formula show?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V, B] }),
       hints: [
-        'Build your answer on the model board by tapping dashed rings.',
+        'Count every corner and every end along the zigzag line on the left.',
         'Compare the corners and ends of the zigzag with the carbons on your board.',
-        'Every corner and every end is one carbon, and a line that does not split means no carbon is joined to three others.'
+        'Each corner or end is one carbon, and a line with no split means the carbons form one straight chain.'
       ],
       check(state) {
         const r = buildRead(state.table, 'board');
-        if (!r.nC) return { ok: false, notYet: true, msg: 'The board is empty.' };
-        if (!r.joined) return { ok: false, msg: 'The carbons on the board are not all joined.' };
+        if (!r.nC) return { ok: false, notYet: true, msg: 'Build a molecule on the board first.' };
+        if (!r.joined) return { ok: false, msg: 'All the carbons on the board need to be connected.' };
         if (r.key === keyOf('pentane')) return { ok: true };
-        if (r.nC !== 5) return { ok: false, msg: `Your chain has ${r.nC} carbon${r.nC === 1 ? '' : 's'}; the drawing has five corners and ends.` };
-        return { ok: false, msg: 'One carbon on your board is joined to three others, and the drawing has no such corner.' };
+        if (r.nC !== 5) return { ok: false, msg: `Your chain has ${r.nC} carbon${r.nC === 1 ? '' : 's'}, so count the corners and ends of the drawing again.` };
+        return { ok: false, msg: 'Your build has a branch, but the drawing is one unbranched zigzag.' };
       },
       reward: {
         log: 'The skeletal formula is pentane.',
         title: 'Pentane',
-        body: 'The skeletal formula has five corners and ends, so five carbons in one unbranched chain: pentane, C₅H₁₂.'
+        body: 'This skeletal formula has five corners and ends, meaning five carbons in one chain: pentane, C₅H₁₂ (pent- means five, like a pentagon).'
       }
     };
   })(),
@@ -224,8 +223,8 @@ export const STAGES = [
     return {
       id: 's6-branch',
       title: 'Naming a Branch',
-      briefing: { speaker: SPEAKER, body: 'A branched alkane is named from its longest chain, with the branch\'s place on it as a number. 2-Methylpropane is a three-carbon chain (propane) with a one-carbon branch (methyl) on carbon 2.' },
-      prompt: 'What is this branched alkane called?',
+      briefing: { speaker: SPEAKER, body: 'A branched alkane is named from its longest continuous carbon chain, numbered from the nearer end. A carbon attached to the side is a branch (a one-carbon branch is called methyl).' },
+      prompt: 'What is the name of this branched alkane?',
       widget,
       table: thornTable({
         pieces: [],
@@ -236,53 +235,54 @@ export const STAGES = [
         ]
       }),
       hints: [
-        'Count the carbons along every path through the drawing, including paths that turn into the branch.',
-        'Compare the longest path you can trace with the line of four that is drawn straight.',
-        'Name the longest chain first, then number it so the branch gets its place from the nearer end.'
+        'Trace every path through the drawing, including paths that bend down into the lower line.',
+        'Compare the longest path you can trace with the four-carbon line drawn straight across.',
+        'Name the longest chain first, then number it from the nearer end to locate the branch.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
         if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three names.' };
         if (pick === 2) return { ok: true };
-        if (pick === 1) return { ok: false, msg: 'A chain of five carbons runs through the drawing when it turns into the lower line.' };
-        return { ok: false, msg: 'One carbon in the drawing is joined to three others, so the six carbons are not one straight chain.' };
+        if (pick === 1) return { ok: false, msg: 'You can trace a five-carbon chain if you turn down into the lower line.' };
+        return { ok: false, msg: 'One carbon is bonded to three other carbons, so these six carbons do not form one straight chain.' };
       },
       reward: {
         log: 'The branched alkane is 3-methylpentane.',
         title: '3-Methylpentane',
-        body: 'Its longest chain runs through the lower line: five carbons, a pentane, with a one-carbon branch on carbon 3. It is 3-methylpentane.'
+        body: 'Turning into the lower line gives a five-carbon chain (pentane) with a one-carbon branch on carbon 3. That makes it 3-methylpentane.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const B = tbuildFixture('board', { x: 60, y: 31 }, { cols: 3, rows: 2, auto: true, lock: true, maxOrder: 1, start: { sites: [0, 1, 2, 3, 4, 5], bonds: [[0, 1, 1], [1, 2, 1], [2, 5, 1], [5, 4, 1], [4, 3, 1]] }, title: 'Model board', w: 90, h: 54 });
+    const B = tbuildFixture('board', { x: 60, y: 31 }, { cols: 3, rows: 2, auto: true, formula: true, lock: true, maxOrder: 1, start: { sites: [0, 1, 2, 3, 4, 5], bonds: [[0, 1, 1], [1, 2, 1], [2, 5, 1], [5, 4, 1], [4, 3, 1]] }, title: 'Model board', w: 90, h: 54 });
     return {
       id: 's7-ring',
       title: 'Closing the Ring',
-      prompt: 'How many hydrogen atoms are left when hexane\'s two end carbons bond to each other?',
+      briefing: { speaker: SPEAKER, body: 'A carbon chain can close into a ring when its two end carbons bond to each other.' },
+      prompt: 'How many hydrogen atoms are left when hexane\'s two end carbons bond together?',
       entry: { id: 'h', label: 'Hydrogen atoms', unit: '' },
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       hints: [
-        'Tap the dotted gap between the two end carbons to bond them.',
-        'Watch the hydrogens on the two end carbons as the bond forms.',
-        'Each carbon still holds four bonds, so a new bond on a carbon costs it one hydrogen.'
+        'Look at the amber dashed gap between the two end carbons on the left of the board.',
+        'Watch what happens to the hydrogens on both end carbons when they bond.',
+        'Each carbon can only hold four bonds, so forming a new bond between the ends costs each end one hydrogen.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'h');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the number of hydrogen atoms.' };
         if (v === 12) return { ok: true };
         const r = buildRead(state.table, 'board');
-        if (r.rings) return { ok: false, msg: `With the two ends bonded, the hydrogens drawn on the board do not number ${v}.` };
-        if (v === 14) return { ok: false, msg: 'Hexane holds 14 before its ends are bonded; the ends have not been bonded on the board yet.' };
-        return { ok: false, msg: `Hexane on the board holds 14 hydrogens before its ends are bonded; ${v} is not what is left after.` };
+        if (r.rings) return { ok: false, msg: 'Count the hydrogens on the board now that the ring is closed; each end carbon lost one hydrogen.' };
+        if (v === 14) return { ok: false, msg: 'Hexane has 14 hydrogens before its ends join; bond the two ends on the board first.' };
+        return { ok: false, msg: `Hexane starts with 14 hydrogens before closing the ring, so ${v} does not match what is left after bonding the ends.` };
       },
       reward: {
         log: 'Cyclohexane, C₆H₁₂: twelve hydrogens.',
         title: 'A Ring',
-        body: 'Twelve: each end carbon gave up one hydrogen to bond to the other. An alkane closed into a ring is a cycloalkane, and this one is cyclohexane, C₆H₁₂.'
+        body: 'Twelve hydrogens: each end carbon gave up one hydrogen to bond to the other. An alkane closed into a ring is a cycloalkane (cyclo- means ring), so this is cyclohexane, C₆H₁₂.'
       }
     };
   })(),
@@ -293,27 +293,27 @@ export const STAGES = [
     return {
       id: 's8-drum',
       title: 'The Sealed Drum',
-      prompt: 'The drum\'s molecule has four carbons, eight hydrogens and single bonds only: which molecule is it?',
+      prompt: 'A sealed drum from the swamp holds a C₄H₈ hydrocarbon with single bonds only: which molecule is it?',
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       hints: [
-        'Build on the model board and read the formula under it as you go.',
-        'Compare the hydrogens your molecule holds with the eight the drum\'s holds.',
-        'Use what hexane showed: a chain loses hydrogens when one more bond is made between its carbons.'
+        'Watch the formula under the board as you add carbons and connect bonds.',
+        'Compare the number of hydrogens on your board with the eight in C₄H₈.',
+        'Remember hexane: closing a chain into a ring removes two hydrogens while keeping all single bonds.'
       ],
       check(state) {
         const r = buildRead(state.table, 'board');
-        if (!r.nC) return { ok: false, notYet: true, msg: 'The board is empty.' };
-        if (!r.joined) return { ok: false, msg: 'The carbons on the board are not all joined.' };
+        if (!r.nC) return { ok: false, notYet: true, msg: 'Build a molecule on the board first.' };
+        if (!r.joined) return { ok: false, msg: 'Connect all the carbons on the board into one molecule.' };
         if (r.key === keyOf('cyclobutane')) return { ok: true };
-        if (r.nC !== 4) return { ok: false, msg: `The board holds ${r.nC} carbon${r.nC === 1 ? '' : 's'}; the drum's molecule has four.` };
-        if (r.doubles) return { ok: false, msg: 'Your molecule has a double bond; the drum\'s has single bonds only.' };
-        return { ok: false, msg: `Your molecule is ${r.formula}; the drum's holds eight hydrogens.` };
+        if (r.nC !== 4) return { ok: false, msg: `Your board has ${r.nC} carbon${r.nC === 1 ? '' : 's'}, but the drum's molecule has four.` };
+        if (r.doubles) return { ok: false, msg: 'Your molecule has a double bond, but the drum\'s molecule has single bonds only.' };
+        return { ok: false, msg: `Your molecule is ${r.formula}, but the drum's molecule holds eight hydrogens.` };
       },
       reward: {
         log: 'The drum holds cyclobutane, C₄H₈.',
         title: 'Cyclobutane',
-        body: 'A ring of four: cyclobutane, C₄H₈. Two hydrogens fewer than the chain of four, with single bonds only, means one ring.'
+        body: 'A four-carbon ring: cyclobutane, C₄H₈. Having two fewer hydrogens than a four-carbon chain, with single bonds only, means the carbons form a ring.'
       }
     };
   })()
@@ -322,7 +322,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'Every carbon holds four bonds. A carbon added to a chain brings two more hydrogens, and closing a ring costs two.' }]
+  sections: [{ heading: 'What You Found', body: 'Every carbon forms four bonds. Adding a carbon to a chain adds two hydrogens, and closing a chain into a ring removes two.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */

@@ -35,32 +35,36 @@ const SCENES = {
     occ.forEach((v, i) => orbital(ctx, F, 8 + i * 9, 14, 7, 6, v, { colour: C.d3 }));
     say(ctx, `${n} of 6 placed`, F.x(f.size.w - 2.2), F.y(f.size.h - 3), F.size(1.9, 6), { align: 'right', color: C.amber, weight: 600 });
   },
-  /** A flat square of four identical ammonia ligands, turned and flipped: every turn looks the same. */
+  /** A flat square of four ligands, turned: rotating a model does not make a new substance. */
   'sq-turn'(ctx, f, F, t) {
-    say(ctx, 'Four identical ligands, turned', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
+    say(ctx, 'A flat square, rotated in space', F.x(2.2), F.y(7), F.size(1.8, 6.5), { color: C.dust });
     const a = (t * 0.9) % (Math.PI * 2);
-    const cx = F.x(f.size.w / 2); const cy = F.y(f.size.h / 2 + 2); const R = F.len(Math.min(f.size.h * 0.3, 10));
-    SQ_DIRS.forEach(([x, y]) => {
+    const cx = F.x(f.size.w / 2); const cy = F.y(f.size.h / 2 + 1.5); const R = F.len(Math.min(f.size.h * 0.3, 10));
+    const cols = ['#7fa04a', '#7fa04a', '#6f8fb0', '#6f8fb0'];
+    SQ_DIRS.forEach(([x, y], i) => {
       const px = cx + (x * Math.cos(a) - y * Math.sin(a)) * R; const py = cy + (x * Math.sin(a) + y * Math.cos(a)) * R * 0.55;
       ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke(); ctx.lineWidth = 1;
-      ctx.fillStyle = '#6f8fb0'; ctx.beginPath(); ctx.arc(px, py, F.len(2), 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = cols[i]; ctx.beginPath(); ctx.arc(px, py, F.len(2.1), 0, Math.PI * 2); ctx.fill();
     });
     ctx.fillStyle = '#b88a5a'; ctx.beginPath(); ctx.arc(cx, cy, F.len(2.4), 0, Math.PI * 2); ctx.fill();
-    say(ctx, 'every turn looks the same', F.x(f.size.w / 2), F.y(f.size.h - 3), F.size(1.8, 6), { align: 'center', color: C.amber });
+    say(ctx, 'turning keeps the same neighbours', F.x(f.size.w / 2), F.y(f.size.h - 3), F.size(1.8, 6.5), { align: 'center', color: C.amber });
   },
   /** Two hydrogen atoms meet: each brings one electron, in its own colour, and the pair between them is the bond. */
   'h2-bond'(ctx, f, F, t) {
-    say(ctx, 'Two hydrogen atoms bonding', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
-    const p = Math.min(1, (t % 6) / 3);
-    const cy = F.y(f.size.h / 2 + 2); const gap = 16 - 9 * p;
+    say(ctx, 'Two hydrogen atoms sharing electrons', F.x(2.2), F.y(7), F.size(1.8, 6.5), { color: C.dust });
+    const p = Math.min(1, (t % 6) / 2.6);
+    const cy = F.y(f.size.h / 2 + 1.5); const gap = 16 - 9 * p;
     const ax = F.x(f.size.w / 2 - gap); const bx = F.x(f.size.w / 2 + gap);
-    for (const [x, col, dir] of [[ax, '#c98f4a', 1], [bx, '#6f8fb0', -1]]) {
-      ctx.fillStyle = '#d6cebd'; ctx.beginPath(); ctx.arc(x, cy, F.len(3), 0, Math.PI * 2); ctx.fill();
-      say(ctx, 'H', x, cy, F.size(1.9, 7), { align: 'center', color: '#14100c', weight: 800, sans: true });
-      const ex = x + dir * F.len(3 + 1.6) * (1 - p) + dir * F.len(p * (gap - 0.6));
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ex, cy, Math.max(2.4, F.len(0.75)), 0, Math.PI * 2); ctx.fill();
+    if (p > 0.85) { ctx.strokeStyle = C.steel; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(ax, cy); ctx.lineTo(bx, cy); ctx.stroke(); ctx.lineWidth = 1; }
+    for (const [x, col, dir, dy] of [[ax, '#c98f4a', 1, -1.2], [bx, '#6f8fb0', -1, 1.2]]) {
+      ctx.fillStyle = '#d6cebd'; ctx.beginPath(); ctx.arc(x, cy, F.len(3.3), 0, Math.PI * 2); ctx.fill();
+      say(ctx, 'H', x, cy, F.size(2.1, 7.5), { align: 'center', color: '#14100c', weight: 800, sans: true });
+      const ex = x + dir * F.len(3.4 + 1.4) * (1 - p) + dir * F.len(p * (gap - 0.5));
+      const ey = cy + F.len(dy * p);
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ex, ey, Math.max(3.4, F.len(1.1)), 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#f0e8d8'; ctx.stroke();
     }
-    if (p >= 1) say(ctx, 'one electron from each atom', F.x(f.size.w / 2), F.y(f.size.h - 3), F.size(1.8, 6), { align: 'center', color: C.amber });
+    if (p >= 0.75) say(ctx, 'one electron from each atom', F.x(f.size.w / 2), F.y(f.size.h - 3), F.size(1.85, 6.5), { align: 'center', color: C.amber });
   },
   /** Two neighbours in the row lose their third electron: one more proton, a higher cost. */
   'ie-ti-v'(ctx, f, F, t) {

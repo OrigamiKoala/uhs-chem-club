@@ -49,32 +49,33 @@ export const STAGES = [
     return {
       id: 's1-iron',
       title: 'Two Iron Drums',
-      prompt: 'Which iron(II) complex has unpaired electrons?',
-      briefing: 'An electron alone in an orbital makes its substance pulled toward a magnet: the substance is paramagnetic. Paired electrons cancel, and give no pull.',
+      prompt: 'Which iron(II) complex is pulled by the magnet?',
+      briefing: { speaker: SPEAKER, body: 'Unpaired electrons make a substance paramagnetic, meaning a magnet pulls on it. Paired electrons cancel each other out and produce no pull.' },
       widget,
       table: lodeTable({
         pieces: [
-          vial('v-fe2-aq', 'fe2-aq', { x: 20, y: 49 }, { name: 'H₂O' }),
-          vial('v-fe2-cn', 'fe2-cn', { x: 42, y: 49 }, { name: 'CN−' })
+          vial('v-fe2-aq', 'fe2-aq', { x: 20, y: 49 }, { name: 'Fe²⁺ + H₂O' }),
+          vial('v-fe2-cn', 'fe2-cn', { x: 44, y: 49 }, { name: 'Fe²⁺ + CN−' })
         ],
         fixtures: [M.fixture],
-        zones: { slots: [M.slot, { id: 'answer', label: 'Has unpaired electrons', at: { x: 128, y: 46 }, size: { w: 28, h: 16 } }] }
+        zones: { slots: [M.slot, { id: 'answer', label: 'Pulled by magnet', at: { x: 128, y: 46 }, size: { w: 28, h: 16 } }] }
       }),
       hints: [
-        'Drop each vial in the holder and press "Switch On", then lay one in the answer slot.',
-        'Compare how far each vial moves toward the poles.',
-        'Only unpaired electrons give a magnetic pull.'
+        'Test each vial in the Magnet balance and press "Switch On" to see if it moves toward the poles.',
+        'Compare the pull bar for the water complex and the cyanide complex.',
+        'Only complexes with unpaired electrons are pulled by a magnet.'
       ],
       check(state) {
         const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a vial in the answer slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a vial in the answer slot.' };
         if (card.id === 'v-fe2-aq') return { ok: true };
-        return { ok: false, msg: 'The cyanide vial did not move toward the poles.' };
+        if (card.props.pull == null) return { ok: false, msg: 'Test that vial in the Magnet balance first.' };
+        return { ok: false, msg: 'The cyanide vial showed no magnetic pull.' };
       },
       reward: {
         log: 'The water complex is paramagnetic.',
         title: 'The Ligand Decides',
-        body: 'The water complex is paramagnetic and pulled toward the poles; the cyanide one is not. Both hold Fe²⁺ with six d electrons, so the ligand decides.'
+        body: 'The water complex is paramagnetic and pulled by the magnet, while the cyanide complex is not. Both contain Fe²⁺ with six d electrons, so the ligand determines the magnetism.'
       }
     };
   })(),
@@ -83,28 +84,29 @@ export const STAGES = [
   {
     id: 's2-predict',
     title: 'Spread or Pair',
-    prompt: 'With a wide gap, do six d electrons spread over all five orbitals or pair up in the lower three?',
+    predict: true,
+    prompt: 'With a wide energy gap, do six d electrons spread across all five orbitals or pair in the lower three?',
     widget,
     table: lodeTable({
       pieces: [
-        note('g-spread', 'Spread out: one per orbital before any pair', { x: 40, y: 49 }, { w: 46, h: 15 }),
-        note('g-pair', 'Pair up in the lower three', { x: 88, y: 49 }, { w: 40, h: 15 })
+        note('g-spread', 'Spread out: one per orbital before any pair', { x: 32, y: 20 }),
+        note('g-pair', 'Pair up in the lower three orbitals', { x: 32, y: 44 })
       ],
-      fixtures: [lodeLeadFixture('lead', { x: 75, y: 20 }, 'd6-equal', { w: 96, h: 30, title: 'Watch first' })],
-      zones: { slots: [{ id: 'guess', label: 'Your prediction', at: { x: 128, y: 49 }, size: { w: 30, h: 16 } }] }
+      fixtures: [lodeLeadFixture('lead', { x: 112, y: 44 }, { scene: 'd6-equal', w: 62, h: 30, title: 'Watch first' })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip shows six d electrons when all five orbitals sit at the same energy.',
-      'Spreading out avoids pairing, but puts electrons into the upper set.',
-      'Compare the cost of a pair with the cost of crossing the gap.'
+      'Watch the clip showing six d electrons when all five orbitals have equal energy.',
+      'Spreading out avoids pairing, but forces electrons up into the higher-energy level.',
+      'Compare the energy cost of pairing two electrons with the energy cost of crossing the gap.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Drop one prediction card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       remember(QUEST_KEY, card.id);
       return { ok: true };
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it on the split ladder.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is saved. Now test how six d electrons arrange themselves across a wide gap.' }
   },
 
   /* ---------------------------------------------------------------- 3 */
@@ -114,197 +116,198 @@ export const STAGES = [
     return {
       id: 's3-test',
       title: 'Pairing Against the Gap',
-      get prompt() { const g = guess(); return `How do six d electrons arrange themselves when the gap is wider than the pairing cost${g ? `, after predicting ${g}` : ''}?`; },
-      briefing: 'Putting two electrons in one orbital costs energy, because they repel. Lifting an electron across the gap costs energy too.',
+      get prompt() { const g = guess(); return `Arrange six d electrons at the lowest energy across this wide gap${g ? ` (you predicted ${g})` : ''}.`; },
+      briefing: { speaker: SPEAKER, body: 'Putting two electrons in the same orbital requires energy (the pairing cost, shown by the purple bar). Jumping across the gap also requires energy.' },
       widget,
       table: lodeTable({ fixtures: [D.fixture] }),
       hints: [
-        'Tap the orbital boxes to place six electrons, then press "Test Energy".',
-        'Compare the height of the gap with the pairing-cost bar.',
-        'Each electron goes where it costs least: a pair if crossing the gap costs more.'
+        'Compare the height of the energy gap with the purple pairing-cost bar.',
+        'Place six electrons in the boxes and press "Test Energy" to check your arrangement.',
+        'Electrons take whichever option costs less energy: pairing up when crossing the gap costs more.'
       ],
       check(state) {
         const r = dsplitRead(state.table, 'ds');
-        if (r.n !== 6) return { ok: false, notYet: true, msg: `Place 6 electrons (${r.n} placed).` };
+        if (r.n !== 6) return { ok: false, notYet: true, msg: `Place 6 electrons in total (${r.n} placed so far).` };
         if (r.occ.slice(0, 3).every(x => x === 2) && r.occ.slice(3).every(x => x === 0)) return { ok: true };
-        return { ok: false, msg: 'Two electrons sit above the gap, which is taller than the pairing bar.' };
+        return { ok: false, msg: 'Two electrons are above the gap, which costs more energy than pairing them in the lower orbitals.' };
       },
       reward: {
         log: 'With a wide gap, all six pair in the lower three.',
         title: 'Low Spin and High Spin',
-        get body() { const g = guess(); return `When the gap is wider than the pairing cost, all six pair in the lower three, leaving none unpaired: low spin (high spin spreads across all five).${g ? ` You predicted ${g}.` : ''}`; }
+        get body() { const g = guess(); return `When the gap is wider than the pairing cost, all six electrons pair in the lower three orbitals (low spin), leaving none unpaired. A narrow gap lets them spread across all five (high spin).${g ? ` You predicted ${g}.` : ''}`; }
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const D = dsplitFixture('ds', { x: 56, y: 19 }, { mode: 'fill', countDial: [3, 4, 5, 6, 7, 8], gapDial: true, w: 88, h: 34, title: 'Fill Lowest' });
+    const D = dsplitFixture('ds', { x: 64, y: 21 }, { mode: 'fill', countDial: [3, 4, 5, 6, 7, 8], gapDial: true, w: 96, h: 40, title: 'Fill Lowest' });
     const ids = ['d3', 'd5', 'd8'];
     const CHANGES = new Set(['d5']);
     return {
       id: 's4-counts',
-      title: 'Which Counts Choose',
-      prompt: 'For which of these numbers of d electrons does the gap change how many are unpaired?',
+      title: 'Which Counts Change',
+      briefing: { speaker: SPEAKER, body: 'Set "d electrons" and "Gap" (Narrow or Wide), then press "Fill Lowest" to see if the number of unpaired electrons changes.' },
+      prompt: 'For which d-electron counts does gap width change the number of unpaired electrons?',
       widget,
       table: lodeTable({
         pieces: [
-          numCard('c-d3', 'd³', { x: 14, y: 49 }, 3),
-          numCard('c-d5', 'd⁵', { x: 34, y: 49 }, 5),
-          numCard('c-d8', 'd⁸', { x: 54, y: 49 }, 8)
+          numCard('c-d3', 'd³', { x: 12, y: 52 }, 3),
+          numCard('c-d5', 'd⁵', { x: 28, y: 52 }, 5),
+          numCard('c-d8', 'd⁸', { x: 44, y: 52 }, 8)
         ],
         fixtures: [D.fixture],
         zones: {
           trays: [
-            { id: 'changes', label: 'Unpaired count changes', at: { x: 92, y: 51 }, size: { w: 28, h: 15 }, cell: 14, cellH: 14 },
-            { id: 'same', label: 'Stays the same', at: { x: 126, y: 51 }, size: { w: 28, h: 15 }, cell: 14, cellH: 14 }
+            { id: 'changes', label: 'Unpaired count changes', at: { x: 78, y: 53 }, size: { w: 38, h: 14 }, cell: 12, cellH: 13 },
+            { id: 'same', label: 'Stays the same', at: { x: 122, y: 53 }, size: { w: 38, h: 14 }, cell: 12, cellH: 13 }
           ]
         }
       }),
       hints: [
-        'Set the electron count and the gap, press "Fill Lowest", then sort the cards.',
-        'Count the unpaired electrons at the narrow gap and at the wide gap.',
-        'A choice exists only when an electron could either pair below or cross the gap.'
+        'Test each electron count with both Narrow and Wide gaps using "Fill Lowest", then sort the cards.',
+        'Compare the number of unpaired electrons at the narrow gap versus the wide gap.',
+        'The unpaired count only changes when an electron has to choose between pairing below or crossing the gap.'
       ],
       check(state) {
         const t = state.table;
         const off = ids.filter(id => !['tray:changes', 'tray:same'].includes(t.pieces[`c-${id}`].zone));
-        if (off.length) return { ok: false, notYet: true, msg: `${off.length} card${off.length > 1 ? 's are' : ' is'} not in a tray yet.` };
+        if (off.length) return { ok: false, notYet: true, msg: `${off.length} card${off.length > 1 ? 's still need' : ' still needs'} to be placed in a tray.` };
         const wrong = ids.find(id => (t.pieces[`c-${id}`].zone === 'tray:changes') !== CHANGES.has(id));
         if (!wrong) return { ok: true };
-        if (wrong === 'd8') return { ok: false, msg: 'd⁸ shows two unpaired with the narrow gap and with the wide one.' };
-        if (wrong === 'd3') return { ok: false, msg: 'd³ shows three unpaired with the narrow gap and with the wide one.' };
-        return { ok: false, msg: 'd⁵ shows five unpaired with the narrow gap and one with the wide one.' };
+        if (wrong === 'd8') return { ok: false, msg: 'd⁸ has two unpaired electrons for both the narrow gap and the wide gap.' };
+        if (wrong === 'd3') return { ok: false, msg: 'd³ has three unpaired electrons for both the narrow gap and the wide gap.' };
+        return { ok: false, msg: 'd⁵ has five unpaired electrons with a narrow gap, but only one with a wide gap.' };
       },
       reward: {
         log: 'Only d⁵ changes here (d⁴ to d⁷ have two arrangements).',
         title: 'Four to Seven',
-        body: 'Only d⁵ changes, five to one. Three electrons fill the lower set singly either way, and eight leave two unpaired either way; only four to seven have two arrangements.'
+        body: 'Only d⁵ changes here (from five unpaired down to one). Both d³ and d⁸ keep the same unpaired count either way; only d⁴ through d⁷ have both high-spin and low-spin forms.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const D = dsplitFixture('ds', { x: 40, y: 20 }, { mode: 'fill', countDial: [3, 5, 8], gap: GAPS.narrow, w: 64, h: 34, title: 'Water complexes (narrow gap)' });
-    const M = magnetFixture('mag', { x: 118, y: 20 }, {
-      w: 50, h: 34,
-      gate: { kind: 'rail', id: 'rank', initial: ['v-mn-aq', 'v-cr-aq', 'v-ni-aq'], msg: 'Rank the vials on the rail first.' }
-    });
+    const D = dsplitFixture('ds', { x: 38, y: 21 }, { mode: 'fill', countDial: [3, 5, 8], gap: GAPS.narrow, w: 66, h: 40, title: 'Water complexes (narrow gap)' });
+    const M = magnetFixture('mag', { x: 116, y: 21 }, { w: 58, h: 40 });
     return {
       id: 's5-rank',
       title: 'Ranking the Pull',
-      prompt: 'Rank these three complexes by how strongly the magnet pulls them.',
+      briefing: { speaker: SPEAKER, body: 'Test each vial on the Magnet balance (or check unpaired electrons on the ladder), then order all three vials on the rail from weakest to strongest pull.' },
+      prompt: 'Order these three complexes from weakest to strongest magnetic pull.',
       widget,
       table: lodeTable({
         pieces: [
-          vial('v-mn-aq', 'mn-aq', { x: 40, y: 49 }, { name: 'Mn²⁺' }),
-          vial('v-cr-aq', 'cr-aq', { x: 75, y: 49 }, { name: 'Cr³⁺' }),
-          vial('v-ni-aq', 'ni-aq', { x: 110, y: 49 }, { name: 'Ni²⁺' })
+          vial('v-mn-aq', 'mn-aq', { x: 40, y: 52 }, { name: 'Mn²⁺' }),
+          vial('v-cr-aq', 'cr-aq', { x: 75, y: 52 }, { name: 'Cr³⁺' }),
+          vial('v-ni-aq', 'ni-aq', { x: 110, y: 52 }, { name: 'Ni²⁺' })
         ],
         fixtures: [D.fixture, M.fixture],
         zones: {
           slots: [M.slot],
-          rail: { at: { x: 75, y: 49 }, size: { w: 96, h: 14 }, first: 'Weakest pull', last: 'Strongest pull', items: ['v-mn-aq', 'v-cr-aq', 'v-ni-aq'], start: ['v-mn-aq', 'v-cr-aq', 'v-ni-aq'] }
+          rail: { at: { x: 75, y: 52 }, size: { w: 96, h: 14 }, slots: 3, first: 'Weakest pull', last: 'Strongest pull', items: ['v-mn-aq', 'v-cr-aq', 'v-ni-aq'], start: ['v-mn-aq', 'v-cr-aq', 'v-ni-aq'] }
         }
       }),
       hints: [
-        'Work out each ion\'s arrangement on the ladder, rank the vials on the rail, then test them.',
-        'Count the unpaired electrons each ion has with water\'s narrow gap.',
-        'More unpaired electrons give a stronger magnetic pull.'
+        'Test each vial on the Magnet balance, or count its unpaired electrons on the ladder.',
+        'Count how many unpaired electrons each ion has with water\'s narrow gap.',
+        'More unpaired electrons produce a stronger magnetic pull.'
       ],
       check(state) {
         const order = railIds(state);
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three vials on the rail.' };
+        if (order.length < 3) return { ok: false, notYet: true, msg: 'Place all three vials on the rail.' };
         if (order[0] === 'v-ni-aq' && order[1] === 'v-cr-aq' && order[2] === 'v-mn-aq') return { ok: true };
         const a = COMPLEXES[state.table.pieces[order[0]].props.cx];
         const b = COMPLEXES[state.table.pieces[order[1]].props.cx];
         const c = COMPLEXES[state.table.pieces[order[2]].props.cx];
-        if (a.unpaired > b.unpaired) return { ok: false, msg: `${a.metal}${a.q === 2 ? '²⁺' : '³⁺'} (${a.unpaired} unpaired) sits left of ${b.metal}${b.q === 2 ? '²⁺' : '³⁺'} (${b.unpaired} unpaired).` };
-        return { ok: false, msg: `${b.metal}${b.q === 2 ? '²⁺' : '³⁺'} (${b.unpaired} unpaired) sits left of ${c.metal}${c.q === 2 ? '²⁺' : '³⁺'} (${c.unpaired} unpaired).` };
+        if (a.unpaired > b.unpaired) return { ok: false, msg: `${a.metal}${a.q === 2 ? '²⁺' : '³⁺'} (${a.unpaired} unpaired) is to the left of ${b.metal}${b.q === 2 ? '²⁺' : '³⁺'} (${b.unpaired} unpaired).` };
+        return { ok: false, msg: `${b.metal}${b.q === 2 ? '²⁺' : '³⁺'} (${b.unpaired} unpaired) is to the left of ${c.metal}${c.q === 2 ? '²⁺' : '³⁺'} (${c.unpaired} unpaired).` };
       },
       reward: {
         log: 'Ni²⁺ (2) < Cr³⁺ (3) < Mn²⁺ (5).',
         title: 'More Unpaired, Stronger Pull',
-        body: 'Ni²⁺ has 2 unpaired electrons, Cr³⁺ has 3, and Mn²⁺ has 5. The pull grows with the number of unpaired electrons.'
+        body: 'Ni²⁺ has 2 unpaired electrons, Cr³⁺ has 3, and Mn²⁺ has 5. Magnetic pull grows stronger as the number of unpaired electrons increases.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const S = specFixture('spec', { x: 50, y: 20 }, { w: 62, h: 34 });
-    const M = magnetFixture('mag', { x: 124, y: 20 }, { w: 44, h: 34, gate: { kind: 'slot', id: 'answer', msg: 'Choose a vial in the slot first.' } });
+    const S = specFixture('spec', { x: 46, y: 20 }, { w: 60, h: 36 });
+    const M = magnetFixture('mag', { x: 122, y: 20 }, { w: 48, h: 36 });
     return {
       id: 's6-cobalt',
       title: 'Cobalt Again',
-      prompt: 'Which cobalt(III) complex does the magnet pull?',
+      briefing: { speaker: SPEAKER, body: 'Test each cobalt(III) vial in the spectrometer and magnet balance to see how its absorbed colour connects to its magnetic pull.' },
+      prompt: 'Which cobalt(III) complex is pulled by the magnet?',
       widget,
       table: lodeTable({
         pieces: [
-          vial('v-co-nh3', 'co-nh3', { x: 20, y: 49 }, { name: 'Co(NH₃)₆³⁺' }),
-          vial('v-co-f', 'co-f', { x: 42, y: 49 }, { name: 'CoF₆³−' })
+          vial('v-co-nh3', 'co-nh3', { x: 20, y: 50 }, { name: 'Co(NH₃)₆³⁺' }),
+          vial('v-co-f', 'co-f', { x: 44, y: 50 }, { name: 'CoF₆³−' })
         ],
         fixtures: [S.fixture, M.fixture],
-        zones: { slots: [S.slot, M.slot, { id: 'answer', label: 'Pulled by the magnet', at: { x: 86, y: 48 }, size: { w: 28, h: 16 } }] }
+        zones: { slots: [S.slot, M.slot, { id: 'answer', label: 'Pulled by the magnet', at: { x: 86, y: 50 }, size: { w: 28, h: 16 } }] }
       }),
       hints: [
-        'Shine light through each vial, choose one in the slot, then test it with the magnet.',
-        'Compare the colour each vial takes out with the gap it needs.',
-        'A narrow gap leaves d⁶ spread out with four unpaired electrons.'
+        'Test both vials in the spectrometer and magnet balance, then place the pulled one in the slot.',
+        'Compare the colour each vial absorbs to see which one has the wider gap.',
+        'Check whether a narrow or wide gap leaves six d electrons unpaired.'
       ],
       check(state) {
         const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a vial in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a vial in the slot.' };
         if (card.id === 'v-co-f') return { ok: true };
-        return { ok: false, msg: 'The ammonia vial took out blue light, the wide-gap end.' };
+        return { ok: false, msg: 'The ammonia complex absorbs higher-energy blue light, which means it has a wide gap.' };
       },
       reward: {
         log: 'The fluoride complex is pulled by the magnet.',
         title: 'Colour Meets Magnetism',
-        body: 'The fluoride complex is pulled: its narrow gap leaves four of six d electrons unpaired. Ammonia\'s wide gap pairs all six.'
+        body: 'The fluoride complex is pulled because its narrow gap leaves four of six d electrons unpaired. Ammonia\'s wide gap pairs all six, leaving no magnetic pull.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const M = magnetFixture('mag', { x: 48, y: 19 }, { w: 56, h: 32 });
-    const D = dsplitFixture('ds', { x: 114, y: 19 }, { mode: 'fill', countDial: [5, 6], gapDial: true, w: 58, h: 32, title: 'Test arrangements' });
+    const M = magnetFixture('mag', { x: 48, y: 21 }, { w: 56, h: 40 });
+    const D = dsplitFixture('ds', { x: 114, y: 21 }, { mode: 'fill', countDial: [5, 6], gapDial: true, w: 60, h: 40, title: 'Test arrangements' });
     return {
       id: 's7-sealed',
       title: 'The Sealed Drum',
-      prompt: 'Which iron complex is in the sealed drum?',
+      briefing: { speaker: SPEAKER, body: 'Cu²⁺ (d⁹) has 1 unpaired electron. Compare the sealed drum\'s pull with Cu²⁺, then use the ladder to identify the iron ion and gap.' },
+      prompt: 'Which iron complex is inside the sealed drum?',
       widget,
       table: lodeTable({
         pieces: [
-          vial('v-cu', 'cu-aq', { x: 11, y: 47 }, { name: 'Cu²⁺' }),
-          vial('v-sealed', 'fe3-cn', { x: 26, y: 47 }, { name: 'Sealed', sealedTint: true }),
-          numCard('c-fe2-n', 'Fe²⁺, narrow', { x: 45, y: 47 }, 1),
-          numCard('c-fe2-w', 'Fe²⁺, wide', { x: 65, y: 47 }, 2),
-          numCard('c-fe3-n', 'Fe³⁺, narrow', { x: 85, y: 47 }, 3),
-          numCard('c-fe3-w', 'Fe³⁺, wide', { x: 105, y: 47 }, 4)
+          vial('v-cu', 'cu-aq', { x: 9, y: 52 }, { name: 'Cu²⁺' }),
+          vial('v-sealed', 'fe3-cn', { x: 22, y: 52 }, { name: 'Sealed', sealedTint: true }),
+          numCard('c-fe2-n', 'Fe²⁺, narrow gap', { x: 41, y: 52 }, 1),
+          numCard('c-fe2-w', 'Fe²⁺, wide gap', { x: 61, y: 52 }, 2),
+          numCard('c-fe3-n', 'Fe³⁺, narrow gap', { x: 81, y: 52 }, 3),
+          numCard('c-fe3-w', 'Fe³⁺, wide gap', { x: 101, y: 52 }, 4)
         ],
         fixtures: [M.fixture, D.fixture],
-        zones: { slots: [M.slot, { id: 'answer', label: 'Sealed drum', at: { x: 132, y: 47 }, size: { w: 24, h: 14 } }] }
+        zones: { slots: [M.slot, { id: 'answer', label: 'Sealed drum', at: { x: 130, y: 52 }, size: { w: 32, h: 15 } }] }
       }),
       hints: [
-        'Test the sealed drum and the Cu²⁺ vial on the magnet, then lay a card in the slot.',
-        'Compare the drum\'s pull with Cu²⁺\'s, and count Cu²⁺\'s unpaired electrons.',
-        'Find which iron ion and gap leave that many unpaired electrons.'
+        'Test both the sealed drum and Cu²⁺ on the magnet balance, then place a card in the slot.',
+        'Compare the drum\'s pull with Cu²⁺\'s pull to find how many unpaired electrons it has.',
+        'Use the ladder to see which iron ion and gap width leave that many unpaired electrons.'
       ],
       check(state) {
         const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (card.id === 'c-fe3-w') return { ok: true };
-        if (card.id === 'c-fe3-n') return { ok: false, msg: 'That arrangement leaves five unpaired; the drum pulls like Cu²⁺.' };
-        if (card.id === 'c-fe2-w') return { ok: false, msg: 'Fe²⁺ with a wide gap leaves none unpaired.' };
-        return { ok: false, msg: 'Fe²⁺ with a narrow gap leaves four unpaired; the drum pulls like Cu²⁺.' };
+        if (card.id === 'c-fe3-n') return { ok: false, msg: 'Fe³⁺ with a narrow gap leaves five unpaired electrons, far more than Cu²⁺.' };
+        if (card.id === 'c-fe2-w') return { ok: false, msg: 'Fe²⁺ with a wide gap pairs all six electrons, leaving no magnetic pull.' };
+        return { ok: false, msg: 'Fe²⁺ with a narrow gap leaves four unpaired electrons, far more than Cu²⁺.' };
       },
       reward: {
         log: 'Fe³⁺ with a wide gap.',
         title: 'One Unpaired Electron',
-        body: 'Fe³⁺ with a wide gap: five d electrons, four paired in the lower set and one alone, the same pull as Cu²⁺\'s single unpaired electron.'
+        body: 'The drum holds Fe³⁺ with a wide gap. Four of its five d electrons pair in the lower level, leaving one unpaired electron and the same pull as Cu²⁺.'
       }
     };
   })()
@@ -313,7 +316,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'Unpaired electrons make a complex paramagnetic. When a ligand splits the d orbitals by more than the pairing cost, electrons pair in the lower set first (low spin); when the gap is narrower, they spread across all five (high spin).' }]
+  sections: [{ heading: 'What You Found', body: 'Unpaired electrons make a complex paramagnetic. When the ligand\'s energy gap is wider than the pairing cost, electrons pair in the lower level first (low spin); when the gap is narrower, they spread across all five orbitals (high spin).' }]
 };
 
 const put = (piece, to) => ({ place: { piece, to } });

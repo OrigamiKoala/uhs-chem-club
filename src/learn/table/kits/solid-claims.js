@@ -52,7 +52,8 @@ claimSolids('lode', {
 });
 
 // Thornmere: the builder's molecule, the molecule windows, the mirror pair, the lead clips.
-claimSolids('thorn', { fixtures: { tbuild: {}, tmol: { live: true }, tmirror: { live: true }, tlead: { live: true, minR: 0.2 } } });
+// minR: 0.9 keeps electron-pair dots flat on the plate while atoms stand up as 3D spheres.
+claimSolids('thorn', { fixtures: { tbuild: {}, tmol: { live: true, minR: 0.9 }, tmirror: { live: true }, tlead: { live: true, minR: 0.45 } } });
 
 // Cinder Halo: the decaying sample's atoms, the chain's nuclei and neutrons, a nucleus's nucleons, the balance's loads, the broken molecules.
 claimSolids('nuke', { fixtures: Object.fromEntries(['ndecay', 'nchain', 'nnuc', 'nscale', 'ntissue'].map(k => [k, { ...MOVING, minR: 0.3 }])) });

@@ -43,11 +43,11 @@ export function toolNoteFor() { return null; }
 /** The refusal for a mark on a strip: what the bars either side of the mark show, or that the jump has not been measured. */
 function markMiss(t, id, el) {
   const r = iestripRead(t, id);
-  if (r.mark === 0) return { ok: false, notYet: true, msg: 'Tap the gap where the cost jumps.' };
+  if (r.mark === 0) return { ok: false, notYet: true, msg: 'Tap the gap between two bars where the removal energy jumps.' };
   const j = jumpAfter(el);
-  if (r.mark === j) return r.removed > j ? { ok: true } : { ok: false, msg: `Only ${r.removed} bars have been measured.` };
-  if (r.removed <= r.mark) return { ok: false, msg: `Bar ${r.mark + 1} has not been measured yet.` };
-  return { ok: false, msg: `Bar ${r.mark} is ${kj(r.costs[r.mark - 1])} and bar ${r.mark + 1} is ${kj(r.costs[r.mark])}.` };
+  if (r.mark === j) return r.removed > j ? { ok: true } : { ok: false, msg: `Only ${r.removed} electrons have been removed so far.` };
+  if (r.removed <= r.mark) return { ok: false, msg: `Electron ${r.mark + 1} has not been removed yet.` };
+  return { ok: false, msg: `Removing electron ${r.mark} takes ${kj(r.costs[r.mark - 1])} and electron ${r.mark + 1} takes ${kj(r.costs[r.mark])}, a steady climb rather than a sharp jump.` };
 }
 
 const TRANS = new Set(['Ti', 'Cu']);
@@ -57,20 +57,20 @@ export const STAGES = [
   {
     id: 's1-calcium',
     title: 'Calcium\'s Costs',
-    briefing: { speaker: SPEAKER, body: 'Ionization energy is the energy needed to remove one electron from an atom or ion. Here the electrons are removed one at a time, and each bar is the cost of the next one.' },
-    prompt: 'How many electrons can calcium lose before the cost of removing the next one jumps?',
+    briefing: { speaker: SPEAKER, body: 'The energy needed to remove an electron is called ionization energy. Press "Remove an Electron" to plot each step, then tap the gap where the energy jumps.' },
+    prompt: 'Tap the gap showing how many electrons calcium loses before ionization energy jumps.',
     widget,
     table: lodeTable({ pieces: [], fixtures: [iestripFixture('strip', { x: 75, y: 30 }, { el: 'Ca', w: 112, h: 50 })] }),
     hints: [
-      'Press "Remove an Electron" a few times, then tap the gap where the bars jump.',
-      'Compare each bar with the one before it, and the level each electron left from.',
-      'An electron in a full inner shell sits much closer to the nucleus than one in the outer shell.'
+      'Compare the bar heights for the first three electrons and check which shell each leaves.',
+      'Look at how much each bar rises compared with the bar before it.',
+      'Electrons in a full inner shell sit much closer to the nucleus and take far more energy to remove.'
     ],
     check(state) { return markMiss(state.table, 'strip', 'Ca'); },
     reward: {
       log: 'Calcium: two, then the jump.',
       title: 'Ionization Energy',
-      body: 'Two. The third electron comes from the full 3p level inside, close to the nucleus, and costs four times the second, so calcium forms only Ca²⁺.'
+      body: 'Calcium loses two outer electrons easily. The third comes from the full inner 3p shell and takes four times as much ionization energy, so calcium only forms Ca²⁺.'
     }
   },
 
@@ -78,19 +78,19 @@ export const STAGES = [
   {
     id: 's2-manganese',
     title: 'Manganese\'s Costs',
-    prompt: 'How many electrons can manganese lose before the cost of removing the next one jumps?',
+    prompt: 'Tap the gap showing how many electrons manganese loses before ionization energy jumps.',
     widget,
     table: lodeTable({ pieces: [], fixtures: [iestripFixture('strip', { x: 75, y: 30 }, { el: 'Mn', w: 112, h: 50 })] }),
     hints: [
-      'Press "Remove an Electron" until the cost jumps, then tap that gap.',
-      'Compare the steps from bar 3 to bar 7 with the step from bar 7 to bar 8.',
-      'The 4s and 3d electrons are close in energy, and only the inner shell sits far below them.'
+      'Watch how steadily the bars rise as 4s and 3d electrons are removed.',
+      'Compare the steady steps across the outer shell with the sudden jump at the inner 3p shell.',
+      'Because 4s and 3d electrons are close in energy, the big jump only happens when the inner shell begins.'
     ],
     check(state) { return markMiss(state.table, 'strip', 'Mn'); },
     reward: {
       log: 'Manganese: seven, then the jump.',
       title: 'Oxidation States',
-      body: 'Seven: two 4s and five 3d, each step a similar size, until the eighth comes from the inner shell. Each charge manganese can take, +2 up to +7, is an oxidation state.'
+      body: 'Manganese loses up to seven outer electrons (two 4s and five 3d) in steady steps before hitting the inner shell. Each charge it can take (+2 to +7) is an oxidation state.'
     }
   },
 
@@ -99,32 +99,32 @@ export const STAGES = [
     id: 's3-predict',
     title: 'The Third Electron',
     predict: true,
-    prompt: 'Which ion needs more energy to lose its third electron, Mn²⁺ or Fe²⁺?',
+    prompt: 'Which ion needs more energy to lose its next electron, Mn²⁺ or Fe²⁺?',
     widget,
     table: lodeTable({
       pieces: [
-        note('g-fe', 'Fe²⁺: one more proton holds it harder', { x: 32, y: 14 }),
-        note('g-mn', 'Mn²⁺', { x: 32, y: 33 }),
-        note('g-same', 'They need the same', { x: 32, y: 52 })
+        note('g-fe', 'Fe²⁺ (one more proton pulls harder)', { x: 32, y: 14 }),
+        note('g-mn', 'Mn²⁺ (all five 3d electrons are unpaired)', { x: 32, y: 33 }),
+        note('g-same', 'About the same (both lose a 3d electron)', { x: 32, y: 52 })
       ],
       fixtures: [lodeLeadFixture('lead', { x: 112, y: 44 }, { scene: 'ie-ti-v', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 16 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip shows two neighbours in the row losing their third electron.',
-      'Iron has one more proton than manganese, and one more 3d electron.',
-      'Think about which orbital that extra 3d electron has to go into.'
+      'Watch the clip showing two neighboring metals losing their third electron.',
+      'Iron has one more proton than manganese, but also one more 3d electron.',
+      'Think about which 3d orbital iron\'s extra electron has to share.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it on the strips.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is saved. Now test both ions on the strips.' }
   },
 
   /* ---------------------------------------------------------------- 4 */
@@ -133,37 +133,37 @@ export const STAGES = [
     return {
       id: 's4-third',
       title: 'Mn²⁺ and Fe²⁺',
-      get prompt() { const g = guess(); return `Which ion needs more energy to lose its third electron, Mn²⁺ or Fe²⁺?${g ? ` You predicted ${g}.` : ''}`; },
+      get prompt() { const g = guess(); return `Which ion needs more energy to lose its next electron, Mn²⁺ or Fe²⁺${g ? ` (you predicted ${g})` : ''}?`; },
       widget,
       table: lodeTable({
         pieces: [],
         fixtures: [
           pickOf(iestripFixture('mn', { x: 38, y: 23 }, { el: 'Mn', q0: 2, n: 1, mark: false, scale: 4000, w: 70, h: 40 }), 1),
           pickOf(iestripFixture('fe', { x: 112, y: 23 }, { el: 'Fe', q0: 2, n: 1, mark: false, scale: 4000, w: 70, h: 40 }), 2),
-          lchoiceFixture('pick', 'Needs more energy', { x: 75, y: 50 }, { options: ['Mn²⁺', 'Fe²⁺'], w: 50 })
+          lchoiceFixture('pick', 'Needs more energy', { x: 75, y: 51 }, { options: ['Mn²⁺', 'Fe²⁺'], w: 52 })
         ]
       }),
       hints: [
-        'Press "Remove an Electron" on each ion, then tap the ion that cost more.',
-        'Watch which orbital Fe²⁺\'s electron leaves from.',
-        'Two electrons in one orbital repel each other, which makes one of them easier to remove.'
+        'Remove one electron from each strip and compare the bar heights.',
+        'Watch which 3d orbital Fe²⁺\'s electron leaves from.',
+        'Two electrons sharing one orbital repel each other, making one of them easier to remove.'
       ],
       check(state) {
         const t = state.table;
         const c = chosen(t, 'pick');
-        if (!c) return { ok: false, notYet: true, msg: 'Tap the ion you choose.' };
+        if (!c) return { ok: false, notYet: true, msg: 'Tap the ion that needs more energy.' };
         if (c === 'Mn²⁺') return { ok: true };
         const mn = iestripRead(t, 'mn'); const fe = iestripRead(t, 'fe');
-        if (!mn.removed) return { ok: false, msg: 'Mn²⁺ has not lost an electron yet.' };
-        if (!fe.removed) return { ok: false, msg: 'Fe²⁺ has not lost an electron yet.' };
-        return { ok: false, msg: `Fe²⁺'s electron cost ${kj(fe.costs[0])} and Mn²⁺'s cost ${kj(mn.costs[0])}.` };
+        if (!mn.removed) return { ok: false, msg: 'Remove an electron from Mn²⁺ first.' };
+        if (!fe.removed) return { ok: false, msg: 'Remove an electron from Fe²⁺ first.' };
+        return { ok: false, msg: `Fe²⁺ took ${kj(fe.costs[0])} while Mn²⁺ took ${kj(mn.costs[0])}.` };
       },
       get reward() {
         const g = guess();
         return {
           log: 'Mn²⁺ 3,248 kJ/mol, Fe²⁺ 2,957 kJ/mol.',
           title: 'The Paired Electron',
-          body: `Mn²⁺${g ? `, where you predicted ${g}` : ''}. Fe²⁺'s sixth 3d electron shares an orbital and is repelled by its partner, so it leaves for less energy despite the extra proton.`
+          body: `Mn²⁺ needs more energy${g ? ` (you predicted ${g})` : ''}. Fe²⁺'s sixth 3d electron shares an orbital and is pushed away by its partner, so it takes less energy to remove despite iron's extra proton.`
         };
       }
     };
@@ -176,8 +176,8 @@ export const STAGES = [
     return {
       id: 's5-transition',
       title: 'Transition Metals',
-      briefing: { speaker: SPEAKER, body: 'A transition metal is an element that forms at least one ion with a partly filled 3d subshell. Copper\'s atom is one of two exceptions in the row: one 4s electron and ten in 3d.' },
-      prompt: 'Which of these four metals are transition metals?',
+      briefing: { speaker: SPEAKER, body: 'A transition metal forms at least one ion with a partly filled 3d subshell. Neutral copper is an exception in this row, with one 4s electron and ten in 3d.' },
+      prompt: 'Sort these four metals into transition metals and non-transition metals.',
       widget,
       table: lodeTable({
         pieces: els.map((el, i) => elemCard(`el-${el}`, el, { x: 10 + i * 14, y: 57 })),
@@ -185,26 +185,26 @@ export const STAGES = [
         zones: {
           slots: [L.slot],
           trays: [
-            { id: 'yes', label: 'Transition metal', at: { x: 92, y: 52.5 }, size: { w: 30, h: 21 }, cell: 14, cellH: 10.5 },
-            { id: 'no', label: 'Not a transition metal', at: { x: 126, y: 52.5 }, size: { w: 30, h: 21 }, cell: 14, cellH: 10.5 }
+            { id: 'yes', label: 'Transition metal', at: { x: 86, y: 52.5 }, size: { w: 34, h: 21 }, cell: 14, cellH: 10.5 },
+            { id: 'no', label: 'Not transition', at: { x: 125, y: 52.5 }, size: { w: 34, h: 21 }, cell: 14, cellH: 10.5 }
           ]
         }
       }),
       hints: [
-        'Lay each card on the ladder\'s square, then drag it to a tray.',
-        'Count the 3d electrons in each of its ions, against the ten that 3d can hold.',
-        'An ion counts only if its 3d subshell is neither empty nor full.'
+        'Drop each card onto "Load an atom", inspect its ions, and sort it into a tray.',
+        'Count the 3d electrons in each metal\'s ions out of the ten that 3d can hold.',
+        'A metal qualifies only if at least one of its ions has between 1 and 9 electrons in 3d.'
       ],
       check(state) {
         const t = state.table;
         const placed = els.map(el => t.pieces[`el-${el}`]);
         const off = placed.filter(p => p.zone !== 'tray:yes' && p.zone !== 'tray:no');
-        if (off.length) return { ok: false, notYet: true, msg: `${off.length} card${off.length > 1 ? 's are' : ' is'} not in a tray yet.` };
+        if (off.length) return { ok: false, notYet: true, msg: `${off.length} card${off.length > 1 ? 's still need' : ' still needs'} to be placed in a tray.` };
         for (const p of placed) {
           const el = p.props.el;
           const inYes = p.zone === 'tray:yes';
           if (inYes === TRANS.has(el)) continue;
-          const ions = COMMON_IONS[el].map(q => `${el}${q > 1 ? ['', '', '²', '³'][q] : ''}⁺ shows ${ionOf(el, q).d} 3d electron${ionOf(el, q).d === 1 ? '' : 's'}`);
+          const ions = COMMON_IONS[el].map(q => `${el}${q > 1 ? ['', '', '²', '³'][q] : ''}⁺ has ${ionOf(el, q).d} 3d electron${ionOf(el, q).d === 1 ? '' : 's'}`);
           return { ok: false, msg: `${cap(ELEMENTS[el].name)}: ${ions.join(', ')}.` };
         }
         return { ok: true };
@@ -212,7 +212,7 @@ export const STAGES = [
       reward: {
         log: 'Ti and Cu are transition metals.',
         title: 'Transition Metals',
-        body: 'Ti³⁺ and Cu²⁺ each have a partly filled 3d subshell. Calcium has no 3d electrons and Zn²⁺ keeps all ten, so neither is a transition metal.'
+        body: 'Ti³⁺ and Cu²⁺ each have a partly filled 3d subshell, so titanium and copper are transition metals. Calcium has no 3d electrons and Zn²⁺ has all ten, so neither qualifies.'
       }
     };
   })(),
@@ -223,7 +223,7 @@ export const STAGES = [
     return {
       id: 's6-sealed',
       title: 'The Sealed Strip',
-      prompt: 'Which metal\'s electrons are being removed in the sealed strip?',
+      prompt: 'Which metal matches the ionization energy pattern on the sealed strip?',
       widget,
       table: lodeTable({
         pieces: ['Sc', 'Ti', 'V', 'Cr'].map((el, i) => elemCard(`el-${el}`, el, { x: 10 + i * 14, y: 57 })),
@@ -231,23 +231,23 @@ export const STAGES = [
         zones: { slots: [L.slot, { id: 'answer', label: 'The sealed metal', at: { x: 127, y: 52 }, size: { w: 24, h: 13 } }] }
       }),
       hints: [
-        'Remove electrons from the sealed strip, and lay each card on the ladder\'s square.',
-        'Compare where the strip jumps with the number of 4s and 3d electrons in each atom.',
-        'The cost jumps once every 4s and 3d electron has gone.'
+        'Remove electrons from the sealed strip, then inspect each metal card on "Load an atom".',
+        'Compare how many electrons leave before the jump with each atom\'s total 4s and 3d electrons.',
+        'The sharp jump happens right after all 4s and 3d electrons are gone.'
       ],
       check(state) {
         const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a metal card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a metal card in the slot.' };
         if (card.props.el === 'Ti') return { ok: true };
         const e = ELEMENTS[card.props.el];
         const r = iestripRead(state.table, 'strip');
-        const seen = r.removed > 4 ? `; the strip jumps after ${jumpAfter('Ti')}` : '';
-        return { ok: false, msg: `${cap(e.name)}'s atom has ${e.s + e.d} electrons in 4s and 3d${seen}.` };
+        if (r.removed <= 4) return { ok: false, msg: 'Remove more electrons from the sealed strip until the energy jumps, then compare with the metals on "Load an atom".' };
+        return { ok: false, msg: `${cap(e.name)} has ${e.s + e.d} outer electrons (4s and 3d). Check where the sealed strip jumps.` };
       },
       reward: {
         log: 'The sealed strip is titanium.',
         title: 'Titanium',
-        body: 'Titanium: four outer electrons, 4s² 3d², then the inner shell. Its highest oxidation state is +4.'
+        body: 'Titanium has four outer electrons (4s² 3d²), followed by the inner shell jump. That means its highest oxidation state is +4.'
       }
     };
   })()
@@ -256,7 +256,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'Ionization energies climb gently while 4s and 3d electrons leave and jump at the inner shell, so these metals take several charges. A paired 3d electron leaves more easily.' }]
+  sections: [{ heading: 'What You Found', body: 'Ionization energy climbs steadily while 4s and 3d electrons leave, then jumps sharply at the inner shell, letting these metals form multiple charges. A paired 3d electron is also easier to remove because of electron repulsion.' }]
 };
 
 const put = (piece, to) => ({ place: { piece, to } });

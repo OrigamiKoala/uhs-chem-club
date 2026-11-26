@@ -43,19 +43,19 @@ const holds = (r, s, d) => r.s === s && r.d === d && !pairedWithEmpty(r) && (d >
 
 function buildMiss(r, el) {
   const want = ELEMENTS[el].s + ELEMENTS[el].d;
-  if (r.n > want) return `The ladder holds ${r.n} electrons; ${ELEMENTS[el].name} has ${want} outside its core.`;
-  if (r.n < want) return { notYet: true, msg: `The ladder holds ${r.n} of ${ELEMENTS[el].name}'s ${want} outer electrons.` };
-  if (r.s < 2 && r.d > 0) return '4s has a place left, and it sits lower on the ladder than 3d.';
-  if (pairedWithEmpty(r)) return 'One 3d orbital holds two electrons while another 3d orbital is empty.';
-  return 'The ladder does not hold the lowest arrangement.';
+  if (r.n > want) return `You placed ${r.n} electrons, but ${ELEMENTS[el].name} has ${want} outer electrons.`;
+  if (r.n < want) return { notYet: true, msg: `You placed ${r.n} of ${ELEMENTS[el].name}'s ${want} outer electrons.` };
+  if (r.s < 2 && r.d > 0) return 'Check which level sits lower in energy: 4s or 3d.';
+  if (pairedWithEmpty(r)) return 'One 3d orbital has two electrons while another 3d orbital is still empty.';
+  return 'That is not the lowest-energy arrangement.';
 }
 
 function ionMiss(r, q) {
-  if (r.charge < q) return { notYet: true, msg: `The charge reads ${r.charge > 0 ? '+' : ''}${r.charge}.` };
-  if (r.charge > q) return `The charge reads +${r.charge}.`;
-  if (r.s > 0 && dBoxes(r).includes(0)) return `4s still holds ${r.s === 2 ? 'two electrons' : 'an electron'}, above an empty place in 3d.`;
-  if (r.s > 0) return `4s still holds ${r.s === 2 ? 'two electrons' : 'an electron'}, above the 3d level.`;
-  return 'The ladder does not hold the lowest arrangement.';
+  if (r.charge < q) return { notYet: true, msg: `The ion's charge is ${r.charge > 0 ? '+' : ''}${r.charge}.` };
+  if (r.charge > q) return `The ion's charge is +${r.charge}.`;
+  if (r.s > 0 && dBoxes(r).includes(0)) return `4s still holds ${r.s === 2 ? 'two electrons' : 'an electron'} even though a 3d orbital is empty.`;
+  if (r.s > 0) return `4s still holds ${r.s === 2 ? 'two electrons' : 'an electron'}, even though 4s is higher in energy than 3d here.`;
+  return 'That is not the lowest-energy arrangement.';
 }
 
 const result = m => (typeof m === 'string' ? { ok: false, msg: m } : { ok: false, ...m });
@@ -67,25 +67,25 @@ export const STAGES = [
     return {
       id: 's1-vanadium',
       title: 'Vanadium',
-      briefing: { speaker: SPEAKER, body: 'Vanadium has five electrons outside its core, the full inner shells it shares with argon. The 3d subshell is a set of five orbitals of the same energy, each holding at most two electrons.' },
-      prompt: 'How are vanadium\'s five outer electrons arranged at the lowest energy?',
+      briefing: { speaker: SPEAKER, body: 'Vanadium has five outer electrons beyond its full inner shells. The 3d subshell has five equal-energy orbitals, each holding up to two electrons.' },
+      prompt: 'Arrange vanadium\'s five outer electrons in their lowest-energy orbitals.',
       widget,
       table: lodeTable({ pieces: [], fixtures: [L.fixture] }),
       hints: [
-        'Tap the boxes to add electrons, then press "Test Energy".',
-        'Compare where each electron sits with the empty places below it or level with it.',
-        'Two electrons in one orbital repel each other, so an empty orbital of the same energy costs less.'
+        'Start with the 4s box below 3d, then place the remaining electrons in the five 3d boxes.',
+        'Compare the energy of placing an electron in an empty 3d orbital versus pairing it up.',
+        'Electrons in the same orbital repel each other, so filling an empty orbital of the same energy costs less.'
       ],
       check(state) {
         const r = dshellRead(state.table, 'ladder');
-        if (r.n === 0) return { ok: false, notYet: true, msg: 'The ladder is empty.' };
+        if (r.n === 0) return { ok: false, notYet: true, msg: 'No electrons are placed on the ladder yet.' };
         if (holds(r, 2, 3)) return { ok: true };
         return result(buildMiss(r, 'V'));
       },
       reward: {
-        log: 'Vanadium: 4s² 3d³, three alone.',
+        log: 'Vanadium is 4s² 3d³, with three unpaired electrons.',
         title: 'One Per Orbital',
-        body: 'Two in 4s, then three alone in separate 3d orbitals. Electrons in one orbital repel each other, so 3d fills one per orbital before any pair.'
+        body: 'Two electrons fill 4s, and three go into separate 3d orbitals. Because electrons in the same orbital repel each other, 3d orbitals fill singly before pairing.'
       }
     };
   })(),
@@ -96,24 +96,24 @@ export const STAGES = [
     return {
       id: 's2-iron',
       title: 'Iron',
-      prompt: 'How are iron\'s eight outer electrons arranged at the lowest energy?',
+      prompt: 'Arrange iron\'s eight outer electrons in their lowest-energy orbitals.',
       widget,
       table: lodeTable({ pieces: [], fixtures: [L.fixture] }),
       hints: [
-        'Tap the boxes to add electrons; this ladder has no test.',
-        'Count what is left for 3d once 4s is full, and compare it with the five 3d orbitals.',
-        'Use what vanadium showed: one electron in each 3d orbital first, then pairs.'
+        'Fill the lower 4s box first, then place the remaining electrons in the five 3d boxes.',
+        'Count how many electrons remain for 3d after 4s is full, and compare that with the five 3d orbitals.',
+        'Follow the same rule as vanadium: put one electron in each 3d orbital before pairing any.'
       ],
       check(state) {
         const r = dshellRead(state.table, 'ladder');
-        if (r.n === 0) return { ok: false, notYet: true, msg: 'The ladder is empty.' };
+        if (r.n === 0) return { ok: false, notYet: true, msg: 'No electrons are placed on the ladder yet.' };
         if (holds(r, 2, 6)) return { ok: true };
         return result(buildMiss(r, 'Fe'));
       },
       reward: {
-        log: 'Iron: 4s² 3d⁶, one pair.',
-        title: 'The Sixth Pairs',
-        body: 'Two in 4s and six in 3d: five alone, then one pair once every 3d orbital has an electron. Iron\'s outer electrons are 4s² 3d⁶.'
+        log: 'Iron is 4s² 3d⁶, with one paired 3d orbital.',
+        title: 'The Sixth Electron Pairs',
+        body: 'Iron has two electrons in 4s and six in 3d. Five fill the 3d orbitals singly, and the sixth forms a pair, giving 4s² 3d⁶.'
       }
     };
   })(),
@@ -123,32 +123,32 @@ export const STAGES = [
     id: 's3-predict',
     title: 'Which Two Leave',
     predict: true,
-    prompt: 'Iron loses two electrons to become the ion Fe²⁺: which two leave?',
+    prompt: 'When iron loses two electrons to become Fe²⁺, which two leave?',
     widget,
     table: lodeTable({
       pieces: [
-        note('g-3d', 'The last two in: two from 3d', { x: 32, y: 14 }),
+        note('g-3d', 'The last two added (two from 3d)', { x: 32, y: 14 }),
         note('g-4s', 'The two in 4s', { x: 32, y: 33 }),
         note('g-one', 'One from 4s and one from 3d', { x: 32, y: 52 })
       ],
       fixtures: [lodeLeadFixture('lead', { x: 112, y: 44 }, { scene: 'fill-fe', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 16 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip shows the order iron\'s electrons went in.',
-      'An electron leaves most easily from the highest level it sits on.',
-      'Ask whether the ladder stays the same once the atom has a positive charge.'
+      'Watch the clip to see the order in which iron\'s electrons filled.',
+      'Electrons leave most easily from the highest-energy level.',
+      'Think about whether 4s and 3d keep the same order once the atom becomes positively charged.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it on the ladder.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is saved. Now test it on the energy ladder.' }
   },
 
   /* ---------------------------------------------------------------- 4 */
@@ -158,26 +158,27 @@ export const STAGES = [
     return {
       id: 's4-fe2',
       title: 'Making Fe²⁺',
-      get prompt() { const g = guess(); return `Which two electrons has Fe²⁺ lost?${g ? ` You predicted ${g}.` : ''}`; },
+      get prompt() { const g = guess(); return `Remove two electrons to form Fe²⁺${g ? ` (you predicted ${g})` : ''}.`; },
       widget,
       table: lodeTable({ pieces: [], fixtures: [L.fixture] }),
       hints: [
-        'Tap an electron to remove it, watch the levels, then press "Test Energy".',
-        'Watch where 4s sits compared with 3d once the charge is +1.',
-        'The electrons that leave are the ones on the highest level of the ion, not of the neutral atom.'
+        'Watch 4s and 3d trade places as soon as the charge reaches +1.',
+        'Compare the heights of 4s and 3d once iron is positively charged.',
+        'Electrons leave from the highest-energy level of the ion, not the neutral atom.'
       ],
       check(state) {
         const r = dshellRead(state.table, 'ladder');
-        if (r.charge === 0) return { ok: false, notYet: true, msg: 'The ladder still holds all eight of iron\'s outer electrons.' };
+        if (r.charge === 0) return { ok: false, notYet: true, msg: 'All eight of iron\'s outer electrons are still on the ladder.' };
         if (r.charge === 2 && r.s === 0 && r.d === 6) return { ok: true };
         return result(ionMiss(r, 2));
       },
       get reward() {
         const g = guess();
+        const right = recall(QUEST_KEY) === 'g-4s';
         return {
-          log: 'Fe²⁺ is 3d⁶: the 4s pair left.',
+          log: 'Fe²⁺ is 3d⁶ because the two 4s electrons leave first.',
           title: '4s Leaves First',
-          body: `The two 4s electrons left: once iron carries a charge its 3d level lies below 4s. Fe²⁺ is 3d⁶${g ? `, and you predicted ${g}` : ''}.`
+          body: `Both 4s electrons leave first because 3d drops below 4s once iron becomes an ion. Fe²⁺ is 3d⁶${g ? (right ? ', matching your prediction' : `, not ${g}`) : ''}.`
         };
       }
     };
@@ -189,25 +190,25 @@ export const STAGES = [
     return {
       id: 's5-co3',
       title: 'Cobalt(III)',
-      prompt: 'How are the outer electrons of the Co³⁺ ion arranged?',
+      prompt: 'Remove three electrons from cobalt to build the Co³⁺ ion.',
       widget,
       table: lodeTable({ pieces: [], fixtures: [L.fixture] }),
       hints: [
-        'Tap electrons to remove them until the charge reads +3.',
-        'Watch which level is highest once the atom is charged.',
-        'Take electrons from the highest level of the ion first, then from the next one down.'
+        'Watch which level moves highest as cobalt takes on a positive charge.',
+        'After 4s is empty, look for a 3d orbital that holds a pair of electrons.',
+        'Remove both 4s electrons first, then take one electron from a paired 3d orbital.'
       ],
       check(state) {
         const r = dshellRead(state.table, 'ladder');
-        if (r.charge === 0) return { ok: false, notYet: true, msg: 'The ladder still holds all nine of cobalt\'s outer electrons.' };
+        if (r.charge === 0) return { ok: false, notYet: true, msg: 'All nine of cobalt\'s outer electrons are still on the ladder.' };
         if (r.charge === 3 && r.s === 0 && r.d === 6 && !pairedWithEmpty(r)) return { ok: true };
-        if (r.charge === 3 && r.s === 0 && pairedWithEmpty(r)) return { ok: false, msg: 'One 3d orbital holds two electrons while another 3d orbital is empty.' };
+        if (r.charge === 3 && r.s === 0 && pairedWithEmpty(r)) return { ok: false, msg: 'One 3d orbital has two electrons while another 3d orbital is empty.' };
         return result(ionMiss(r, 3));
       },
       reward: {
         log: 'Co³⁺ is 3d⁶.',
         title: 'Then From 3d',
-        body: 'Both 4s electrons leave first, then one from 3d. Co³⁺ keeps six 3d electrons: 3d⁶, the same as Fe²⁺.'
+        body: 'Both 4s electrons leave first, followed by one electron from 3d. That leaves Co³⁺ with six 3d electrons (3d⁶), the same as Fe²⁺.'
       }
     };
   })(),
@@ -218,7 +219,7 @@ export const STAGES = [
     return {
       id: 's6-drum',
       title: 'The Sealed Drum',
-      prompt: 'The drum holds a 3+ ion with five 3d electrons: which metal is it?',
+      prompt: 'Which metal forms a 3+ ion with five 3d electrons?',
       widget,
       table: lodeTable({
         pieces: ['Mn', 'Fe', 'Co', 'Ni'].map((el, i) => elemCard(`el-${el}`, el, { x: 10 + i * 14, y: 56 })),
@@ -229,21 +230,20 @@ export const STAGES = [
         zones: { slots: [L.slot, { id: 'answer', label: 'The drum\'s metal', at: { x: 22, y: 36 }, size: { w: 26, h: 14 } }] }
       }),
       hints: [
-        'Lay a metal card on the ladder\'s square and tap away three electrons.',
-        'Compare the 3d electrons left with the drum\'s five.',
-        'Two electrons leave from 4s and the third from 3d, so the atom had one more 3d electron than its 3+ ion.'
+        'Drop each metal card onto "Load an atom" and remove three electrons.',
+        'Compare how many 3d electrons remain with the five listed on the drum.',
+        'Two electrons leave from 4s and the third leaves from 3d, so the neutral atom started with one more 3d electron.'
       ],
       check(state) {
         const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a metal card in the drum\'s slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a metal card in the drum\'s slot.' };
         if (card.props.el === 'Fe') return { ok: true };
-        const left = ELEMENTS[card.props.el].d - 1;
-        return { ok: false, msg: `${ELEMENTS[card.props.el].name[0].toUpperCase()}${ELEMENTS[card.props.el].name.slice(1)} as a 3+ ion keeps ${left} 3d electrons.` };
+        return { ok: false, msg: `Test ${ELEMENTS[card.props.el].name} on "Load an atom" by removing three electrons and counting how many remain in 3d.` };
       },
       reward: {
         log: 'The drum holds Fe³⁺.',
-        title: 'Iron(III)',
-        body: 'Iron, 4s² 3d⁶, loses both 4s electrons and one 3d electron, leaving Fe³⁺ with five 3d electrons, one in each orbital.'
+        title: 'Iron(III), Fe³⁺',
+        body: 'Iron (4s² 3d⁶) loses both 4s electrons and one 3d electron, leaving Fe³⁺ (iron(III)) with five unpaired 3d electrons.'
       }
     };
   })()
@@ -252,7 +252,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'In the fourth row, 3d fills one electron per orbital before any pair. Once the atom is an ion its 3d level lies below 4s, so the 4s electrons leave first.' }]
+  sections: [{ heading: 'What You Found', body: 'In the fourth row, 3d orbitals fill one electron at a time before pairing. Once a metal forms a positive ion, 3d drops below 4s, so the 4s electrons leave first.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */

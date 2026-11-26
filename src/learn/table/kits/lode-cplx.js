@@ -25,8 +25,8 @@ import { LIGANDS, OCT_DIRS, SQ_DIRS, complexCharge, fitTurn } from '../../engine
 const TET_DIRS = [[1, 1, 1], [-1, -1, 1], [-1, 1, -1], [1, -1, -1]].map(v => v.map(x => x / Math.sqrt(3)));
 const DONOR_INK = { O: '#b5573a', N: '#6f8fb0', Cl: '#7fa04a', C: '#55524c', F: '#a8c48a' };
 const METAL_INK = '#b88a5a';
-/** How big each ligand is drawn, against water: a chloride ion is about half as wide again as a water molecule (ionic radius 181 pm). */
-const SIZE = { h2o: 1, nh3: 1, cl: 1.45, cn: 1.1, f: 0.95, en: 1 };
+/** How big each ligand is drawn, against water: a chloride ion is noticeably wider than a water molecule (ionic radius 181 pm). */
+const SIZE = { h2o: 1, nh3: 1, cl: 1.65, cn: 1.1, f: 0.95, en: 1 };
 
 /* ------------------------------------------------------------------ drawing helpers */
 
@@ -41,15 +41,27 @@ export function project([x, y, z], tilt = 25, yaw = 28) {
   return { x: x1, y: -up, depth };
 }
 
-/** A ligand at (px, py) pixels: its donor atom as a shaded disc, its formula beside it. */
-function drawLigand(ctx, px, py, r0, id, { dim = false, label = true, size = 10 } = {}) {
+/** A ligand at (px, py) pixels: its donor atom as a shaded disc, its formula pushed radially outward so it never sits on bonds or the metal. */
+function drawLigand(ctx, px, py, r0, id, { dim = false, label = true, size = 10, out = null, inside = null } = {}) {
   const L = LIGANDS[id];
   const r = r0 * (SIZE[id] || 1);
   ctx.globalAlpha = dim ? 0.45 : 1;
   const g = ctx.createRadialGradient ? ctx.createRadialGradient(px - r * 0.35, py - r * 0.35, r * 0.1, px, py, r) : null;
   if (g && g.addColorStop) { g.addColorStop(0, '#f0e6d4'); g.addColorStop(0.35, DONOR_INK[L.donor]); g.addColorStop(1, '#1a1814'); ctx.fillStyle = g; } else ctx.fillStyle = DONOR_INK[L.donor];
   ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
-  if (label) say(ctx, L.sym, px, py + r + size * 0.75, size, { align: 'center', color: C.text, weight: 700, sans: true });
+  if (inside) say(ctx, inside, px, py, Math.max(6, size * 0.9), { align: 'center', color: '#100f0c', weight: 800, sans: true });
+  if (label) {
+    let lx = px; let ly = py + r + size * 0.85;
+    if (out) {
+      const m = Math.hypot(out[0], out[1]);
+      if (m > 0.01) {
+        const ux = out[0] / m; const uy = out[1] / m;
+        lx = px + ux * (r + size * 1.15);
+        ly = py + uy * (r + size * 0.9);
+      }
+    }
+    say(ctx, L.sym, lx, ly, size, { align: 'center', color: C.text, weight: 700, sans: true });
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -73,7 +85,7 @@ function paintBeaker(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
   title(ctx, f, F, b);
-  const g = glide(`${f.id}:nh3`, b, p.added, p.added, 1.0);
+  const g = glide(`${f.id}:nh3`, b, p.added, p.added, 0.55);
   // The flask: its tint runs from pale blue to deep blue with the ammonia that has bonded.
   const fx = 5; const fy = 9; const fw = 26; const fh = f.size.h - 15;
   const mix = Math.min(1, g / p.steps);
@@ -100,9 +112,9 @@ function paintBeaker(ctx, f, state, b) {
   const front = draw.filter(d => d.q.depth >= 0); const back = draw.filter(d => d.q.depth < 0);
   const ligAt = i => { const k = order.indexOf(i); return k < 4 && k < g - 0.5 ? 'nh3' : 'h2o'; };
   const swapGlow = i => { const k = order.indexOf(i); return k < 4 && Math.abs(g - (k + 1)) < 0.5 && g < k + 1; };
-  for (const d of back) { const P = { x: cx + d.q.x * R, y: cy + d.q.y * R }; bondLine(ctx, { x: cx, y: cy }, P); drawLigand(ctx, P.x, P.y, F.len(2.9), ligAt(d.i), { dim: swapGlow(d.i), size: F.size(2, 6.5) }); }
+  for (const d of back) { const P = { x: cx + d.q.x * R, y: cy + d.q.y * R }; bondLine(ctx, { x: cx, y: cy }, P); drawLigand(ctx, P.x, P.y, F.len(2.9), ligAt(d.i), { dim: swapGlow(d.i), size: F.size(2, 6.5), out: [P.x - cx, P.y - cy] }); }
   drawMetal(ctx, cx, cy, F.len(3.8), 'Cu²⁺', F.size(2, 7));
-  for (const d of front) { const P = { x: cx + d.q.x * R, y: cy + d.q.y * R }; bondLine(ctx, { x: cx, y: cy }, P); drawLigand(ctx, P.x, P.y, F.len(2.9), ligAt(d.i), { dim: swapGlow(d.i), size: F.size(2, 6.5) }); }
+  for (const d of front) { const P = { x: cx + d.q.x * R, y: cy + d.q.y * R }; bondLine(ctx, { x: cx, y: cy }, P); drawLigand(ctx, P.x, P.y, F.len(2.9), ligAt(d.i), { dim: swapGlow(d.i), size: F.size(2, 6.5), out: [P.x - cx, P.y - cy] }); }
 }
 
 function runBeaker(state, fid) {
@@ -124,7 +136,7 @@ registerFixture('beaker', { paint: paintBeaker, run: runBeaker, live: () => true
 export function cplxFixture(id, at, { metal, q, geom = 'oct', mode = 'cycle', lig = 'h2o', palette = ['h2o', 'cl'], start = null, meter = false, turn = false, title: ttl = null, w = 56, h = 46, label = null, tilt = 25, yaw = 28, mark = false, turnStart = 1 } = {}) {
   const n = geom === 'oct' ? 6 : 4;
   const dials = {};
-  if (turn) dials.turn = { min: 0, max: 6, step: 1, value: turnStart, label: 'Turn', labels: ['Above', '', '', '', '', '', 'Edge-on'] };
+  if (turn) dials.turn = { min: 0, max: 6, step: 1, value: turnStart, label: 'Turn', labels: ['Above', '15°', '30°', '45°', '60°', '75°', 'Edge-on'] };
   const hidden = [];
   if (mode === 'cycle') {
     for (let i = 0; i < n; i++) { const v = start ? Math.max(0, palette.indexOf(start[i]) + 1) : 0; dials[`s${i}`] = { min: 0, max: palette.length, step: 1, value: v, label: `Place ${i + 1}` }; hidden.push(`s${i}`); }
@@ -134,7 +146,7 @@ export function cplxFixture(id, at, { metal, q, geom = 'oct', mode = 'cycle', li
   const run = mode === 'ring6' ? { runLabel: 'Release' } : mode === 'bond' ? { runLabel: 'Bond' } : { noRun: true };
   return {
     id, kind: 'cplx', label: ttl || `${label || metal}`, at: { ...at }, size: { w, h }, dials, ...run,
-    props: { metal, q, geom, mode, lig, palette, start, meter, turn, hidden, released: false, bonded: false, label, tilt, yaw, mark }
+    props: { metal, q, geom, mode, lig, palette, start, meter, turn, hidden, released: false, bonded: false, label, tilt, yaw, mark, ...(turn ? { top: 10.5 } : {}) }
   };
 }
 
@@ -205,11 +217,11 @@ function placesOf(f, b, state = null) {
 
 function geomOf(f) {
   const p = f.props;
-  const top = f.dials.turn ? 13 : 6;
+  const top = f.dials.turn ? 17.5 : 6;
   // A line of words under the model (a supply key, the meter, a mark) takes the bottom 8 units; otherwise only a margin.
   const foot = (p.mode === 'supply' || p.meter || p.mark || p.mode === 'ring6') ? 8 : 3;
   const cx = f.size.w / 2; const cy = top + (f.size.h - top - foot) / 2;
-  const R = Math.min(f.size.w * 0.34, (f.size.h - top - foot) * 0.4);
+  const R = Math.min(f.size.w * 0.32, (f.size.h - top - foot) * 0.38);
   return { cx, cy, R, top };
 }
 
@@ -225,6 +237,7 @@ function paintCplx(ctx, f, state, b) {
   const P = placesOf(f, b, state);
   const order = P.map((q, i) => ({ q, i })).sort((u, v) => u.q.depth - v.q.depth);
   const lr = F.len(Math.max(2.2, G.R * 0.17)); const ls = F.size(1.8, 6.5);
+  const chelate = p.mode === 'supply' && LIGANDS[p.lig].places === 2;
   const drawAt = (i, front) => {
     const q = P[i];
     if ((q.depth >= 0) !== front) return;
@@ -232,25 +245,29 @@ function paintCplx(ctx, f, state, b) {
     const id = r.arr[i];
     if (id) {
       bondLine(ctx, { x: cx, y: cy }, pos, Math.max(2, F.len(0.5)));
-      drawLigand(ctx, pos.x, pos.y, lr, id, { size: ls, label: !(p.mode === 'supply' && LIGANDS[id].places === 2 && [2, 4, 5].includes(i)) });
+      drawLigand(ctx, pos.x, pos.y, lr, id, { size: ls, out: [pos.x - cx, pos.y - cy], label: !chelate, inside: chelate ? 'N' : null });
     } else if (p.mode === 'cycle') {
-      ctx.strokeStyle = C.dust; ctx.setLineDash([3, 3]);
-      ctx.beginPath(); ctx.arc(pos.x, pos.y, lr, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = '#d4c9b4'; ctx.lineWidth = 1.8; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, Math.max(lr, F.len(2.5)), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
     }
-    if (p.mode === 'ring6' && !id) drawLigand(ctx, pos.x, pos.y, lr, 'nh3', { size: ls });
+    if (p.mode === 'ring6' && !id) drawLigand(ctx, pos.x, pos.y, lr, 'nh3', { size: ls, out: [pos.x - cx, pos.y - cy] });
   };
-  // In a supply bench the space round the ion is drawn: a faint shell, and the room each bonded ligand takes on it.
+  // In a supply bench the space round the ion is drawn: a clear shell, and the room each bonded ligand takes on it.
   if (p.mode === 'supply') {
-    ctx.strokeStyle = 'rgba(184,175,160,0.25)'; ctx.setLineDash([2, 4]);
-    ctx.beginPath(); ctx.ellipse ? ctx.ellipse(cx, cy, R, R * 0.62, 0, 0, Math.PI * 2) : ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(210,200,180,0.45)'; ctx.lineWidth = 1.4; ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.ellipse ? ctx.ellipse(cx, cy, R, R * 0.62, 0, 0, Math.PI * 2) : ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
   }
   // A chelate: the two nitrogens of each en joined by its carbon backbone.
-  const chelate = p.mode === 'supply' && LIGANDS[p.lig].places === 2;
   for (const d of order) drawAt(d.i, false);
   if (chelate) {
-    ctx.strokeStyle = '#8a8274'; ctx.lineWidth = Math.max(2, F.len(0.6));
+    ctx.strokeStyle = '#dfd0a8'; ctx.lineWidth = Math.max(3, F.len(0.95));
     const ord = [0, 2, 1, 4, 3, 5];
-    for (let k = 0; k + 1 < r.atoms; k += 2) { const a = P[ord[k]]; const c2 = P[ord[k + 1]]; ctx.beginPath(); ctx.moveTo(cx + a.x * R, cy + a.y * R); ctx.quadraticCurveTo(cx + (a.x + c2.x) * R * 0.9, cy + (a.y + c2.y) * R * 0.9, cx + c2.x * R, cy + c2.y * R); ctx.stroke(); }
+    for (let k = 0; k + 1 < r.atoms; k += 2) {
+      const a = P[ord[k]]; const c2 = P[ord[k + 1]];
+      const mx = cx + (a.x + c2.x) * R * 0.95; const my = cy + (a.y + c2.y) * R * 0.95;
+      ctx.beginPath(); ctx.moveTo(cx + a.x * R, cy + a.y * R); ctx.quadraticCurveTo(mx, my, cx + c2.x * R, cy + c2.y * R); ctx.stroke();
+      say(ctx, 'en', mx, my, F.size(1.9, 6.5), { align: 'center', color: C.amber, weight: 700, sans: true });
+    }
     ctx.lineWidth = 1;
   }
   drawMetal(ctx, cx, cy, F.len(Math.max(3.4, G.R * 0.27)), metalText, F.size(2.1, 7));
@@ -307,24 +324,24 @@ function paintBond(ctx, f, F, b, G) {
     ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(nx, ny); ctx.lineTo(nx + dx * nR * 1.4, ny + dy * nR * 1.4); ctx.stroke(); ctx.lineWidth = 1;
     ctx.fillStyle = '#d6cebd'; ctx.beginPath(); ctx.arc(nx + dx * nR * 1.5, ny + dy * nR * 1.5, nR * 0.45, 0, Math.PI * 2); ctx.fill();
   }
-  // The lone pair: two dots on the side facing copper; once bonded they sit in the gap.
+  // The lone pair: two large dots on the side facing copper; once bonded they move clearly into the gap.
   const pairX = nx - nR * 1.5;
   const gapX = (cx + cuR * 1.45 + nx - nR) / 2;
   const lx = pairX + (gapX - pairX) * g;
-  for (const dy of [-0.9, 0.9]) { ctx.fillStyle = C.nIn; ctx.beginPath(); ctx.arc(lx, ny + F.len(dy * 1.2), Math.max(2.6, F.len(0.9)), 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#d8e4f0'; ctx.stroke(); }
+  for (const dy of [-1.2, 1.2]) { ctx.fillStyle = C.nIn; ctx.beginPath(); ctx.arc(lx, ny + F.len(dy * 1.3), Math.max(4.2, F.len(1.4)), 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#f0f5fa'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.lineWidth = 1; }
   if (g > 0.95) { ctx.strokeStyle = C.steel; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(cx + cuR, cy); ctx.lineTo(nx - nR, ny); ctx.stroke(); ctx.setLineDash([]); }
   // The key and the counts.
-  const ky = f.size.h - 9;
-  ctx.fillStyle = C.cuIn; ctx.beginPath(); ctx.arc(F.x(3.5), F.y(ky), Math.max(2.2, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
-  say(ctx, 'copper\'s 3d electrons: 9', F.x(5.5), F.y(ky), F.size(1.9, 6.2), { color: C.text });
-  ctx.fillStyle = C.nIn; ctx.beginPath(); ctx.arc(F.x(3.5), F.y(ky + 4), Math.max(2.2, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
-  say(ctx, 'nitrogen\'s lone pair: 2', F.x(5.5), F.y(ky + 4), F.size(1.9, 6.2), { color: C.text });
+  const ky = f.size.h - 9.5;
+  ctx.fillStyle = C.cuIn; ctx.beginPath(); ctx.arc(F.x(3.5), F.y(ky), Math.max(3, F.len(0.9)), 0, Math.PI * 2); ctx.fill();
+  say(ctx, 'copper\'s 3d electrons: 9', F.x(5.8), F.y(ky), F.size(2.2, 7.5), { color: C.text, weight: 600 });
+  ctx.fillStyle = C.nIn; ctx.beginPath(); ctx.arc(F.x(3.5), F.y(ky + 4.4), Math.max(3, F.len(0.9)), 0, Math.PI * 2); ctx.fill();
+  say(ctx, 'nitrogen\'s lone pair: 2', F.x(5.8), F.y(ky + 4.4), F.size(2.2, 7.5), { color: C.text, weight: 600 });
 }
 
 function cplxTaps(f, state) {
   const p = f.props;
   if (p.mode === 'supply') { const k = supplyKey(f); return [{ x0: k.x0, x1: k.x1, y0: k.y0, y1: k.y1, dial: 'add', step: 1 }]; }
-  if (p.mark) { const top = f.dials.turn ? 13 : 5; return [{ x0: 1, x1: f.size.w - 1, y0: top, y1: f.size.h - 1, dial: 'mark', step: 1, wrap: true }]; }
+  if (p.mark) { const top = f.dials.turn ? 17.5 : 5; return [{ x0: 1, x1: f.size.w - 1, y0: top, y1: f.size.h - 1, dial: 'mark', step: 1, wrap: true }]; }
   if (p.mode !== 'cycle') return [];
   const G = geomOf(f);
   const P = placesOf(f, null);
@@ -345,8 +362,8 @@ registerFixture('cplx', { paint: paintCplx, run: runCplx, tapZones: cplxTaps, li
 
 /* ================================================================== match */
 
-export function matchFixture(id, at, { a, b: bId, geom = 'sq', w = 44, h = 30, title: ttl = null } = {}) {
-  return { id, kind: 'match', label: ttl || `Turn ${bId} to fit ${a}`, at: { ...at }, size: { w, h }, dials: {}, runLabel: `Turn ${bId} to Fit ${a}`, props: { a, b: bId, geom, tried: null } };
+export function matchFixture(id, at, { a, b: bId, geom = 'sq', need = null, w = 44, h = 30, title: ttl = null } = {}) {
+  return { id, kind: 'match', label: ttl || `Turn ${bId} to fit ${a}`, at: { ...at }, size: { w, h }, dials: {}, runLabel: `Turn ${bId} to Fit ${a}`, props: { a, b: bId, geom, need, tried: null } };
 }
 export const matchRead = (state, id) => state.fixtures[id].props.tried;
 
@@ -380,11 +397,33 @@ function paintMatch(ctx, f, state, b) {
   say(ctx, words, F.x(2.2), F.y(7.4), F.size(2.1, 7), { color: playing ? C.dust : res.m ? C.phosphor : C.amber, weight: 700, maxW: F.len(f.size.w - 4) });
 }
 
+function countLigands(arr) {
+  const c = {};
+  for (const x of arr) if (x) c[x] = (c[x] || 0) + 1;
+  return c;
+}
+function matchesNeed(arr, need) {
+  const c = countLigands(arr);
+  return Object.entries(need).every(([k, v]) => (c[k] || 0) === v);
+}
+function sameComposition(a, b) {
+  const ca = countLigands(a); const cb = countLigands(b);
+  const keys = new Set([...Object.keys(ca), ...Object.keys(cb)]);
+  for (const k of keys) if ((ca[k] || 0) !== (cb[k] || 0)) return false;
+  return true;
+}
+
 function runMatch(state, fid) {
   const f = state.fixtures[fid];
   const p = f.props;
   const A = cplxRead(state, p.a).arr; const B = cplxRead(state, p.b).arr;
   if (A.some(x => !x) || B.some(x => !x)) return { noop: 'Fill every place on both models first.' };
+  if (p.need) {
+    const desc = Object.entries(p.need).map(([k, v]) => `${v} ${LIGANDS[k]?.sym || k}`).join(' and ');
+    if (!matchesNeed(A, p.need) || !matchesNeed(B, p.need)) return { noop: `Each model must hold ${desc}.` };
+  } else if (!sameComposition(A, B)) {
+    return { noop: 'Both models must hold the same ligands before comparing.' };
+  }
   const m = fitTurn(p.geom, A, B);
   // fitTurn answers the turn that carries each of B's places onto the place of A that holds the same ligand: B is turned by it.
   p.tried = { key: `${A.join()}|${B.join()}`, same: Boolean(m), m, seq: (p.tried?.seq || 0) + 1 };

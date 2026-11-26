@@ -47,16 +47,19 @@ function chains(ctx, w, h, t) {
 function isomers(ctx, w, h, t) {
   ground(ctx, w, h);
   if (t < 0.33) {
-    text(ctx, 'C₄H₁₀, joined two ways', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    text(ctx, 'C₄H₁₀, connected two ways', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
     ctx.globalAlpha = ease(win(t, 0.02, 0.12));
     sceneIn(ctx, 'skel-butane', { x: 110, y: 160, w: 320, h: 220 }, { skeletal: true });
     sceneIn(ctx, 'skel-2-methylpropane', { x: 530, y: 160, w: 320, h: 220 }, { skeletal: true });
     ctx.globalAlpha = 1;
   } else if (t < 0.67) {
-    text(ctx, '1,2-Dichloroethene: the far end will not turn', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    text(ctx, '1,2-Dichloroethene: cis and trans forms', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
     const k = win(t, 0.36, 0.64);
     const a = (Math.PI / 2) * Math.sin(Math.PI * Math.min(1, k * 1.2));
-    drawTwist(ctx, PX, 480, 290, 120, substance('dichloroethene12').ends, Math.max(0, a));
+    drawTwist(ctx, PX, 290, 290, 96, substance('dichloroethene12').ends, Math.max(0, a));
+    drawTwist(ctx, PX, 670, 290, 96, substance('dichloroethene12').ends, Math.PI, { remade: true });
+    text(ctx, 'cis (same side)', 290, 440, { size: 18, color: C.dust, align: 'center', weight: 600 });
+    text(ctx, 'trans (opposite sides)', 670, 440, { size: 18, color: C.dust, align: 'center', weight: 600 });
   } else {
     text(ctx, 'CHFClBr and its mirror image', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
     const turn = Math.min(11, Math.floor(win(t, 0.7, 0.95) * 12));
@@ -120,7 +123,7 @@ function carapace(ctx, w, h, t) {
     text(ctx, 'Wax: C₃₀H₆₂', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
     ctx.globalAlpha = ease(win(t, 0.02, 0.12)); sceneIn(ctx, 'skel-pentane', { x: 280, y: 160, w: 400, h: 200 }, { skeletal: true }); ctx.globalAlpha = 1;
   } else if (t < 0.67) {
-    text(ctx, 'One link of the armour', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    text(ctx, 'One link of the armor', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
     ctx.globalAlpha = ease(win(t, 0.35, 0.45)); sceneIn(ctx, 'amide', { x: 250, y: 120, w: 460, h: 300 }, { pairs: true, lit: ['a:c'] }); ctx.globalAlpha = 1;
   } else {
     text(ctx, 'The chain, cut at its amide links', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });

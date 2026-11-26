@@ -132,7 +132,7 @@ export const PRIMERS = {
   /* Thornmere (unit13): the recaps its benches assume, from Ligar and from the Charge Gardens. */
   fourbonds: {
     title: 'Covalent bonds and carbon',
-    html: `<p>A covalent bond is a pair of electrons shared by two atoms, drawn as a line. A carbon atom has four valence electrons and forms four bonds; a hydrogen atom forms one. Slide how many of a carbon's bonds go to other carbons.</p>
+    html: `<p>A covalent bond is a pair of electrons shared between two atoms, drawn as a line. Carbon has four outer electrons and forms four bonds; hydrogen forms one. Slide how many of a carbon's bonds connect to other carbons.</p>
       ${slider('fb-n', 'Bonds to other carbons', 0, 4, 1, 1)}<p id="fb-v"></p>`,
     wire(root) {
       bind(root, ['fb-n'], (v, set) => {
@@ -143,36 +143,36 @@ export const PRIMERS = {
   },
   imforces: {
     title: 'Attractions between molecules',
-    html: `<p>Molecules attract one another even though each has no overall charge. Electrons shift for a moment to one side of a molecule, and the next molecule's electrons shift in step, so the two attract: a dispersion force. The more of two molecules lie against each other, the stronger it is. A hydrogen bonded to oxygen is also attracted to an oxygen of the next molecule: a hydrogen bond, much stronger. To boil a liquid, these attractions must be overcome. Slide how much of two molecules lie side by side.</p>
-      ${slider('im-n', 'Length lying side by side', 1, 5, 1, 2)}<p id="im-v"></p>`,
+    html: `<p>Even neutral molecules attract each other. Electrons briefly shift to one side of a molecule, pulling a neighbor's electrons out of balance too (a dispersion force). The more surface area two molecules share, the stronger the pull. A hydrogen bonded to oxygen also pulls strongly on a neighboring oxygen (a hydrogen bond). Boiling a liquid means overcoming these attractions. Slide how much surface the two molecules share.</p>
+      ${slider('im-n', 'Shared surface length', 1, 5, 1, 2)}<p id="im-v"></p>`,
     wire(root) {
       bind(root, ['im-n'], (v, set) => {
         const n = v('im-n');
-        set('im-v', `${'▬'.repeat(n)}<br>${'▬'.repeat(n)}<br>More contact, stronger attraction, more heat needed to part them: ${['', 'weakest', 'weak', 'middling', 'strong', 'strongest'][n]}.`);
+        set('im-v', `${'▬'.repeat(n)}<br>${'▬'.repeat(n)}<br>More contact means stronger attraction and more heat needed to separate them: ${['', 'weakest', 'weak', 'medium', 'strong', 'strongest'][n]}.`);
       });
     }
   },
   acidbase: {
-    title: 'Acids, bases and pH',
-    html: `<p>A proton is a hydrogen atom without its electron, H⁺. An acid gives a proton to water, making H₃O⁺ and lowering the pH below 7; a base takes a proton from water, leaving OH⁻ and raising the pH above 7. Pure water is pH 7. Slide which way the proton goes.</p>
+    title: 'Acids, bases, and pH',
+    html: `<p>A proton is a hydrogen atom without its electron (H⁺). An acid gives a proton to water, making H₃O⁺ and lowering the pH below 7; a base pulls a proton off water, leaving OH⁻ and raising the pH above 7. Pure water sits at pH 7. Slide which way the proton moves.</p>
       ${slider('ab-n', 'Proton moves (−1 to water, +1 from water)', -1, 1, 1, 0)}<p id="ab-v"></p>`,
     wire(root) {
       bind(root, ['ab-n'], (v, set) => {
         const n = v('ab-n');
-        set('ab-v', n < 0 ? 'The sample gave a proton to water: an acid, pH below 7.' : n > 0 ? 'The sample took a proton from water: a base, pH above 7.' : 'No proton moved: the pH stays at 7.');
+        set('ab-v', n < 0 ? 'The sample gave a proton to water: acidic (pH below 7).' : n > 0 ? 'The sample took a proton from water: basic (pH above 7).' : 'No proton moved: neutral (pH 7).');
       });
     }
   },
   pairmove: {
-    title: 'Electron-rich, electron-poor and the curved arrow',
-    html: `<p>Electrons are negative. A place in a molecule with a pair of electrons to spare is electron-rich; an atom whose shared electrons have been pulled away from it is electron-poor. Opposite charges attract, so a pair moves from an electron-rich site to an electron-poor one.</p>
-      <p>A curved arrow shows one pair of electrons moving: it starts at the pair and ends at the atom the pair moves to. Slide how strongly the other atom attracts the shared pair.</p>
-      ${slider('pm-n', 'Attraction of atom B', 0, 4, 1, 2)}<p id="pm-v"></p>`,
+    title: 'Electron-rich, electron-poor, and the curved arrow',
+    html: `<p>Electrons are negative. A spot with an exposed electron pair is electron-rich, while an atom whose shared electrons are pulled away is electron-poor. Opposite charges attract, so an electron pair moves from an electron-rich site to an electron-poor one.</p>
+      <p>A curved arrow tracks one pair of electrons, starting at the pair and pointing to the atom it moves to. Slide how strongly atom B pulls on the shared pair.</p>
+      ${slider('pm-n', 'Pull of atom B', 0, 4, 1, 2)}<p id="pm-v"></p>`,
     wire(root) {
       bind(root, ['pm-n'], (v, set) => {
         const n = v('pm-n');
         const left = '&nbsp;'.repeat(2 + n * 3);
-        set('pm-v', `A ${left}<strong>:</strong>${'&nbsp;'.repeat(14 - n * 3)} B &nbsp; ${n > 2 ? 'The pair sits near B, so A is electron-poor.' : n < 2 ? 'The pair sits near A, so B is electron-poor.' : 'The pair is shared evenly.'}`);
+        set('pm-v', `A ${left}<strong>:</strong>${'&nbsp;'.repeat(14 - n * 3)} B &nbsp; ${n > 2 ? 'The pair sits near B, leaving A electron-poor.' : n < 2 ? 'The pair sits near A, leaving B electron-poor.' : 'The pair is shared evenly.'}`);
       });
     }
   }

@@ -27,12 +27,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "Two hydrogens for each of the eight carbons is 16, and each end carbon holds one more: 16 + 2 = 18, C₈H₁₈."
+          "explanation": "Two hydrogens for each of the eight carbons is 16, plus one extra at each end: 16 + 2 = 18, giving C₈H₁₈."
         },
         {
           "id": "q1-chains#b2",
           "quest": "q1-chains",
-          "question": "A skeletal formula is a zigzag line with four corners and two ends, and it does not split. Which molecule is it?",
+          "question": "A skeletal formula is an unbranched zigzag line with four corners and two ends. Which molecule is it?",
           "options": [
             {
               "id": "a",
@@ -52,14 +52,14 @@
             }
           ],
           "answer": "a",
-          "explanation": "Every corner and every end of a skeletal formula is a carbon: four corners and two ends make six carbons in one unbranched chain, hexane."
+          "explanation": "Every corner and end represents one carbon, so four corners and two ends make six carbons in one straight chain: hexane."
         }
       ],
       "worked": {
         "id": "q1-chains#w",
         "quest": "q1-chains",
         "title": "Hydrogens on a long chain",
-        "setup": "A wax molecule is an alkane chain of 25 carbons with single bonds only. Find how many hydrogen atoms it holds.",
+        "setup": "A wax molecule is a single-bond alkane chain of 25 carbons. Find how many hydrogen atoms it holds.",
         "steps": [
           {
             "say": "How many hydrogens do the 25 carbons hold at two each?",
@@ -71,34 +71,34 @@
             "explain": "2 × 25 = 50."
           },
           {
-            "say": "How many more do the two end carbons hold between them?",
+            "say": "How many extra hydrogens do the two end carbons hold combined?",
             "kind": "number",
             "answer": 2,
             "unit": "",
             "calc": "1 + 1",
-            "hint": "Each end carbon is bonded to only one other carbon.",
-            "explain": "Each end carbon holds one more: 1 + 1 = 2."
+            "hint": "Each end carbon is only bonded to one other carbon.",
+            "explain": "Each end carbon holds one extra hydrogen: 1 + 1 = 2."
           },
           {
-            "say": "How many hydrogen atoms does the chain hold in all?",
+            "say": "How many hydrogen atoms does the chain hold in total?",
             "kind": "number",
             "answer": 52,
             "unit": "",
             "calc": "2 * 25 + 2",
-            "hint": "Add the two counts.",
-            "explain": "50 + 2 = 52: the wax is C₂₅H₅₂."
+            "hint": "Add the two counts together.",
+            "explain": "50 + 2 = 52, so the wax is C₂₅H₅₂."
           },
           {
-            "say": "The same 25 carbons closed into one ring hold how many hydrogens?",
+            "say": "If those same 25 carbons close into a single ring, how many hydrogens do they hold?",
             "kind": "number",
             "answer": 50,
             "unit": "",
             "calc": "2 * 25 + 2 - 2",
-            "hint": "Closing a ring makes one more bond, and each end carbon gives up a hydrogen for it.",
+            "hint": "Closing a ring forms one new carbon–carbon bond, costing each end carbon one hydrogen.",
             "explain": "52 − 2 = 50."
           }
         ],
-        "finish": "An alkane chain of n carbons holds 2n + 2 hydrogens, and each ring takes two away."
+        "finish": "An alkane chain of n carbons holds 2n + 2 hydrogens, and closing it into a ring removes two."
       }
     },
     "q2-unsat": {
@@ -106,7 +106,7 @@
         {
           "id": "q2-unsat#b1",
           "quest": "q2-unsat",
-          "question": "A hydrocarbon has four carbons in a chain with one carbon–carbon double bond and no ring. How many hydrogen atoms does it hold?",
+          "question": "A four-carbon chain has one carbon–carbon double bond and no ring. How many hydrogen atoms does it hold?",
           "options": [
             {
               "id": "a",
@@ -126,20 +126,20 @@
             }
           ],
           "answer": "a",
-          "explanation": "A chain of four carbons with single bonds holds 2 × 4 + 2 = 10 hydrogens. A double bond uses one more bond on each of two carbons, so two hydrogens fewer: 8."
+          "explanation": "A four-carbon alkane holds 2 × 4 + 2 = 10 hydrogens. Adding one double bond uses an extra bond on each of two carbons, removing two hydrogens: 8."
         },
         {
           "id": "q2-unsat#b2",
           "quest": "q2-unsat",
-          "question": "Hydrogen chloride, H–Cl, adds to ethene. Which pair of electrons moves first, and where does it go?",
+          "question": "Hydrogen chloride (H–Cl) adds to ethene. Which electron pair moves first, and where does it go?",
           "options": [
             {
               "id": "a",
-              "label": "The second pair of the double bond moves to the hydrogen of H–Cl"
+              "label": "The double bond's second pair moves to the hydrogen of H–Cl"
             },
             {
               "id": "b",
-              "label": "The second pair of the double bond moves to the chlorine"
+              "label": "The double bond's second pair moves to the chlorine"
             },
             {
               "id": "c",
@@ -147,11 +147,11 @@
             },
             {
               "id": "d",
-              "label": "A pair of a C–H bond moves to the hydrogen of H–Cl"
+              "label": "A C–H bond pair moves to the hydrogen of H–Cl"
             }
           ],
           "answer": "a",
-          "explanation": "Chlorine attracts the pair it shares with hydrogen, so hydrogen is the electron-poor end of H–Cl. The double bond's second pair is the electron-rich site, and it moves to that hydrogen."
+          "explanation": "Chlorine pulls the H–Cl electrons toward itself, leaving hydrogen electron-poor. Ethene's exposed second pair is electron-rich and moves to that hydrogen."
         }
       ]
     },
@@ -160,7 +160,7 @@
         {
           "id": "q3-isomers#b1",
           "quest": "q3-isomers",
-          "question": "Hexane, C₆H₁₄, and 2-methylpentane, C₆H₁₄, are structural isomers. Which is expected to boil at the higher temperature?",
+          "question": "Hexane (C₆H₁₄) and 2-methylpentane (C₆H₁₄) are structural isomers. Which one boils at a higher temperature?",
           "options": [
             {
               "id": "a",
@@ -176,12 +176,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "The unbranched chain lies along its neighbours over more of its length, so the dispersion forces between its molecules are stronger and more heat is needed to separate them. Hexane boils at 68.7 °C, 2-methylpentane at 60.3 °C."
+          "explanation": "Unbranched hexane chains touch neighbors over more surface area, creating stronger attractions that take more heat to break. Hexane boils at 68.7 °C, while 2-methylpentane boils at 60.3 °C."
         },
         {
           "id": "q3-isomers#b2",
           "quest": "q3-isomers",
-          "question": "Which molecule is chiral?",
+          "question": "Which of these molecules is chiral?",
           "options": [
             {
               "id": "a",
@@ -201,7 +201,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "In 2-bromobutane the second carbon holds H, Br, CH₃ and CH₂CH₃, four different groups, so its mirror image cannot be turned to match it. Each of the others has a carbon with two groups the same."
+          "explanation": "Carbon 2 of 2-bromobutane holds four different groups (H, Br, CH₃, and CH₂CH₃), so its mirror image cannot be rotated to match it. Every other choice has at least two identical groups on that carbon."
         }
       ]
     },
@@ -210,32 +210,32 @@
         {
           "id": "q4-groups#b1",
           "quest": "q4-groups",
-          "question": "Propan-1-ol, CH₃CH₂CH₂OH, and methoxyethane, CH₃OCH₂CH₃, have the same formula. Which boils higher, and why?",
+          "question": "Propan-1-ol (CH₃CH₂CH₂OH) and methoxyethane (CH₃OCH₂CH₃) share the same formula. Which boils higher, and why?",
           "options": [
             {
               "id": "a",
-              "label": "Propan-1-ol: its –OH hydrogen forms hydrogen bonds to the next molecule's oxygen"
+              "label": "Propan-1-ol, because its –OH forms hydrogen bonds with neighboring molecules"
             },
             {
               "id": "b",
-              "label": "Methoxyethane: its oxygen is in the middle of the chain"
+              "label": "Methoxyethane, because its oxygen sits in the middle of the chain"
             },
             {
               "id": "c",
-              "label": "They boil at the same temperature, since their formulas are the same"
+              "label": "They boil at the same temperature because they have the same formula"
             },
             {
               "id": "d",
-              "label": "Propan-1-ol: it is the heavier molecule"
+              "label": "Propan-1-ol, because it is heavier"
             }
           ],
           "answer": "a",
-          "explanation": "Only propan-1-ol has a hydrogen bonded to oxygen, so only its molecules hold one another by hydrogen bonds. It boils at 97 °C; methoxyethane at 7 °C. Their masses are the same."
+          "explanation": "Only propan-1-ol has a hydrogen bonded to oxygen, allowing strong hydrogen bonds between molecules. It boils at 97 °C compared with 7 °C for methoxyethane, even though both have the same mass."
         },
         {
           "id": "q4-groups#b2",
           "quest": "q4-groups",
-          "question": "Methanoic acid, HCOOH, is put in water. Which hydrogen leaves as a proton?",
+          "question": "Methanoic acid (HCOOH) is dissolved in water. Which hydrogen leaves as a proton?",
           "options": [
             {
               "id": "a",
@@ -247,11 +247,11 @@
             },
             {
               "id": "c",
-              "label": "Neither: an –OH group makes water basic"
+              "label": "Neither, because –OH makes water basic"
             }
           ],
           "answer": "a",
-          "explanation": "The O–H pair sits near oxygen, and the charge left on the –COO⁻ group is shared by two oxygens, so that proton leaves. A C–H pair sits nearly midway and stays."
+          "explanation": "Oxygen pulls the O–H electrons tightly, and the negative charge left on –COO⁻ is shared evenly across both oxygens, so that proton leaves easily. The C–H bond is shared nearly evenly and stays intact."
         }
       ]
     },
@@ -260,7 +260,7 @@
         {
           "id": "q5-reactions#b1",
           "quest": "q5-reactions",
-          "question": "A hydroxide ion meets chloromethane, CH₃Cl. Which atom does its spare pair of electrons move to?",
+          "question": "A hydroxide ion meets chloromethane (CH₃Cl). Which atom does hydroxide's spare electron pair move to?",
           "options": [
             {
               "id": "a",
@@ -276,32 +276,32 @@
             }
           ],
           "answer": "a",
-          "explanation": "Chlorine attracts the pair it shares with carbon, so carbon is the electron-poor site. The hydroxide's pair moves to the carbon, and the C–Cl pair leaves with the chlorine as a chloride ion: a substitution."
+          "explanation": "Chlorine pulls the C–Cl electrons away from carbon, leaving carbon electron-poor. Hydroxide's pair moves to carbon while chlorine leaves with the C–Cl pair as Cl⁻, completing a substitution."
         },
         {
           "id": "q5-reactions#b2",
           "quest": "q5-reactions",
-          "question": "Methanol and ethanoic acid react, and water is given off. What kind of reaction is it, and what is made?",
+          "question": "Methanol and ethanoic acid react and release water. What kind of reaction is this, and what product forms?",
           "options": [
             {
               "id": "a",
-              "label": "A condensation, making an ester"
+              "label": "Condensation, forming an ester"
             },
             {
               "id": "b",
-              "label": "An addition, making an alkene"
+              "label": "Addition, forming an alkene"
             },
             {
               "id": "c",
-              "label": "A hydrolysis, making an alcohol"
+              "label": "Hydrolysis, forming an alcohol"
             },
             {
               "id": "d",
-              "label": "A substitution, making a carboxylic acid"
+              "label": "Substitution, forming a carboxylic acid"
             }
           ],
           "answer": "a",
-          "explanation": "Two molecules join through a new C–O link from the acid's carbon to the alcohol's oxygen while water leaves: a condensation reaction, and the product, methyl ethanoate, is an ester."
+          "explanation": "The two molecules join through a new C–O bond while releasing water, making it a condensation reaction. The product (methyl ethanoate) is an ester."
         }
       ]
     },
@@ -310,11 +310,11 @@
         {
           "id": "q6-polymers#b1",
           "quest": "q6-polymers",
-          "question": "Poly(propene) is made from propene, CH₂=CH–CH₃. What does each repeating unit of the chain look like?",
+          "question": "Poly(propene) is made from propene (CH₂=CH–CH₃). What does each repeating unit in the polymer chain look like?",
           "options": [
             {
               "id": "a",
-              "label": "–CH₂–CH(CH₃)–, joined by single bonds"
+              "label": "–CH₂–CH(CH₃)–, connected by single bonds"
             },
             {
               "id": "b",
@@ -326,12 +326,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "Each double bond's second pair becomes the bond to the next unit, so the three carbons of propene stay together as –CH₂–CH(CH₃)–, with single bonds only, and nothing leaves."
+          "explanation": "Each double bond's second pair opens to bond with the next monomer, turning every double bond into single bonds: –CH₂–CH(CH₃)–, with nothing left over."
         },
         {
           "id": "q6-polymers#b2",
           "quest": "q6-polymers",
-          "question": "A protein chain is made of 120 amino acids joined end to end. How many water molecules were given off as it formed?",
+          "question": "A protein chain is built from 120 amino acids linked end to end. How many water molecules were released as it formed?",
           "options": [
             {
               "id": "a",
@@ -351,53 +351,53 @@
             }
           ],
           "answer": "a",
-          "explanation": "Each amide link is made as one water molecule leaves, and 120 amino acids in a row have 119 links between them."
+          "explanation": "Each amide link releases one water molecule, and 120 amino acids in a row are connected by 119 links."
         }
       ],
       "worked": {
         "id": "q6-polymers#w",
         "quest": "q6-polymers",
         "title": "Water from a condensation chain",
-        "setup": "A nylon chain is made from 800 two-ended monomers joined end to end. Find how many water molecules were given off, and how many links a hydrolysis would have to cut to free every monomer.",
+        "setup": "A nylon chain is built from 800 two-ended monomers linked end to end. Find how many water molecules were released, and how many links hydrolysis must break to separate every monomer.",
         "steps": [
           {
-            "say": "How many links join 800 monomers in a row?",
+            "say": "How many links connect 800 monomers in a row?",
             "kind": "number",
             "answer": 799,
             "unit": "",
             "calc": "800 - 1",
-            "hint": "A row of monomers has one link fewer than it has monomers.",
+            "hint": "A chain always has one fewer link than monomers.",
             "explain": "800 − 1 = 799 links."
           },
           {
-            "say": "How many water molecules were given off?",
+            "say": "How many water molecules were released?",
             "kind": "number",
             "answer": 799,
             "unit": "",
             "calc": "800 - 1",
-            "hint": "Each link gave off one water molecule.",
-            "explain": "One for each link: 799."
+            "hint": "Each link releases one water molecule.",
+            "explain": "One per link: 799."
           },
           {
-            "say": "How many water molecules must a hydrolysis add back to free all 800 monomers?",
+            "say": "How many water molecules must hydrolysis add back to separate all 800 monomers?",
             "kind": "number",
             "answer": 799,
             "unit": "",
             "calc": "800 - 1",
-            "hint": "Hydrolysis adds water back across each link it cuts.",
-            "explain": "Every link must be cut, one water each: 799."
+            "hint": "Hydrolysis adds one water molecule back across every link it breaks.",
+            "explain": "All 799 links must be broken, taking 799 waters."
           },
           {
-            "say": "If the chain were 1600 monomers long, how many water molecules would it give off?",
+            "say": "If the chain had 1600 monomers instead, how many water molecules would it release?",
             "kind": "number",
             "answer": 1599,
             "unit": "",
             "calc": "1600 - 1",
-            "hint": "Count the links again.",
-            "explain": "1600 − 1 = 1599: doubling the monomers does not quite double the links."
+            "hint": "Count the links between 1600 monomers.",
+            "explain": "1600 − 1 = 1599 links and 1599 water molecules."
           }
         ],
-        "finish": "A condensation chain of n monomers has n − 1 links and gives off n − 1 water molecules."
+        "finish": "A condensation polymer of n monomers has n − 1 links and releases n − 1 water molecules."
       }
     },
     "boss-carapace": {
@@ -405,7 +405,7 @@
         {
           "id": "boss-carapace#b1",
           "quest": "boss-carapace",
-          "question": "Nylon's links are amide links, made as water left. Which reagent would break nylon back into its monomers?",
+          "question": "Nylon is held together by amide links formed when water left. Which reagent breaks nylon back into monomers?",
           "options": [
             {
               "id": "a",
@@ -421,16 +421,16 @@
             }
           ],
           "answer": "a",
-          "explanation": "An amide link is made by condensation, losing water, so it is broken by hydrolysis: hydroxide's pair moves to the C=O carbon and the C–N bond gives way. Nylon has no carbon–carbon double bonds for bromine or hydrogen to add across."
+          "explanation": "Amide links are built by condensation (losing water), so hydrolysis reverses them: hydroxide moves to the C=O carbon and breaks the C–N bond. Nylon has no carbon–carbon double bonds for bromine or hydrogen to react with."
         },
         {
           "id": "boss-carapace#b2",
           "quest": "boss-carapace",
-          "question": "A sample has the formula C₆H₁₂ and leaves bromine water orange. What is it?",
+          "question": "A hydrocarbon has the formula C₆H₁₂ and leaves bromine water orange. What is it?",
           "options": [
             {
               "id": "a",
-              "label": "A ring of six carbons, cyclohexane"
+              "label": "A six-carbon ring, cyclohexane"
             },
             {
               "id": "b",
@@ -438,11 +438,11 @@
             },
             {
               "id": "c",
-              "label": "An alkane chain of six carbons"
+              "label": "A six-carbon alkane chain"
             }
           ],
           "answer": "a",
-          "explanation": "C₆H₁₂ is two hydrogens short of the chain C₆H₁₄, so it has either a ring or a double bond. It left bromine water orange, so there is no double bond: it is a ring."
+          "explanation": "C₆H₁₂ has two fewer hydrogens than hexane (C₆H₁₄), so it must have either a ring or a double bond. Because it left bromine water orange, it has no double bond, so it must be a ring."
         }
       ]
     }

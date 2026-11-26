@@ -59,27 +59,27 @@ export const STAGES = [
     return {
       id: 's1-another',
       title: 'One Formula, Two Molecules',
-      briefing: { speaker: SPEAKER, body: 'Molecules with the same formula whose atoms are joined in a different order are structural isomers. Butane\'s four carbons are joined in one line.' },
-      prompt: 'Is there a molecule of C₄H₁₀ whose carbons are joined in a different order from butane\'s?',
+      briefing: { speaker: SPEAKER, body: 'Molecules with the same formula whose atoms are connected in a different order are called structural isomers. Butane connects its four carbons in one continuous line.' },
+      prompt: 'Build a different C₄H₁₀ molecule whose carbons are not connected in one line.',
       widget,
       table: thornTable({ pieces: [], fixtures: [V, B] }),
       hints: [
-        'Build on the model board and read the formula under it as you go.',
-        'Compare how each carbon of your molecule is joined with how butane\'s are joined.',
-        'Try a carbon that is bonded to three other carbons instead of two.'
+        'Watch the formula under the board and look at the dashed rings above and below the middle carbon.',
+        'Compare how each carbon in your build is connected with how butane\'s carbons are connected.',
+        'Try connecting one carbon to three other carbons instead of putting all four in a row.'
       ],
       check(state) {
         const r = buildRead(state.table, 'board');
-        if (!r.nC) return { ok: false, notYet: true, msg: 'The board is empty.' };
-        if (!r.joined) return { ok: false, msg: 'The carbons on the board are not all joined.' };
+        if (!r.nC) return { ok: false, notYet: true, msg: 'Build a molecule on the board first.' };
+        if (!r.joined) return { ok: false, msg: 'Connect all the carbons on the board into one molecule.' };
         if (r.key === keyOf('methylpropane')) return { ok: true };
-        if (r.key === keyOf('butane')) return { ok: false, msg: 'Your carbons are joined one after another in a line of four, as butane\'s are, however the line bends.' };
-        return { ok: false, msg: `The board holds ${r.formula}, not C₄H₁₀.` };
+        if (r.key === keyOf('butane')) return { ok: false, msg: 'Your four carbons are still connected in one continuous line, just like butane, even if the line bends.' };
+        return { ok: false, msg: `Your board holds ${r.formula}, not C₄H₁₀.` };
       },
       reward: {
         log: '2-Methylpropane, an isomer of butane.',
         title: 'Structural Isomers',
-        body: 'Yes: one carbon bonded to three others makes 2-methylpropane. It and butane are structural isomers, the same atoms joined in a different order.'
+        body: 'Connecting one carbon to three others makes 2-methylpropane. It and butane are structural isomers: the same atoms connected in a different order.'
       }
     };
   })(),
@@ -95,23 +95,25 @@ export const STAGES = [
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       hints: [
-        'Build a C₅H₁₂ and press "Record", then change the build and record again.',
-        'Watch which builds the strip takes and which it refuses as already recorded.',
-        'Start from the longest chain and shorten it one carbon at a time, moving the carbons you take off onto the side.'
+        'Use the Record strip on the right, and start in the middle row so you have room to branch up and down.',
+        'Watch which builds the strip saves and which ones it rejects as duplicates.',
+        'Start with the five-carbon straight chain, then shorten the main chain one carbon at a time and attach the extra carbons as branches.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'n');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type how many different molecules there are.' };
-        if (v === ISOMER_COUNT[5]) return { ok: true };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the number of different molecules.' };
         const got = buildRead(state.table, 'board').recorded.length;
-        if (v > got) return { ok: false, msg: `Your strip holds ${got} different molecule${got === 1 ? '' : 's'} of C₅H₁₂, fewer than ${v}.` };
-        if (v < got) return { ok: false, msg: `Your strip already holds ${got} different molecules of C₅H₁₂.` };
-        return { ok: false, msg: 'The board can hold a C₅H₁₂ that is not on your strip yet.' };
+        if (v === ISOMER_COUNT[5] && got >= ISOMER_COUNT[5]) return { ok: true };
+        if (v === ISOMER_COUNT[5]) return { ok: false, msg: `Record all ${ISOMER_COUNT[5]} different C₅H₁₂ molecules on the strip first (${got} recorded so far).` };
+        if (v > ISOMER_COUNT[5]) return { ok: false, msg: `Try building ${v} different C₅H₁₂ molecules on the board; you have found ${got} so far and the strip rejects repeats.` };
+        if (v < got) return { ok: false, msg: `You already have ${got} different C₅H₁₂ molecules recorded on the strip.` };
+        if (v > got) return { ok: false, msg: `Your strip only has ${got} different C₅H₁₂ molecule${got === 1 ? '' : 's'} so far, fewer than ${v}.` };
+        return { ok: false, msg: 'There is still another C₅H₁₂ isomer you have not recorded yet.' };
       },
       reward: {
         log: 'C₅H₁₂ has three structural isomers.',
-        title: 'Three',
-        body: 'Three: pentane, 2-methylbutane and 2,2-dimethylpropane. Any other build is one of these drawn bent, and the strip refused it.'
+        title: 'Three Isomers',
+        body: 'Pentane, 2-methylbutane, and 2,2-dimethylpropane are the three structural isomers of C₅H₁₂. Any other build is just one of these bent differently.'
       }
     };
   })(),
@@ -122,8 +124,8 @@ export const STAGES = [
     return {
       id: 's3-compact',
       title: 'The Compact One',
-      briefing: { speaker: SPEAKER, body: 'Molecules attract one another most where they lie against each other, by dispersion forces. Only two of the three isomers of C₅H₁₂ are in store to test.' },
-      prompt: 'Where does the most compact isomer, 2,2-dimethylpropane, boil compared with the other two?',
+      briefing: { speaker: SPEAKER, body: 'Molecules attract each other most where their surfaces touch. You only have samples of two of the three C₅H₁₂ isomers to heat.' },
+      prompt: 'Compared with the other two isomers, where does the most compact one, 2,2-dimethylpropane, boil?',
       widget,
       table: thornTable({
         pieces: [tcard('c-pent', 'pentane', { x: 12, y: 10 }), tcard('c-mbut', 'methylbutane', { x: 12, y: 25 }), tcard('c-dmp', 'dimethylpropane', { x: 12, y: 40 })],
@@ -131,22 +133,22 @@ export const STAGES = [
         zones: { slots: [T.slot] }
       }),
       hints: [
-        'Lay each card in the Sample slot and press "Heat".',
-        'Compare how much of the two molecules lie against each other in the window, and where each boils.',
-        'Ask how much of a ball-shaped molecule can lie against its neighbour, compared with a more stretched one.'
+        'Watch the thermometer and the contact dashes in the window as you heat each available sample.',
+        'Compare how much surface touches between two molecules in the window and where each sample boils.',
+        'Think about how little surface area two ball-shaped molecules share compared with two stretched-out chains.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three statements.' };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
         if (pick === 3) return { ok: true };
         const tested = resultOf(state.table, 'c-pent', 'heat') !== undefined && resultOf(state.table, 'c-mbut', 'heat') !== undefined;
-        if (!tested) return { ok: false, msg: 'Not both of the isomers in store have been heated yet.' };
-        return { ok: false, msg: 'Of the two you heated, the more compact one boiled lower and its window showed less contact.' };
+        if (!tested) return { ok: false, msg: 'Heat both available isomers first.' };
+        return { ok: false, msg: 'Between the two you heated, the more compact one had less contact in the window and boiled lower.' };
       },
       reward: {
         log: '2,2-Dimethylpropane boils lowest of the three (9.5 °C).',
         title: 'Less Contact',
-        body: 'Below both: it boils at 9.5 °C. The more compact a molecule, the less of it lies against its neighbours, and the weaker the dispersion forces to overcome.'
+        body: 'Below both: it boils at 9.5 °C. More compact molecules touch their neighbors over less surface area, so the attractions between them are weaker.'
       }
     };
   })(),
@@ -157,31 +159,32 @@ export const STAGES = [
     return {
       id: 's4-twist',
       title: 'One Side or the Other',
-      prompt: 'Which of these molecules exists in two forms that twisting cannot turn into each other?',
+      briefing: { speaker: SPEAKER, body: 'A single bond lets the two ends of a molecule twist freely. Test what happens when a double bond connects the carbons instead.' },
+      prompt: 'Which of these molecules comes in two separate forms that twisting cannot turn into each other?',
       widget,
       table: thornTable({
         pieces: [tcard('c-ane', 'dichloroethane', { x: 14, y: 8 }), tcard('c-12', 'dichloroethene12', { x: 14, y: 22.5 }), tcard('c-11', 'dichloroethene11', { x: 14, y: 37 })],
         fixtures: [T.fixture],
-        zones: { slots: [T.slot, { id: 'two', label: 'Two forms', at: { x: 22, y: 52 }, size: { w: 36, h: 12 } }] }
+        zones: { slots: [T.slot, { id: 'two', label: 'Two forms', at: { x: 22, y: 52 }, size: { w: 42, h: 14 } }] }
       }),
       hints: [
-        'Lay a card in the Sample slot and press "Twist", then try the others.',
-        'Compare what the far end does with a single bond and with a double bond, and look at the form drawn beside it.',
-        'Two forms are two molecules only if twisting cannot join them and the far end turned over looks different.'
+        'Watch the molecule window as you twist each sample card in the Sample slot.',
+        'Compare what the far end does on a single bond versus a double bond, and look at the flipped version beside it.',
+        'A molecule only has two separate forms if the bond refuses to twist and flipping one end actually produces a different arrangement.'
       ],
       check(state) {
         const card = inSlot(state, 'two');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (card.props.sub === 'dichloroethene12') return { ok: true };
         const seen = resultOf(state.table, card.id, 'twist');
-        if (!seen) return { ok: false, msg: 'That molecule has not been twisted yet.' };
-        if (card.props.sub === 'dichloroethane') return { ok: false, msg: 'Its far end turned and stayed turned.' };
-        return { ok: false, msg: 'With its far end turned over, it is drawn just as it was: both chlorines are still on one carbon.' };
+        if (!seen) return { ok: false, msg: 'Twist that molecule in the rig first.' };
+        if (card.props.sub === 'dichloroethane') return { ok: false, msg: 'Its single bond twisted freely and stayed turned.' };
+        return { ok: false, msg: 'Flipping the far end gives the exact same molecule, because both chlorines are on the same carbon.' };
       },
       reward: {
         log: '1,2-Dichloroethene has cis and trans forms.',
         title: 'Cis and Trans',
-        body: '1,2-Dichloroethene: its double bond cannot turn, so its chlorines stay on the same side (cis) or on opposite sides (trans), two different molecules.'
+        body: '1,2-Dichloroethene: its double bond cannot twist, so the two chlorines stay locked on the same side (cis) or on opposite sides (trans), making two different molecules.'
       }
     };
   })(),
@@ -191,7 +194,8 @@ export const STAGES = [
     id: 's5-predict',
     title: 'The Mirror',
     predict: true,
-    prompt: 'Can a molecule\'s mirror image always be turned round until it matches the molecule?',
+    briefing: { speaker: SPEAKER, body: 'Your left hand is the mirror image of your right, yet rotating it never makes it fit a right glove. Test whether molecules can work the same way.' },
+    prompt: 'Can a molecule\'s mirror image always be rotated until it matches the original?',
     widget,
     table: thornTable({
       pieces: [
@@ -199,23 +203,23 @@ export const STAGES = [
         note('g-never', 'Never', { x: 30, y: 33 }),
         note('g-depends', 'It depends on the atoms', { x: 30, y: 52 })
       ],
-      fixtures: [tleadFixture('lead', { x: 108, y: 44 }, { scene: 'mirror-ch2cl2', caption: 'CH₂Cl₂ and its mirror image, turned until they match.', w: 70, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 108, y: 14 }, size: { w: 46, h: 16 } }] }
+      fixtures: [tleadFixture('lead', { x: 108, y: 44 }, { scene: 'mirror-ch2cl2', caption: 'CH₂Cl₂ and its mirror image, rotated until they match.', w: 70, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 108, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip turns a mirror image of CH₂Cl₂ until each of its four groups stands where the same group stands in the molecule.',
-      'Your left hand is the mirror image of your right: compare how they fit when you turn one.',
-      'Ask what the two chlorines and two hydrogens of CH₂Cl₂ allow that four different groups would not.'
+      'Watch how the picture rotates the mirror image of CH₂Cl₂ until every group lines up with the original.',
+      'Think of your left and right hands: compare how they line up when you rotate one.',
+      'Consider whether having two identical chlorines and two identical hydrogens makes matching easier than having four different groups.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it on the mirror rig.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Next, rotate CHFClBr\'s mirror image on the mirror rig to see if it ever matches.' }
   },
 
   /* ---------------------------------------------------------------- 6 */
@@ -225,27 +229,27 @@ export const STAGES = [
     return {
       id: 's6-four',
       title: 'Four Different Groups',
-      get prompt() { const g = guess(); return `Can the mirror image of CHFClBr be turned to match it?${g ? ` You predicted ${g}.` : ''}`; },
+      get prompt() { const g = guess(); return `Can the mirror image of CHFClBr be rotated to match it?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: thornTable({ pieces: [], fixtures: [M, tchoiceFixture('ans', 'Can it match?', { x: 127, y: 31 }, { options: ['Yes', 'No'], w: 40 })] }),
       hints: [
-        'Press "Next Turn" again and again and watch the count under the rig.',
-        'Compare the count on each turn with four, and keep going until all twelve turns have been tried.',
-        'If no turn ever puts all four groups in place, the image and the molecule are not the same molecule.'
+        'Watch the match count under the mirror rig as you rotate the mirror image.',
+        'Check whether any of the twelve rotations ever puts all four groups in place at once.',
+        'If no rotation can line up all four groups, the molecule and its mirror image are different molecules.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
         if (!pick) return { ok: false, notYet: true, msg: 'Tap Yes or No.' };
         if (pick === 2) return { ok: true };
         const r = mirrorRead(state.table, 'mirror');
-        return { ok: false, msg: r.tried >= 12 ? 'None of the twelve turns put all four groups in place.' : `No turn tried so far put all four groups in place (${r.tried} of 12 tried).` };
+        return { ok: false, msg: r.tried >= 12 ? 'None of the twelve rotations lined up all four groups.' : `None of the rotations tried so far lined up all four groups (${r.tried} of 12 tried).` };
       },
       get reward() {
         const g = guess();
         return {
           log: 'CHFClBr is chiral.',
           title: 'Chiral',
-          body: `No${g ? ` (you predicted ${g})` : ''}: every turn left groups swapped, as a left hand never fits a right. Such a molecule is chiral, and it and its mirror image are enantiomers.`
+          body: `No${g ? ` (you predicted ${g})` : ''}: every rotation left groups swapped, just like a left hand and a right hand. Such a molecule is chiral, and the mirror pair are enantiomers.`
         };
       }
     };
@@ -262,25 +266,26 @@ export const STAGES = [
       table: thornTable({
         pieces: [tcard('c-bcm', 'bromochloromethane', { x: 14, y: 8 }), tcard('c-cle', 'chloroethanol', { x: 14, y: 22.5 }), tcard('c-clp', 'chloropropane', { x: 14, y: 37 })],
         fixtures: [M.fixture],
-        zones: { slots: [M.slot, { id: 'chiral', label: 'Chiral', at: { x: 22, y: 52 }, size: { w: 36, h: 12 } }] }
+        zones: { slots: [M.slot, { id: 'chiral', label: 'Chiral', at: { x: 22, y: 52 }, size: { w: 42, h: 14 } }] }
       }),
       hints: [
-        'Lay a card in the Sample slot and press "Next Turn" until the count stops changing, then try the next card.',
-        'Compare the best count each card reached, which it prints once it has been turned.',
-        'Look at the four groups round each carbon: are any two of them the same?'
+        'Look at the best match count printed on each card after testing it in the mirror rig.',
+        'Compare the best count each card reached: a chiral molecule never reaches 4 of 4.',
+        'Check the four groups attached to each central carbon to see if any two are identical.'
       ],
       check(state) {
         const card = inSlot(state, 'chiral');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
-        if (card.props.sub === 'chloroethanol') return { ok: true };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const best = card.props.res?.mirror;
-        if (best === 4) return { ok: false, msg: 'A turn put all four of that molecule\'s groups in place.' };
-        return { ok: false, msg: 'That molecule\'s carbon holds two groups that are the same.' };
+        if (best === undefined) return { ok: false, msg: 'Test that molecule in the mirror rig first and check its best count.' };
+        if (card.props.sub === 'chloroethanol') return { ok: true };
+        if (best === 4) return { ok: false, msg: 'A rotation matched all four groups on that molecule, so it is not chiral.' };
+        return { ok: false, msg: 'Keep rotating it: two of its groups are identical, so a rotation will line up all four.' };
       },
       reward: {
         log: '1-Chloroethanol is chiral.',
         title: 'Four Different',
-        body: '1-Chloroethanol: its carbon holds H, CH₃, OH and Cl, four different groups. The other two each hold two the same, and a turn swapped those back into place.'
+        body: '1-Chloroethanol: its central carbon holds four different groups (H, CH₃, OH, and Cl). The other two each have two identical groups, so rotating them matches their mirror image.'
       }
     };
   })(),
@@ -291,25 +296,26 @@ export const STAGES = [
     return {
       id: 's8-centre',
       title: 'The Carbon That Does It',
+      briefing: { speaker: SPEAKER, body: 'Lactic acid is a chiral molecule. Look closely at the four groups attached to each carbon.' },
       prompt: 'Which carbon atom makes lactic acid chiral?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       hints: [
-        'Tap a carbon atom to choose it.',
-        'For each carbon, list the four things bonded to it.',
-        'Use what the mirror rig showed: only four different groups round one carbon leave a mirror image no turn can match.'
+        'Look at the three carbons in lactic acid and see what is bonded to each one.',
+        'List the groups attached to each carbon and check whether any two are the same.',
+        'A carbon only creates a non-matching mirror image when it is bonded to four different groups.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
         if (!r.picked) return { ok: false, notYet: true, msg: 'Tap a carbon atom.' };
         if (r.picked === 'c2') return { ok: true };
-        if (r.picked === 'c1') return { ok: false, msg: 'That carbon holds three hydrogens.' };
-        return { ok: false, msg: 'That carbon has a double bond to an oxygen, so it holds three groups, not four.' };
+        if (r.picked === 'c1') return { ok: false, msg: 'That carbon is bonded to three identical hydrogens.' };
+        return { ok: false, msg: 'That carbon has a double bond to oxygen, so it is only bonded to three groups, not four.' };
       },
       reward: {
         log: 'Lactic acid\'s middle carbon is a stereocentre.',
         title: 'Stereocentre',
-        body: 'The middle carbon: it holds H, CH₃, OH and COOH, four different groups. A carbon like that is a stereocentre.'
+        body: 'The middle carbon holds four different groups: H, CH₃, OH, and –COOH. A carbon bonded to four different groups is called a stereocentre.'
       }
     };
   })()
@@ -318,7 +324,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'One formula can be several molecules: atoms joined in a different order, held on either side of a double bond, or mirror images that no turn can match.' }]
+  sections: [{ heading: 'What You Found', body: 'One formula can describe several different molecules: atoms connected in different orders, groups locked on opposite sides of a double bond, or non-matching mirror images.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */

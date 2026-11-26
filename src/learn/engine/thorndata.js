@@ -303,13 +303,13 @@ export function judgeArrow(scene, src, dst, right, wrongs = []) {
   for (const w of wrongs) if ((w.src == null || w.src === src) && (w.dst == null || w.dst === dst)) return { ok: false, msg: w.msg };
   const D = scene.atoms[dst];
   const pair = pairsOf(scene).find(p => p.id === src);
-  if (pair && (pair.a === dst || pair.b === dst)) return { ok: false, msg: 'That pair is already held by that atom.' };
-  if (D.el === 'H' && !D.label) return { ok: false, msg: 'Hydrogen holds one bond, and it did not give way: the pair returned.' };
-  if (pair && pair.kind === 's') return { ok: false, msg: 'That pair is held on the line between two atoms, and it returned.' };
+  if (pair && (pair.a === dst || pair.b === dst)) return { ok: false, msg: 'That atom already holds that electron pair.' };
+  if (D.el === 'H' && !D.label) return { ok: false, msg: 'That hydrogen already has one full bond and did not let go, so the pair bounced back.' };
+  if (pair && pair.kind === 's') return { ok: false, msg: 'That electron pair is locked in a single bond and cannot move.' };
   if (bondsOn(scene, dst) >= seatsOf(scene, dst) && poorness(scene, dst) <= 0.05) {
-    return { ok: false, msg: `That ${nameOf(D)} is not short of electrons, and the pair returned.` };
+    return { ok: false, msg: `That ${nameOf(D)} is not electron-poor, so the pair bounced back.` };
   }
-  return { ok: false, msg: 'The pair returned to where it was.' };
+  return { ok: false, msg: 'Nothing changed, so the pair bounced back.' };
 }
 
 /* ------------------------------------------------------------------ mirror images */

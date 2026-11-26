@@ -122,7 +122,7 @@ export const STAGE_STORY = {
   'q3-complex': { 1: 'Find out why spilled ammonia turned a metal drum deep blue.' },
   'q4-shapes': { 1: 'Check the shapes of two drums that share a formula but act differently.' },
   'q5-colour': { 1: 'Use each drum\'s color to identify what is inside with the labels gone.' },
-  'q6-spin': { 1: 'Find out why the sorting magnet grabs some drums and ignores others.' },
+  'q6-spin': { 1: 'Find out why the sorting magnet pulls some drums and ignores others.' },
 
   /* ---- Unit 13 — Thornmere (Organic Chemistry): swamp outpost wrapped in plastic armor over lead ---- */
   'q1-chains': { 1: 'Test the black swamp tar the Fifth pumps into their factory.' },

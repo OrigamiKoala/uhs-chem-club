@@ -59,18 +59,18 @@ const ARROW7 = {
   srcAmong: pairsOf(sceneOf('gly-0')).map(p => p.id).filter(id => id !== 'l:n1:0'),
   dstAmong: ['n1', 'ca1', 'c1', 'o1', 'oh1', 'hh1', 'n2', 'ca2', 'c2'],
   wrongs: [
-    ...O_PAIRS.map(src => ({ src, dst: 'c1', msg: 'Oxygen holds that pair more closely than nitrogen holds its own: the pair returned.' })),
-    { src: 'l:n2:0', dst: 'c2', msg: 'That carbon is in the same molecule as the nitrogen, and the two ends of one molecule cannot reach each other.' }
+    ...O_PAIRS.map(src => ({ src, dst: 'c1', msg: 'Oxygen holds its lone pairs more tightly than nitrogen does, so the pair bounced back.' })),
+    { src: 'l:n2:0', dst: 'c2', msg: 'That carbon is on the same glycine molecule as the nitrogen, so they cannot reach each other.' }
   ]
 };
 
 const V3 = tmolFixture('view', { x: 75, y: 31 }, { play: 'chain-step2', mode: 'arrow', arrow: ARROW3, pairs: true, title: 'The chain\'s end and the next monomer', w: 128, h: 56 });
-const V7 = tmolFixture('view', { x: 75, y: 31 }, { play: 'gly-join', mode: 'arrow', arrow: ARROW7, pairs: true, under: 'Proton moves are left out of this picture.', title: 'Two molecules of glycine', w: 136, h: 56 });
+const V7 = tmolFixture('view', { x: 75, y: 31 }, { play: 'gly-join', mode: 'arrow', arrow: ARROW7, pairs: true, title: 'Two molecules of glycine', w: 136, h: 56 });
 
 function arrowCheck(state) {
   const r = molRead(state.table, 'view');
   if (r.done) return { ok: true };
-  if (!r.tried) return { ok: false, notYet: true, msg: 'No pair has been moved yet.' };
+  if (!r.tried) return { ok: false, notYet: true, msg: 'Move an electron pair first.' };
   return { ok: false, msg: r.last.msg };
 }
 
@@ -82,7 +82,8 @@ export const STAGES = [
     id: 's1-predict',
     title: 'Into a Chain',
     predict: true,
-    prompt: 'Alkene molecules can join end to end into a very long chain: what do you expect happens to each double bond?',
+    briefing: { speaker: SPEAKER, body: 'Plastics are long chains built by linking many small molecules end to end. Start with alkenes, which are molecules with a carbon–carbon double bond.' },
+    prompt: 'When alkene molecules link end to end into a long chain, what do you expect happens to each double bond?',
     widget,
     table: thornTable({
       pieces: [
@@ -91,22 +92,22 @@ export const STAGES = [
         note('g-splits', 'It splits the molecule in two', { x: 30, y: 52 })
       ],
       fixtures: [tleadFixture('lead', { x: 112, y: 44 }, { play: 'hbr-ethene', caption: 'H–Br adds across ethene\'s double bond.', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 16 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip shows the second pair of ethene\'s double bond making a new bond, as on the second bench.',
-      'Compare the bonds between the two carbons before and after H–Br added.',
-      'Ask what bond holds one unit to the next if each joins through its second pair.'
+      'Watch what happens to ethene\'s double bond when H–Br adds across it.',
+      'Compare the bond between the two carbons before and after H–Br adds.',
+      'Think about what happens to the double bond if its second pair is used to connect to the next molecule.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it with the chain maker.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Next, join 2-methylpropene monomers in the chain maker and watch their bonds.' }
   },
 
   /* ---------------------------------------------------------------- 2 */
@@ -116,29 +117,29 @@ export const STAGES = [
     return {
       id: 's2-join',
       title: 'Joining Up',
-      briefing: { speaker: SPEAKER, body: 'A small molecule that joins to others of its kind is a monomer, and the long chain they make is a polymer. R⁺ is an electron-poor carbon that starts the chain.' },
+      briefing: { speaker: SPEAKER, body: 'A small molecule that links up repeatedly is a monomer, and the long chain it builds is a polymer. Here R⁺ is an electron-poor starter that begins the chain.' },
       get prompt() { const g = guess(); return `What happens to each double bond as the monomers join?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: thornTable({ pieces: [], fixtures: [M, tchoiceFixture('ans', 'Each double bond', { x: 133, y: 31 }, { options: ['Stays double', 'Becomes single', 'Splits apart'], w: 30 })] }),
       hints: [
-        'Press "Join Next" to add one monomer at a time, and watch the rust-coloured pair.',
-        'Compare the bond between the two carbons of a monomer before and after it joins.',
-        'The second pair of each double bond moved: ask what it became, and what was left between the monomer\'s own carbons.'
+        'Watch the orange second pair of each double bond as you press Join Next.',
+        'Compare the bond between a monomer\'s two carbons before and after it joins the chain.',
+        'Each double bond spends its second pair to connect to the chain, leaving one bond between its own carbons.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three statements.' };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
         if (pick === 2) return { ok: true };
         const r = molRead(state.table, 'maker');
-        if (pick === 1) return { ok: false, msg: r.step ? 'A joined monomer and a waiting one are not drawn with the same bond between their own carbons.' : 'No monomer has been joined yet.' };
-        return { ok: false, msg: 'Each joined monomer keeps both of its carbons, bonded to each other.' };
+        if (pick === 1) return { ok: false, msg: r.step ? 'Compare a joined monomer with a waiting one: they do not have the same bond between their carbons.' : 'Press Join Next first to watch a monomer attach.' };
+        return { ok: false, msg: 'Each joined monomer still keeps its two carbons bonded together.' };
       },
       get reward() {
         const g = guess();
         return {
           log: 'The double bonds became single: an addition polymer.',
           title: 'Addition Polymer',
-          body: `Each became single${g ? ` (you predicted ${g})` : ''}: the second pair became the bond to the chain. Nothing left, so the chain is an addition polymer of its monomer.`
+          body: `Each monomer's double bond became a single bond as its second pair linked to the chain${g ? ` (you predicted ${g})` : ''}. Because nothing is left over, this is an addition polymer.`
         };
       }
     };
@@ -148,19 +149,19 @@ export const STAGES = [
   {
     id: 's3-end',
     title: 'The Growing End',
-    prompt: 'Which pair of electrons of the waiting monomer moves to the chain\'s electron-poor end?',
+    prompt: 'Which electron pair on the waiting monomer moves to the chain\'s electron-poor end?',
     widget,
     table: thornTable({ pieces: [], fixtures: [V3] }),
     hints: [
-      'Tap a pair of electrons of the waiting monomer and press "Move Electrons".',
-      'Compare the pairs on the lines between atoms with the rust-coloured pair beside the double bond.',
-      'The pair that moves is one that can be reached from outside the molecule.'
+      'Look at the waiting monomer on the right and the electron-poor end of the chain.',
+      'Compare the pale single-bond pairs with the exposed orange pair beside the double bond.',
+      'Only an exposed electron pair outside a single bond can reach the growing chain.'
     ],
     check: arrowCheck,
     reward: {
       log: 'The second pair of the double bond moved to the chain\'s end.',
       title: 'The Electron-Rich Site',
-      body: 'The second pair of its double bond, the monomer\'s electron-rich site, became the bond to the chain, and the monomer\'s far carbon became the new end.'
+      body: 'The double bond\'s second pair (the electron-rich site) formed the bond to the chain, turning the monomer\'s far carbon into the new growing end.'
     }
   },
 
@@ -170,25 +171,26 @@ export const STAGES = [
     return {
       id: 's4-monomer',
       title: 'Which Monomer',
+      briefing: { speaker: SPEAKER, body: 'To find the monomer that built a chain, split the chain into identical repeating units: each unit came from one monomer.' },
       prompt: 'Which monomer was this chain made from?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V, tchoiceFixture('ans', 'The monomer', { x: 128, y: 31 }, { options: ['CH₂=CHCl', 'CHCl=CHCl', 'CH₃CH₂Cl'], w: 38 })] }),
       hints: [
-        'Tap one of the three formulas to answer.',
-        'Find the stretch that repeats along the chain, and count its carbons and chlorines.',
-        'Each repeating unit was one monomer, and its double bond became the single bonds that join the units.'
+        'Scan along the chain for the smallest pattern of carbons and chlorines that repeats.',
+        'Count how many carbons and chlorines appear in one repeating unit.',
+        'Each repeating unit was one monomer whose double bond opened into single bonds to link up.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
         if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the formulas.' };
         if (pick === 1) return { ok: true };
-        if (pick === 2) return { ok: false, msg: 'The chain carries one chlorine for every two carbons.' };
-        return { ok: false, msg: 'CH₃CH₂Cl has no double bond for the chain to join through.' };
+        if (pick === 2) return { ok: false, msg: 'Look closely: the chain has only one chlorine for every two carbons.' };
+        return { ok: false, msg: 'CH₃CH₂Cl has no double bond, so it cannot link into an addition polymer.' };
       },
       reward: {
         log: 'The chain is poly(chloroethene), PVC.',
         title: 'PVC',
-        body: 'Chloroethene, CH₂=CHCl: two carbons and one chlorine repeat along the chain. This plastic is PVC.'
+        body: 'Chloroethene, CH₂=CHCl: every repeating unit has two carbons and one chlorine. This plastic is PVC, used in pipes and siding.'
       }
     };
   })(),
@@ -197,26 +199,28 @@ export const STAGES = [
   {
     id: 's5-water',
     title: 'Links That Lose Water',
-    prompt: 'How many water molecules are given off when six of these two-ended monomers join into one chain?',
+    briefing: { speaker: SPEAKER, body: 'Here A has an acid group at both ends and B has an alcohol group at both ends. The chain maker joins four of them so you can count the water released.' },
+    prompt: 'How many water molecules are released when six of these two-ended monomers join into one chain?',
     entry: { id: 'w', label: 'Water molecules', unit: '' },
     widget,
     table: thornTable({ pieces: [], fixtures: [condMaker(75, 120)] }),
     hints: [
-      'Press "Join Next" to join the monomers one at a time, and count what falls.',
-      'Compare the number of monomers in the chain with the number of water molecules below it.',
-      'Each link between two neighbouring monomers gives off one water molecule.'
+      'Watch the H₂O molecules drop beneath each link as you join the four monomers.',
+      'Compare the number of monomers in the chain with the number of water molecules released.',
+      'One water molecule is released at every link between two neighboring monomers.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'w');
       if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the number of water molecules.' };
       if (v === linksIn(6)) return { ok: true };
-      if (v === 6) return { ok: false, msg: 'On the bench four monomers gave three water molecules, not four.' };
-      return { ok: false, msg: `On the bench four monomers gave three water molecules; ${v} does not follow from that for six.` };
+      if (molRead(state.table, 'maker').step === 0) return { ok: false, msg: 'Press Join Next first and count the water molecules below the chain.' };
+      if (v === 6) return { ok: false, msg: 'On the bench, four monomers released three waters, which is one fewer than the number of monomers.' };
+      return { ok: false, msg: `On the bench, four monomers released three waters, so ${v} does not match that pattern for six.` };
     },
     reward: {
       log: 'Six monomers, five links, five water molecules.',
       title: 'Condensation Polymer',
-      body: 'Five: one for each link, and six monomers in a row have five links. A polymer made by losing water at each link is a condensation polymer; this one is a polyester.'
+      body: 'Five waters: six monomers in a row have five links, releasing one water at each link. A polymer built this way is a condensation polymer (here, a polyester).'
     }
   },
 
@@ -226,30 +230,29 @@ export const STAGES = [
     title: 'A Real Chain',
     briefing: {
       speaker: SPEAKER,
-      body: 'A chain of monomers in a row has one link fewer than it has monomers. For 100 monomers:',
-      worked: ['100 monomers in a row: 100 − 1 = 99 links', 'one water molecule for each link: 99 water molecules']
+      body: 'Real plastic chains contain hundreds or thousands of monomers in a row. Use the pattern from the four-monomer maker to scale up.'
     },
-    prompt: 'How many water molecules are given off when 500 monomers join into one chain?',
+    prompt: 'How many water molecules are released when 500 monomers join into one chain?',
     entry: { id: 'w', label: 'Water molecules', unit: '' },
     widget,
     table: thornTable({ pieces: [], fixtures: [condMaker(75, 120)] }),
     hints: [
-      'The chain maker on the bench still joins four monomers, so the links can be counted again.',
-      'Compare the links in a chain with the monomers in it, on the bench and in the worked case.',
-      'Count the links between 500 monomers in a row, and give one water molecule for each.'
+      'Check the chain maker to see how many links connect four monomers.',
+      'Compare the number of links in a chain with the number of monomers.',
+      'Count how many links connect 500 monomers in a row, with one water released per link.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'w');
       if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the number of water molecules.' };
       if (v === linksIn(500)) return { ok: true };
-      if (v === 500 || v === 501) return { ok: false, msg: `Four monomers on the bench gave three water molecules, and ${v} is not that pattern for 500.` };
-      if (v === 250) return { ok: false, msg: 'Every link gave one water molecule on the bench, whichever kind of monomer came next.' };
-      return { ok: false, msg: `Four monomers on the bench gave three; ${v} does not follow that for 500.` };
+      if (v === 500 || v === 501) return { ok: false, msg: 'Four monomers released three waters: always one fewer than the number of monomers.' };
+      if (v === 250) return { ok: false, msg: 'Every link between neighboring monomers releases one water molecule.' };
+      return { ok: false, msg: `Four monomers released three waters, so ${v} does not fit that pattern for 500.` };
     },
     reward: {
       log: '500 monomers, 499 water molecules.',
       title: 'n − 1',
-      body: '499: a chain of n monomers has n − 1 links, and each link gave off one water molecule.'
+      body: '499 waters: a chain of n monomers has n − 1 links, and each link releases one water molecule.'
     }
   },
 
@@ -257,20 +260,20 @@ export const STAGES = [
   {
     id: 's7-amino',
     title: 'Amino Acids',
-    briefing: { speaker: SPEAKER, body: 'An amino acid has an amine group at one end and a carboxylic acid group at the other. Glycine is the smallest.' },
-    prompt: 'Which pair of electrons starts the join between two glycine molecules, and where does it go?',
+    briefing: { speaker: SPEAKER, body: 'An amino acid has an amine group at one end and a carboxylic acid group at the other. Glycine is the simplest one.' },
+    prompt: 'Which electron pair starts the link between two glycine molecules, and where does it go?',
     widget,
     table: thornTable({ pieces: [], fixtures: [V7] }),
     hints: [
-      'Tap a pair of electrons, then the atom it moves to, and press "Move Electrons".',
-      'Compare the spare pairs on nitrogen and on the oxygens, and where each carbon\'s shared pairs sit.',
-      'This is the ester bench\'s reaction again, with a nitrogen pair in place of an oxygen pair.'
+      'Look at the gold lone pair on the right glycine\'s nitrogen and the C=O carbon on the left glycine.',
+      'Compare the lone pairs on nitrogen and oxygen, and check which carbon has its electrons pulled away by oxygens.',
+      'This works just like making an ester, except nitrogen\'s lone pair moves to the C=O carbon instead of oxygen\'s.'
     ],
     check: arrowCheck,
     reward: {
       log: 'Two glycines joined by an amide link.',
       title: 'Amide Link',
-      body: 'Nitrogen\'s pair moved to the other molecule\'s C=O carbon, and water left. That C–N link is an amide link, and a long chain of amino acids joined by them is a protein.'
+      body: 'Nitrogen\'s lone pair bonded to the other glycine\'s C=O carbon while water left. That C–N bond is an amide link, and a long chain of amino acids is a protein.'
     }
   },
 
@@ -280,28 +283,28 @@ export const STAGES = [
     return {
       id: 's8-cut',
       title: 'Where to Cut',
-      prompt: 'Which bond of this polyester chain does a hydroxide ion break?',
+      prompt: 'Which bond in this polyester chain does a hydroxide ion break?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       hints: [
-        'Tap a bond of the chain to choose it.',
-        'Find the links where two monomers were joined as water left.',
-        'Use what the ester bench showed: hydroxide\'s pair goes to the C=O carbon, and the link\'s C–O pair leaves.'
+        'Look along the polyester chain for the C=O groups and the C–O bonds right beside them.',
+        'Find the ester links where two monomers were joined when water left.',
+        'Just like on the ester bench, hydroxide moves to the C=O carbon and breaks the C–O link beside it.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
         if (!r.picked) return { ok: false, notYet: true, msg: 'Tap a bond.' };
         const [a, b] = r.picked;
         if (a === 'c1' && b === 'x1') return { ok: true };
-        if (b === 'o1') return { ok: false, msg: 'That pair would move out onto its oxygen, and the chain would still be joined.' };
-        if (a === 'x1') return { ok: false, msg: 'That carbon shares one pair with oxygen; the C=O carbon beside it shares three.' };
-        if (a === 'p1') return { ok: false, msg: 'No oxygen pulls the pair those two carbons share.' };
-        return { ok: false, msg: 'That bond lies inside one monomer, not at a link between two.' };
+        if (b === 'o1') return { ok: false, msg: 'That double-bond pair only shifts onto oxygen, leaving the chain intact.' };
+        if (a === 'x1') return { ok: false, msg: 'That carbon only shares one bond with oxygen, while the C=O carbon beside it shares three.' };
+        if (a === 'p1') return { ok: false, msg: 'Two carbons share electrons evenly, so hydroxide does not target that bond.' };
+        return { ok: false, msg: 'That bond sits inside a monomer, not at the link between two monomers.' };
       },
       reward: {
         log: 'Hydroxide cuts the ester link\'s C–O bond.',
         title: 'Cut at the Link',
-        body: 'The C–O bond of the ester link, beside C=O: hydrolysis cuts the chain at each link where condensation joined it.'
+        body: 'The C–O bond of each ester link, right next to C=O: hydrolysis breaks the exact link condensation made. Those links are the weak point in the plastic armor.'
       }
     };
   })()
@@ -310,7 +313,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'Monomers join into polymers either through their double bonds, losing nothing, or at reacting groups, losing water at every link; a link made by losing water is cut by adding it back.' }]
+  sections: [{ heading: 'What You Found', body: 'Monomers build polymers either by opening double bonds with nothing left over, or by releasing water at each link. Any link made by losing water can be broken by adding water back.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */

@@ -745,9 +745,9 @@ export class CombatMonster3D {
       if (!ud.baseColor && m.color) ud.baseColor = m.color.clone();
       const b = ud.baseEm;
       m.emissive.setRGB(
-        b.c.r * b.i + ember * 1.0 + flash * 1.4 + tele * 0.9,
-        b.c.g * b.i + ember * 0.34 + flash * 1.4 + tele * 0.12,
-        b.c.b * b.i + ember * 0.08 + flash * 1.4 + tele * 0.08
+        b.c.r * b.i + ember * 0.8 + flash * 0.65 + tele * 0.75,
+        b.c.g * b.i + ember * 0.3 + flash * 0.32 + tele * 0.14,
+        b.c.b * b.i + ember * 0.08 + flash * 0.08 + tele * 0.06
       );
       m.emissiveIntensity = 1;
       if (ud.baseColor) m.color.copy(ud.baseColor).lerp(CHAR, wound * 0.5);

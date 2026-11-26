@@ -120,7 +120,7 @@ addTest('twist', {
   title: 'Twist rig',
   key: 'Twist',
   result: sub => (substance(sub).ends.order === 1 ? 'turned' : 'sprang back'),
-  line: res => (res === 'turned' ? 'The far end turned and stayed turned' : 'The far end sprang back'),
+  line: res => (res === 'turned' ? 'The far end twisted freely' : 'The far end sprang back'),
   short: res => res,
   seconds: () => 4.2,
   paint(ctx, f, F, { sub, k, loaded }) {
@@ -128,7 +128,7 @@ addTest('twist', {
     ctx.fillStyle = C.win; ctx.fillRect(F.x(wx), F.y(wy), F.len(ww), F.len(wh));
     ctx.strokeStyle = C.steel; ctx.strokeRect(Math.round(F.x(wx)) + 0.5, Math.round(F.y(wy)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));
     const show = sub || loaded;
-    if (!show) { say(ctx, 'The molecule, turned in space', F.x(wx + ww / 2), F.y(wy + wh / 2), F.size(1.8, 6), { align: 'center', color: C.dim }); return; }
+    if (!show) { say(ctx, 'Place a sample to test twisting', F.x(wx + ww / 2), F.y(wy + wh / 2), F.size(1.8, 6), { align: 'center', color: C.dim }); return; }
     const S = substance(show);
     const a = sub ? twistAngle(S.ends.order, k) : 0;
     const done = sub && k >= 1 && S.ends.order === 2;
@@ -138,9 +138,9 @@ addTest('twist', {
       // The form with the far end turned over (by breaking the bond and making it again), for comparison.
       drawTwist(ctx, F, wx + ww * 0.75, wy + wh * 0.52, u, S.ends, Math.PI, { alpha: 0.9, remade: true });
       say(ctx, 'As it is', F.x(wx + ww * 0.27), F.y(wy + 2.6), F.size(1.6, 6), { align: 'center', color: C.dust });
-      say(ctx, 'Far end turned over', F.x(wx + ww * 0.75), F.y(wy + 2.6), F.size(1.6, 6), { align: 'center', color: C.dust });
+      say(ctx, 'Far end flipped', F.x(wx + ww * 0.75), F.y(wy + 2.6), F.size(1.6, 6), { align: 'center', color: C.dust });
     }
-    say(ctx, S.ends.order === 2 ? 'Rust: the second pair, in two halves' : 'One shared pair', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
+    say(ctx, S.ends.order === 2 ? 'Orange: the double bond\'s second electron pair' : 'One shared pair', F.x(wx + 1.5), F.y(wy + wh - 2.4), F.size(1.9, 7.5), { color: C.dust, maxW: F.len(ww - 3) });
   }
 });
 
@@ -198,8 +198,11 @@ export function tmirrorFixture(id, at, { groups = null, sub = null, holder = fal
   const slotId = `${id}.holder`;
   const fixture = {
     id, kind: 'tmirror', label: ttl, at: { ...at }, size: { w, h }, runLabel: 'Next Turn',
-    dials: { turn: { min: 0, max: TETRA_TURNS.length - 1, step: 1, value: 0, label: 'Turn' } },
-    props: { groups, sub, holder: holder ? slotId : null, hidden: ['turn'], last: { n: 0, from: 0, to: 0 }, tried: {}, seen: null }
+    dials: {
+      turn: { min: 0, max: TETRA_TURNS.length - 1, step: 1, value: 0, label: 'Turn' },
+      all: { min: 0, max: 12, step: 1, value: 0, label: 'All' }
+    },
+    props: { groups, sub, holder: holder ? slotId : null, hidden: ['turn', 'all'], last: { n: 0, from: 0, to: 0 }, tried: {}, seen: null }
   };
   return holder ? { fixture, slot: { id: slotId, label: 'Sample', at: { x: at.x - w / 2 - 11, y: at.y }, size: { w: 19, h: 12 } } } : fixture;
 }
@@ -223,10 +226,10 @@ export function mirrorRead(state, id) {
 function runMirror(state, fid) {
   const f = state.fixtures[fid];
   const { sub, groups, card } = mirrorSubject(state, f);
-  if (!groups) return { noop: 'There is no sample card in the Sample slot.' };
+  if (!groups) return { noop: 'Place a sample card in the Sample slot first.' };
   const key = sub || 'fixed';
   const tried = f.props.tried[key] || [0];
-  if (tried.length >= TETRA_TURNS.length) return { noop: 'Every one of the twelve turns has been tried.' };
+  if (tried.length >= TETRA_TURNS.length) return { noop: 'All 12 rotations have been tried.' };
   const from = Math.round(f.dials.turn.value);
   // The next turn not yet tried, in order.
   let next = 0; while (tried.includes(next)) next++;
@@ -242,15 +245,43 @@ function runMirror(state, fid) {
 
 function settleMirror(state) {
   for (const f of Object.values(state.fixtures)) {
-    if (f.kind !== 'tmirror' || !f.props.holder) continue;
+    if (f.kind !== 'tmirror') continue;
+    const { sub, groups, card } = mirrorSubject(state, f);
+    const allVal = Math.round(f.dials.all?.value || 0);
+    if (allVal !== (f.props.prevAll ?? 0)) {
+      f.props.prevAll = allVal;
+      if (groups && allVal > 0) {
+        const key = sub || 'fixed';
+        const allTurns = Array.from({ length: TETRA_TURNS.length }, (_, i) => i);
+        const matchTurn = allTurns.find(x => mirrorMatches(groups, x) === 4);
+        const target = matchTurn !== undefined ? matchTurn : TETRA_TURNS.length - 1;
+        const from = Math.round(f.dials.turn.value);
+        f.dials.turn.value = target;
+        f.props.tried = { ...f.props.tried, [key]: allTurns };
+        f.props.last = { n: f.props.last.n + 1, from, to: target };
+        if (card) {
+          const best = Math.max(...allTurns.map(x => mirrorMatches(groups, x)));
+          card.props.res = { ...(card.props.res || {}), mirror: best };
+        }
+      }
+    }
+    if (!f.props.holder) continue;
     // A new card in the Sample slot starts its image as the plain mirror image, with its own count of turns.
-    const { sub } = mirrorSubject(state, f);
     if (!sub || sub === f.props.seen) continue;
     f.props.seen = sub;
     const tried = f.props.tried[sub];
     const want = tried && tried.length ? tried[tried.length - 1] : 0;
     f.dials.turn.value = want; f.props.last = { n: f.props.last.n, from: want, to: want };
   }
+}
+
+function mirrorTaps(f, state) {
+  const r = mirrorRead(state, f.id);
+  if (!r.groups || r.tried < 3 || r.tried >= TETRA_TURNS.length) return [];
+  const right = Math.max(9, f.runLabel.length * 1.9 + 3) + 3;
+  const bw = 20; const bx1 = f.size.w - right - 2; const bx0 = bx1 - bw;
+  const nextAll = Math.min(12, Math.round(f.dials.all?.value || 0) + 1);
+  return [{ x0: bx0, x1: bx1, y0: f.size.h - 6.6, y1: f.size.h - 0.8, dial: 'all', value: nextAll }];
 }
 
 function paintMirror(ctx, f, state, b) {
@@ -261,16 +292,23 @@ function paintMirror(ctx, f, state, b) {
   ctx.fillStyle = C.win; ctx.fillRect(F.x(rect.x), F.y(rect.y), F.len(rect.w), F.len(rect.h));
   ctx.strokeStyle = C.steel; ctx.strokeRect(Math.round(F.x(rect.x)) + 0.5, Math.round(F.y(rect.y)) + 0.5, Math.round(F.len(rect.w)), Math.round(F.len(rect.h)));
   const right = Math.max(9, f.runLabel.length * 1.9 + 3) + 3;
-  if (!r.groups) { say(ctx, 'A molecule and its mirror image', F.x(rect.x + rect.w / 2), F.y(rect.y + rect.h / 2), F.size(1.8, 6), { align: 'center', color: C.dim }); foot(ctx, f, F, 'Lay a sample card in the Sample slot', C.dust, right); return; }
-  const k = progress(`${f.id}:turn`, b, f.props.last.n, 1.4);
+  if (!r.groups) { say(ctx, 'A molecule and its mirror image', F.x(rect.x + rect.w / 2), F.y(rect.y + rect.h / 2), F.size(2.1, 8), { align: 'center', color: C.dim }); foot(ctx, f, F, 'Place a sample card in the Sample slot', C.dust, right); return; }
+  const k = progress(`${f.id}:turn`, b, f.props.last.n, 0.65);
   drawMirrorPair(ctx, F, rect, r.groups, r.turn, { from: f.props.last.from, k });
-  say(ctx, 'Molecule', F.x(rect.x + rect.w * 0.25), F.y(rect.y + 2.6), F.size(1.6, 6), { align: 'center', color: C.dust });
-  say(ctx, 'Mirror image, turned', F.x(rect.x + rect.w * 0.75), F.y(rect.y + 2.6), F.size(1.6, 6), { align: 'center', color: C.dust });
+  say(ctx, 'Molecule', F.x(rect.x + rect.w * 0.25), F.y(rect.y + 2.6), F.size(1.9, 7.5), { align: 'center', color: C.dust });
+  say(ctx, 'Mirror image (rotated)', F.x(rect.x + rect.w * 0.75), F.y(rect.y + 2.6), F.size(1.9, 7.5), { align: 'center', color: C.dust });
   const turns = Math.max(1, r.tried);
-  foot(ctx, f, F, k < 1 ? 'Turning…' : `${r.inPlace} of 4 in place · turns tried: ${turns} of 12`, k < 1 ? C.dust : C.text, right);
+  const showAll = r.tried >= 3 && r.tried < TETRA_TURNS.length;
+  if (showAll) {
+    const bw = 20; const bx0 = f.size.w - right - 2 - bw; const by0 = f.size.h - 6.2; const bh = 5.0;
+    ctx.fillStyle = '#2a2620'; ctx.fillRect(F.x(bx0), F.y(by0), F.len(bw), F.len(bh));
+    ctx.strokeStyle = C.amber; ctx.strokeRect(Math.round(F.x(bx0)) + 0.5, Math.round(F.y(by0)) + 0.5, Math.round(F.len(bw)), Math.round(F.len(bh)));
+    say(ctx, 'Try All 12', F.x(bx0 + bw / 2), F.y(by0 + bh / 2), F.size(1.8, 7), { align: 'center', color: C.amber, weight: 700 });
+  }
+  foot(ctx, f, F, k < 1 ? 'Rotating…' : `${r.inPlace} of 4 matched · ${turns} of 12 rotations`, k < 1 ? C.dust : C.text, right + (showAll ? 22 : 0));
 }
 
-registerFixture('tmirror', { paint: paintMirror, run: runMirror, settle: settleMirror, live: () => true });
+registerFixture('tmirror', { paint: paintMirror, run: runMirror, settle: settleMirror, tapZones: mirrorTaps, live: () => true });
 
 /** The predict clip: dichloromethane beside its mirror image, turned until every group stands on its match. */
 addLeadScene('mirror-ch2cl2', (ctx, f, F, t) => {
@@ -293,7 +331,7 @@ addTest('mirror', { title: 'Mirror rig', key: 'Next Turn', result: () => null, l
 addTourText({
   'thorn:tmirror': {
     title: 'Mirror rig', dials: false,
-    text: 'Press "Next Turn" to rotate the mirror image and test whether groups align.'
+    text: 'Press "Next Turn" to rotate the mirror image and check if all four groups line up.'
   }
 }, {});
 

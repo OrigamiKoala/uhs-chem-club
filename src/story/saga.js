@@ -421,13 +421,13 @@ export const EPISODES = {
     worldId: 'unit13',
     worldName: 'Thornmere',
     act: 'act4',
-    arrival: 'The Fifth Guild\'s swamp outpost on Thornmere is wrapped in tough plastic armor. Find out what is under it.',
-    closing: 'We cut through the plastic armor and found heavy lead plates underneath, built to block radiation.',
+    arrival: 'The Fifth Guild\'s swamp outpost on Thornmere is wrapped in tough plastic armor. Find out how it is built and what is under it.',
+    closing: 'We broke through the plastic armor and found heavy lead plates underneath, built to block radiation.',
     spoilFamily: 'Armor plates',
     bossId: 'boss-carapace',
     clueId: 'clue_thornmere_carapace',
     incident: 'The swamp outpost is sealed behind tough plastic armor plates.',
-    objective: 'Find how the plastic chains are built, cut their weak links, and see what they are hiding.',
+    objective: 'Find how the carbon chains of the plastic are built, break their weak chemical links, and see what the armor hides.',
     caseFileNote: 'Armor is lined with lead to block nuclear radiation.'
   },
   unit14: {

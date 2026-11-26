@@ -3046,6 +3046,9 @@ body.bench-deployed .modal-container .modal-card {
   margin: 0;
   max-height: 100%;
   overflow-y: auto;
+  background: #141210;
+  border: 1px solid var(--border-durasteel);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
 }
 
 /* Dedicated full-screen display for worked problems and end-of-quest practice,
@@ -4277,7 +4280,9 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
 .lq-tmsg .lq-widget:empty,
 .lq-tmsg .lq-hints:empty { display: none; }
 .lq-tmsg .lq-hint { margin: 0 !important; font-size: 0.8rem !important; line-height: 1.35 !important; }
-.lq-tmsg .lq-reward-body { margin: 0 !important; font-size: 0.82rem; line-height: 1.4; }
+.lq-tmsg .lq-reward-body { margin: 0 !important; font-size: 0.9rem; line-height: 1.45; }
+.lq-brief-worked sup, .lq-tour-text sup, .lq-brief-text sup, .lq-reward-body sup { font-size: 0.72em; vertical-align: super; line-height: 0; }
+.lq-brief-worked sub, .lq-tour-text sub, .lq-brief-text sub, .lq-reward-body sub { font-size: 0.72em; vertical-align: sub; line-height: 0; }
 .lq-tmsg:has(.lq-model) { max-height: min(500px, 64vh); }
 .lq-tmsg .lq-model { margin-top: 4px; }
 .lq-tmsg .lq-model-view { height: 200px; }

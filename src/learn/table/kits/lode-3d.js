@@ -18,7 +18,7 @@ export function liveDress(handler) {
     const { THREE, scale: s, toPlate, own, ground } = c;
     const lay = fixtureLayout(f);
     // A fixture's dial rows (their names and end words) are painted on the plate: the screen starts below the last of them.
-    const yTop = lay.dials.length ? Math.min(lay.box.y1 - 4, Math.max(...lay.dials.map(d => d.y)) + 2.6) : lay.box.y0;
+    const yTop = lay.dials.length ? Math.min(lay.box.y1 - 4, Math.max(...lay.dials.map(d => d.y)) + 5.2) : lay.box.y0;
     const bw = lay.box.x1 - lay.box.x0; const bh = lay.box.y1 - yTop;
     const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
     const group = new THREE.Group();
@@ -40,7 +40,7 @@ export function liveDress(handler) {
     group.add(mesh);
     let latest = state; let fx = f; let clock = 0.001; let acc = 0;
     const paint = () => {
-      ctx.fillStyle = '#14120e';
+      ctx.fillStyle = '#1a1814';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const b = { X: u => (u - lay.box.x0) * PX, Y: u => (u - yTop) * PX, sc: PX, lay: fixtureLayout(fx), clock, bodies: false, scope: '3d-live' };
       try {

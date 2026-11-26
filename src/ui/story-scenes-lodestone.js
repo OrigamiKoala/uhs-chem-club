@@ -83,13 +83,16 @@ function charges(ctx, w, h, t) {
     return;
   }
   const p = ease(win(t, 0.68, 0.9));
-  const bars = [['Mn²⁺', IE.Mn[2], 300], ['Fe²⁺', IE.Fe[2], 560]];
-  ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(220, 400); ctx.lineTo(740, 400); ctx.stroke(); ctx.lineWidth = 1;
-  for (const [name, v, x] of bars) {
-    const hh = (v / 4000) * 280 * p;
-    ctx.fillStyle = D3; ctx.fillRect(x, 400 - hh, 100, hh);
-    if (p >= 1) text(ctx, `${Math.round(v).toLocaleString('en-US')} kJ/mol`, x + 50, 400 - hh - 18, { size: 20, color: C.text, weight: 700 });
-    text(ctx, `${name}: third electron`, x + 50, 432, { size: 20, color: C.text });
+  const bars = [['Mn²⁺', IE.Mn[2], 240, 5], ['Fe²⁺', IE.Fe[2], 580, 6]];
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(160, 400); ctx.lineTo(800, 400); ctx.stroke(); ctx.lineWidth = 1;
+  for (const [name, v, x, dCount] of bars) {
+    const hh = (v / 4000) * 240 * p;
+    ctx.fillStyle = D3; ctx.fillRect(x, 400 - hh, 110, hh);
+    if (p >= 1) text(ctx, `${Math.round(v).toLocaleString('en-US')} kJ/mol`, x + 55, 400 - hh - 18, { size: 20, color: C.text, weight: 700 });
+    text(ctx, `${name}: next electron`, x + 55, 432, { size: 20, color: C.text });
+    // Draw the 3d boxes above to show Fe²⁺'s paired electron leaving.
+    fillLevel(5, dCount).forEach((n, i) => box(ctx, x - 75 + i * 50, 72, n, i === 0 && dCount === 6 ? C.amber : D3));
+    text(ctx, dCount === 6 ? 'paired 3d leaves more easily' : 'all five 3d unpaired', x + 55, 130, { size: 16, color: dCount === 6 ? C.amber : C.dust });
   }
 }
 
@@ -181,7 +184,7 @@ function shapes(ctx, w, h, t) {
   }
   square(ctx, 300, 240, 110, ['cl', 'cl', 'nh3', 'nh3'], t > 0.64 ? 'cis' : 'model A');
   square(ctx, 660, 240, 110, ['cl', 'nh3', 'cl', 'nh3'], t > 0.64 ? 'trans' : 'model B');
-  if (t > 0.45 && t < 0.64) text(ctx, 'no turn or flip lays B on A', 480, 470, { size: 22, color: C.amber, weight: 700 });
+  if (t > 0.45 && t < 0.64) text(ctx, 'no rotation or flip matches B to A', 480, 470, { size: 22, color: C.amber, weight: 700 });
 }
 
 /** A spectrum strip at (x0, y0) with the bands of `cx` dark. */
@@ -199,7 +202,7 @@ function colour(ctx, w, h, t) {
   ground(ctx, w, h);
   if (t < 0.32) {
     spectrum(ctx, 200, 200, 560, 60, 'cu-aq', ease(win(t, 0.05, 0.25)));
-    text(ctx, 'copper(II) in water: orange and red taken out', 480, 330, { size: 22, color: C.text });
+    text(ctx, 'copper(II) in water: orange and red absorbed', 480, 330, { size: 22, color: C.text });
     return;
   }
   if (t < 0.64) {
@@ -230,9 +233,11 @@ function spin(ctx, w, h, t) {
     text(ctx, 'N', 270, 245, { size: 22, color: C.text, weight: 700 });
     text(ctx, 'S', 450, 245, { size: 22, color: C.text, weight: 700 });
     ctx.fillStyle = COMPLEXES['fe2-aq'].tint; ctx.fillRect(348, 210 + 36 * p, 24, 56);
-    text(ctx, 'Fe(H₂O)₆²⁺: pulled', 360, 350, { size: 20, color: C.amber, weight: 700 });
+    text(ctx, 'Fe(H₂O)₆²⁺: 4 unpaired (pulled)', 360, 340, { size: 19, color: C.amber, weight: 700 });
+    [2, 1, 1, 1, 1].forEach((n, i) => box(ctx, 225 + i * 54, 375, n, D3));
     ctx.fillStyle = COMPLEXES['fe2-cn'].tint; ctx.fillRect(688, 210, 24, 56);
-    text(ctx, 'Fe(CN)₆⁴−: no pull', 700, 350, { size: 20, color: C.dim });
+    text(ctx, 'Fe(CN)₆⁴⁻: 0 unpaired (no pull)', 700, 340, { size: 19, color: C.dim });
+    [2, 2, 2, 0, 0].forEach((n, i) => box(ctx, 565 + i * 54, 375, n, D3));
     return;
   }
   if (t < 0.68) {

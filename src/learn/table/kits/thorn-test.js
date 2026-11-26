@@ -99,18 +99,48 @@ addTest('bromine', {
   result: sub => (bromineFades(sub) ? 'colourless' : 'orange'),
   line: res => (res === 'colourless' ? 'The jar is colourless' : 'The jar is still orange'),
   short: res => (res === 'colourless' ? 'colourless' : 'orange'),
-  seconds: res => (res === 'colourless' ? 5.2 : 3),
+  seconds: res => (res === 'colourless' ? 3.4 : 2.2),
   paint(ctx, f, F, { sub, res, k, loaded }) {
     const jx = 4; const jy = 9; const jw = 11; const jh = f.size.h - 21;
-    const faded = res === 'colourless' ? clamp((k - 0.75) / 0.25, 0, 1) : 0;
+    const faded = res === 'colourless' ? clamp((k - 0.72) / 0.28, 0, 1) : 0;
     jar(ctx, F, jx, jy, jw, jh, sub ? mix(C.orange, C.clear, faded) : loaded ? C.clear : C.win, sub ? (faded >= 1 ? 'Colourless' : 'Orange') : loaded ? 'Sample' : 'Empty');
     // The window: one place in the sample, much enlarged.
     const wx = jx + jw + 5; const wy = 7; const ww = f.size.w - wx - 3; const wh = f.size.h - 15;
     ctx.fillStyle = C.win; ctx.fillRect(F.x(wx), F.y(wy), F.len(ww), F.len(wh));
     ctx.strokeStyle = C.steel; ctx.strokeRect(Math.round(F.x(wx)) + 0.5, Math.round(F.y(wy)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));
-    if (!sub) { say(ctx, 'Inside the jar, enlarged', F.x(wx + ww / 2), F.y(wy + wh / 2), F.size(1.8, 6), { align: 'center', color: C.dim }); return; }
+    if (!sub) { say(ctx, 'Inside the jar, enlarged', F.x(wx + ww / 2), F.y(wy + wh / 2), F.size(2.1, 8), { align: 'center', color: C.dim }); return; }
+    if (sub === 'cyclohexane' || sub === 'cyclopentane') {
+      // Draw the actual closed carbon ring so ring samples visibly differ from open chains.
+      const sides = sub === 'cyclohexane' ? 6 : 5;
+      const rcx = wx + ww * 0.42; const rcy = wy + wh * 0.52; const rr = Math.min(ww * 0.22, wh * 0.3);
+      ctx.strokeStyle = C.bond; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i <= sides; i++) {
+        const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
+        const px = F.x(rcx + Math.cos(a) * rr); const py = F.y(rcy + Math.sin(a) * rr);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke(); ctx.lineWidth = 1;
+      for (let i = 0; i < sides; i++) {
+        const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
+        const px = F.x(rcx + Math.cos(a) * rr); const py = F.y(rcy + Math.sin(a) * rr);
+        ctx.fillStyle = ATOM_INK.C.fill; ctx.beginPath(); ctx.arc(px, py, Math.max(4, F.len(1.8)), 0, Math.PI * 2); ctx.fill();
+        say(ctx, 'C', px, py + 0.5, Math.max(7, F.len(2.0)), { align: 'center', color: ATOM_INK.C.text, weight: 800, sans: true });
+      }
+      // Br2 approaches and drifts away unchanged.
+      const bounce = k < 0.5 ? k * 2 : (1 - k) * 2;
+      const bx = wx + ww * (0.82 - 0.12 * bounce); const by = rcy;
+      ctx.strokeStyle = C.bond; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(F.x(bx), F.y(by - 3)); ctx.lineTo(F.x(bx), F.y(by + 3)); ctx.stroke(); ctx.lineWidth = 1;
+      for (const dy of [-3, 3]) {
+        ctx.fillStyle = ATOM_INK.Br.fill; ctx.beginPath(); ctx.arc(F.x(bx), F.y(by + dy), Math.max(4.5, F.len(2.1)), 0, Math.PI * 2); ctx.fill();
+        say(ctx, 'Br', F.x(bx), F.y(by + dy) + 0.5, Math.max(7, F.len(1.8)), { align: 'center', color: ATOM_INK.Br.text, weight: 800, sans: true });
+      }
+      say(ctx, 'Single-bonded ring — no pair for Br₂', F.x(wx + 1.8), F.y(wy + wh - 2.4), F.size(1.9, 7.5), { color: C.dust, maxW: F.len(ww - 3.6) });
+      return;
+    }
     const P = playOf(res === 'colourless' ? 'br2-ene' : 'br2-ane');
-    const G = fitScenes(P.scenes.map(sceneOf), { x: wx + 1, y: wy + 1, w: ww - 2, h: wh - 2 }, 9.5);
+    const G = fitScenes(P.scenes.map(sceneOf), { x: wx + 1, y: wy + 1, w: ww - 2, h: wh - 2 }, 13);
     const n = P.scenes.length - 1;
     drawPlay(ctx, F, G, P, Math.min(n, (k / (res === 'colourless' ? 0.78 : 1)) * n), { pairs: true });
   }
@@ -257,7 +287,7 @@ addTest('heat', {
         say(ctx, p[3] ? 'OH' : p[0], q.x + jx, q.y + jy + 0.5, Math.max(6.5, F.len(u * (p[3] ? 0.36 : 0.44))), { align: 'center', color: ink.text, weight: 800, sans: true });
       });
     });
-    say(ctx, 'Dashes: where the two molecules lie against each other', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
+    say(ctx, 'Dashes: where the two molecules touch', F.x(wx + 1.5), F.y(wy + wh - 2.4), F.size(1.9, 7.5), { color: C.dust, maxW: F.len(ww - 3) });
   }
 });
 
@@ -311,7 +341,7 @@ addTest('ph', {
       disc(cx - gap, cy, r, 'Na', 'Na', 1);
       disc(cx + gap, cy, r, 'O', 'O', -1);
       disc(cx + gap + r * 1.5, cy, r * 0.6, 'H', 'H');
-      say(ctx, e > 0.9 ? 'The ions have separated' : 'Two ions', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim });
+      say(ctx, e > 0.9 ? 'The ions separated in water' : 'Two ions', F.x(wx + 1.5), F.y(wy + wh - 2.4), F.size(1.95, 8), { color: C.dust, maxW: F.len(ww - 3) });
       return;
     }
     // A molecule: a carbon chain (R) bonded to the group that matters.
@@ -328,7 +358,7 @@ addTest('ph', {
       bond(wxo, wyo, wxo + r * 1.3, wyo - r * 1.2);
       disc(wxo, wyo, r, 'O', 'O', e > 0.85 ? -1 : 0);
       disc(wxo + r * 1.3, wyo - r * 1.2, r * 0.6, 'H', 'H');
-      say(ctx, e > 0.9 ? 'A proton has moved from water to nitrogen' : 'The molecule and a water molecule', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
+      say(ctx, e > 0.9 ? 'A proton moved from water to nitrogen' : 'Sample molecule and water', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
       return;
     }
     // A C=O with no hydrogen on its oxygen (a ketone such as propanone): nothing on it can leave as a proton.
@@ -337,7 +367,7 @@ addTest('ph', {
       disc(cx, cy, r, 'C', 'C');
       disc(gx, cy, r, 'O', 'O');
       water(false, false);
-      say(ctx, sub && e > 0.9 ? 'Nothing has left the molecule' : 'The molecule and a water molecule', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
+      say(ctx, sub && e > 0.9 ? 'No proton left the molecule' : 'Sample molecule and water', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
       return;
     }
     // An O–H group on carbon. An acid's proton moves to water; otherwise it stays where it is.
@@ -351,6 +381,6 @@ addTest('ph', {
     disc(gx, cy, r, 'O', 'O', moves && e > 0.85 ? -1 : 0);
     disc(hx, cy, r * 0.6, 'H', 'H');
     water(moves && e > 0.85, false);
-    say(ctx, moves && e > 0.9 ? 'A proton has moved to a water molecule' : sub && e > 0.9 ? 'Nothing has left the molecule' : 'The molecule and a water molecule', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
+    say(ctx, moves && e > 0.9 ? 'A proton moved to water' : sub && e > 0.9 ? 'No proton left the molecule' : 'Sample molecule and water', F.x(wx + 1.5), F.y(wy + wh - 2.4), F.size(1.95, 8), { color: C.dust, maxW: F.len(ww - 3) });
   }
 });

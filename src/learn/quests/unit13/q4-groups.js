@@ -55,12 +55,12 @@ const ARROW7 = {
   right: { src: 'l:n:0', dst: 'hw1' },
   dstAmong: ['m', 'n', 'hn1', 'hn2', 'o', 'hw1'],
   wrongs: [
-    { src: 'l:o:0', dst: 'hn1', msg: 'Nitrogen holds that hydrogen\'s pair less tightly than oxygen holds water\'s, and nothing moved: the pair returned.' },
-    { src: 'l:o:1', dst: 'hn1', msg: 'Nitrogen holds that hydrogen\'s pair less tightly than oxygen holds water\'s, and nothing moved: the pair returned.' },
-    { src: 'l:o:0', dst: 'hn2', msg: 'Nitrogen holds that hydrogen\'s pair less tightly than oxygen holds water\'s, and nothing moved: the pair returned.' },
-    { src: 'l:o:1', dst: 'hn2', msg: 'Nitrogen holds that hydrogen\'s pair less tightly than oxygen holds water\'s, and nothing moved: the pair returned.' },
-    { src: 'l:n:0', dst: 'hn1', msg: 'That hydrogen is already bonded to this nitrogen: the pair returned.' },
-    { src: 'l:n:0', dst: 'hn2', msg: 'That hydrogen is already bonded to this nitrogen: the pair returned.' }
+    { src: 'l:o:0', dst: 'hn1', msg: 'Water\'s oxygen does not pull a proton off nitrogen, so the pair bounced back.' },
+    { src: 'l:o:1', dst: 'hn1', msg: 'Water\'s oxygen does not pull a proton off nitrogen, so the pair bounced back.' },
+    { src: 'l:o:0', dst: 'hn2', msg: 'Water\'s oxygen does not pull a proton off nitrogen, so the pair bounced back.' },
+    { src: 'l:o:1', dst: 'hn2', msg: 'Water\'s oxygen does not pull a proton off nitrogen, so the pair bounced back.' },
+    { src: 'l:n:0', dst: 'hn1', msg: 'That hydrogen is already bonded to this nitrogen, so the pair bounced back.' },
+    { src: 'l:n:0', dst: 'hn2', msg: 'That hydrogen is already bonded to this nitrogen, so the pair bounced back.' }
   ]
 };
 const V6 = tmolFixture('view', { x: 59, y: 31 }, { play: 'ethanoate-shift', mode: 'arrow', arrow: ARROW6, pairs: true, title: 'The ethanoate ion', w: 104, h: 56 });
@@ -69,7 +69,7 @@ const V7 = tmolFixture('view', { x: 75, y: 31 }, { play: 'amine-water', mode: 'a
 function arrowCheck(state) {
   const r = molRead(state.table, 'view');
   if (r.done) return { ok: true };
-  if (!r.tried) return { ok: false, notYet: true, msg: 'No pair has been moved yet.' };
+  if (!r.tried) return { ok: false, notYet: true, msg: 'Move an electron pair first.' };
   return { ok: false, msg: r.last.msg };
 }
 
@@ -81,8 +81,8 @@ export const STAGES = [
     return {
       id: 's1-oh',
       title: 'One Atom Changed',
-      briefing: { speaker: SPEAKER, body: 'A functional group is a small group of atoms on a carbon chain that decides much of how the molecule behaves. Ethanol and methoxymethane share one formula, C₂H₆O.' },
-      prompt: 'Which part of an ethanol molecule holds its neighbours so much more strongly than methoxymethane\'s does?',
+      briefing: { speaker: SPEAKER, body: 'Both drums hold carbon chains with small reactive parts called functional groups. First compare two isomers of C₂H₆O: ethanol and methoxymethane.' },
+      prompt: 'Which part of ethanol pulls nearby molecules together much more strongly than methoxymethane does?',
       widget,
       table: thornTable({
         pieces: [tcard('c-eth', 'ethanol', { x: 12, y: 12 }), tcard('c-mom', 'methoxymethane', { x: 12, y: 28 })],
@@ -90,21 +90,21 @@ export const STAGES = [
         zones: { slots: [T.slot] }
       }),
       hints: [
-        'Heat each card in the rig, then tap an atom of the ethanol drawing.',
-        'Compare what the window draws between two ethanol molecules with what it draws for methoxymethane.',
-        'A hydrogen bond forms between a hydrogen bonded to oxygen on one molecule and an oxygen on the next.'
+        'Compare the boiling points and dashed attraction lines in the window for ethanol and methoxymethane.',
+        'Look at which atoms in ethanol connect with dashed lines to the neighboring molecule.',
+        'A strong hydrogen bond forms between an –OH hydrogen on one molecule and an oxygen on the next.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
-        if (!r.picked) return { ok: false, notYet: true, msg: 'Tap an atom of the ethanol drawing.' };
+        if (!r.picked) return { ok: false, notYet: true, msg: 'Tap an atom on the ethanol drawing.' };
         if (r.picked === 'ho' || r.picked === 'o') return { ok: true };
         const tested = resultOf(state.table, 'c-mom', 'heat') !== undefined;
-        return { ok: false, msg: tested ? 'Methoxymethane has CH₃ groups too, and it boiled at −24.8 °C.' : 'Methoxymethane, with CH₃ groups too, has not been heated yet.' };
+        return { ok: false, msg: tested ? 'Methoxymethane has CH₃ groups too, yet it boiled at −24.8 °C.' : 'Heat methoxymethane too so you can compare it with ethanol.' };
       },
       reward: {
         log: 'The –OH group: ethanol is an alcohol.',
         title: 'Alcohol',
-        body: 'The –OH group: its hydrogen is attracted to the oxygen of the next molecule, a hydrogen bond. A chain carrying –OH is an alcohol, and –OH is its functional group.'
+        body: 'The –OH group: its hydrogen attracts the next molecule\'s oxygen in a hydrogen bond. A carbon chain with an –OH group is an alcohol, and –OH is its functional group.'
       }
     };
   })(),
@@ -114,7 +114,8 @@ export const STAGES = [
     id: 's2-predict',
     title: 'Is It a Base',
     predict: true,
-    prompt: 'Sodium hydroxide makes water basic: what does ethanol, with its –OH group, do to the pH of water?',
+    briefing: { speaker: SPEAKER, body: 'On the pH scale, 7 is neutral, above 7 is basic, and below 7 is acidic. Sodium hydroxide (NaOH) releases OH⁻ ions and raises pH above 7.' },
+    prompt: 'Sodium hydroxide makes water basic: what do you expect ethanol, with its –OH group, to do to the pH of water?',
     widget,
     table: thornTable({
       pieces: [
@@ -122,23 +123,23 @@ export const STAGES = [
         note('g-seven', 'Leaves it at 7', { x: 30, y: 33 }),
         note('g-down', 'Lowers it below 7', { x: 30, y: 52 })
       ],
-      fixtures: [tleadFixture('lead', { x: 112, y: 44 }, { scene: 'naoh-dissolves', caption: 'Sodium hydroxide in water: Na⁺ and OH⁻ come apart.', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 16 } }] }
+      fixtures: [tleadFixture('lead', { x: 112, y: 44 }, { scene: 'naoh-dissolves', caption: 'Sodium hydroxide in water: Na⁺ and OH⁻ separate.', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip shows sodium hydroxide coming apart into a sodium ion and a hydroxide ion in water.',
-      'Compare how the OH is held in sodium hydroxide with how ethanol\'s O is held to its carbon.',
-      'Ask whether ethanol\'s oxygen, held to carbon by a shared pair, would come away as a hydroxide ion.'
+      'The picture shows sodium hydroxide splitting into free Na⁺ and OH⁻ ions in water.',
+      'Compare how OH⁻ is held in ionic NaOH with how ethanol\'s oxygen is bonded to carbon.',
+      'Think about whether ethanol\'s –OH, held to carbon by a covalent bond, breaks off as a free hydroxide ion.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it with the pH test.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Next, test both sodium hydroxide and ethanol in water with the pH meter.' }
   },
 
   /* ---------------------------------------------------------------- 3 */
@@ -156,24 +157,24 @@ export const STAGES = [
         zones: { slots: [T.slot] }
       }),
       hints: [
-        'Lay each card in the Sample slot and press "Add to Water".',
-        'Compare the meter and the window for sodium hydroxide with those for ethanol.',
-        'A base raises the pH because hydroxide ions come free in the water; ask whether any did with ethanol.'
+        'Watch the pH meter and the water window for both sodium hydroxide and ethanol.',
+        'Compare what happens to NaOH in water with what happens to ethanol.',
+        'A base raises pH by releasing free OH⁻ ions, so check whether ethanol releases any.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three statements.' };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
         if (pick === 2) return { ok: true };
         const seen = resultOf(state.table, 'c-eth', 'ph');
-        if (seen === undefined) return { ok: false, msg: 'Ethanol has not been added to water yet.' };
-        return { ok: false, msg: `The meter read pH ${seen.toFixed(1)} with ethanol in the water.` };
+        if (seen === undefined) return { ok: false, msg: 'Test ethanol in water first.' };
+        return { ok: false, msg: `With ethanol in the water, the meter read pH ${seen.toFixed(1)}.` };
       },
       get reward() {
         const g = guess();
         return {
           log: 'Ethanol left the pH at 7.',
           title: 'Not Hydroxide',
-          body: `It leaves the pH at 7${g ? `; you predicted ${g}` : ''}. Ethanol\'s oxygen is held to carbon by a shared pair and does not come away as a hydroxide ion.`
+          body: `It leaves the pH at 7${g ? ` (you predicted ${g})` : ''}. Ethanol's –OH is held to carbon by a covalent bond, so it stays attached instead of breaking off as OH⁻.`
         };
       }
     };
@@ -185,7 +186,7 @@ export const STAGES = [
     return {
       id: 's4-poor',
       title: 'Short of Electrons',
-      briefing: { speaker: SPEAKER, body: 'Oxygen attracts the electrons it shares more strongly than carbon does: its electronegativity is higher. So a pair shared by carbon and oxygen sits nearer the oxygen.' },
+      briefing: { speaker: SPEAKER, body: 'Oxygen pulls shared electrons much more strongly than carbon does (higher electronegativity), so C=O electrons sit closer to oxygen. Propanone (acetone) has a C=O bond.' },
       prompt: 'Which atom of propanone is the electron-poor site?',
       widget,
       table: thornTable({
@@ -193,21 +194,21 @@ export const STAGES = [
         fixtures: [V, plaqueFixture('en', 'Electronegativity', { x: 128, y: 20 }, ['O  3.4', 'C  2.6', 'H  2.2'], { w: 34 })]
       }),
       hints: [
-        'Tap an atom of the drawing to choose it.',
-        'Look at where each shared pair sits along its bond, and which atom each pair has moved away from.',
-        'The electron-poor atom is the one whose shared pairs sit farthest from it.'
+        'Look at where the shared electron pairs sit along each bond in propanone.',
+        'Check which atom has its shared electron pairs pulled away from it.',
+        'The electron-poor atom is the one whose shared pairs sit farthest away.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
         if (!r.picked) return { ok: false, notYet: true, msg: 'Tap an atom.' };
         if (r.picked === 'c') return { ok: true };
-        if (r.picked === 'o') return { ok: false, msg: 'Both pairs of the C=O bond sit nearer that oxygen.' };
-        return { ok: false, msg: 'The pair that CH₃ shares with the middle carbon sits midway between them.' };
+        if (r.picked === 'o') return { ok: false, msg: 'Both C=O electron pairs sit close to oxygen, making oxygen electron-rich.' };
+        return { ok: false, msg: 'Two carbons pull electrons equally, so the pair between them sits right in the middle.' };
       },
       reward: {
         log: 'The carbon of C=O is electron-poor.',
         title: 'The Carbonyl Group',
-        body: 'The carbon bonded to oxygen: both shared pairs of C=O sit nearer the oxygen, away from it. A carbon double-bonded to oxygen is a carbonyl group.'
+        body: 'The carbon bonded to oxygen: both C=O electron pairs sit closer to oxygen, leaving that carbon short of electrons. A carbon double-bonded to oxygen is called a carbonyl group.'
       }
     };
   })(),
@@ -218,29 +219,34 @@ export const STAGES = [
     return {
       id: 's5-acid',
       title: 'Which Is the Acid',
-      prompt: 'Which of these three clear liquids from the still is an acid?',
+      prompt: 'Which of these three clear liquids from the plant is an acid?',
       widget,
       table: thornTable({
-        pieces: [tcard('c-eth', 'ethanol', { x: 14, y: 8 }), tcard('c-prop', 'propanone', { x: 14, y: 22.5 }), tcard('c-acid', 'ethanoic', { x: 14, y: 37 })],
+        pieces: [
+          tcard('c-eth', 'ethanol', { x: 14, y: 8 }, { text: 'A: CH₃CH₂OH' }),
+          tcard('c-prop', 'propanone', { x: 14, y: 22.5 }, { text: 'B: CH₃COCH₃' }),
+          tcard('c-acid', 'ethanoic', { x: 14, y: 37 }, { text: 'C: CH₃COOH' })
+        ],
         fixtures: [T.fixture],
-        zones: { slots: [T.slot, { id: 'acid', label: 'The acid', at: { x: 22, y: 52 }, size: { w: 36, h: 12 } }] }
+        zones: { slots: [T.slot, { id: 'acid', label: 'The acid', at: { x: 22, y: 52 }, size: { w: 42, h: 14 } }] }
       }),
       hints: [
-        'Lay each card in the Sample slot and press "Add to Water".',
-        'Compare the three meter readings and what moves in each window.',
-        'An acid gives a proton to water and lowers the pH below 7.'
+        'Test each of the three liquids and watch the pH meter and the water window.',
+        'Compare the three pH readings and see which molecule hands off a proton in the window.',
+        'An acid gives a proton (H⁺) to water and lowers the pH below 7.'
       ],
       check(state) {
         const card = inSlot(state, 'acid');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
-        if (card.props.sub === 'ethanoic') return { ok: true };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const seen = resultOf(state.table, card.id, 'ph');
-        return { ok: false, msg: seen === undefined ? 'That liquid has not been added to water yet.' : `The meter read pH ${seen.toFixed(1)} for that one.` };
+        if (seen === undefined) return { ok: false, msg: 'Test that liquid in water first.' };
+        if (card.props.sub === 'ethanoic') return { ok: true };
+        return { ok: false, msg: `That liquid read pH ${seen.toFixed(1)}, not acidic.` };
       },
       reward: {
         log: 'Ethanoic acid: –COOH gave a proton to water.',
         title: 'Carboxylic Acid',
-        body: `Ethanoic acid, pH ${phOf('ethanoic').toFixed(1)}: its –COOH group gave a proton to water. A molecule with –COOH is a carboxylic acid.`
+        body: `Sample C (ethanoic acid), pH ${phOf('ethanoic').toFixed(1)}: its –COOH group gave a proton (H⁺) to water. A molecule with a –COOH group is a carboxylic acid.`
       }
     };
   })(),
@@ -249,19 +255,19 @@ export const STAGES = [
   {
     id: 's6-share',
     title: 'Why It Lets Go',
-    prompt: 'Ethanoic acid lost a proton, leaving a spare pair on one oxygen: which atom can that pair move to?',
+    prompt: 'Ethanoic acid lost a proton, leaving a spare electron pair on one oxygen: which atom can that pair move to?',
     widget,
     table: thornTable({ pieces: [], fixtures: [V6, plaqueFixture('en', 'Electronegativity', { x: 131, y: 20 }, ['O  3.4', 'C  2.6'], { w: 34 })] }),
     hints: [
-      'Tap an atom and press "Move Electrons": the charged oxygen\'s spare pair is the one that moves.',
-      'Look at which atom has its shared pairs pulled away toward an oxygen.',
-      'A carbon already holding four bonds can take a new pair only if one of its pairs moves off onto another atom.'
+      'Look at the highlighted spare pair on the lower oxygen and the bonds around the middle carbon.',
+      'Check which atom has its shared electron pairs pulled away toward oxygen.',
+      'Carbon can only hold four bonds, so it can accept a new pair only if its C=O pair shifts onto the other oxygen.'
     ],
     check: arrowCheck,
     reward: {
       log: 'The charge is shared by two oxygens.',
       title: 'Shared Charge',
-      body: 'To the electron-poor carbon, as the C=O pair moved out onto the other oxygen. The charge is shared by two oxygens (resonance), which lowers the ion\'s energy, so –COOH lets its proton go.'
+      body: 'To the electron-poor carbon, while the C=O pair moves onto the other oxygen. Sharing the negative charge across two oxygens stabilizes the ion, so –COOH releases its proton easily.'
     }
   },
 
@@ -269,20 +275,20 @@ export const STAGES = [
   {
     id: 's7-amine',
     title: 'The Nitrogen Group',
-    briefing: { speaker: SPEAKER, body: 'A nitrogen bonded into a carbon chain, with a lone pair of its own, makes an amine. Water\'s O–H pairs sit nearer oxygen, leaving its hydrogens electron-poor.' },
-    prompt: 'Which pair of electrons moves first when methylamine meets water, and where does it go?',
+    briefing: { speaker: SPEAKER, body: 'A nitrogen bonded to a carbon chain, carrying a lone pair of electrons, forms an amine. Compare the electron pairs on methylamine with the bonds in water.' },
+    prompt: 'Which electron pair moves first when methylamine meets water, and where does it go?',
     widget,
     table: thornTable({ pieces: [], fixtures: [V7] }),
     hints: [
-      'Tap a pair of electrons, then the atom it moves to, and press "Move Electrons".',
-      'Compare the lone pairs on nitrogen and on oxygen, and where each O–H and N–H pair sits.',
-      'A lone pair moves to an electron-poor hydrogen, and the pair that hydrogen shared stays with the atom that held it closer.'
+      'Look at the gold lone pair on nitrogen and the O–H bonds of water.',
+      'Compare the lone pair on nitrogen with the electron-poor hydrogens on water.',
+      'Nitrogen\'s lone pair moves to an electron-poor hydrogen on water, leaving OH⁻ behind.'
     ],
     check: arrowCheck,
     reward: {
       log: 'Methylamine took a proton from water.',
       title: 'Amine',
-      body: 'Nitrogen\'s lone pair took a proton from water, and the O–H pair stayed on oxygen as OH⁻. An amine is a base: it raises the pH of water.'
+      body: 'Nitrogen\'s lone pair pulled a proton off water, leaving the O–H pair on oxygen as OH⁻. That makes an amine a base, raising the pH of water.'
     }
   },
 
@@ -292,25 +298,26 @@ export const STAGES = [
     return {
       id: 's8-which-h',
       title: 'Two O–H Groups',
-      prompt: 'Lactic acid has two O–H groups: which hydrogen leaves as a proton when it is put in water?',
+      briefing: { speaker: SPEAKER, body: 'Lactic acid has two different O–H groups. Look at the carbon attached to each one.' },
+      prompt: 'Lactic acid has two O–H groups: which hydrogen leaves as a proton in water?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       hints: [
-        'Tap a hydrogen atom to choose it.',
-        'Compare the oxygen each O–H hydrogen is bonded to, and what else is bonded to that oxygen\'s carbon.',
-        'Use what the ethanoate ion showed: a charge left behind is shared only where a second oxygen sits on the same carbon.'
+        'Look at the two O–H hydrogens at opposite ends of lactic acid.',
+        'Compare what else is bonded to the carbon next to each O–H group.',
+        'Remember ethanoic acid: the leftover negative charge can only be shared when a second oxygen (C=O) sits on the same carbon.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
         if (!r.picked) return { ok: false, notYet: true, msg: 'Tap a hydrogen atom.' };
         if (r.picked === 'h6') return { ok: true };
-        if (r.picked === 'h5') return { ok: false, msg: 'The carbon that oxygen is bonded to holds no second oxygen.' };
-        return { ok: false, msg: 'That hydrogen\'s pair sits nearly midway between it and carbon.' };
+        if (r.picked === 'h5') return { ok: false, msg: 'That carbon has no second oxygen to share the charge; compare it with the C=O carbon.' };
+        return { ok: false, msg: 'That hydrogen is bonded to carbon, where the electron pair sits evenly in the middle.' };
       },
       reward: {
         log: 'The –COOH hydrogen leaves.',
         title: 'The Acid Group',
-        body: 'The hydrogen of –COOH: the charge it leaves is shared by two oxygens. The other O–H belongs to an alcohol group and stays.'
+        body: 'The –COOH hydrogen leaves because two oxygens can share the negative charge left behind. The other –OH belongs to an alcohol group and stays put.'
       }
     };
   })()
@@ -319,7 +326,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'A functional group decides how a molecule behaves because of where it puts electrons: –OH hydrogen bonds, C=O leaves its carbon electron-poor, –COOH shares a charge, and an amine\'s lone pair takes a proton.' }]
+  sections: [{ heading: 'What You Found', body: 'Functional groups control how a molecule behaves by shifting where electrons sit: –OH forms hydrogen bonds, C=O makes carbon electron-poor, –COOH shares a negative charge, and an amine\'s lone pair pulls a proton from water.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */

@@ -40,8 +40,13 @@ registerPiece('vial', {
     ctx.strokeStyle = lit ? C.amber : '#cfd8de'; ctx.lineWidth = lit ? 2.5 : 1.5;
     ctx.beginPath(); ctx.moveTo(x - w / 2, y - h * 0.5); ctx.lineTo(x - w / 2, y + h * 0.42); ctx.quadraticCurveTo(x, y + h * 0.62, x + w / 2, y + h * 0.42); ctx.lineTo(x + w / 2, y - h * 0.5); ctx.stroke();
     ctx.lineWidth = 1;
-    say(ctx, p.props.name || c.formula, x, y - h * 0.62, Math.max(6, 1.55 * sc), { align: 'center', color: C.text, weight: 700, sans: true, maxW: VIAL_RECT.hw * 2 * sc * 1.25 });
-    if (p.props.pull != null) say(ctx, `pull ${p.props.pull}`, x, y + h * 0.78, Math.max(6, 1.45 * sc), { align: 'center', color: C.amber, weight: 700 });
+    const lbl = p.props.name || c.formula;
+    const lblSize = Math.max(8, 2.15 * sc);
+    const lblW = Math.min(VIAL_RECT.hw * 2 * sc * 1.65, Math.max(w * 1.4, lbl.length * lblSize * 0.62 + 6));
+    ctx.fillStyle = 'rgba(16,15,12,0.82)';
+    ctx.fillRect(x - lblW / 2, y - h * 0.66 - lblSize * 0.6, lblW, lblSize * 1.2);
+    say(ctx, lbl, x, y - h * 0.66, lblSize, { align: 'center', color: C.text, weight: 700, sans: true, maxW: lblW - 2 });
+    if (p.props.pull != null) say(ctx, `pull ${p.props.pull}`, x, y + h * 0.78, Math.max(7.5, 1.75 * sc), { align: 'center', color: C.amber, weight: 700 });
   },
   faceKey: p => `vial:${p.props.cx}:${p.props.pull ?? ''}:${p.props.name || ''}`,
   printed: p => p.props.name || COMPLEXES[p.props.cx].formula
@@ -123,7 +128,7 @@ function paintSpec(ctx, f, state, b) {
     });
     say(ctx, '400 nm', F.x(g.x0), F.y(g.y1 + 5.2), F.size(1.5, 5.5), { color: C.dim });
     say(ctx, '700 nm', F.x(g.x1), F.y(g.y1 + 5.2), F.size(1.5, 5.5), { align: 'right', color: C.dim });
-    if (r.complex && r.nm > 700) say(ctx, 'the dark band reaches past the red end', F.x(g.x1), F.y(g.y1 + 8.2), F.size(1.6, 5.8), { align: 'right', color: C.dust });
+    if (r.complex && r.nm > 700) say(ctx, 'absorbs orange and red', F.x(g.x1), F.y(g.y1 + 8.2), F.size(1.7, 6), { align: 'right', color: C.dust });
     if (!r.complex) say(ctx, 'Put a sample in the holder', F.x((g.x0 + g.x1) / 2), F.y((g.y0 + g.y1) / 2), F.size(1.9, 6.2), { align: 'center', color: C.text });
     if (p.cursor && r.complex && r.nm && r.nm <= 700) {
       const x = g.x0 + ((r.nm - 400) / 300) * (g.x1 - g.x0);
@@ -216,16 +221,16 @@ const ORBITALS = [
 export const CF_ORBITALS = ORBITALS;
 
 export function cfieldFixture(id, at, { w = 140, h = 52, title: ttl = 'The five d orbitals of Ti³⁺ and six ligands' } = {}) {
-  const dials = { near: { min: 0, max: 4, step: 1, value: 0, label: 'Ligands', labels: ['Far', '', '', '', 'Bonded'] } };
+  const dials = { near: { min: 0, max: 4, step: 1, value: 0, label: 'Ligands', labels: ['Far', 'Closer', 'Near', 'Close', 'Bonded'] } };
   const hidden = [];
   ORBITALS.forEach((_, i) => { dials[`o${i}`] = { min: 0, max: 1, step: 1, value: 0, label: `Orbital ${i + 1}` }; hidden.push(`o${i}`); });
-  return { id, kind: 'cfield', label: ttl, at: { ...at }, size: { w, h }, dials, noRun: true, props: { hidden } };
+  return { id, kind: 'cfield', label: ttl, at: { ...at }, size: { w, h }, dials, noRun: true, props: { hidden, top: 10.5 } };
 }
 export const cfieldRead = (state, id) => { const f = state.fixtures[id]; return { near: Math.round(f.dials.near.value), marked: ORBITALS.filter((_, i) => Math.round(f.dials[`o${i}`].value) === 1).map(o => o.id) }; };
 
 function cfGeom(f) {
-  const top = 15; const ladderW = 22; const iw = (f.size.w - ladderW - 6) / 5;
-  return { top, iw, ih: f.size.h - top - 9, ladderX: f.size.w - ladderW - 1, ladderW };
+  const top = 18; const ladderW = 24; const iw = (f.size.w - ladderW - 6) / 5;
+  return { top, iw, ih: f.size.h - top - 7, ladderX: f.size.w - ladderW - 1, ladderW };
 }
 
 /** One orbital in its plane: two or four lobes, the axes, and the ligands' lone pairs on the axes at the distance the dial sets. */
@@ -298,10 +303,11 @@ export function dsplitFixture(id, at, { mode = 'build', gap = GAPS.wide, gapDial
   const runLabel = mode === 'build' ? 'Test Energy' : mode === 'fill' ? 'Fill Lowest' : mode === 'vial' ? 'Shine Light' : null;
   const slotId = `${id}.vial`;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
+  const hasVisibleDials = Boolean(countDial || gapDial);
   return {
     fixture: {
       id, kind: 'dsplit', label: ttl, at: { ...at }, size: { w, h }, dials, ...(runLabel ? { runLabel } : { noRun: true }),
-      props: { mode, gap, gapDial, count, countDial, pair, cx, hidden, slot: mode === 'vial' ? slotId : null, test: null, filled: null, shone: null }
+      props: { mode, gap, gapDial, count, countDial, pair, cx, hidden, slot: mode === 'vial' ? slotId : null, test: null, filled: null, shone: null, ...(hasVisibleDials ? { top: 10.5, rowPitch: 9.2 } : {}) }
     },
     slot: mode === 'vial' ? { id: slotId, label: 'Sample', at: { x: x0 - 9, y: y0 + h / 2 }, size: { w: 13, h: 18 } } : null
   };
@@ -328,11 +334,12 @@ export function dsplitRead(state, id) {
 }
 
 function dsGeom(f) {
-  const top = Object.keys(f.dials).filter(n => !f.props.hidden.includes(n)).length ? 9.6 + 5 * (Object.keys(f.dials).filter(n => !f.props.hidden.includes(n)).length - 1) + 4.5 : 6;
-  const bottom = f.size.h - 9;
+  const nDials = Object.keys(f.dials).filter(n => !f.props.hidden.includes(n)).length;
+  const top = nDials ? 10.5 + (nDials - 1) * 9.2 + 6.2 : 9.5;
+  const bottom = f.size.h - 8;
   const bw = 7; const gapX = 2;
   const lowerX = 10; const upperX = lowerX + (bw + gapX) * 0.5;
-  return { top, bottom, bw, gapX, lowerX, upperX, bh: 5.5 };
+  return { top, bottom, bw, gapX, lowerX, upperX, bh: 5.2 };
 }
 
 function paintDsplit(ctx, f, state, b) {
@@ -394,6 +401,12 @@ function paintDsplit(ctx, f, state, b) {
     });
     // The gap's height carried across the ruler as a line.
     ctx.strokeStyle = C.amber; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(F.x(gx), F.y(yUp + G.bh)); ctx.lineTo(F.x(f.size.w - 2), F.y(yUp + G.bh)); ctx.stroke(); ctx.setLineDash([]);
+    // When the matching colour is picked, show the electron lifting across the gap.
+    if (r.band && COMPLEXES[r.cx]?.absorb?.includes(r.band)) {
+      const ph = ((b.clock || 0) % 1.4) / 1.4;
+      const ax = G.lowerX + G.bw / 2; const zx = G.upperX + G.bw / 2;
+      ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(F.x(ax + (zx - ax) * ph), F.y(yLow + G.bh / 2 + (yUp - yLow) * ph), Math.max(2.6, F.len(0.8)), 0, Math.PI * 2); ctx.fill();
+    }
   }
   // Shine Light: whether an electron in the lower set can be lifted into a free place above.
   if (p.mode === 'vial' && r.shone && r.shone.cx === r.cx) {
@@ -418,7 +431,7 @@ function dsplitTaps(f, state) {
     const r = dsplitRead(state, f.id);
     const span = G.bottom - G.top - G.bh * 2 - 2; const k = Math.min(0.09, span / 320);
     const yUp = G.bottom - G.bh - r.gap * k - G.bh;
-    for (let i = 0; i < 2; i++) out.push({ x0: G.upperX + i * (G.bw + G.gapX) - 0.4, x1: G.upperX + i * (G.bw + G.gapX) + G.bw + 0.4, y0: yUp - 1, y1: yUp + G.bh + 1, dial: `b${3 + i}`, step: 1, wrap: true });
+    for (let i = 0; i < 2; i++) out.push({ x0: G.upperX + i * (G.bw + G.gapX) - 0.6, x1: G.upperX + i * (G.bw + G.gapX) + G.bw + 0.6, y0: yUp - 2.5, y1: yUp + G.bh + 2.5, dial: `b${3 + i}`, step: 1, wrap: true });
     return out;
   }
   if (p.mode === 'ruler') {

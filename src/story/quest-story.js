@@ -100,25 +100,25 @@ export const QUEST_STORY = {
     ],
     pin: 'It is nuclear fission, not alchemy. The Fifth Guild\'s reactor is now stable.'
   },
-  /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
+  /* ---- Thornmere: what is the Fifth's armor made of, and where can it be cut? ---- */
   'unit13/q1-chains': {
     scene: 'thorn-chains',
     role: 'Direct Clue',
-    mystery: 'Black tar is dragged from the swamp to the Fifth\'s plant every night. What is the tar made of?',
+    mystery: 'Black tar is dragged from the swamp to the Fifth\'s plant every night. What carbon-and-hydrogen chains is the tar made of?',
     beats: [
       { to: 0.32, say: 'Two carbons held six hydrogens: each carbon used one of its four bonds on the other and three on hydrogens.' },
       { to: 0.66, say: 'Adding a third carbon replaced one hydrogen and brought three of its own, so the chain gained two hydrogens.' },
       { to: 0.96, say: 'When hexane\'s two ends joined into a ring, each end gave up a hydrogen, leaving twelve hydrogens.' }
     ],
-    pin: 'The swamp tar is alkanes: simple chains of carbon and hydrogen atoms.'
+    pin: 'The swamp tar is alkanes: simple chains and rings of carbon and hydrogen atoms.'
   },
   'unit13/q2-unsat': {
     scene: 'thorn-unsat',
     role: 'Direct Clue',
-    mystery: 'The Fifth heats the swamp tar before using it. What does the heater turn it into?',
+    mystery: 'The Fifth Guild heats the swamp tar to crack its chains into double-bonded molecules. How do those double bonds react?',
     beats: [
-      { to: 0.32, say: 'Bromine broke the double bond and attached to both carbons, turning the orange bromine water clear.' },
-      { to: 0.66, say: 'With H-Br, the double bond\'s electrons grabbed the hydrogen atom, and bromine left carrying the extra electron pair.' },
+      { to: 0.32, say: 'Bromine used the double bond\'s second pair and attached to both carbons, turning the orange bromine water clear.' },
+      { to: 0.66, say: 'With H–Br, the double bond\'s second pair moved to the hydrogen atom, and bromine left carrying the shared pair.' },
       { to: 0.96, say: 'That bromide ion then bonded to the other carbon, completing an addition reaction with nothing left over.' }
     ],
     pin: 'The heater turns the tar into double-bonded molecules that can link together.'
@@ -132,29 +132,29 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'A double bond cannot rotate, so placing two chlorines on the same side or opposite sides makes two different molecules.' },
       { to: 0.96, say: 'No rotation could match CHFClBr to its mirror image. Four different groups around one carbon make it chiral.' }
     ],
-    pin: 'The two drums hold the same atoms in different shapes, so only one works.'
+    pin: 'The drums hold the same atoms in different orders, sides, or mirror forms.'
   },
   'unit13/q4-groups': {
     scene: 'thorn-groups',
     role: 'Direct Clue',
-    mystery: 'One drum\'s clear liquid is eating through its steel, and the drum beside it is fine. What is in the bad drum?',
+    mystery: 'One drum\'s liquid is eating through steel, while the other drum is safe. What small group of atoms makes them behave so differently?',
     beats: [
-      { to: 0.32, say: 'Ethanol\'s -OH groups pull strongly on neighboring molecules, so it boils much higher than methoxymethane despite having the same formula.' },
+      { to: 0.32, say: 'Ethanol\'s –OH group attracts the molecules next to it, so it boils much higher than methoxymethane despite having the same formula.' },
       { to: 0.66, say: 'Ethanoic acid gave a proton to water, and the negative charge it left behind spread evenly across two oxygens.' },
       { to: 0.96, say: 'Methylamine\'s nitrogen pulled a proton away from water, showing that an amine acts as a base.' }
     ],
-    pin: 'The corrosive liquid is a carboxylic acid, while the safe drum holds an alcohol.'
+    pin: 'The corrosive drum holds a carboxylic acid, which eats steel; the safe drum holds alcohol.'
   },
   'unit13/q5-reactions': {
     scene: 'thorn-reactions',
     role: 'Direct Clue',
     mystery: 'The Fifth joins that acid and an alcohol into links for its armor. How is each link made, and what could undo it?',
     beats: [
-      { to: 0.32, say: 'Hydroxide attacked the electron-poor carbon next to bromine, pushing bromine off in a one-for-one swap.' },
+      { to: 0.32, say: 'Hydroxide moved to the electron-poor carbon next to bromine, swapping places with bromine in a substitution.' },
       { to: 0.66, say: 'Ethanol\'s oxygen bonded to the acid\'s C=O carbon and released a water molecule, joining them into an ester.' },
-      { to: 0.96, say: 'Hydroxide attacked that same carbon and split the ester back apart. Adding water reverses the link.' }
+      { to: 0.96, say: 'Hydroxide moved to that same carbon and split the ester back apart. Adding water back, helped by hydroxide, reverses the link.' }
     ],
-    pin: 'Each armor link forms by releasing water, so water can break the link apart.'
+    pin: 'Each armor link forms by releasing water, so water and hydroxide break it.'
   },
   'unit13/q6-polymers': {
     scene: 'thorn-polymers',
@@ -170,89 +170,91 @@ export const QUEST_STORY = {
   'unit13/boss-carapace': {
     scene: 'thorn-carapace',
     role: 'Boss Payoff',
-    mystery: 'Thornmere\'s armor is far heavier than plastic should be. What is underneath it?',
+    mystery: 'The armor is sealed by a crawler of wax, seams, and plastic plates. How do we strip it to see what is underneath?',
     beats: [
-      { to: 0.32, say: 'The wax was C₃₀H₆₂, and the seam that turned bromine water clear held the double bond.' },
-      { to: 0.66, say: 'The filler\'s second carbon held four different groups, and the link\'s C=O carbon was the electron-poor target.' },
-      { to: 0.96, say: 'Hydroxide attacked that carbon and broke every amide link, peeling the plastic armor right off the outpost.' }
+      { to: 0.32, say: 'The wax was C₃₀H₆₂, and the seam sample that turned bromine water clear held the double bond.' },
+      { to: 0.66, say: 'The chiral sample\'s second carbon held four different groups, and the link\'s C=O carbon was the electron-poor site.' },
+      { to: 0.96, say: 'Hydroxide moved to that carbon and broke every amide link, peeling the plastic armor off to reveal heavy lead shielding underneath.' }
     ],
-    pin: 'Thick lead plates sit under the plastic to block nuclear radiation.'
+    pin: 'Heavy lead plates sit under the plastic armor, built to block radiation.'
   },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
     scene: 'lode-dblock',
-    role: 'Toolkit',
+    role: 'Direct Clue',
+    mystery: 'The Fifth\'s manifest calls every drum iron salt, yet one sealed drum holds a 3+ ion with five 3d electrons. Which metal is it?',
     beats: [
-      { to: 0.34, say: 'Iron took two electrons into 4s, then six into 3d: five alone, then one pair.' },
-      { to: 0.7, say: 'With a charge on the atom, 3d dropped below 4s, so the two 4s electrons were the ones to leave Fe²⁺.' },
-      { to: 0.97, say: 'One more 3d electron gone left Fe³⁺ with five, the ion in the sealed drum.' }
-    ]
+      { to: 0.34, say: 'Neutral iron fills 4s first, then places six electrons into 3d: five singly, then one pair.' },
+      { to: 0.7, say: 'Once iron carries a positive charge, 3d drops below 4s, so the two 4s electrons leave first to form Fe²⁺.' },
+      { to: 0.97, say: 'Removing one 3d electron leaves Fe³⁺ (iron(III)) with five 3d electrons, matching the sealed drum.' }
+    ],
+    pin: 'Iron loses 4s before 3d, leaving Fe³⁺ with five 3d electrons: the drum holds iron(III).'
   },
   'unit12/q2-charges': {
     scene: 'lode-charges',
     role: 'Direct Clue',
-    mystery: 'Two drums of the same metal are marked with different charges, plus two and plus three. Can one metal carry both?',
+    mystery: 'Two drums of the same metal are marked +2 and +3. Can one metal form both?',
     beats: [
-      { to: 0.32, say: 'Calcium gave up two electrons cheaply; the third came from the inner shell and cost four times as much.' },
-      { to: 0.64, say: 'Manganese climbed in even steps through seven electrons, so it can carry any charge from +2 to +7.' },
-      { to: 0.95, say: 'Fe²⁺ lost its third electron for 2,957 kJ/mol, less than Mn²⁺\'s 3,248, because that electron shared an orbital.' }
+      { to: 0.32, say: 'Calcium loses two outer electrons easily, but the third comes from the inner shell and takes four times as much energy.' },
+      { to: 0.64, say: 'Manganese climbs in steady steps through seven outer electrons, letting it form oxidation states from +2 to +7.' },
+      { to: 0.95, say: 'Fe²⁺ loses its next electron for 2,957 kJ/mol, less than Mn²⁺\'s 3,248, because its paired 3d electron is repelled by its partner.' }
     ],
-    pin: 'Yes. Transition metals can hold several different charges, so the labels can all be right.'
+    pin: 'Yes: 4s and 3d electrons leave in steady steps, so iron forms both Fe²⁺ and Fe³⁺.'
   },
   'unit12/q3-complex': {
     scene: 'lode-complex',
     role: 'Direct Clue',
-    mystery: 'Ammonia spilled into a drum, and the pale blue inside turned deep blue. What did the ammonia do?',
+    mystery: 'Ammonia spilled into a pale blue copper drum and turned it deep blue. What did ammonia do to the copper ions?',
     beats: [
-      { to: 0.3, say: 'Ammonia replaced four water molecules around each copper ion, turning the pale blue solution deep blue.' },
-      { to: 0.62, say: 'Copper kept its nine 3d electrons, while each nitrogen donated a lone pair to form a new bond.' },
-      { to: 0.95, say: 'Six water molecules fit around Fe³⁺, only four chloride ions fit around Cu²⁺, and the drum\'s +1 charge meant two chloride ions on Cr³⁺.' }
+      { to: 0.3, say: 'Ammonia replaced four water molecules around each copper(II) ion, turning the pale blue solution deep blue.' },
+      { to: 0.62, say: 'Copper kept all nine 3d electrons, while each nitrogen donated its lone pair to form a coordinate bond.' },
+      { to: 0.95, say: 'Coordination number counts bonded donor atoms: six H₂O on Fe³⁺, four larger Cl⁻ on Cu²⁺, and three two-bond en ligands on Ni²⁺.' }
     ],
-    pin: 'Ammonia bound around the copper ions, creating a deep blue complex.'
+    pin: 'Ammonia bonded as a ligand around each copper ion, forming a deep blue complex ion.'
   },
   'unit12/q4-shapes': {
     scene: 'lode-shapes',
     role: 'Direct Clue',
-    mystery: 'Two drums share one formula but act differently. How can one formula be two different things?',
+    mystery: 'Two drums share one formula but behave differently. How can one formula be two different substances?',
     beats: [
-      { to: 0.3, say: 'Six ammonia ligands spread 90° apart around the metal: four in a flat square, one above, and one below.' },
-      { to: 0.62, say: 'Around Pt²⁺, two NH₃ and two Cl⁻ formed two distinct shapes that no rotation could line up.' },
-      { to: 0.95, say: 'With the two chlorines side by side the complex is cis; across from each other it is trans.' }
+      { to: 0.3, say: 'Six ligands spread 90° apart into an octahedron; four form a tetrahedron or, on Pt²⁺, a flat square.' },
+      { to: 0.62, say: 'Around Pt²⁺, two NH₃ and two Cl⁻ formed two distinct isomers that no rotation or flip could match.' },
+      { to: 0.95, say: 'With the two chloride ions side by side the isomer is cis; across from each other it is trans.' }
     ],
-    pin: 'The groups around the metal sit in two different 3D arrangements.'
+    pin: 'The same atoms arranged differently in 3D form different substances called isomers (cis and trans).'
   },
   'unit12/q5-colour': {
     scene: 'lode-colour',
     role: 'Direct Clue',
-    mystery: 'The drum labels burned off, but each drum holds a different colour. Can the colour tell us what is inside?',
+    mystery: 'The drum labels burned off, leaving only the colour of each solution. Can colour tell us what is inside?',
     beats: [
-      { to: 0.3, say: 'The blue copper solution absorbed orange and red from white light, letting only blue pass through.' },
-      { to: 0.62, say: 'Six ligands raised the energy of two d orbitals, so the complex absorbed only light matching that energy gap.' },
-      { to: 0.95, say: 'Swapping water for ammonia widened the gap to 199 kJ/mol, shifting the absorbed light from red to orange.' }
+      { to: 0.3, say: 'The blue copper solution absorbed orange and red from white light, so the remaining light looked blue.' },
+      { to: 0.62, say: 'Six ligands split the five d orbitals into two levels; a photon is absorbed only when its energy lifts a d electron across that gap.' },
+      { to: 0.95, say: 'Swapping water for ammonia widened the gap to 199 kJ/mol, so the complex absorbed higher-energy orange light and let red pass through.' }
     ],
-    pin: 'Yes. Each drum\'s color reveals which ligands are bound around its metal.'
+    pin: 'Yes: a complex\'s colour reveals its d-orbital gap and ligands, while d⁰ and d¹⁰ stay colourless.'
   },
   'unit12/q6-spin': {
     scene: 'lode-spin',
     role: 'Direct Clue',
-    mystery: 'The canyon magnet lifts some metal drums and leaves the rest on the line. Why does it grab only some?',
+    mystery: 'The canyon magnet lifts some metal drums and ignores others. Why does it pull only certain drums?',
     beats: [
-      { to: 0.32, say: 'Water left iron(II) with four unpaired electrons, pulling it to the magnet; cyanide paired all six, leaving no pull.' },
-      { to: 0.65, say: 'When the energy gap exceeds the cost of pairing, all six d electrons pair in the lower three orbitals as low spin.' },
-      { to: 0.95, say: 'More unpaired electrons mean a stronger magnetic pull, and both color and magnetism come from the same orbital gap.' }
+      { to: 0.32, say: 'Unpaired electrons create a magnetic pull: water left iron(II) with four unpaired electrons, while cyanide paired all six.' },
+      { to: 0.65, say: 'When the d-orbital gap is wider than the pairing cost, electrons pair in the lower three orbitals first (low spin).' },
+      { to: 0.95, say: 'More unpaired electrons create a stronger magnetic pull, and both colour and magnetism come from the same d-orbital gap.' }
     ],
-    pin: 'The magnet lifts only drums whose metal has unpaired d electrons.'
+    pin: 'The magnet pulls only drums whose metal ion has unpaired d electrons.'
   },
   'unit12/boss-coil': {
     scene: 'lode-coil',
     role: 'Boss Payoff',
-    mystery: 'The sorting magnet decides where every metal drum goes. Where is it sending them?',
+    mystery: 'The sorting magnet sorts every metal drum in the canyon by charge, colour, and pull. Can you shut it down?',
     beats: [
-      { to: 0.35, say: 'We unlocked the first coil by tracking Mn²⁺ losing its 4s electrons and reading vanadium\'s +5 jump.' },
-      { to: 0.70, say: 'We checked [Co(NH₃)₅Cl]²⁺ at +2 and matched [Co(NH₃)₆]³⁺\'s absorbed blue light to its orange color.' },
-      { to: 0.95, say: 'High-spin [Fe(H₂O)₆]³⁺ pulled harder than low-spin [Fe(CN)₆]³⁻, shutting down the Coil and revealing the route to Cinder Halo.' }
+      { to: 0.35, say: 'Stripping Mn to Mn²⁺ (3d⁵) and reading vanadium\'s +5 ionization jump broke the Coil\'s first two locks.' },
+      { to: 0.70, say: 'Adding ligand charges gave [Co(NH₃)₅Cl]²⁺ (+2), and blue absorption matched [Co(NH₃)₆]³⁺ to its orange colour.' },
+      { to: 0.95, say: 'High-spin [Fe(H₂O)₆]³⁺ (five unpaired electrons) pulled far harder than low-spin [Fe(CN)₆]³⁻, powering down the Coil.' }
     ],
-    pin: 'Its shipping chip routes every Fifth Guild metal drum straight to Cinder Halo.'
+    pin: 'Every drum is identified by d electrons, ligands, colour, and pull; the Coil is shut down.'
   },
   'unit11/q1-watch': {
     scene: 'rate-watch',

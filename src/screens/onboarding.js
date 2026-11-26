@@ -525,6 +525,7 @@ export async function renderOnboarding(container) {
     let holdTimer = null;
 
     function startHold() {
+      if (holdTimer) return;
       holdStart = Date.now();
       soundscape.playKeyCapThunk();
       holdTimer = setInterval(() => {
@@ -551,8 +552,11 @@ export async function renderOnboarding(container) {
       if (fillBar) fillBar.style.width = '0%';
     }
 
+    holdBtn.addEventListener('pointerdown', startHold);
     holdBtn.addEventListener('mousedown', startHold);
     holdBtn.addEventListener('touchstart', startHold, { passive: true });
+    window.addEventListener('pointerup', cancelHold);
+    window.addEventListener('pointercancel', cancelHold);
     window.addEventListener('mouseup', cancelHold);
     window.addEventListener('touchend', cancelHold);
 

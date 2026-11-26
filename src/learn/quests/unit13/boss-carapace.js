@@ -38,28 +38,28 @@ export const STAGES = [
     return {
       id: 'p1-wax',
       title: 'Phase 1 · The Wax Layer',
-      briefing: { speaker: SPEAKER, body: 'The outer skin of each plate is a wax: an alkane chain thirty carbons long. Its hydrogens tell us how much of it there is to burn off.' },
+      briefing: { speaker: SPEAKER, body: 'Each plate is coated in wax, an alkane chain thirty carbons long. Count its hydrogens to identify the coating.' },
       prompt: 'How many hydrogen atoms does an alkane chain of thirty carbons hold?',
       entry: { id: 'h', label: 'Hydrogen atoms', unit: '' },
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       foes: FOE,
-      encounter: { species: 'the carapace', act: 'Strip Wax', intent: 'The Carapace wears a skin of wax, an alkane chain thirty carbons long.' },
+      encounter: { species: 'the carapace', act: 'Strip Wax', intent: 'The Carapace is coated in a thirty-carbon alkane wax.' },
       hints: [
-        'Build short chains on the board and read the formula under it.',
-        'Compare how many hydrogens each added carbon brings, and what the two end carbons hold.',
-        'Give every carbon its two hydrogens, then add the end carbons\' extra ones.'
+        'Watch the formula under the board as you build short chains of two, three, and four carbons.',
+        'Compare how many hydrogens each middle carbon holds with how many the two end carbons hold.',
+        'Give every carbon two hydrogens, then add the two extra hydrogens on the ends.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'h');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the number of hydrogen atoms.' };
         if (v === alkaneH(30)) return { ok: true };
-        if (v === 120) return { ok: false, msg: 'On the board a carbon inside a chain holds two hydrogens, not four.' };
-        if (v === 60) return { ok: false, msg: 'On the board the two end carbons each hold one hydrogen more than the rest.' };
-        if (v === 90) return { ok: false, msg: 'On the board a carbon inside a chain holds two hydrogens, not three.' };
-        return { ok: false, msg: `Chains on the board go C₃H₈, C₄H₁₀, C₅H₁₂; ${v} is not that pattern for thirty carbons.` };
+        if (v === 120) return { ok: false, msg: 'Look at the board: each carbon inside a chain holds two hydrogens, not four.' };
+        if (v === 60) return { ok: false, msg: 'Look at the board: each end carbon holds one extra hydrogen compared with the middle carbons.' };
+        if (v === 90) return { ok: false, msg: 'Look at the board: each carbon inside a chain holds two hydrogens, not three.' };
+        return { ok: false, msg: `On the board, chains follow C₃H₈, C₄H₁₀, C₅H₁₂, so ${v} does not fit thirty carbons.` };
       },
-      reward: { log: 'Phase 1: the wax is C₃₀H₆₂.', title: 'Wax Stripped', body: 'Sixty-two: two for each of the thirty carbons and one more at each end, C₃₀H₆₂.' }
+      reward: { log: 'Phase 1: the wax is C₃₀H₆₂.', title: 'Wax Stripped', body: '62 hydrogens: two for each of the thirty carbons plus one extra at each end, C₃₀H₆₂.' }
     };
   })(),
 
@@ -70,113 +70,113 @@ export const STAGES = [
     return {
       id: 'p2-seam',
       title: 'Phase 2 · The Soft Seam',
-      prompt: 'Which scraping from the seams between the plates still holds a carbon–carbon double bond?',
+      prompt: 'Which seam sample still has a carbon–carbon double bond?',
       widget,
       table: thornTable({
         pieces: Object.entries(JARS).map(([id, sub], i) => tcard(id, sub, { x: 14, y: 10 + i * 14.5 }, { text: `${'ABC'[i]}: ${['C₅H₁₂', 'C₅H₁₀', 'C₅H₁₀'][i]}` })),
         fixtures: [T.fixture],
-        zones: { slots: [T.slot, { id: 'ene', label: 'Double bond', at: { x: 22, y: 52 }, size: { w: 34, h: 12 } }] }
+        zones: { slots: [T.slot, { id: 'ene', label: 'Double bond', at: { x: 22, y: 52 }, size: { w: 42, h: 14 } }] }
       }),
       foes: FOE,
-      encounter: { species: 'the carapace', act: 'Open Seam', intent: 'The Carapace\'s plates are sealed at the seams with three hydrocarbons.' },
+      encounter: { species: 'the carapace', act: 'Open Seam', intent: 'The Carapace\'s seams are sealed with three hydrocarbon samples.' },
       hints: [
-        'Lay a scraping\'s card in the Sample slot and press "Add Bromine Water".',
-        'Two scrapings share one formula: compare what each does to the bromine water.',
-        'Two hydrogens short of a full chain can mean a ring or a double bond, and only one gives bromine a pair to reach.'
+        'Test the samples in the bromine water rig and watch the jar and enlarged window.',
+        'Two samples share the formula C₅H₁₀, so compare what each does to the orange bromine water.',
+        'Having two fewer hydrogens than a full chain means either a ring or a double bond, and only a double bond reacts with bromine.'
       ],
       check(state) {
         const card = inSlot(state, 'ene');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a scraping\'s card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a sample card in the slot.' };
         if (card.props.sub === 'pentene') return { ok: true };
-        if (card.props.sub === 'pentane') return { ok: false, msg: 'C₅H₁₂ is a chain of five carbons holding every hydrogen it can.' };
+        if (card.props.sub === 'pentane') return { ok: false, msg: 'C₅H₁₂ is a full five-carbon alkane chain with no room for a double bond.' };
         const seen = resultOf(state.table, card.id, 'bromine');
-        return { ok: false, msg: seen ? 'That scraping left the bromine water orange.' : 'That scraping has not been tested with bromine water.' };
+        return { ok: false, msg: seen ? 'That sample left the bromine water orange.' : 'Test that sample with bromine water first.' };
       },
-      reward: { log: 'Phase 2: scraping C is the alkene.', title: 'Seam Found', body: 'Scraping C took the colour out of bromine water: a double bond, where the seam can be opened. B is a ring and left it orange.' }
+      reward: { log: 'Phase 2: sample C is the alkene.', title: 'Seam Found', body: 'Sample C turned bromine water clear because it has a double bond. Sample B is a ring, so it left the bromine water orange.' }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 3: The Twisted Filler */
+  /* ---------------------------------------------------------------- 3: The Chiral Sample */
   (() => {
-    const V = tmolFixture('mol', { x: 62, y: 33 }, { scene: 'bromobutane', mode: 'pick', pick: { kind: 'atom', among: ['m1', 'c2', 'c3', 'm4'] }, title: 'The filler: 2-bromobutane', w: 108, h: 50 });
+    const V = tmolFixture('mol', { x: 62, y: 33 }, { scene: 'bromobutane', mode: 'pick', pick: { kind: 'atom', among: ['m1', 'c2', 'c3', 'm4'] }, title: 'Sample: 2-bromobutane', w: 108, h: 50 });
     return {
       id: 'p3-filler',
-      title: 'Phase 3 · The Twisted Filler',
-      prompt: 'Which carbon atom makes the filler molecule, 2-bromobutane, chiral?',
+      title: 'Phase 3 · The Chiral Sample',
+      prompt: 'Which carbon atom makes 2-bromobutane chiral?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       foes: FOE,
-      encounter: { species: 'the carapace', act: 'Untwist', intent: 'The Carapace packs its joints with a filler of one mirror form only.' },
+      encounter: { species: 'the carapace', act: 'Identify Center', intent: 'The Carapace packs its joints with one mirror form of 2-bromobutane.' },
       hints: [
-        'Tap a carbon or a carbon group to choose it.',
-        'For each carbon, list the four things bonded to it.',
-        'A molecule is chiral where one carbon holds four different groups.'
+        'Check each carbon along the chain and see what groups are attached to it.',
+        'List the four things bonded to each carbon and look for any repeats.',
+        'A molecule is chiral when one carbon holds four different groups.'
       ],
       check(state) {
         const p = pickOf(state, 'mol');
         if (!p) return { ok: false, notYet: true, msg: 'Tap a carbon.' };
         if (p === 'c2') return { ok: true };
-        if (p === 'c3') return { ok: false, msg: 'That carbon holds two hydrogens.' };
-        return { ok: false, msg: 'That carbon holds three hydrogens.' };
+        if (p === 'c3') return { ok: false, msg: 'That carbon is bonded to two identical hydrogens.' };
+        return { ok: false, msg: 'That carbon is bonded to three identical hydrogens.' };
       },
-      reward: { log: 'Phase 3: carbon 2 is the stereocentre.', title: 'Filler Untwisted', body: 'Carbon 2 holds H, Br, CH₃ and C₂H₅, four different groups: it is the stereocentre, and the filler is chiral.' }
+      reward: { log: 'Phase 3: carbon 2 is the stereocentre.', title: 'Stereocentre Found', body: 'Carbon 2 holds four different groups (H, Br, CH₃, and C₂H₅), making it the stereocentre that makes this molecule chiral.' }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4: The Weak Point */
   (() => {
-    const V = tmolFixture('mol', { x: 62, y: 33 }, { scene: 'amide', mode: 'pick', pick: { kind: 'atom', among: ['m1', 'c', 'o', 'n', 'm2'] }, pairs: true, title: 'One link of the armour', w: 108, h: 50 });
+    const V = tmolFixture('mol', { x: 62, y: 33 }, { scene: 'amide', mode: 'pick', pick: { kind: 'atom', among: ['m1', 'c', 'o', 'n', 'm2'] }, pairs: true, title: 'One link of the armor', w: 108, h: 50 });
     return {
       id: 'p4-weak',
       title: 'Phase 4 · The Weak Point',
-      prompt: 'Which atom of this link in the armour is the electron-poor site?',
+      prompt: 'Which atom in this amide link is the electron-poor site?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       foes: FOE,
-      encounter: { species: 'the carapace', act: 'Find Weakness', intent: 'The Carapace\'s plates are joined by links of carbon, oxygen and nitrogen.' },
+      encounter: { species: 'the carapace', act: 'Find Weakness', intent: 'The Carapace\'s plates are held together by amide links.' },
       hints: [
-        'Tap an atom to choose it.',
-        'Look at where each shared pair sits along its bond, and which atom the pairs have moved away from.',
-        'The electron-poor atom is the one whose shared pairs sit farthest from it.'
+        'Look at where the shared electron pairs sit along the C=O and C–N bonds.',
+        'Check which atom has its shared electron pairs pulled away from it.',
+        'The electron-poor atom is the one whose shared pairs sit farthest away.'
       ],
       check(state) {
         const p = pickOf(state, 'mol');
         if (!p) return { ok: false, notYet: true, msg: 'Tap an atom.' };
         if (p === 'c') return { ok: true };
-        if (p === 'o') return { ok: false, msg: 'Both pairs of the C=O bond sit nearer that oxygen.' };
-        if (p === 'n') return { ok: false, msg: 'The pairs nitrogen shares sit nearer the nitrogen, and it holds a lone pair.' };
-        return { ok: false, msg: 'The pair that CH₃ group shares sits close to midway.' };
+        if (p === 'o') return { ok: false, msg: 'Both C=O pairs sit close to oxygen, making it electron-rich.' };
+        if (p === 'n') return { ok: false, msg: 'Nitrogen pulls shared electrons toward itself and carries a lone pair.' };
+        return { ok: false, msg: 'Carbon and carbon share electrons evenly between them.' };
       },
-      reward: { log: 'Phase 4: the C=O carbon is electron-poor.', title: 'Weak Point Found', body: 'The carbon of C=O: its pairs with oxygen, and its pair with nitrogen, all sit away from it. That is where hydroxide\'s pair will go.' }
+      reward: { log: 'Phase 4: the C=O carbon is electron-poor.', title: 'Weak Point Found', body: 'The C=O carbon: both oxygen and nitrogen pull shared electrons away from it, making it the target for hydroxide.' }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5: Opening the Gate */
   (() => {
-    const V = tmolFixture('mol', { x: 66, y: 33 }, { scene: 'polyamide', mode: 'pick', pick: { kind: 'bond', among: [['r1', 'c1'], ['c1', 'o1'], ['c1', 'n1'], ['n1', 'h1'], ['n1', 'p1']] }, pairs: true, title: 'A stretch of the armour', w: 120, h: 50 });
+    const V = tmolFixture('mol', { x: 66, y: 33 }, { scene: 'polyamide', mode: 'pick', pick: { kind: 'bond', among: [['r1', 'c1'], ['c1', 'o1'], ['c1', 'n1'], ['n1', 'h1'], ['n1', 'p1']] }, pairs: true, title: 'A stretch of the armor', w: 120, h: 50 });
     return {
       id: 'p5-gate',
       title: 'Phase 5 · Opening the Gate',
-      prompt: 'Which bond of the armour\'s chain does a hydroxide ion break?',
+      prompt: 'Which bond in the armor\'s chain does a hydroxide ion break?',
       widget,
       table: thornTable({ pieces: [], fixtures: [V] }),
       foes: FOE,
-      encounter: { species: 'the carapace', act: 'Cut Links', intent: 'The Carapace\'s armour is one chain, joined link to link where water once left.' },
+      encounter: { species: 'the carapace', act: 'Cut Links', intent: 'The Carapace\'s armor is one long chain joined where water once left.' },
       hints: [
-        'Tap a bond of the chain to choose it.',
-        'Find the links where two monomers were joined as water left.',
-        'Hydroxide\'s pair goes to the electron-poor carbon, and the link beside it gives way.'
+        'Look along the chain for the C=O groups and the C–N bonds right beside them.',
+        'Find the amide links where monomers joined by releasing water.',
+        'Hydroxide moves to the electron-poor C=O carbon and breaks the C–N link right beside it.'
       ],
       check(state) {
         const p = pickOf(state, 'mol');
         if (!p) return { ok: false, notYet: true, msg: 'Tap a bond.' };
         const [a, b] = p;
         if (a === 'c1' && b === 'n1') return { ok: true };
-        if (b === 'o1') return { ok: false, msg: 'That pair would move out onto its oxygen, and the chain would still be joined.' };
-        if (a === 'n1') return { ok: false, msg: 'No pair moves to that nitrogen: it is not electron-poor.' };
-        return { ok: false, msg: 'That bond lies inside one monomer, not at a link between two.' };
+        if (b === 'o1') return { ok: false, msg: 'That double-bond pair only shifts onto oxygen, leaving the chain intact.' };
+        if (a === 'n1') return { ok: false, msg: 'Nitrogen is not electron-poor, so hydroxide does not move there.' };
+        return { ok: false, msg: 'That bond sits inside a monomer, not at the link between two monomers.' };
       },
-      reward: { log: 'Phase 5: the amide links are cut.', title: 'Gate Open', body: 'The C–N bond of each amide link, beside C=O. Hydrolysis cut the armour where condensation had joined it, and the plates fell apart.' }
+      reward: { log: 'Phase 5: the amide links are cut.', title: 'Armor Unlinked', body: 'The C–N bond of each amide link, next to C=O. Hydrolysis broke the armor where condensation built it, revealing heavy lead plates underneath.' }
     };
   })()
 ];
@@ -184,7 +184,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'The Carapace Is Down', body: 'Its wax, its seams, its filler and its links each answered to an idea you worked out on the benches; hydroxide cut the armour at its amide links.' }]
+  sections: [{ heading: 'The Carapace Is Down', body: 'You used every Thornmere concept on the wax, seams, chiral filler, and weak links, then broke the armor apart at its amide links with hydroxide.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */

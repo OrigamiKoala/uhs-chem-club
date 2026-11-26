@@ -577,8 +577,8 @@ export class Table3D extends BenchViewer3D {
         cap.position.set(rp.x, DECK_TOP, rp.z);
         this.fixtureRoot.add(cap);
         const label = new THREE.Mesh(
-          new THREE.PlaneGeometry(kw * 0.86, kd * 0.72),
-          this.mine(new THREE.MeshStandardMaterial({ map: this.plaque(key.label, Math.max(128, Math.round((key.x1 - key.x0) * 14)), 64, {}), roughness: 0.85, metalness: 0.2 }))
+          new THREE.PlaneGeometry(kw * 0.9, kd * 0.78),
+          this.mine(new THREE.MeshStandardMaterial({ map: this.plaque(key.label, Math.max(160, Math.round((key.x1 - key.x0) * 16)), 72, { bg: '#2f271b' }), roughness: 0.75, metalness: 0.15 }))
         );
         label.rotation.x = -Math.PI / 2;
         label.position.set(rp.x, DECK_TOP + 0.0165, rp.z);

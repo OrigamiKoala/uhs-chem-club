@@ -637,7 +637,8 @@ export function createRunner(container, ctx, cfg) {
     }
     // The Tour explains each instrument and kind of piece on this stage's table.
     // A briefing teaches before the stage that needs it (at most two sentences, with an optional worked case as `worked` lines); it is the Tour's first step on any stage that has one.
-    frame.setTourSteps(stage.noTour ? [] : tourSteps(state.table, stage.briefing?.body ? { intro: stage.briefing.parts || stage.briefing.body, speaker: stage.briefing.speaker || 'Vess', worked: stage.briefing.worked || null, fx: stage.briefing.fx || null } : {}), state.table, tabletop);
+    const briefIntro = typeof stage.briefing === 'string' ? stage.briefing : (stage.briefing?.parts || stage.briefing?.body);
+    frame.setTourSteps(stage.noTour ? [] : tourSteps(state.table, briefIntro ? { intro: briefIntro, speaker: stage.briefing?.speaker || 'Vess', worked: stage.briefing?.worked || null, fx: stage.briefing?.fx || null } : {}), state.table, tabletop);
   }
 
   // Ctrl+Z (or Cmd+Z) is Undo on a table, wherever the focus is except a field being typed in.

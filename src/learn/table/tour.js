@@ -133,6 +133,7 @@ function fixtureStep(f, kitId, table) {
   const runSentence = f.runLabel ? `Press "${f.runLabel}" to record.` : '';
   const rawTitle = typeof entry.title === 'function' ? entry.title(f, table) : entry.title;
   const rawText = typeof entry.text === 'function' ? entry.text(f, table) : entry.text;
+  if (rawText == null || rawText === '') return null;
   const text = rawText
     .replace('{run}', f.runLabel || 'Run')
     .replace('{item}', 'sample')
@@ -193,7 +194,9 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null, 
     if (SKIP_FIXTURES.has(f.kind)) continue;
     const twin = steps.some(st => st.flag === `tour_${kit}_fx_${f.kind}`);
     if (twin) continue;
-    const { title, text, key } = fixtureStep(f, kit, table);
+    const step = fixtureStep(f, kit, table);
+    if (!step) continue;
+    const { title, text, key } = step;
     add(key || `fx_${f.kind}`, title, text, { fx: f.id });
   }
 

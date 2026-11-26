@@ -355,7 +355,10 @@ export function buildSolids(THREE, own, { cap = 160, rodCap = 240, baseY = 0, li
     for (let i = 0; i < n; i++) {
       const label = atoms[i].label;
       if (!label) continue;
-      const tex = texFor(label, '#efe6d2');
+      const sym = /^[A-Z][a-z]?/.exec(label)?.[0];
+      try { col.set(String(atoms[i].color)); } catch { col.set(SYMBOL_COLOUR[sym] ?? 0xb8afa0); }
+      const lum = 0.299 * col.r + 0.587 * col.g + 0.114 * col.b;
+      const tex = texFor(label, lum > 0.52 ? '#14100c' : '#f5f0e6');
       if (!tex) continue;
       let mesh = tagPool[t];
       if (!mesh) {

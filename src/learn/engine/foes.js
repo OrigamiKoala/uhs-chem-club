@@ -377,7 +377,7 @@ export const SPECIES = {
 
   'the carapace': {
     name: 'The Carapace',
-    counter: 'Trial missed: the reading does not match what the armour shows.',
+    counter: 'The armor plates hold firm—check the bench reading and try again.',
     knockback: 'Knocked back. The Carapace closes its plates, but your bench readings remain.',
     hit: 'A row of the Carapace\'s plates comes unlinked and falls.',
     lines: {

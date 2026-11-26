@@ -51,9 +51,9 @@ function paintMagnet(ctx, f, state, b) {
   const open = gateOpen(state, p.gate);
   title(ctx, f, F, b);
 
-  const cx = f.size.w * 0.42; const cy = f.size.h * 0.56;
+  const cx = f.size.w * 0.36; const cy = f.size.h * 0.54;
   // Two pole pieces framing the hanging tube.
-  const poleW = 9; const poleH = 12; const poleGap = 15;
+  const poleW = Math.min(8, f.size.w * 0.14); const poleH = Math.min(11, f.size.h * 0.32); const poleGap = Math.min(13, f.size.w * 0.24);
   ctx.fillStyle = '#534f49'; ctx.strokeStyle = C.steel; ctx.lineWidth = 1.4;
   ctx.fillRect(F.x(cx - poleGap / 2 - poleW), F.y(cy - poleH / 2), F.len(poleW), F.len(poleH));
   ctx.strokeRect(F.x(cx - poleGap / 2 - poleW), F.y(cy - poleH / 2), F.len(poleW), F.len(poleH));
@@ -66,18 +66,18 @@ function paintMagnet(ctx, f, state, b) {
   // Balance beam and hanging sample tube.
   const measured = r.vial && r.pull != null;
   const frac = measured ? Math.min(1, r.pull / 35) : 0;
-  const shownFrac = glide(`${f.id}:pull`, b, frac, frac, 0.85);
-  const drop = shownFrac * 5.2;
-  const pivotX = cx; const pivotY = 11.5;
+  const shownFrac = glide(`${f.id}:pull`, b, frac, frac, 0.7);
+  const drop = shownFrac * 4.6;
+  const pivotX = cx; const pivotY = 10.5;
   ctx.strokeStyle = C.dust; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(F.x(pivotX - 10), F.y(pivotY)); ctx.lineTo(F.x(pivotX + 10), F.y(pivotY)); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(F.x(pivotX), F.y(pivotY)); ctx.lineTo(F.x(pivotX), F.y(cy - 6 + drop)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(F.x(pivotX - 9), F.y(pivotY)); ctx.lineTo(F.x(pivotX + 9), F.y(pivotY)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(F.x(pivotX), F.y(pivotY)); ctx.lineTo(F.x(pivotX), F.y(cy - 5.5 + drop)); ctx.stroke();
   ctx.lineWidth = 1;
 
   if (r.vial) {
     const c = COMPLEXES[r.cx];
     const tint = r.vial.props.sealedTint ? '#7a7466' : c.tint;
-    const tw = 4.2; const th = 11; const ty = cy - 6 + drop;
+    const tw = 4.2; const th = 10; const ty = cy - 5.5 + drop;
     ctx.fillStyle = tint; ctx.globalAlpha = 0.9;
     ctx.fillRect(F.x(cx - tw / 2), F.y(ty + th * 0.28), F.len(tw), F.len(th * 0.68));
     ctx.globalAlpha = 1;
@@ -85,27 +85,28 @@ function paintMagnet(ctx, f, state, b) {
     ctx.lineWidth = measured && r.pull > 0 ? 2 : 1.3;
     ctx.strokeRect(F.x(cx - tw / 2), F.y(ty), F.len(tw), F.len(th));
     ctx.lineWidth = 1;
-    say(ctx, r.vial.props.name || c.formula, F.x(cx), F.y(ty + th + 3.2), F.size(1.7, 6), { align: 'center', color: C.text, weight: 600, sans: true, maxW: F.len(26) });
+    say(ctx, r.vial.props.name || c.formula, F.x(cx), F.y(ty + th + 2.8), F.size(1.8, 6.5), { align: 'center', color: C.text, weight: 600, sans: true, maxW: F.len(26) });
   } else {
-    say(ctx, 'Load a vial', F.x(cx), F.y(cy + 10), F.size(1.8, 6), { align: 'center', color: C.dim });
+    say(ctx, 'Load a vial', F.x(cx), F.y(cy + 9), F.size(1.8, 6.5), { align: 'center', color: C.dim });
   }
 
-  // Pull bar on the right.
-  const bx = f.size.w - 16; const byTop = 12; const byBot = f.size.h - 10; const bh = byBot - byTop;
-  ctx.strokeStyle = C.steel; ctx.strokeRect(F.x(bx), F.y(byTop), F.len(6), F.len(bh));
+  // Pull bar on the right, clear of the S pole and the Switch On key.
+  const bx = f.size.w - 11; const byTop = 10; const byBot = f.size.h - 10; const bh = byBot - byTop;
+  ctx.strokeStyle = C.steel; ctx.strokeRect(F.x(bx), F.y(byTop), F.len(5.5), F.len(bh));
   if (measured) {
     const fillH = bh * shownFrac;
     ctx.fillStyle = r.pull > 0 ? C.amber : C.dim;
-    ctx.fillRect(F.x(bx), F.y(byBot - fillH), F.len(6), F.len(fillH));
-    say(ctx, `pull ${r.pull}`, F.x(bx + 3), F.y(byTop - 2), F.size(1.9, 6.2), { align: 'center', color: r.pull > 0 ? C.amber : C.text, weight: 700 });
+    ctx.fillRect(F.x(bx), F.y(byBot - fillH), F.len(5.5), F.len(fillH));
+    say(ctx, `pull ${r.pull}`, F.x(bx + 2.75), F.y(byTop - 2.2), F.size(1.9, 6.5), { align: 'center', color: r.pull > 0 ? C.amber : C.text, weight: 700 });
   } else {
-    say(ctx, 'Pull', F.x(bx + 3), F.y(byTop - 2), F.size(1.75, 6), { align: 'center', color: C.dust });
+    say(ctx, 'Pull', F.x(bx + 2.75), F.y(byTop - 2.2), F.size(1.75, 6), { align: 'center', color: C.dust });
   }
 
   const foot = f.size.h - 3.4;
-  if (!open) say(ctx, p.gate.msg || 'Complete the step first', F.x(2.2), F.y(foot), F.size(1.8, 6), { color: C.dim, maxW: F.len(f.size.w - 4) });
-  else if (measured) say(ctx, r.pull > 0 ? 'Pulled toward the poles' : 'No pull', F.x(2.2), F.y(foot), F.size(1.9, 6.2), { color: r.pull > 0 ? C.amber : C.phosphor, weight: 600 });
-  else if (r.vial) say(ctx, 'Press "Switch On"', F.x(2.2), F.y(foot), F.size(1.85, 6), { color: C.dim });
+  const maxFoot = F.len(Math.max(18, f.size.w - 25));
+  if (!open) say(ctx, p.gate.msg || 'Complete the step first', F.x(2.2), F.y(foot), F.size(1.75, 6), { color: C.dim, maxW: maxFoot });
+  else if (measured) say(ctx, r.pull > 0 ? 'Pulled toward poles' : 'No pull', F.x(2.2), F.y(foot), F.size(1.85, 6.2), { color: r.pull > 0 ? C.amber : C.phosphor, weight: 600, maxW: maxFoot });
+  else if (r.vial) say(ctx, 'Press "Switch On"', F.x(2.2), F.y(foot), F.size(1.8, 6), { color: C.dim, maxW: maxFoot });
 }
 
 function runMagnet(state, fid) {

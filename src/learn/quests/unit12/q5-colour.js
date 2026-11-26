@@ -34,7 +34,7 @@ export const BUILDS_ON = ['unit12/q4-shapes', 'unit02/q2-photon'];
 
 const SPEAKER = 'Vess';
 const QUEST_KEY = 'unit12/q5-colour';
-const GUESS = { 'g-same': 'no change', 'g-change': 'a change' };
+const GUESS = { 'g-same': 'the same gap', 'g-change': 'a wider gap' };
 const widget = { type: 'table', label: 'The bench' };
 const name = id => BANDS.find(b => b.id === id)?.name.toLowerCase();
 
@@ -51,9 +51,9 @@ export const STAGES = [
     const S = specFixture('spec', { x: 72, y: 27 }, { w: 100, h: 46, taps: true });
     return {
       id: 's1-blue',
-      title: 'What Blue Takes Out',
-      briefing: { speaker: SPEAKER, body: 'White light holds every colour. A solution looks the colour of the light that gets through, and the colour opposite it on the wheel, the one taken out, is its complementary colour.' },
-      prompt: 'Which colour of light does the blue copper(II) solution take out?',
+      title: 'What Blue Absorbs',
+      briefing: { speaker: SPEAKER, body: 'White light contains every colour of the rainbow. Drop the blue copper(II) vial in Sample to see which colours pass through and which are absorbed.' },
+      prompt: 'Which colour of light does the blue copper(II) solution absorb?',
       widget,
       table: lodeTable({
         pieces: [vial('v-cu', 'cu-aq', { x: 10, y: 50 })],
@@ -61,21 +61,21 @@ export const STAGES = [
         zones: { slots: [S.slot] }
       }),
       hints: [
-        'Drag the vial into the holder, then tap a colour on the strip.',
-        'Compare the strip with the six colours of white light: look for the dark part.',
-        'The colour you see is what gets through; find it on the wheel and look opposite.'
+        'Drop the vial in Sample and look for the dark region on the light strip.',
+        'Compare the dark region on the strip with the six colours of white light.',
+        'The colour you see is what passes through, which sits directly opposite the absorbed colour on the colour wheel.'
       ],
       check(state) {
         const r = specRead(state.table, 'spec');
         if (!r.chosen) return { ok: false, notYet: true, msg: 'Tap a colour on the strip.' };
-        if (!r.complex) return { ok: false, msg: 'There is no sample in the holder yet.' };
+        if (!r.complex) return { ok: false, msg: 'Drop the vial into the Sample slot first.' };
         if (r.chosen === 'orange' || r.chosen === 'red') return { ok: true };
-        return { ok: false, msg: `The strip still shows ${name(r.chosen)} light after the sample.` };
+        return { ok: false, msg: `The strip shows ${name(r.chosen)} light still passing through the sample.` };
       },
       reward: {
-        log: 'Copper(II) takes out orange and red.',
+        log: 'Copper(II) absorbs orange and red.',
         title: 'Complementary Colour',
-        body: 'Orange and red are taken out, and the blue left over is what you see. Orange sits opposite blue on the wheel: they are complementary colours.'
+        body: 'The solution absorbs orange and red light, so the remaining light looks blue. Orange sits opposite blue on the wheel, making them complementary colours.'
       }
     };
   })(),
@@ -84,27 +84,27 @@ export const STAGES = [
   {
     id: 's2-split',
     title: 'Ligands Split the d Orbitals',
-    briefing: { speaker: SPEAKER, body: 'A ligand\'s lone pair repels the electrons of a metal ion\'s d orbitals. The more an orbital points at the ligands, the more its energy rises.' },
-    prompt: 'Which two d orbitals rise in energy as six ligands close in along the axes?',
+    briefing: { speaker: SPEAKER, body: 'A metal ion\'s five d orbitals have equal energy until ligands approach along the axes. Drag "Ligands" toward Bonded to see how their energies split.' },
+    prompt: 'Which two d orbitals rise in energy as six ligands approach along the axes?',
     widget,
     table: lodeTable({ pieces: [], fixtures: [cfieldFixture('cf', { x: 75, y: 31 }, { w: 146, h: 56 })] }),
     hints: [
-      'Turn the "Ligands" dial, then tap two orbitals.',
-      'Look at where each orbital\'s lobes point compared with the blue lone pairs.',
-      'Lobes that point straight at a lone pair are repelled most.'
+      'Drag the "Ligands" dial toward Bonded and watch where each orbital\'s lobes point.',
+      'Compare where each orbital\'s lobes point relative to the blue ligand lone pairs.',
+      'Orbitals whose lobes point straight at the incoming lone pairs feel the most repulsion and rise in energy.'
     ],
     check(state) {
       const r = cfieldRead(state.table, 'cf');
-      if (r.marked.length < 2) return { ok: false, notYet: true, msg: `${r.marked.length} orbital${r.marked.length === 1 ? ' is' : 's are'} marked; mark two.` };
+      if (r.marked.length < 2) return { ok: false, notYet: true, msg: `You marked ${r.marked.length} orbital${r.marked.length === 1 ? '' : 's'}; mark two.` };
       if (r.marked.length === 2 && r.marked.includes('x2y2') && r.marked.includes('z2')) return { ok: true };
       const wrong = r.marked.find(id => id !== 'x2y2' && id !== 'z2');
       const nm = { xy: 'dxy', xz: 'dxz', yz: 'dyz' }[wrong];
-      return { ok: false, msg: wrong ? `The lobes of ${nm} point between the lone pairs on its axes.` : 'More than two orbitals are marked.' };
+      return { ok: false, msg: wrong ? `The lobes of ${nm} point between the ligands rather than directly at them.` : 'Mark only two orbitals.' };
     },
     reward: {
       log: 'dz² and dx²−y² rise.',
       title: 'Crystal Field Splitting',
-      body: 'dz² and dx²−y², whose lobes point at the ligands, rise; the other three fall. The gap that opens between the two sets is the crystal field splitting.'
+      body: 'dz² and dx²−y² point straight at the ligands and rise in energy, while the other three drop. This energy gap between the two sets is called crystal field splitting.'
     }
   },
 
@@ -114,27 +114,26 @@ export const STAGES = [
     return {
       id: 's3-photon',
       title: 'Gap Meets Light',
-      briefing: { speaker: SPEAKER, body: 'Light comes in tiny packets of energy called photons; violet photons carry the most energy and red the least. A photon is absorbed only if its energy exactly lifts an electron to an empty place above.' },
-      prompt: 'Which colour of light has photons that can lift titanium\'s d electron across the gap?',
+      briefing: { speaker: SPEAKER, body: 'Light travels in energy packets called photons, with violet carrying the most energy and red the least. A complex absorbs a photon only when its energy matches the d-orbital gap.' },
+      prompt: 'Which colour of light has photons that match titanium\'s d-orbital gap?',
       widget,
       table: lodeTable({ pieces: [], fixtures: [D.fixture] }),
       hints: [
-        'Tap a colour on the ruler beside the ladder.',
-        'Compare the height of the gap with the height of each colour\'s bar.',
-        'A photon is absorbed only when its energy matches the gap exactly.'
+        'Follow the dashed gap line across to the colour bars.',
+        'Compare the height of the dashed gap line with the height of each colour bar.',
+        'Only photons whose energy equals the gap height can lift the d electron.'
       ],
       check(state) {
         const r = dsplitRead(state.table, 'ds');
-        if (!r.band) return { ok: false, notYet: true, msg: 'Tap a colour on the ruler.' };
+        if (!r.band) return { ok: false, notYet: true, msg: 'Tap a colour bar.' };
         if (r.band === 'green') return { ok: true };
         const b = BANDS.find(x => x.id === r.band);
-        const lo = Math.round(photonKJ(b.hi)); const hi = Math.round(photonKJ(b.lo));
-        return { ok: false, msg: `${b.name} photons carry ${lo} to ${hi} kJ for each mole, and the gap line crosses the ruler elsewhere.` };
+        return { ok: false, msg: `${b.name} photons do not match the gap height. Follow the dashed line across to the bar it hits.` };
       },
       reward: {
         log: 'Green light matches titanium\'s gap.',
         title: 'Light That Fits the Gap',
-        body: 'Green: its photons carry the gap\'s energy, so green light is taken out. Red and violet are left, so the solution looks purple.'
+        body: 'Green photons match the gap energy, so green light is absorbed. The red and violet light left behind makes the solution look purple.'
       }
     };
   })(),
@@ -144,31 +143,31 @@ export const STAGES = [
     id: 's4-predict',
     title: 'Same Copper, New Ligand',
     predict: true,
-    prompt: 'If the water round each Cu²⁺ is swapped for ammonia, will the colour of the solution change?',
+    prompt: 'When ammonia replaces water around Cu²⁺, does the d-orbital gap stay the same or widen?',
     widget,
     table: lodeTable({
       pieces: [
-        note('g-same', 'No: copper is blue whatever it bonds to', { x: 32, y: 20 }),
-        note('g-change', 'Yes: the colour changes', { x: 32, y: 44 })
+        note('g-same', 'Stays the same (copper sets the gap)', { x: 32, y: 20 }),
+        note('g-change', 'Widens (ammonia splits the d orbitals more)', { x: 32, y: 44 })
       ],
       fixtures: [lodeLeadFixture('lead', { x: 112, y: 44 }, { scene: 'metal-colours', w: 62, h: 30 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 16 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 54, h: 18 } }] }
     }),
     hints: [
-      'The clip shows two different metal ions in water.',
-      'The colour comes from light lifting a d electron across a gap.',
-      'Think about what makes the gap in the first place.'
+      'Watch the clip showing two different metal ions in water.',
+      'A complex\'s colour depends on the energy gap a d electron jumps across.',
+      'Think about what causes the d orbitals to split in the first place.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a prediction card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it with the lamp.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is saved. Now test it with the lamp.' }
   },
 
   /* ---------------------------------------------------------------- 5 */
@@ -178,28 +177,30 @@ export const STAGES = [
     return {
       id: 's5-band',
       title: 'The Band Moves',
-      get prompt() { const g = guess(); return `Which colour does the copper solution take out once ammonia is bonded?${g ? ` You predicted ${g}.` : ''}`; },
+      briefing: { speaker: SPEAKER, body: 'Drop the copper vial in Sample, then press "Add Ammonia" and watch how both the dark band and the energy gap shift.' },
+      get prompt() { const g = guess(); return `After adding ammonia, which colour is no longer absorbed and lights back up${g ? ` (you predicted ${g})` : ''}?`; },
       widget,
       table: lodeTable({ pieces: [vial('v-cu', 'cu-aq', { x: 9, y: 54 })], fixtures: [S.fixture], zones: { slots: [S.slot] } }),
       hints: [
-        'Put the vial in the holder, press "Add Ammonia", then tap the dark colour.',
-        'Compare the dark part of the strip and the gap before and after the ammonia.',
-        'A wider gap needs photons of more energy, nearer the violet end.'
+        'Compare the light strip before and after pressing "Add Ammonia".',
+        'Notice which colour stays dark and which colour lights back up as the gap widens.',
+        'A wider gap absorbs higher-energy light nearer violet, letting lower-energy red light pass through.'
       ],
       check(state) {
         const r = specRead(state.table, 'spec');
         if (!r.chosen) return { ok: false, notYet: true, msg: 'Tap a colour on the strip.' };
-        if (!r.complex) return { ok: false, msg: 'There is no sample in the holder yet.' };
-        if (!r.added) return { ok: false, msg: 'No ammonia has been added yet.' };
-        if (r.chosen === 'orange') return { ok: true };
-        return { ok: false, msg: `After the ammonia, the strip shows ${name(r.chosen)} light getting through.` };
+        if (!r.complex) return { ok: false, msg: 'Drop the vial into the Sample slot first.' };
+        if (!r.added) return { ok: false, msg: 'Press "Add Ammonia" first.' };
+        if (r.chosen === 'red') return { ok: true };
+        if (r.chosen === 'orange') return { ok: false, msg: 'Orange is still dark after adding ammonia. Look for the colour that lit back up.' };
+        return { ok: false, msg: `${name(r.chosen)} light was already passing through before you added ammonia.` };
       },
       get reward() {
         const g = guess();
         return {
-          log: 'Ammonia moved the band to orange.',
+          log: 'Ammonia widened the gap; red now passes through.',
           title: 'Ligands Set the Colour',
-          body: `The dark band moved from red to orange${g ? ` (you predicted ${g})` : ''}: ammonia widens the gap, so light of more energy is taken out. The same copper ion turned deep blue-violet.`
+          body: `Red lights back up while orange stays dark${g ? ` (you predicted ${g})` : ''}. Ammonia widens the d-orbital gap compared with water, so the complex absorbs higher-energy orange light instead of red.`
         };
       }
     };
@@ -214,13 +215,13 @@ export const STAGES = [
       title: 'The Gap in Kilojoules',
       briefing: {
         speaker: SPEAKER,
-        body: 'The energy of one photon is E = hc ÷ λ, with λ in metres; a mole of photons has Avogadro\'s number of them. Titanium\'s complex takes out light of 500 nm, so its gap is:',
+        body: 'One photon\'s energy is E = hc ÷ λ (with λ in metres), and a mole has Avogadro\'s number of photons. For titanium absorbing 500 nm light:',
         worked: [
-          `E = (6.63 × 10⁻³⁴ × 3.00 × 10⁸) ÷ (500 × 10⁻⁹) = ${(wJ * 1e19).toFixed(2)} × 10⁻¹⁹ J for one photon`,
-          `× 6.02 × 10²³ = ${Math.round(wKJ * 1000).toLocaleString('en-US')} J, so ${Math.round(wKJ)} kJ for each mole`
+          `E = (6.63 × 10⁻³⁴ × 3.00 × 10⁸) ÷ (500 × 10⁻⁹) = ${(wJ * 1e19).toFixed(2)} × 10⁻¹⁹ J per photon`,
+          `× 6.02 × 10²³ = ${Math.round(wKJ * 1000).toLocaleString('en-US')} J/mol, or ${Math.round(wKJ)} kJ/mol`
         ]
       },
-      prompt: 'How wide is the gap in the copper-ammonia complex, in kJ for each mole?',
+      prompt: 'What is the d-orbital gap of the copper-ammonia complex in kJ/mol (to the nearest integer)?',
       entry: { id: 'kj', label: 'Gap', unit: 'kJ/mol' },
       widget,
       table: lodeTable({
@@ -231,23 +232,23 @@ export const STAGES = [
         ]
       }),
       hints: [
-        'Read the wavelength at the middle of the dark band, then type your answer.',
-        'Compare this wavelength with the worked titanium case at 500 nm.',
-        'Find one photon\'s energy with E = hc ÷ λ, with λ in metres, then multiply by Avogadro\'s number and turn joules into kilojoules.'
+        'Read the wavelength at the center of the dark band, then enter your calculated gap.',
+        'Follow the same steps as the worked 500 nm titanium example above.',
+        'Compute E = hc ÷ λ with λ in metres, multiply by Avogadro\'s number, and divide by 1000 to convert J to kJ.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'kj');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the gap in kJ/mol.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Enter the gap in kJ/mol.' };
         if (Math.abs(v - GAP_KJ) <= 3) return { ok: true };
-        if (Math.abs(v - GAP_KJ * 1000) <= 3000) return { ok: false, msg: `${v} is the gap in joules for a mole, not kilojoules.` };
-        if (v < 1e-10) return { ok: false, msg: `${v} is the energy of one photon, not of a mole of them.` };
-        if (Math.abs(v - wKJ) <= 3) return { ok: false, msg: `${v} kJ/mol is titanium's gap, from light of 500 nm; this band sits at ${GAP_NM} nm.` };
-        return { ok: false, msg: `A gap of ${v} kJ/mol would take out light of ${Math.round(119627 / v)} nm; the band sits at ${GAP_NM} nm.` };
+        if (Math.abs(v - GAP_KJ * 1000) <= 3000) return { ok: false, msg: `${v} is in J/mol, not kJ/mol. Divide by 1000.` };
+        if (v < 1e-10) return { ok: false, msg: `${v} is the energy of a single photon. Multiply by Avogadro's number to get a mole.` };
+        if (Math.abs(v - wKJ) <= 3) return { ok: false, msg: `${v} kJ/mol is titanium's 500 nm gap. Read the copper-ammonia band at ${GAP_NM} nm.` };
+        return { ok: false, msg: `A gap of ${v} kJ/mol corresponds to ${Math.round(119627 / v)} nm, but this dark band is at ${GAP_NM} nm.` };
       },
       reward: {
         log: 'Copper-ammonia gap: 199 kJ/mol.',
         title: 'Gap From Wavelength',
-        body: `One photon of ${GAP_NM} nm carries ${(photonJ(GAP_NM) * 1e19).toFixed(2)} × 10⁻¹⁹ J, so a mole carries ${Math.round(GAP_KJ)} kJ. The longer wavelength than titanium's 500 nm means a narrower gap.`
+        body: `One ${GAP_NM} nm photon carries ${(photonJ(GAP_NM) * 1e19).toFixed(2)} × 10⁻¹⁹ J, or ${Math.round(GAP_KJ)} kJ/mol. That is wider than copper in water, though narrower than titanium's 500 nm gap.`
       }
     };
   })(),
@@ -260,37 +261,38 @@ export const STAGES = [
     return {
       id: 's7-colourless',
       title: 'No Colour',
-      prompt: 'Which of these four ions give colourless solutions?',
+      briefing: { speaker: SPEAKER, body: 'Drop each sealed vial in Sample and press "Shine Light" to see if a d electron can jump the gap, then sort the vials.' },
+      prompt: 'Sort these four metal ions into coloured and colourless solutions.',
       widget,
       table: lodeTable({
-        pieces: ids.map((id, i) => vial(`v-${id}`, id, { x: 9 + i * 14, y: 55 }, { name: COMPLEXES[id].formula.replace(/\[(\w+)\(H₂O\)₆\]/, '$1') })),
+        pieces: ids.map((id, i) => vial(`v-${id}`, id, { x: 8 + i * 14, y: 55 }, { sealedTint: true, name: COMPLEXES[id].formula.replace(/\[(\w+)\(H₂O\)₆\]/, '$1') })),
         fixtures: [D.fixture],
         zones: {
           slots: [D.slot],
           trays: [
-            { id: 'coloured', label: 'Coloured', at: { x: 86, y: 55 }, size: { w: 26, h: 18 }, cell: 12, cellH: 18 },
-            { id: 'clear', label: 'Colourless', at: { x: 118, y: 55 }, size: { w: 26, h: 18 }, cell: 12, cellH: 18 }
+            { id: 'coloured', label: 'Coloured', at: { x: 81, y: 55 }, size: { w: 40, h: 18 }, cell: 10, cellH: 18 },
+            { id: 'clear', label: 'Colourless', at: { x: 125, y: 55 }, size: { w: 40, h: 18 }, cell: 10, cellH: 18 }
           ]
         }
       }),
       hints: [
-        'Drop each vial on the ladder\'s square and press "Shine Light", then drag it to a tray.',
-        'Look for an electron in the lower set and an empty place in the upper set.',
-        'Light is taken out only when an electron can be lifted across the gap.'
+        'Test each vial in Sample with "Shine Light", then drag it into a tray.',
+        'Check whether the ion has both an electron in the lower level and an empty spot in the upper level.',
+        'A solution absorbs visible light only if an electron can jump across the gap.'
       ],
       check(state) {
         const t = state.table;
         const off = ids.filter(id => !['tray:coloured', 'tray:clear'].includes(t.pieces[`v-${id}`].zone));
-        if (off.length) return { ok: false, notYet: true, msg: `${off.length} vial${off.length > 1 ? 's are' : ' is'} not in a tray yet.` };
+        if (off.length) return { ok: false, notYet: true, msg: `${off.length} vial${off.length > 1 ? 's still need' : ' still needs'} to be placed in a tray.` };
         const wrong = ids.find(id => (t.pieces[`v-${id}`].zone === 'tray:clear') !== COLOURLESS.has(id));
         if (!wrong) return { ok: true };
         const c = COMPLEXES[wrong];
-        return { ok: false, msg: `${c.formula} has ${c.d} d electron${c.d === 1 ? '' : 's'}: ${c.d === 0 ? 'the lower set is empty' : c.d === 10 ? 'the upper set is full' : 'one can be lifted into the upper set'}.` };
+        return { ok: false, msg: `Test ${c.formula} in Sample with "Shine Light" to see whether an electron can jump the gap.` };
       },
       reward: {
         log: 'Sc³⁺ and Zn²⁺ are colourless.',
         title: 'Nothing to Lift',
-        body: 'Sc³⁺ has no d electron to lift and Zn²⁺ no empty place to lift one into, so neither takes out visible light. Ti³⁺ and Cu²⁺ are coloured.'
+        body: 'Sc³⁺ has no d electrons to lift and Zn²⁺ has no empty upper spots to lift into, so neither absorbs visible light. Ti³⁺ and Cu²⁺ are coloured.'
       }
     };
   })(),
@@ -299,7 +301,7 @@ export const STAGES = [
   {
     id: 's8-drums',
     title: 'Two Cobalt Drums',
-    prompt: 'Which of these two cobalt(III) drums has the wider gap between its d orbitals?',
+    prompt: 'Which of these two cobalt(III) drums has the wider d-orbital gap?',
     widget,
     table: lodeTable({
       pieces: [vial('v-y', 'co-nh3', { x: 22, y: 30 }, { name: 'Drum 1' }), vial('v-g', 'co-f', { x: 44, y: 30 }, { name: 'Drum 2' })],
@@ -307,23 +309,23 @@ export const STAGES = [
         wheelFixture('wheel', { x: 84, y: 24 }, { size: 32 }),
         plaqueFixture('e', 'Photon energy', { x: 128, y: 22 }, ['violet: the most', 'blue, green, yellow', 'orange, red: the least'], { w: 38 })
       ],
-      zones: { slots: [{ id: 'answer', label: 'The wider gap', at: { x: 33, y: 49 }, size: { w: 22, h: 16 } }] }
+      zones: { slots: [{ id: 'answer', label: 'The wider gap', at: { x: 33, y: 50 }, size: { w: 26, h: 18 } }] }
     }),
     hints: [
-      'Read each drum\'s colour, then use the wheel and the photon plate.',
-      'Find the colour each drum takes out of white light.',
-      'The wider gap takes out the photons that carry more energy.'
+      'Note each drum\'s colour, then check the colour wheel and photon energy plate.',
+      'Use the opposite side of the wheel to find which colour each drum absorbs.',
+      'The wider gap absorbs the higher-energy photons.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a drum in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place a drum in the slot.' };
       if (card.id === 'v-y') return { ok: true };
-      return { ok: false, msg: 'Drum 2 looks green, so it takes out red light, whose photons carry the least energy.' };
+      return { ok: false, msg: 'Find the colour Drum 2 absorbs on the wheel and compare its photon energy with Drum 1.' };
     },
     reward: {
       log: 'The yellow-orange drum has the wider gap.',
       title: 'Colour Reads the Gap',
-      body: 'Drum 1 looks yellow-orange, so it takes out blue light, whose photons carry more energy than the red Drum 2 takes out. Ammonia gives cobalt(III) a wider gap than fluoride.'
+      body: 'Drum 1 looks yellow-orange because it absorbs higher-energy blue light, while Drum 2 looks green because it absorbs lower-energy red light. Drum 1 has the wider gap.'
     }
   }
 ];
@@ -331,7 +333,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'Ligands split the d orbitals; a photon whose energy matches the gap is absorbed, and the solution shows the complementary colour. Change the ligand and the gap, and the colour, change.' }]
+  sections: [{ heading: 'What You Found', body: 'Ligands split the five d orbitals into two energy levels. A complex absorbs photons matching that gap and shows the complementary colour, so changing the ligands changes both the gap and the colour.' }]
 };
 
 const put = (piece, to) => ({ place: { piece, to } });
@@ -343,7 +345,7 @@ export const SOLUTIONS = [
   [dial('cf', 'near', 4), dial('cf', 'o1', 1), dial('cf', 'o2', 1)],
   [dial('ds', 'band', band('green'))],
   [put('g-same', 'slot:guess')],
-  [put('v-cu', 'slot:spec.holder'), { run: 'spec' }, dial('spec', 'band', band('orange'))],
+  [put('v-cu', 'slot:spec.holder'), { run: 'spec' }, dial('spec', 'band', band('red'))],
   [{ type: { entry: 'kj', value: '199' } }],
   [put('v-sc-aq', 'tray:clear'), put('v-ti-aq', 'tray:coloured'), put('v-cu-aq', 'tray:coloured'), put('v-zn-aq', 'tray:clear')],
   [put('v-y', 'slot:answer')]
@@ -354,7 +356,7 @@ export const MISSES = [
   [dial('cf', 'near', 4), dial('cf', 'o0', 1), dial('cf', 'o1', 1)],
   [dial('ds', 'band', band('red'))],
   [],
-  [put('v-cu', 'slot:spec.holder'), { run: 'spec' }, dial('spec', 'band', band('red'))],
+  [put('v-cu', 'slot:spec.holder'), { run: 'spec' }, dial('spec', 'band', band('orange'))],
   [{ type: { entry: 'kj', value: '199400' } }],
   [put('v-sc-aq', 'tray:clear'), put('v-ti-aq', 'tray:coloured'), put('v-cu-aq', 'tray:coloured'), put('v-zn-aq', 'tray:coloured')],
   [put('v-g', 'slot:answer')]

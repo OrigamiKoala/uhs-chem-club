@@ -267,13 +267,13 @@ export class CombatFpsFx {
   }
 
   /** One fireball: flash, ring, sparks and trauma. */
-  explosion(pos, { scale = 1, color = 0xff8a2a } = {}) {
-    this.effects.push(new Flash(this, pos, { color: 0xffffff, size: 3.2 * scale, life: 0.2, grow: 1.7 }));
-    this.effects.push(new Flash(this, pos, { color, size: 6.0 * scale, life: 0.5, grow: 2.2, opacity: 0.85 }));
-    this.effects.push(new RingFlash(this, pos, { color, size: 1.2 * scale, to: 7 * scale, life: 0.5 }));
-    this.sparks(pos, { count: Math.round(40 * scale), speed: 10 * scale, color, size: 0.26 * scale, life: 0.95 });
-    this.pulseLight(pos, color, 12 * scale, 0.4);
-    this.addTrauma(0.3 * Math.min(scale, 2));
+  explosion(pos, { scale = 1, color = 0xd98032 } = {}) {
+    this.effects.push(new Flash(this, pos, { color: 0xffd28a, size: 1.6 * scale, life: 0.14, grow: 1.4, opacity: 0.55 }));
+    this.effects.push(new Flash(this, pos, { color, size: 3.0 * scale, life: 0.32, grow: 1.7, opacity: 0.45 }));
+    this.effects.push(new RingFlash(this, pos, { color, size: 1.0 * scale, to: 5.0 * scale, life: 0.42 }));
+    this.sparks(pos, { count: Math.round(32 * scale), speed: 9 * scale, color, size: 0.22 * scale, life: 0.85 });
+    this.pulseLight(pos, color, 6 * scale, 0.3);
+    this.addTrauma(0.24 * Math.min(scale, 2));
     sfx('playTouchdown');
   }
 

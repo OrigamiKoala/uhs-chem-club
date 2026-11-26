@@ -780,6 +780,9 @@ export class LearnFrame {
    */
   setStage(stage) {
     this.closeTour?.();
+    if (typeof document !== 'undefined') {
+      import('../../ui/calculator.js').then(m => m.closeCalculator()).catch(() => {});
+    }
     const advancing = this.stage !== null;
     if (this.activeBriefingTx?.destroy) {
       this.activeBriefingTx.destroy();
@@ -787,7 +790,8 @@ export class LearnFrame {
     }
     this.stage = stage;
     this.dropModel();
-    if (stage.briefing?.body) this.benchIntro = stage.briefing.body;
+    const briefBody = typeof stage.briefing === 'string' ? stage.briefing : stage.briefing?.body;
+    if (briefBody) this.benchIntro = briefBody;
     if (this.isPredictStage()) (this.predictIndices ||= new Set()).add(stage.index);
     if (stage.reward) this.findings[stage.index] = stage.reward;
     this.misses = 0;
@@ -1497,27 +1501,18 @@ export class LearnFrame {
       spot.style.width = `${sw}px`;
       spot.style.height = `${sh}px`;
 
-      // Place callout beside the spotlight where there is the most room without overlapping it.
-      const gap = 12;
-      let cx = sx; let cy = sy + sh + gap;
-      if (sy + sh + gap + ch <= vh - 12) {
-        cy = sy + sh + gap;
-        cx = Math.max(12, Math.min(vw - cw - 12, sx));
-      } else if (sy - gap - ch >= 12) {
-        cy = sy - gap - ch;
-        cx = Math.max(12, Math.min(vw - cw - 12, sx));
-      } else if (sx + sw + gap + cw <= vw - 12) {
-        cx = sx + sw + gap;
-        cy = Math.max(12, Math.min(vh - ch - 12, sy));
-      } else if (sx - gap - cw >= 12) {
-        cx = sx - gap - cw;
-        cy = Math.max(12, Math.min(vh - ch - 12, sy));
-      } else {
-        cx = Math.max(12, vw - cw - 12);
-        cy = Math.max(12, vh - ch - 12);
-      }
-      card.style.left = `${Math.round(cx)}px`;
-      card.style.top = `${Math.round(cy)}px`;
+      // Keep the tour card in a steady anchor (top-right) so the Next button stays in place across steps;
+      // only move it if the spotlight overlaps that anchor.
+      const overlaps = (x, y) => !(x + cw + 8 < sx || x > sx + sw + 8 || y + ch + 8 < sy || y > sy + sh + 8);
+      const anchors = [
+        [Math.max(12, vw - cw - 20), Math.max(12, Math.min(vh - ch - 20, 76))],
+        [Math.max(12, vw - cw - 20), Math.max(12, vh - ch - 84)],
+        [16, Math.max(12, Math.min(vh - ch - 20, 76))],
+        [16, Math.max(12, vh - ch - 84)]
+      ];
+      const chosen = anchors.find(([ax, ay]) => !overlaps(ax, ay)) || anchors[0];
+      card.style.left = `${Math.round(chosen[0])}px`;
+      card.style.top = `${Math.round(chosen[1])}px`;
     };
 
     const leave = () => {

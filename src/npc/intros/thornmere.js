@@ -16,7 +16,7 @@ export const INTROS = {
   },
   'q4-groups': {
     prop: { kind: 'drums', opts: { n: 2, color: 0x4a5a4a, band: 0x8c2a1e }, effects: [{ kind: 'drip', at: 'top', color: 0xd8d8c8, floor: 0.05 }] },
-    steps: walkUp('thornmere-chemist', 'Bring your eyes over here. One of these drums is eating itself.')
+    steps: walkUp('thornmere-chemist', 'Come take a look at this. One of these drums is eating through its own steel.')
   },
   'q6-polymers': {
     prop: { kind: 'crates', opts: { n: 3, wrapped: true } },
