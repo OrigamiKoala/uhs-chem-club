@@ -238,7 +238,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
 export function openCampaignStoryModal(opts = {}) {
   session.recordNotebookMany(campaignBriefingIds());
   if (hasCutscene('intro')) {
-    playCutscene('intro', { title: 'Campaign briefing' }).then(result => {
+    playCutscene('intro', { title: 'Prologue' }).then(result => {
       session.setFlag('story_onboarding_completed', true);
       if (result === 'done' && opts.onComplete) opts.onComplete();
       else opts.onClose?.();
@@ -257,7 +257,7 @@ export function openCampaignStoryModal(opts = {}) {
         <!-- Topbar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.5rem;">
           <div style="display: flex; align-items: baseline; gap: 0.6rem;">
-            <span class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.68rem; letter-spacing: 0.12em;">Campaign Briefing</span>
+            <span class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.68rem; letter-spacing: 0.12em;">Prologue</span>
           </div>
         </div>
 
@@ -308,7 +308,7 @@ export function openCampaignStoryModal(opts = {}) {
           </div>
 
           <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <button type="button" id="campaign-footer-skip-btn" class="btn-secondary" style="padding: 7px 12px; font-size: 0.8rem; color: var(--text-muted);" title="Skip Briefing">
+            <button type="button" id="campaign-footer-skip-btn" class="btn-secondary" style="padding: 7px 12px; font-size: 0.8rem; color: var(--text-muted);" title="Skip">
               Skip ⏭
             </button>
             ${!isLast ? `

@@ -110,7 +110,7 @@ export function renderDrills(container, params = {}) {
       <div class="screen-container m-screen m-drills">
         ${pageHeader({
           art: '/art/starmap.jpg',
-          title: 'Drill Deck',
+          title: 'Practice',
           actions: statRow([
             { label: 'Mastered', value: `${overall.mastered} / ${overall.total}`, plain: true },
             { label: 'Stars', value: String(starTotal), plain: true }
@@ -118,6 +118,7 @@ export function renderDrills(container, params = {}) {
         })}
 
         ${notice ? `<p class="drill-notice" role="status">${esc(notice)}</p>` : ''}
+        ${finishedWorlds.length ? '' : '<p class="drill-notice">Finish any Learn quest to open these rounds.</p>'}
 
         <div class="drill-modes">
           <article class="plate drill-card" data-mode-card="run">
@@ -147,7 +148,7 @@ export function renderDrills(container, params = {}) {
 
           <article class="plate drill-card" data-mode-card="weak">
             <h2 class="drill-card-title">Review</h2>
-            <p class="drill-card-line">Review past mistakes</p>
+            <p class="drill-card-line">Questions you missed come back here.</p>
             <div class="drill-card-foot">
               <span class="tag ${weakCount ? 'warn' : ''}">${weakCount} waiting</span>
               <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="weak"${weakCount && finishedWorlds.length ? '' : ' disabled'}>Start</button>
@@ -281,7 +282,7 @@ export function renderDrills(container, params = {}) {
       const raw = await loadPool(mode === 'run' ? scope : 'all');
       pool = raw.filter(isProblemUnlocked);
     } catch (err) {
-      console.error('Drill Deck could not load questions:', err);
+      console.error('Practice could not load questions:', err);
     }
     if (guard()) return;
     if (!pool.length) {

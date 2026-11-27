@@ -63,7 +63,7 @@ export function getLore(id) {
     if (!beat) return null;
     return {
       id, kind: 'briefing', act: 'prologue', worldId: null, sort: [0, -2, i],
-      title: 'Main Briefing', speaker: beat.speaker, text: beat.text,
+      title: 'Prologue', speaker: beat.speaker, text: beat.text,
       source: `Main · ${i + 1} of ${CAMPAIGN_STORY.length}`
     };
   }

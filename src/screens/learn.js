@@ -42,10 +42,10 @@ export function renderLearn(container) {
         artAlt: '',
         title: 'Learn',
         actions: `
-          <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="text-decoration: none; margin-right: 0.4rem;">Case Board</a>
-          <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-campaign-story-btn" title="Main Briefing" style="margin-right: 0.5rem;">Main Briefing</button>
+          <a href="#/briefing" class="btn-secondary quest-btn-sm m-tap learn-head-link">Briefing</a>
+          <button type="button" class="btn-secondary quest-btn-sm m-tap learn-head-link" id="learn-campaign-story-btn">Prologue</button>
           ${resumeQuest
-            ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary" style="text-decoration: none;">Continue · ${esc(resume.world)}</a>`
+            ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary learn-continue">Continue · ${esc(resume.world)}</a>`
             : ''}
         `
       })}
@@ -56,23 +56,28 @@ export function renderLearn(container) {
           const tag = STATUS_TAG[st] || STATUS_TAG.charted;
           const prog = worldProgress(w);
           const enterable = st === 'open' || st === 'complete';
+          // Only the world the player is on gets the painted key; the rest are
+          // bare switches, so the eye lands on where they left off.
+          const isResume = enterable && resume && resume.id === w.id;
+          const arrival = getEpisode(w.id)?.arrival;
           return `
-            <article class="plate learn-world-row learn-${st}">
+            <article class="plate learn-world-row learn-${st}${isResume ? ' is-resume' : ''}">
               <div class="learn-world-code">
+                <span class="eyebrow">Unit</span>
                 <span class="learn-code-num">${esc(w.code)}</span>
-                <span class="eyebrow">${esc(w.unit)}</span>
               </div>
 
               <div class="learn-world-body">
-                <div class="m-head learn-world-head">
+                <div class="learn-world-head">
                   <h2 class="learn-world-name">${esc(w.world)}</h2>
-                  <div style="display: flex; gap: 0.35rem; align-items: center;">
-                    ${w.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ''}
-                    <span class="tag ${tag.cls}">${tag.label}</span>
-                  </div>
+                  ${w.beyondAp || st !== 'open' ? `
+                    <div class="learn-world-tags">
+                      ${w.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ''}
+                      ${st !== 'open' ? `<span class="tag ${tag.cls}">${tag.label}</span>` : ''}
+                    </div>` : ''}
                 </div>
                 <p class="learn-world-line">${esc(w.line)}</p>
-                ${getEpisode(w.id)?.arrival ? `<p style="font-size: 0.78rem; line-height: 1.38; color: var(--accent-amber); margin: 0.25rem 0 0;">${esc(getEpisode(w.id).arrival)}</p>` : ''}
+                ${arrival ? `<p class="learn-world-story">${esc(arrival)}</p>` : ''}
               </div>
 
               <div class="learn-world-meta">
@@ -84,11 +89,11 @@ export function renderLearn(container) {
                   }).join('')}
                 </div>
                 <div class="eyebrow learn-world-count">
-                  ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ''}
+                  ${prog.liveTotal ? `${prog.questsComplete} / ${prog.liveTotal} quests done` : `${w.questCount} quests`}
                 </div>
                 <div class="learn-world-keys">
                   ${enterable
-                    ? `<a href="#/learn/${esc(w.id)}" class="btn-primary learn-enter m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">Enter</a>`
+                    ? `<a href="#/learn/${esc(w.id)}" class="${isResume ? 'btn-primary' : 'btn-secondary'} learn-enter m-tap learn-enter-btn" data-world-id="${esc(w.id)}">Enter</a>`
                     : `<span class="eyebrow learn-world-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
                   ${practiceKey(w)}
                 </div>

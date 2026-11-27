@@ -1487,10 +1487,16 @@ export class LearnFrame {
       const pad = 8;
       const cw = card.offsetWidth || 290;
       const ch = card.offsetHeight || 130;
+      // The card's top row sits under the prompt strip, never on it: the
+      // strip carries the stage lamps and the objective the tour is about.
+      const strip = document.querySelector('.lq-tstrip');
+      const stripRect = strip ? strip.getBoundingClientRect() : null;
+      const stripBottom = stripRect && stripRect.height > 0 ? stripRect.bottom : 0;
+      const topY = Math.max(12, Math.min(vh - ch - 20, Math.max(76, stripBottom + 10)));
       if (!rect) {
         spot.style.display = 'none';
         card.style.left = `${Math.max(12, vw - cw - 20)}px`;
-        card.style.top = `${Math.max(12, Math.min(vh - ch - 20, 76))}px`;
+        card.style.top = `${topY}px`;
         return;
       }
       spot.style.display = 'block';
@@ -1507,9 +1513,9 @@ export class LearnFrame {
       // only move it if the spotlight overlaps that anchor.
       const overlaps = (x, y) => !(x + cw + 8 < sx || x > sx + sw + 8 || y + ch + 8 < sy || y > sy + sh + 8);
       const anchors = [
-        [Math.max(12, vw - cw - 20), Math.max(12, Math.min(vh - ch - 20, 76))],
+        [Math.max(12, vw - cw - 20), topY],
         [Math.max(12, vw - cw - 20), Math.max(12, vh - ch - 84)],
-        [16, Math.max(12, Math.min(vh - ch - 20, 76))],
+        [16, topY],
         [16, Math.max(12, vh - ch - 84)]
       ];
       const chosen = anchors.find(([ax, ay]) => !overlaps(ax, ay)) || anchors[0];

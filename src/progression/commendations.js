@@ -440,7 +440,7 @@ export const COMMENDATIONS = [
   {
     id: 'first_drill',
     name: 'Warm-Up',
-    line: 'Finished a round in the Drill Deck.',
+    line: 'Finished a Practice round.',
     tier: 'painted',
     road: 'learn',
     hidden: false,

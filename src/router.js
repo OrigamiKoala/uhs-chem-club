@@ -47,6 +47,7 @@ const ROUTE_ROOM = {
   '/demo': 'quest',
   '/learn': 'starmap',
   '/drills': 'starmap',
+  '/practice': 'starmap',
   '/inventory': 'cargo',
   '/cargo': 'cargo',
   '/quarters': 'quarters',
@@ -54,6 +55,7 @@ const ROUTE_ROOM = {
   '/leaderboard': 'comms',
   '/comms': 'comms',
   '/casefile': 'comms',
+  '/briefing': 'comms',
   '/contracts': 'starmap',
   '/admin': 'bridge'
 };
@@ -69,6 +71,7 @@ const ROUTE_BACKDROPS = {
   '/demo': '/art/crucible.jpg',
   '/learn': '/art/starmap.jpg',
   '/drills': '/art/starmap.jpg',
+  '/practice': '/art/starmap.jpg',
   '/cargo': '/art/cargo.jpg',
   '/inventory': '/art/cargo.jpg',
   '/quarters': '/art/quarters.jpg',
@@ -76,6 +79,7 @@ const ROUTE_BACKDROPS = {
   '/leaderboard': '/art/comms.jpg',
   '/comms': '/art/comms.jpg',
   '/casefile': '/art/comms.jpg',
+  '/briefing': '/art/comms.jpg',
   '/contracts': '/art/starmap.jpg',
   '/admin': '/art/airlock.jpg'
 };
@@ -87,9 +91,11 @@ const ROUTE_NAV = {
   '/quest': 'starmap',
   '/learn': 'learn',
   '/drills': 'drills',
+  '/practice': 'drills',
   '/leaderboard': 'leaderboard',
   '/comms': 'leaderboard',
   '/casefile': 'casefile',
+  '/briefing': 'casefile',
   '/inventory': 'inventory',
   '/cargo': 'inventory',
   '/quarters': 'quarters',
@@ -108,9 +114,11 @@ const ROUTES = {
   '/starmap': { render: renderStarMap, auth: false },
   '/contracts': { render: renderContracts, auth: false },
   '/casefile': { render: renderCaseFile, auth: false },
+  '/briefing': { render: renderCaseFile, auth: false },
   '/quest': { render: renderQuest, auth: true },
   '/learn': { render: renderLearn, auth: true },
   '/drills': { render: renderDrills, auth: true },
+  '/practice': { render: renderDrills, auth: true },
   '/leaderboard': { render: renderLeaderboard, auth: false },
   '/comms': { render: renderLeaderboard, auth: false },
   '/cargo': { render: renderInventory, auth: true },
@@ -128,6 +136,7 @@ const ROUTES = {
 const PARAM_ROUTES = [
   { pattern: ['crew', ':playerId'], render: renderCrewProfile, auth: false, nav: 'leaderboard', room: 'comms', backdrop: '/art/comms.jpg' },
   { pattern: ['drills', ':worldId'], render: renderDrills, auth: true, nav: 'drills', room: 'starmap', backdrop: '/art/starmap.jpg' },
+  { pattern: ['practice', ':worldId'], render: renderDrills, auth: true, nav: 'drills', room: 'starmap', backdrop: '/art/starmap.jpg' },
   { pattern: ['learn', ':worldId'], render: renderLearnWorld, auth: true, nav: 'learn', room: 'starmap', backdrop: '/art/crucible.jpg' },
   { pattern: ['learn', ':worldId', ':questId'], render: renderLearnQuest, auth: true, nav: 'learn', room: 'quest', backdrop: '/art/crucible.jpg' }
 ];

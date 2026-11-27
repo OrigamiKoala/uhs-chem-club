@@ -384,13 +384,13 @@ Machined plates and panels feature **machined double-bezel framing** with precis
   feature precision outer durasteel borders (`1px solid var(--border-durasteel)`), crisp inner highlight
   hairlines (`inset 0 1px 0 rgba(255, 255, 255, 0.08)`), and deep ambient drop shadows (`0 20px 48px rgba(0, 0, 0, 0.75)`).
 - **Subtle Corner Radii**: Clean 2px–4px radius replaces crude polygon cuts, preventing anti-aliasing artifacts on high-DPI viewports.
-- **Pure Optical Clarity**: Grain noise overlays (`--grain`) and muddy scanline filters are eliminated. Surfaces feature smooth titanium/obsidian plate depth and pristine glassmorphism (`backdrop-filter: blur(16px)`).
+- **Worn, not dirty**: every `.plate` / `.glass-panel` carries a static wear layer on `::before` — fasteners at the four corners (`--screws`), long glove scuffs (`--scuff`), sandblast speckle (`--grain`) and dirt settled toward the lower edge (`--grime`), all defined in `tokens.css`. `.holo-card` and the in-world terminals carry the same wear without fasteners; a strip too thin for four bolts (page header, bench strip and dock) drops them. The tiles are SVG noise painted once: nothing animates, nothing blurs, and there is no `backdrop-filter` over the live canvas.
 
 ### Named Rules
 
 **The Double-Bezel Rule.** Every instrument enclosure features a machined dual boundary: an outer durasteel boundary framing an inner illuminated or ground plate face.
 
-**The Optical Clarity Rule.** Optical elements (viewports, banners, telemetry, cards) must never be degraded by artificial raster scanlines or muddy sepia filters. The interface reflects precision aerospace instrumentation in active service.
+**The Worn Plate Rule.** Wear lives on metal, never on what the player reads: no scanlines, sepia or noise over text, viewports, banners or instruments. Plates look forty years old; their labels and readouts stay sharp.
 
 ## Components
 
@@ -434,8 +434,10 @@ the only glowing element in the header.
 - **Hover:** face raises to `plate-400`, legend brightens.
 - **Active:** the button is pressed *into* the bulkhead — `plate-100` fill, an inset
   shadow, amber legend, and a 2px amber bar down its left edge.
-- **Nav labels match page titles exactly:** BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY,
-  CREW. A label that does not match its destination's title is a bug.
+- **Nav labels match page titles exactly:** BRIDGE, STAR MAP, LEARN, PRACTICE, BRIEFING,
+  INVENTORY. `#/practice` and `#/briefing` are the URLs; `#/drills` and `#/casefile` still route.
+  The campaign's opening story is the **Prologue**, so it is never confused with the Briefing board.
+  A label that does not match its destination's title is a bug.
 - **On phones** the nav becomes a horizontally scrolling strip on the HUD's second row.
 
 ### Panels and Cards

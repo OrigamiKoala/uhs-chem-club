@@ -8,113 +8,96 @@ import { bindPasswordReveal } from './register.js';
 import { soundscape } from '../audio/soundscape.js';
 
 export function renderSettings(container) {
-  const soundPrefs = session.sound;
+  const sound = session.sound || { master: 60, ambience: 60, effects: 60, muted: false };
+  const pct = v => Math.round(Number.isFinite(Number(v)) ? Number(v) : 60);
   const isT4 = tierManager.currentTier === 'T4';
   // The device's capability: a player on a lower tier can always ask for T4.
   const eligibleT4 = isT4Capable();
-  // On a phone the continuous walk is driven by the twin sticks, not WASD.
-  const t4Note = !eligibleT4
-    ? ' · Requires WebGL2'
-    : (isTouchPrimary() ? ' · Twin sticks' : '');
+  const is3D = tierManager.is3D();
+  const help3D = !eligibleT4
+    ? 'This device cannot run it (it needs WebGL2).'
+    : (isTouchPrimary() ? 'Walk the ship and the worlds in 3D with the on-screen sticks.' : 'Walk the ship and the worlds in 3D.');
 
   const terminalHeaderMarkup = isT4 ? `
     <div class="terminal-header">
-      <div>
-        <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">SETTINGS</h2>
-      </div>
-      <button type="button" id="close-settings-terminal-btn" class="terminal-close-btn">CLOSE</button>
+      <h2 class="section-title settings-terminal-title">Settings</h2>
+      <button type="button" id="close-settings-terminal-btn" class="terminal-close-btn">Close</button>
     </div>
   ` : pageHeader({
     title: 'Settings',
-    actions: `<a href="#/bridge" class="btn-secondary" style="text-decoration: none;">Bridge</a>`
+    actions: `<a href="#/bridge" class="btn-secondary settings-back">Bridge</a>`
   });
 
+  const slider = (id, valId, label, value) => `
+    <div class="settings-slider-row">
+      <div class="settings-slider-head">
+        <label class="settings-row-label" for="${id}">${label}</label>
+        <output id="${valId}" class="settings-value" for="${id}">${value}%</output>
+      </div>
+      <input type="range" class="settings-slider" id="${id}" min="0" max="100" value="${value}">
+    </div>`;
+
   container.innerHTML = `
-    <div class="${isT4 ? 'in-world-terminal settings-terminal m-screen m-settings' : 'screen-container m-screen m-settings'}" ${isT4 ? '' : 'style="max-width: 680px;"'}>
+    <div class="${isT4 ? 'in-world-terminal settings-terminal m-screen m-settings' : 'screen-container m-screen m-settings settings-screen'}">
       ${terminalHeaderMarkup}
 
-      <!-- Section 1: Graphics & Performance -->
-      <div class="glass-panel" style="margin-bottom: 1.5rem;">
-        <h2 class="section-title" style="margin-bottom: 1.25rem;">Graphics</h2>
+      <section class="glass-panel settings-section" aria-labelledby="settings-gfx">
+        <h2 id="settings-gfx" class="section-title">Graphics</h2>
 
-        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
-          <label class="choice-option ${tierManager.is3D() ? 'selected' : ''} ${!eligibleT4 ? 'disabled' : ''}">
-            <input type="radio" name="gfx-3d" value="on" ${tierManager.is3D() ? 'checked' : ''} ${!eligibleT4 ? 'disabled' : ''}>
-            <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">3D On</div>
-              <div class="eyebrow" style="margin-top: 3px;">Full 3D walk & interactive worlds${t4Note}</div>
-            </div>
+        <div class="settings-choices" role="radiogroup" aria-labelledby="settings-gfx">
+          <label class="choice-option settings-choice ${is3D ? 'selected' : ''} ${!eligibleT4 ? 'disabled' : ''}">
+            <input type="radio" class="settings-lamp" name="gfx-3d" value="on" ${is3D ? 'checked' : ''} ${!eligibleT4 ? 'disabled' : ''}>
+            <span class="settings-choice-text">
+              <span class="settings-choice-name">3D On</span>
+              <span class="settings-choice-help">${help3D}</span>
+            </span>
           </label>
 
-          <label class="choice-option ${!tierManager.is3D() ? 'selected' : ''}">
-            <input type="radio" name="gfx-3d" value="off" ${!tierManager.is3D() ? 'checked' : ''}>
-            <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">3D Off</div>
-              <div class="eyebrow" style="margin-top: 3px;">2D interfaces & minimal graphics</div>
-            </div>
+          <label class="choice-option settings-choice ${!is3D ? 'selected' : ''}">
+            <input type="radio" class="settings-lamp" name="gfx-3d" value="off" ${!is3D ? 'checked' : ''}>
+            <span class="settings-choice-text">
+              <span class="settings-choice-name">3D Off</span>
+              <span class="settings-choice-help">Flat 2D screens. Use this on slower devices.</span>
+            </span>
           </label>
         </div>
 
-        <div class="settings-motion-row" style="border-top: 1px solid var(--border-durasteel); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-bright);">Reduce Motion</div>
-          <input type="checkbox" id="reduce-motion-checkbox" ${session.reduceMotion ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+        <label class="settings-row">
+          <span class="settings-row-label">Reduce Motion</span>
+          <input type="checkbox" class="settings-switch" id="reduce-motion-checkbox" ${session.reduceMotion ? 'checked' : ''}>
+        </label>
+      </section>
+
+      <section class="glass-panel settings-section" aria-labelledby="settings-audio">
+        <h2 id="settings-audio" class="section-title">Audio</h2>
+
+        <label class="settings-row settings-row-first">
+          <span class="settings-row-label">Mute</span>
+          <input type="checkbox" class="settings-switch" id="audio-mute-checkbox" ${sound.muted ? 'checked' : ''}>
+        </label>
+
+        <div class="settings-sliders${sound.muted ? ' is-muted' : ''}">
+          ${slider('slider-master', 'val-master', 'Volume', pct(sound.master))}
+          ${slider('slider-ambience', 'val-ambience', 'Ambience', pct(sound.ambience))}
+          ${slider('slider-effects', 'val-effects', 'Sound Effects', pct(sound.effects))}
         </div>
-      </div>
-
-      <!-- Section 2: Audio Systems -->
-      <div class="glass-panel" style="margin-bottom: 1.5rem;">
-        <div class="m-head settings-audio-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-          <h2 class="section-title" style="margin: 0;">Audio</h2>
-          <button type="button" id="audio-mute-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 14px;">
-            ${soundPrefs.muted ? 'Unmute' : 'Mute'}
-          </button>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <div>
-            <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
-              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Volume</span>
-              <span id="val-master" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.masterVolume * 100)}%</span>
-            </div>
-            <input type="range" class="settings-slider" id="slider-master" min="0" max="100" value="${Math.round(soundPrefs.masterVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
-          </div>
-
-          <div>
-            <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
-              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Ambience</span>
-              <span id="val-ambience" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.ambienceVolume * 100)}%</span>
-            </div>
-            <input type="range" class="settings-slider" id="slider-ambience" min="0" max="100" value="${Math.round(soundPrefs.ambienceVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
-          </div>
-
-          <div>
-            <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
-              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Sound Effects</span>
-              <span id="val-effects" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.effectsVolume * 100)}%</span>
-            </div>
-            <input type="range" class="settings-slider" id="slider-effects" min="0" max="100" value="${Math.round(soundPrefs.effectsVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
-          </div>
-        </div>
-      </div>
+      </section>
 
       <!-- Section: Privacy & Standings (accounts only: a guest is never on a board) -->
       ${session.isGuest ? '' : `
-      <div class="glass-panel" style="margin-bottom: 1.5rem;">
-        <h2 class="section-title" style="margin-bottom: 1.25rem;">Privacy & Standings</h2>
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-          <div>
-            <div style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-bright);">Keep Name Off Public Boards</div>
-            <div class="eyebrow" style="margin-top: 3px; font-size: 0.72rem; color: var(--text-muted);">
-              When active, your name appears as "Crew · [Guild]" to other players on public standings.
-            </div>
-          </div>
-          <input type="checkbox" id="board-optout-checkbox" ${session.player?.board_optout ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
-        </div>
-      </div>
+      <section class="glass-panel settings-section" aria-labelledby="settings-privacy">
+        <h2 id="settings-privacy" class="section-title">Privacy & Standings</h2>
+        <label class="settings-row settings-row-first">
+          <span>
+            <span class="settings-row-label">Hide My Name on Standings</span>
+            <span class="settings-choice-help">Other players see "Crew · [Guild]" instead of your name.</span>
+          </span>
+          <input type="checkbox" class="settings-switch" id="board-optout-checkbox" ${session.player?.board_optout ? 'checked' : ''}>
+        </label>
+      </section>
 
-      <!-- Section 3: Change Password -->
-      <div class="glass-panel">
-        <h2 class="section-title">Change Password</h2>
+      <section class="glass-panel settings-section" aria-labelledby="settings-pw">
+        <h2 id="settings-pw" class="section-title">Change Password</h2>
         <form id="pw-form">
           <div class="form-group">
             <label class="form-label" for="old-pw">Current Password</label>
@@ -135,11 +118,11 @@ export function renderSettings(container) {
 
           <div id="pw-error" class="form-banner hidden" role="alert"></div>
 
-          <button type="submit" id="pw-btn" class="btn-primary" style="width: 100%;">
+          <button type="submit" id="pw-btn" class="btn-primary settings-submit">
             Change Password
           </button>
         </form>
-      </div>
+      </section>
       `}
     </div>
   `;
@@ -156,36 +139,26 @@ export function renderSettings(container) {
     });
   });
 
-  // Audio controls
-  const muteBtn = container.querySelector('#audio-mute-btn');
-  muteBtn?.addEventListener('click', () => {
-    const isMuted = soundscape.toggleMute();
-    muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
-    showToast(isMuted ? 'Audio muted.' : 'Audio unmuted.', 'info');
+  // Audio. The soundscape listens to the session, so writing the setting is
+  // what changes the gain; there is no separate audio call to make.
+  const muteCheck = container.querySelector('#audio-mute-checkbox');
+  const sliders = container.querySelector('.settings-sliders');
+  muteCheck?.addEventListener('change', (e) => {
+    const muted = e.target.checked;
+    session.setSound({ muted });
+    sliders?.classList.toggle('is-muted', muted);
+    if (!muted) soundscape.playToggleClack?.();
   });
 
-  const masterSlider = container.querySelector('#slider-master');
-  const masterVal = container.querySelector('#val-master');
-  masterSlider?.addEventListener('input', (e) => {
-    const val = Number(e.target.value) / 100;
-    soundscape.setMasterVolume(val);
-    if (masterVal) masterVal.textContent = `${e.target.value}%`;
-  });
-
-  const ambSlider = container.querySelector('#slider-ambience');
-  const ambVal = container.querySelector('#val-ambience');
-  ambSlider?.addEventListener('input', (e) => {
-    const val = Number(e.target.value) / 100;
-    soundscape.setAmbienceVolume(val);
-    if (ambVal) ambVal.textContent = `${e.target.value}%`;
-  });
-
-  const effSlider = container.querySelector('#slider-effects');
-  const effVal = container.querySelector('#val-effects');
-  effSlider?.addEventListener('input', (e) => {
-    const val = Number(e.target.value) / 100;
-    soundscape.setEffectsVolume(val);
-    if (effVal) effVal.textContent = `${e.target.value}%`;
+  [['#slider-master', '#val-master', 'master'],
+   ['#slider-ambience', '#val-ambience', 'ambience'],
+   ['#slider-effects', '#val-effects', 'effects']].forEach(([sel, outSel, key]) => {
+    const input = container.querySelector(sel);
+    const out = container.querySelector(outSel);
+    input?.addEventListener('input', (e) => {
+      if (out) out.textContent = `${e.target.value}%`;
+      session.setSound({ [key]: Number(e.target.value) });
+    });
   });
 
   // Motion checkbox

@@ -75,8 +75,8 @@ async function bootstrapApp() {
   window.addEventListener('notebook:added', () => {
     clearTimeout(notebookToastTimer);
     notebookToastTimer = setTimeout(() => {
-      if (!session.token || window.location.hash.startsWith('#/casefile')) return;
-      showToast('Notebook updated. New entries are in the Case File.', 'info');
+      if (!session.token || /^#\/(casefile|briefing)/.test(window.location.hash)) return;
+      showToast('Notebook updated. New entries are in Briefing.', 'info');
     }, 1200);
   });
 
@@ -190,6 +190,8 @@ function setupHud() {
     soundToggle.classList.toggle('is-muted', isMuted);
   };
   updateSoundBtn();
+  // Settings can mute too; keep the header key's icon honest about it.
+  session.subscribe?.(updateSoundBtn);
 
   soundToggle?.addEventListener('click', () => {
     const nextMuted = !session.sound?.muted;

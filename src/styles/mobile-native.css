@@ -70,7 +70,7 @@ body.touch-primary:not(.touch-walking) #fps-interact-prompt { display: none !imp
     padding: 0 var(--m-right) var(--m-foot) var(--m-left) !important;
     border: 0;
     box-shadow: none;
-    background: rgb(14, 12, 10);
+    background-color: rgb(14, 12, 10);
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     z-index: 48;
@@ -133,7 +133,10 @@ body.touch-primary:not(.touch-walking) #fps-interact-prompt { display: none !imp
   .lq-tstrip .lq-prompt,
   .lq-tstrip .lq-prompt-body { font-size: 0.76rem !important; line-height: 1.25 !important; }
   .lq-tstrip .lq-prompt-body { -webkit-line-clamp: 2; }
-  .lq-tstrip .lq-lamp { width: 10px; min-width: 10px; height: 10px; min-height: 10px; }
+  .lq-tstrip .lq-lamp { width: 10px; min-width: 10px; height: 10px; min-height: 10px; padding: 0; }
+  /* At lamp size there is no room for the stage number; it stays in the
+     lamp's accessible name. Printed, it broke into a digit per line. */
+  .lq-tstrip .lq-lamp em { display: none; }
   .lq-tstrip .lq-rail { gap: 3px !important; }
 
   .lq-tdock {
@@ -355,9 +358,21 @@ body.touch-primary:not(.touch-walking) #fps-interact-prompt { display: none !imp
   /* ---------- Learn road and a world's quest list: rows read across ---------- */
   .m-learn .learn-world-row {
     grid-template-columns: 58px minmax(0, 1fr) auto;
+    grid-template-areas: none;
     gap: 0.9rem;
     padding: 0.55rem 0.9rem;
+    align-items: center;
   }
+  /* Undo the upright phone's stacked foot: sideways, the row reads across. */
+  .m-learn .learn-world-row > * { grid-area: auto; }
+  .m-learn .learn-world-code .eyebrow { display: block; }
+  .m-learn .learn-world-meta {
+    display: flex;
+    grid-template-areas: none;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .m-learn .learn-world-keys > * { min-width: 0; }
   .m-learn-world .learn-quest-row {
     grid-template-columns: 40px minmax(0, 1fr) auto;
     gap: 0.9rem;
@@ -408,10 +423,11 @@ body.touch-primary:not(.touch-walking) #fps-interact-prompt { display: none !imp
 
   /* ---------- Star map: chart and world plate side by side ----------
      `galaxy-map.js` sizes the chart to the glass left under the tabs. */
-  .map-tabs { margin-bottom: 0.4rem; flex-wrap: nowrap !important; }
-  .map-tabs > div { flex-wrap: nowrap !important; }
+  .map-tabs-row { margin-bottom: 0.4rem; flex-direction: row; align-items: flex-end; flex-wrap: nowrap !important; }
+  .map-tabs { width: auto; }
+  .map-links { order: 0; display: flex; padding: 0 0 0.3rem; }
   .map-tab { min-height: 38px; padding: 0 12px; }
-  .map-tabs .quest-btn-sm { min-height: 38px !important; padding: 0 10px; white-space: nowrap; }
+  .map-links .quest-btn-sm { min-height: 38px !important; padding: 0 10px; white-space: nowrap; }
 
   .galaxy {
     display: grid;
@@ -478,6 +494,16 @@ body.touch-primary:not(.touch-walking) #fps-interact-prompt { display: none !imp
     flex-direction: column;
     border: 0;
     box-shadow: none;
+    padding: max(2px, env(safe-area-inset-top)) var(--m-right) var(--m-foot) var(--m-left);
+  }
+  /* The round owns the whole glass, header row included, so the bar goes
+     back to clear and leaves only its menu key. */
+  :root:has(.app-viewport > .m-drills .drill-run) .hud {
+    background: transparent !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+  .m-drills.is-active > .drill-run-full {
     padding: max(2px, env(safe-area-inset-top)) var(--m-right) var(--m-foot) var(--m-left);
   }
   .drill-run-top {

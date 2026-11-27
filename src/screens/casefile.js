@@ -1,5 +1,5 @@
 /**
- * casefile.js — The ONE Case Board: every clue, message, briefing, and bench
+ * casefile.js — Briefing, the one case board: every clue, message, briefing, and bench
  * note the player has seen, organized around the 4 Fifth Guild Act questions.
  *
  * No separate Case Board / Notebook / Messages tabs: everything lives in one
@@ -48,7 +48,7 @@ export function renderCaseFile(container) {
   const collectedCount = allClues.filter(c => collectedClueIds.has(c.id)).length;
   const worldNames = new Map(WORLDS.map(w => [w.id, w.world]));
 
-  // Prologue / Main Briefing lines the player has seen
+  // Prologue lines the player has seen
   const prologueEntries = foundLore.filter(e => e.act === 'prologue');
 
   // Quest Case Pins earned from completed Learn quests, grouped by Act
@@ -83,41 +83,32 @@ export function renderCaseFile(container) {
   }
 
   const headerMarkup = isT4 ? `
-    <div class="terminal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.5rem;">
-      <div>
-        <span class="eyebrow lit" style="color: var(--accent-gold); letter-spacing: 0.15em;">FIFTH GUILD MYSTERY</span>
-        <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">CASE BOARD</h2>
+    <div class="terminal-header case-terminal-head">
+      <div class="case-terminal-title">
+        <h2 class="section-title">Briefing</h2>
+        <span class="case-terminal-count">${collectedCount} / ${totalClues} clues</span>
       </div>
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <button type="button" id="caseboard-briefing-btn" class="btn-secondary quest-btn-sm" style="font-size: 0.72rem;">Main Briefing</button>
-        <a href="#/bridge" class="terminal-close-btn" style="text-decoration: none; padding: 4px 10px; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid var(--border-durasteel); color: var(--text-muted);">CLOSE</a>
+      <div class="case-terminal-keys">
+        <button type="button" id="caseboard-briefing-btn" class="btn-secondary quest-btn-sm m-tap">Prologue</button>
+        <a href="#/bridge" class="terminal-close-btn">Close</a>
       </div>
     </div>
   ` : pageHeader({
     art: '/art/comms.jpg',
-    title: 'Case Board',
-    eyebrow: 'The Fifth Guild Mystery',
+    title: 'Briefing',
     actions: `
-      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-        ${statRow([
-          { label: 'Clues', value: `${collectedCount} / ${totalClues}`, plain: true },
-          { label: 'Bench Notes', value: `${totalPinsEarned}`, plain: true }
-        ])}
-        <button type="button" id="caseboard-briefing-btn" class="btn-secondary quest-btn-sm" style="font-size: 0.72rem;">Main Briefing</button>
-      </div>
+      ${statRow([
+        { label: 'Clues', value: `${collectedCount} / ${totalClues}`, plain: true },
+        { label: 'Bench Notes', value: `${totalPinsEarned}`, plain: true }
+      ])}
+      <button type="button" id="caseboard-briefing-btn" class="btn-secondary quest-btn-sm m-tap">Prologue</button>
     `
   });
 
   const prologueMarkup = prologueEntries.length ? `
-    <section class="holo-card" style="padding: 0.95rem 1.1rem; border: 1px solid var(--border-durasteel); background: var(--plate-200); margin-bottom: 1.1rem;">
-      <div class="eyebrow lit" style="font-size: 0.68rem; color: var(--accent-gold); letter-spacing: 0.12em; margin-bottom: 0.45rem;">
-        THE CASE · VESS BRIEFING
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 0.45rem;">
-        ${prologueEntries.map(e => `
-          <p style="font-size: 0.84rem; line-height: 1.5; color: var(--text-primary); margin: 0;">${esc(e.text)}</p>
-        `).join('')}
-      </div>
+    <section class="holo-card case-prologue">
+      <h3 class="case-section-label">Prologue · Vess</h3>
+      ${prologueEntries.map(e => `<p class="case-prologue-line">${esc(e.text)}</p>`).join('')}
     </section>
   ` : '';
 
@@ -132,38 +123,24 @@ export function renderCaseFile(container) {
     const worldList = act.worlds.map(id => worldNames.get(id) || id).join(' · ');
 
     return `
-      <section class="holo-card case-act-panel" style="padding: 1.1rem 1.15rem; border: 1px solid ${solved ? 'var(--accent-gold)' : 'var(--border-durasteel)'}; background: var(--plate-200);">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-          <span class="eyebrow ${solved ? 'lit' : ''}" style="font-size: 0.68rem; color: var(--accent-gold); letter-spacing: 0.12em;">
-            ACT 0${act.order} · ${esc(worldList)}
-          </span>
-          <span class="tag ${solved ? 'live' : ''}" style="font-size: 0.64rem;">
-            ${solved ? 'ANSWERED' : `${foundClues.length} / ${actClues.length} CLUES`}
-          </span>
+      <section class="holo-card case-act${solved ? ' is-solved' : ''}">
+        <div class="case-act-head">
+          <span class="case-act-worlds">Act ${act.order} · ${esc(worldList)}</span>
+          <span class="tag ${solved ? 'live' : ''}">${solved ? 'Answered' : `${foundClues.length} / ${actClues.length} clues`}</span>
         </div>
 
-        <h3 style="font-family: var(--font-display); font-size: 1.05rem; letter-spacing: 0.04em; color: var(--text-bright); margin: 0 0 0.75rem;">
-          ${esc(act.question)}
-        </h3>
+        <h3 class="case-act-question">${esc(act.question)}</h3>
 
-        <div class="case-clue-strip" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.6rem; margin-bottom: 0.8rem;">
+        <div class="case-clues">
           ${actClues.map(clue => {
             const unlocked = collectedClueIds.has(clue.id);
             return `
-              <article style="padding: 0.65rem 0.75rem; border: 1px solid ${unlocked ? 'var(--accent-bronze)' : 'var(--border-durasteel)'}; background: ${unlocked ? 'var(--plate-100)' : 'rgba(0,0,0,0.22)'}; opacity: ${unlocked ? '1' : '0.6'};">
-                <div style="font-family: var(--font-mono); font-size: 0.64rem; color: ${unlocked ? 'var(--accent-gold)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.2rem;">
-                  ${esc(clue.source)}
-                </div>
-                <div style="font-family: var(--font-display); font-size: 0.86rem; color: ${unlocked ? 'var(--text-bright)' : 'var(--text-muted)'}; margin-bottom: 0.25rem;">
-                  ${unlocked ? esc(clue.name) : 'Not found yet'}
-                </div>
+              <article class="case-clue${unlocked ? ' is-found' : ''}">
+                <div class="case-clue-source">${esc(clue.source)}</div>
+                <div class="case-clue-name">${unlocked ? esc(clue.name) : 'Not found yet'}</div>
                 ${unlocked ? `
-                  <div style="font-size: 0.78rem; line-height: 1.4; color: var(--text-secondary); margin-bottom: 0.35rem;">
-                    ${esc(clue.summary)}
-                  </div>
-                  <div style="font-family: var(--font-mono); font-size: 0.71rem; color: var(--accent-amber); border-left: 2px solid var(--accent-amber); padding-left: 0.45rem;">
-                    ${esc(clue.note)}
-                  </div>
+                  <p class="case-clue-summary">${esc(clue.summary)}</p>
+                  <p class="case-clue-note">${esc(clue.note)}</p>
                 ` : ''}
               </article>
             `;
@@ -171,76 +148,58 @@ export function renderCaseFile(container) {
         </div>
 
         ${actMessages.length ? `
-          <div style="margin-bottom: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border-durasteel); display: flex; flex-direction: column; gap: 0.5rem;">
-            <div style="font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);">
-              Messages
-            </div>
+          <div class="case-block">
+            <h4 class="case-section-label">Messages</h4>
             ${actMessages.map(beat => `
-              <div style="padding: 0.6rem 0.75rem; background: var(--plate-100); border-left: 2px solid var(--accent-gold);">
-                <div style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-gold); margin-bottom: 0.2rem;">
-                  ${esc(beat.speaker)} · ${esc(beat.title)}
-                </div>
-                <div style="font-size: 0.83rem; line-height: 1.45; color: var(--text-bright);">
-                  "${esc(beat.transmission)}"
-                </div>
+              <div class="case-message">
+                <div class="case-message-from">${esc(beat.speaker)} · ${esc(beat.title)}</div>
+                <p class="case-message-text">"${esc(beat.transmission)}"</p>
               </div>
             `).join('')}
           </div>
         ` : ''}
 
         ${actPins.length ? `
-          <div style="margin-bottom: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border-durasteel);">
-            <div style="font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.4rem;">
-              Bench Notes (${actPins.length})
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 0.3rem;">
-              ${actPins.map(p => `
-                <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-primary); padding: 0.3rem 0.55rem; background: var(--plate-100); border-left: 2px solid var(--accent-bronze);">
-                  ${p.ask ? `<div style="color: var(--text-muted); margin-bottom: 0.15rem;">${esc(p.ask)}</div>` : ''}
-                  <span style="color: var(--accent-gold);">${esc(p.world)}:</span> ${esc(p.pin)}
-                </div>
-              `).join('')}
-            </div>
+          <div class="case-block">
+            <h4 class="case-section-label">Bench Notes (${actPins.length})</h4>
+            ${actPins.map(p => `
+              <div class="case-pin">
+                ${p.ask ? `<div class="case-pin-ask">${esc(p.ask)}</div>` : ''}
+                <span class="case-pin-world">${esc(p.world)}:</span> ${esc(p.pin)}
+              </div>
+            `).join('')}
           </div>
         ` : ''}
 
         ${actSeenNotes.length ? `
-          <details style="margin-bottom: 0.8rem; padding-top: 0.55rem; border-top: 1px solid var(--border-durasteel);">
-            <summary style="font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); cursor: pointer;">
-              Briefings &amp; Field Log (${actSeenNotes.length})
-            </summary>
-            <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem;">
-              ${actSeenNotes.map(e => `
-                <div style="padding: 0.45rem 0.65rem; background: var(--plate-100); border: 1px solid var(--border-durasteel);">
-                  <div style="font-family: var(--font-mono); font-size: 0.64rem; color: var(--accent-bronze); margin-bottom: 0.15rem;">
-                    ${esc(e.title)} · ${esc(e.source)}
-                  </div>
-                  <div style="font-size: 0.8rem; line-height: 1.45; color: var(--text-primary);">${esc(e.text)}</div>
-                </div>
-              `).join('')}
-            </div>
+          <details class="case-block case-log">
+            <summary class="case-section-label">Field Log (${actSeenNotes.length})</summary>
+            ${actSeenNotes.map(e => `
+              <div class="case-log-entry">
+                <div class="case-log-title">${esc(e.title)} · ${esc(e.source)}</div>
+                <p class="case-log-text">${esc(e.text)}</p>
+              </div>
+            `).join('')}
           </details>
         ` : ''}
 
-        <div style="padding: 0.55rem 0.75rem; border-left: 2px solid ${solved ? 'var(--accent-gold)' : 'var(--border-durasteel)'}; background: rgba(0, 0, 0, 0.3); font-family: var(--font-mono); font-size: 0.76rem; color: ${solved ? 'var(--accent-amber)' : 'var(--text-muted)'};">
-          ${solved
-            ? esc(act.answer)
-            : 'Open question — recover the world clues in this act to stamp the answer.'}
-        </div>
+        <p class="case-answer${solved ? ' is-solved' : ''}">
+          ${solved ? esc(act.answer) : 'Find every clue in this act to answer it.'}
+        </p>
       </section>
     `;
   }).join('');
 
   container.innerHTML = `
-    <div class="${isT4 ? 'in-world-terminal casefile-terminal' : 'screen-container'} m-screen m-casefile" style="max-width: 960px; margin: 0 auto; padding: 1.25rem;">
+    <div class="${isT4 ? 'in-world-terminal casefile-terminal' : 'screen-container case-screen'} m-screen m-casefile">
       ${headerMarkup}
       ${prologueMarkup}
-      <div class="case-board" style="display: flex; flex-direction: column; gap: 1.1rem;">
+      <div class="case-board">
         ${actsMarkup}
       </div>
-      <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-durasteel); display: flex; justify-content: space-between; align-items: center;">
-        <a href="#/bridge" class="btn-secondary quest-btn-sm" style="text-decoration: none; font-size: 0.75rem;">◀ Bridge</a>
-        <a href="#/starmap" class="btn-primary quest-btn-sm" style="text-decoration: none; font-size: 0.75rem;">Star Map ▶</a>
+      <div class="case-foot">
+        <a href="#/bridge" class="btn-secondary quest-btn-sm m-tap">Bridge</a>
+        <a href="#/starmap" class="btn-primary quest-btn-sm m-tap">Star Map</a>
       </div>
     </div>
   `;

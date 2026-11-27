@@ -174,8 +174,8 @@ export function renderContracts(container) {
       </div>
 
       <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-durasteel); display: flex; justify-content: space-between; align-items: center;">
-        <a href="#/bridge" class="btn-secondary quest-btn-sm" style="text-decoration: none; font-size: 0.75rem;">◀ Bridge</a>
-        <a href="#/casefile" class="btn-secondary quest-btn-sm" style="text-decoration: none; font-size: 0.75rem;">Case Board ▶</a>
+        <a href="#/bridge" class="btn-secondary quest-btn-sm" style="text-decoration: none; font-size: 0.75rem;">Bridge</a>
+        <a href="#/briefing" class="btn-secondary quest-btn-sm" style="text-decoration: none; font-size: 0.75rem;">Briefing</a>
       </div>
     </div>
   `;

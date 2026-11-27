@@ -232,19 +232,9 @@
   .m-quarters .crew-roster-card { padding: 0.65rem 0.75rem !important; }
 
   /* ---------- Settings ---------- */
-  .m-settings .settings-motion-row { min-height: 52px; gap: 0.75rem; }
-  .m-settings #reduce-motion-checkbox {
-    width: 26px !important;
-    height: 26px !important;
-    flex-shrink: 0;
-  }
-  .m-settings .settings-audio-head .section-title { flex: 1 1 auto; }
-  .m-settings #audio-mute-btn {
-    min-height: 40px;
-    padding: 6px 12px !important;
-  }
+  .m-settings .settings-section { padding: 1.1rem 1rem; margin-bottom: 0.9rem; }
   .m-settings .settings-slider-head { gap: 0.75rem; }
-  .m-settings .settings-slider { height: 32px; }
+  .m-settings .settings-slider { height: 36px; }
 
   /* ---------- Admin ---------- */
   .m-admin .admin-counters {
@@ -262,14 +252,59 @@
   /* The world and quest rows drop their side columns: code and status stack
      above the body, and the entry key spans the full width so it is reachable
      with a thumb. */
-  .m-learn .learn-world-row,
   .m-learn-world .learn-quest-row {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.75rem;
     padding: 0.9rem 1rem;
   }
 
-  .m-learn .learn-world-code,
+  /* A world on a phone: its number beside its name, what it teaches under
+     both, and one foot row holding progress on the left and Enter on the
+     right, where a thumb already is. */
+  .m-learn .learn-world-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "code body"
+      "meta meta";
+    column-gap: 0.85rem;
+    row-gap: 0.8rem;
+    align-items: start;
+    padding: 0.95rem 1rem 1rem;
+  }
+  .m-learn .learn-world-code {
+    grid-area: code;
+    border-right: 0;
+    padding: 0.1rem 0 0;
+    align-self: start;
+  }
+  .m-learn .learn-world-code .eyebrow { display: none; }
+  .m-learn .learn-code-num { font-size: 1.3rem; }
+  .m-learn .learn-world-body { grid-area: body; min-width: 0; }
+  .m-learn .learn-world-head { align-items: flex-start; flex-wrap: wrap; gap: 0.4rem 0.6rem; }
+  .m-learn .learn-world-line { font-size: 0.95rem; }
+  .m-learn .learn-world-meta {
+    grid-area: meta;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "meter keys"
+      "count keys";
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-durasteel);
+  }
+  .m-learn .learn-meter { grid-area: meter; flex-wrap: wrap; }
+  .m-learn .learn-world-count { grid-area: count; text-align: left; }
+  .m-learn .learn-world-keys {
+    grid-area: keys;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+  }
+  .m-learn .learn-world-keys > * { width: auto !important; min-width: 92px; }
+  .m-learn .learn-world-blocked { grid-area: keys; }
+
   .m-learn-world .learn-quest-index {
     flex-direction: row;
     align-items: center;
@@ -279,9 +314,6 @@
     padding: 0 0 0.6rem;
   }
 
-  .m-learn .learn-code-num { font-size: 1.05rem; }
-
-  .m-learn .learn-world-meta,
   .m-learn-world .learn-quest-action {
     align-items: stretch;
     flex-direction: row;
@@ -290,17 +322,14 @@
     gap: 0.6rem;
   }
 
-  .m-learn .learn-world-count,
-  .m-learn .learn-world-blocked,
   .m-learn-world .learn-quest-blocked { text-align: left; }
 
-  .m-learn .learn-enter,
+  .m-learn .learn-enter { min-height: 44px; }
   .m-learn-world .learn-enter { width: 100%; min-height: 44px; }
 
   /* Enter and Problems stack on a phone rather than squeezing side by side.
      The Problems key is how a finished world's practice set comes back, so it
      has to be a full 44 px target like everything else. */
-  .m-learn .learn-world-keys,
   .m-learn-world .learn-walk-keys,
   .m-learn-world .learn-brief-foot,
   .m-starmap .map-learn-action {
@@ -309,7 +338,6 @@
     gap: 0.5rem;
   }
 
-  .m-learn .learn-world-keys > *,
   .m-learn-world .learn-walk-keys > *,
   .m-learn-world .learn-brief-foot > *,
   .m-starmap .map-learn-action > * {
@@ -436,8 +464,6 @@
 @media (max-width: 480px) {
   .m-screen .glass-panel:not(.page-header) { padding: 1rem 0.9rem; }
 
-  .m-settings .settings-audio-head { align-items: stretch !important; }
-  .m-settings #audio-mute-btn { width: 100%; }
 
   .m-register .m-foot { justify-content: space-between; }
 }
@@ -456,10 +482,27 @@
    =================================================================== */
 
 @media (max-width: 760px) {
-  .map-tabs { flex-wrap: wrap; }
+  /* The shortcuts go above the tabs as one row of three equal keys, so the
+     tabs still sit directly on the chart they switch. */
+  .map-tabs-row { flex-direction: column; align-items: stretch; gap: 0; }
+  .map-links {
+    order: -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0 0 0.75rem;
+  }
+  .map-links .quest-btn-sm {
+    min-height: 44px;
+    padding: 0 6px;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    justify-content: center;
+  }
+  .map-tabs { width: 100%; }
 
   .map-tab {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 44px;
     font-size: 0.68rem;
     padding: 10px 8px;
@@ -473,7 +516,19 @@
   .map-learn-code { flex-direction: row; align-items: center; gap: 8px; }
 
   .map-learn-action { width: 100%; }
-  .map-learn-action .btn-primary { width: 100%; text-align: center; min-height: 40px; }
+  .map-learn-action .btn-primary,
+  .map-learn-action .btn-secondary { width: 100%; text-align: center; min-height: 44px; }
+
+  /* ---------- Briefing ---------- */
+  .case-terminal-head { flex-wrap: wrap; row-gap: 0.5rem; }
+  .case-terminal-keys { margin-left: auto; }
+  .case-terminal-keys .btn-secondary,
+  .case-terminal-keys .terminal-close-btn { min-height: 40px; }
+  .case-prologue,
+  .case-act { padding: 0.9rem 0.95rem 1rem; }
+  .case-act-question { font-size: 1.02rem; }
+  .case-clues { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+  .case-foot a { flex: 1 1 0; min-height: 44px; justify-content: center; }
 
   /* The Learn walk HUD on a phone lives in mobile-game.css, beside the sticks it clears. */
 }

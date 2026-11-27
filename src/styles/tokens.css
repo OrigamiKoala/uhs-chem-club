@@ -126,7 +126,22 @@
   /* -----------------------------------------------------------------
      TEXTURE & MOTION
      ----------------------------------------------------------------- */
-  --grain: none;
+  /* WEAR — forty years of hands, sand and solvent on every plate.
+     Static SVG tiles, painted once; nothing here animates or blurs, so a
+     plate over the live canvas costs no more than it did bare.
+       --grain   fine sandblast speckle, light and dark
+       --scuff   long horizontal wipe marks where gloves dragged across
+       --grime   dirt settled into the lower edge and corners
+       --screws  four countersunk fasteners, one per corner */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.8 0 0 0 0 0.7 0.9 0 0 0 -0.43'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  --scuff: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='220'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003 0.42' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.9 0 0 0 -1.12'/%3E%3C/filter%3E%3Crect width='420' height='220' filter='url(%23s)'/%3E%3C/svg%3E");
+  --grime: linear-gradient(180deg, rgba(255, 240, 220, 0.025) 0%, transparent 18%, transparent 62%, rgba(0, 0, 0, 0.32) 100%),
+           radial-gradient(120% 90% at 50% 40%, transparent 60%, rgba(0, 0, 0, 0.3) 100%);
+  --screws:
+    radial-gradient(circle at 9px 9px, #6b665e 0 1.2px, #2b2926 1.6px 2.6px, rgba(0, 0, 0, 0.7) 3px, transparent 3.6px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #6b665e 0 1.2px, #2b2926 1.6px 2.6px, rgba(0, 0, 0, 0.7) 3px, transparent 3.6px),
+    radial-gradient(circle at 9px calc(100% - 9px), #6b665e 0 1.2px, #2b2926 1.6px 2.6px, rgba(0, 0, 0, 0.7) 3px, transparent 3.6px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #6b665e 0 1.2px, #2b2926 1.6px 2.6px, rgba(0, 0, 0, 0.7) 3px, transparent 3.6px);
 
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --transition-fast: 0.15s var(--ease-spring);

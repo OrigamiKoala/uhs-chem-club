@@ -92,7 +92,7 @@ function maybeOfferPractice(world) {
   if (session.hasFlag(practiceOfferedFlag(world.id))) return;
   // An offer, said once, in the corner. The questions are in the Drill Deck.
   session.setFlag(practiceOfferedFlag(world.id), true);
-  showToast(`${world.world} is worked. Its practice questions are open in the Drill Deck.`, 'info');
+  showToast(`${world.world} is worked. Its questions are now in Practice.`, 'info');
 }
 
 /** The key that reopens a finished world's problem set, or nothing. */

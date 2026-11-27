@@ -51,11 +51,29 @@
   color: var(--text-muted);
 }
 
+.learn-head-link,
+.learn-continue,
+.learn-enter { text-decoration: none; }
+
+/* The world the player is on: its edge catches the lamp. */
+.learn-world-row.is-resume { border-color: var(--border-strong); }
+
+.learn-world-tags { display: flex; gap: 0.35rem; align-items: center; flex: none; }
+
+/* The story's hook for the world, under what it teaches. */
+.learn-world-story {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--accent-gold);
+  margin: 0.35rem 0 0;
+  max-width: 68ch;
+}
+
 .learn-world-code {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 4px;
   border-right: 1px solid var(--border-durasteel);
   padding-right: 1rem;
   align-self: stretch;
@@ -2710,11 +2728,32 @@ body.touch-walking .lq-dock-bar {
    STAR MAP — the two roads
    =================================================================== */
 
+/* Tabs on the left sit on the rule that divides them from the chart; the
+   three shortcuts to the other boards sit on the same rule, on the right. */
+.map-tabs-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-durasteel);
+}
+
 .map-tabs {
   display: flex;
   gap: 0;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border-durasteel);
+}
+
+.map-links {
+  display: flex;
+  gap: 0.4rem;
+  padding-bottom: 0.45rem;
+}
+.map-links .quest-btn-sm {
+  font-size: 0.72rem;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .map-tab {
@@ -2788,6 +2827,16 @@ body.touch-walking .lq-dock-bar {
 }
 
 .map-learn-count { font-size: 0.68rem; }
+
+/* The story's hook for this world: a line of transmission, not a signal. */
+.map-learn-story {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--accent-gold);
+  margin: 0.15rem 0 0.35rem;
+}
+
+.map-learn-action { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
 
 .map-learn-blocked { font-size: 0.68rem; color: var(--text-muted); }
 
@@ -2942,25 +2991,32 @@ body.touch-walking .lq-dock-bar {
 }
 
 .lq-practice-question {
-  font-size: 1rem;
-  max-width: 36ch;
-  line-height: 1.45;
+  margin: 0 0 1.1rem;
+  font-size: 1.08rem;
+  max-width: 62ch;
+  line-height: 1.5;
+  color: var(--text-bright);
+  text-wrap: pretty;
 }
 
 .lq-practice-options {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  margin-bottom: 0.9rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .lq-practice-opt {
   text-align: left;
-  padding: 0.6rem 0.9rem;
+  padding: 0.75rem 1rem;
   width: 100%;
+  min-height: 50px;
+  font-size: 0.98rem;
+  line-height: 1.4;
 }
 
-.lq-practice-feedback { min-height: 2.2rem; margin-bottom: 0.9rem; }
+.lq-practice-feedback { margin-bottom: 1rem; }
+.lq-practice-feedback:empty { margin-bottom: 0; }
 
 .lq-practice-verdict {
   display: flex;
@@ -3093,6 +3149,10 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
     width: 100%;
     max-width: 560px;
     margin: auto;
+  }
+  body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card,
+  body.bench-deployed .modal-container:has(.lq-practice-options) .modal-card {
+    padding: 1.25rem 1.1rem;
   }
 }
 

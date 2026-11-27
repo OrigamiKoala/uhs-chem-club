@@ -14,7 +14,7 @@ import { renderGardensMap } from "../ui/gardens-map.js";
 import { QUEST1_STORY } from "../story/quest1.js";
 import { tierManager } from "../three/tier.js";
 import { WORLDS } from "../learn/curriculum.js";
-import { worldStatus, worldProgress, isQuestComplete } from "../learn/progress.js";
+import { worldStatus, worldProgress, isQuestComplete, currentWorld } from "../learn/progress.js";
 import { openWorldStoryModal, openCampaignStoryModal } from "../story/story-modal.js";
 import { mountGalaxyMap } from "../ui/galaxy-map.js";
 import { ACTS, getEpisode } from "../story/saga.js";
@@ -68,17 +68,15 @@ const LEARN_STATUS_TAG = {
  */
 function tabRow(active) {
   return `
-    <div class="map-tabs" role="tablist" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-      <div style="display: flex; gap: 0.25rem;">
+    <div class="map-tabs-row">
+      <div class="map-tabs" role="tablist">
         <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Story</button>
         <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Contracts</button>
       </div>
-      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-        <a href="#/drills" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; text-decoration: none;">Drill Deck</a>
-        <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; text-decoration: none;">Case Board</a>
-        <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Main Briefing" style="font-size: 0.72rem;">
-          Main Briefing
-        </button>
+      <div class="map-links">
+        <a href="#/practice" class="btn-secondary quest-btn-sm m-tap">Practice</a>
+        <a href="#/briefing" class="btn-secondary quest-btn-sm m-tap">Briefing</a>
+        <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn">Prologue</button>
       </div>
     </div>
   `;
@@ -90,6 +88,7 @@ function tabRow(active) {
  * label says which, and nothing here claims a world exists that does not.
  */
 function learnPanel() {
+  const resumeId = currentWorld()?.id;
   return `
     <div class="map-learn-list">
       ${WORLDS.map(w => {
@@ -101,20 +100,20 @@ function learnPanel() {
           <article class="holo-card map-learn-row learn-${st}">
             <div class="map-learn-code">
               <span class="eyebrow ${enterable ? "lit" : ""}">${esc(w.code)}</span>
-              <span class="tag ${tag.cls}">${tag.label}</span>
+              ${st === "open" ? "" : `<span class="tag ${tag.cls}">${tag.label}</span>`}
               ${w.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ""}
             </div>
             <div class="map-learn-body">
               <div class="map-learn-name">${esc(w.world)}</div>
               <p class="map-learn-line">${esc(w.line)}</p>
-              ${getEpisode(w.id)?.arrival ? `<p style="font-size: 0.76rem; line-height: 1.35; color: var(--accent-amber); margin: 0.2rem 0 0.35rem;">${esc(getEpisode(w.id).arrival)}</p>` : ""}
+              ${getEpisode(w.id)?.arrival ? `<p class="map-learn-story">${esc(getEpisode(w.id).arrival)}</p>` : ""}
               <div class="eyebrow map-learn-count">
-                ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ""}
+                ${prog.liveTotal ? `${prog.questsComplete} / ${prog.liveTotal} quests done` : `${w.questCount} quests`}
               </div>
             </div>
-            <div class="map-learn-action" style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+            <div class="map-learn-action">
               ${enterable
-                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">Enter</a>`
+                ? `<a href="#/learn/${esc(w.id)}" class="${w.id === resumeId ? "btn-primary" : "btn-secondary"} quest-btn-sm m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">Enter</a>`
                 : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Locked" : "Coming soon"}</span>`}
             </div>
           </article>

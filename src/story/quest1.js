@@ -187,7 +187,7 @@ export const QUEST1_STORY = {
     speaker: 'Vess',
     badge: 'CONTRACT COMPLETE · SECTOR 01',
     subtitle: 'The Charge Gardens',
-    message: 'All twenty shield towers are back online. Inside Pylon 20 we found an unknown triangle mark—none of the Four Guilds use it, and it opens our Case Board.',
+    message: 'All twenty shield towers are back online. Inside Pylon 20 we found an unknown triangle mark—none of the Four Guilds use it, and it opens our Briefing.',
     sections: [
       {
         title: 'Contract Fulfilled',

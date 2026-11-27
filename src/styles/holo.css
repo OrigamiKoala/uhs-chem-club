@@ -19,7 +19,14 @@
 }
 
 .holo-card::before {
-  display: none;
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--scuff), var(--grain), var(--grime);
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
+  background-size: 420px 220px, 180px 180px, 100% 100%, 100% 100%;
+  opacity: 0.75;
 }
 
 .holo-card > * { position: relative; }
@@ -1567,3 +1574,338 @@
   color: var(--text-muted);
 }
 
+
+/* ===================================================================
+   BRIEFING — the case board (`screens/casefile.js`).
+   One act per plate: the question it asks, the clues that answer it,
+   and what has been heard about it. A found clue is printed in full; a
+   missing one is a blank slot with its source stencilled on it.
+   =================================================================== */
+.case-screen { max-width: 960px; }
+
+.case-terminal-head { align-items: center; gap: 0.75rem; }
+.case-terminal-title { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; min-width: 0; }
+.case-terminal-title .section-title { margin: 0; font-size: 1.15rem; }
+.case-terminal-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.case-terminal-keys { display: flex; align-items: center; gap: 0.5rem; flex: none; }
+.case-terminal-keys .terminal-close-btn { text-decoration: none; display: inline-flex; align-items: center; min-height: 32px; }
+
+.case-section-label {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.case-prologue {
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.1rem;
+  background: var(--plate-200);
+}
+.case-prologue .case-section-label { color: var(--accent-gold); }
+.case-prologue-line { margin: 0 0 0.45rem; font-size: 0.92rem; line-height: 1.55; color: var(--text-primary); max-width: 72ch; }
+.case-prologue-line:last-child { margin-bottom: 0; }
+
+.case-board { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.case-act {
+  padding: 1.15rem 1.2rem 1.2rem;
+  background: var(--plate-200);
+}
+.case-act.is-solved { border-color: rgba(204, 165, 110, 0.55); }
+.case-act:hover { background-color: var(--plate-200); }
+
+.case-act-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+.case-act-worlds {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  line-height: 1.5;
+}
+.case-act-head .tag { flex: none; }
+
+.case-act-question {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--text-bright);
+  text-wrap: balance;
+}
+
+.case-clues {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+/* A slot not yet filled: a recess in the plate, its label stencilled in. */
+.case-clue {
+  padding: 0.7rem 0.8rem;
+  background: var(--plate-100);
+  border: 1px dashed var(--plate-500);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.case-clue.is-found {
+  border: 1px solid rgba(150, 124, 80, 0.7);
+  box-shadow: inset 0 1px 0 var(--seam-light);
+}
+.case-clue-source {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.case-clue.is-found .case-clue-source { color: var(--accent-gold); }
+.case-clue-name { font-family: var(--font-display); font-size: 0.9rem; color: var(--text-muted); }
+.case-clue.is-found .case-clue-name { color: var(--text-bright); margin-bottom: 0.3rem; }
+.case-clue-summary { margin: 0 0 0.4rem; font-size: 0.82rem; line-height: 1.45; color: var(--text-secondary); }
+.case-clue-note {
+  margin: 0;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--accent-amber);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.case-block {
+  margin-bottom: 0.9rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border-durasteel);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.case-block > .case-section-label { margin-bottom: 0; }
+
+.case-message {
+  padding: 0.6rem 0.75rem;
+  background: var(--plate-100);
+  border: 1px solid var(--border-subtle);
+  border-left-color: var(--accent-gold);
+}
+.case-message-from { font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-gold); margin-bottom: 0.25rem; }
+.case-message-text { margin: 0; font-size: 0.88rem; line-height: 1.5; color: var(--text-bright); }
+
+.case-pin {
+  padding: 0.4rem 0.6rem;
+  background: var(--plate-100);
+  border: 1px solid var(--border-subtle);
+  border-left-color: var(--accent-bronze);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+.case-pin-ask { color: var(--text-muted); margin-bottom: 0.15rem; }
+.case-pin-world { color: var(--accent-gold); }
+
+.case-log > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; list-style: none; }
+.case-log > summary::-webkit-details-marker { display: none; }
+.case-log > summary::before { content: '+'; width: 1.1em; color: var(--text-secondary); }
+.case-log[open] > summary::before { content: '\2212'; }
+.case-log-entry { padding: 0.5rem 0.7rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); }
+.case-log-title { font-family: var(--font-mono); font-size: 0.66rem; color: var(--accent-bronze); margin-bottom: 0.2rem; }
+.case-log-text { margin: 0; font-size: 0.84rem; line-height: 1.5; color: var(--text-primary); }
+
+.case-answer {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.case-answer.is-solved { color: var(--text-bright); border-color: rgba(204, 165, 110, 0.5); border-left-color: var(--accent-amber); }
+
+.case-foot {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-durasteel);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+.case-foot a { text-decoration: none; }
+
+/* ===================================================================
+   SETTINGS — rows of switchgear (`screens/settings.js`).
+   A choice is a key with a lamp in it; an on/off is a slide switch in a
+   recessed track; a level is a fader. Nothing here is a browser default.
+   =================================================================== */
+.settings-screen { max-width: 680px; }
+.settings-back { text-decoration: none; }
+.settings-terminal-title { margin: 0; font-size: 1.15rem; }
+
+.settings-section { margin-bottom: 1.25rem; padding: 1.4rem 1.5rem; }
+.settings-section > .section-title { margin-bottom: 1rem; }
+.settings-section:last-child { margin-bottom: 0; }
+
+.settings-choices { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.1rem; }
+.settings-choice { gap: 0.9rem; padding: 12px 14px; }
+.settings-choice.disabled { opacity: 0.5; cursor: not-allowed; }
+.settings-choice-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.settings-choice-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+.settings-choice-help {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* The radio is a panel lamp: dark when off, a lit filament when chosen. */
+.settings-lamp {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 10px;
+  height: 14px;
+  margin: 0;
+  background: var(--plate-400);
+  border: 1px solid var(--plate-600);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+.settings-lamp:checked {
+  background: var(--lamp-amber);
+  border-color: var(--border-hazard);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 0 4px rgba(245, 183, 66, 0.4);
+}
+.settings-lamp:disabled { cursor: not-allowed; }
+.settings-choice:has(.settings-lamp:focus-visible) { outline: 1px solid var(--accent-amber); outline-offset: 2px; }
+
+/* One labelled row: name on the left, the control on the right. */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 52px;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border-durasteel);
+  cursor: pointer;
+}
+.settings-row-first { padding-top: 0; border-top: 0; margin-bottom: 0.9rem; }
+.settings-row-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+/* Slide switch: a knob in a recessed track. On, the knob is at the right and
+   lit; off, it is bare metal at the left. */
+.settings-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 48px;
+  height: 26px;
+  margin: 0;
+  cursor: pointer;
+  border: 1px solid var(--border-durasteel);
+  border-top-color: #000;
+  background:
+    linear-gradient(180deg, var(--plate-600), var(--plate-400)) no-repeat 3px 50% / 18px 18px,
+    var(--plate-100);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.75);
+  transition: background-position 0.14s var(--ease-spring), background-color 0.14s ease;
+}
+.settings-switch:checked {
+  background:
+    linear-gradient(180deg, var(--lamp-amber), #c8851a) no-repeat calc(100% - 3px) 50% / 18px 18px,
+    #2a2112;
+  border-color: rgba(229, 155, 36, 0.45);
+  border-top-color: #000;
+}
+.settings-switch:focus-visible { outline: 1px solid var(--accent-amber); outline-offset: 3px; }
+
+.settings-sliders { display: flex; flex-direction: column; gap: 1.1rem; transition: opacity 0.15s ease; }
+.settings-sliders.is-muted { opacity: 0.45; }
+.settings-slider-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+.settings-value { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-amber); font-variant-numeric: tabular-nums; }
+
+/* Fader: a machined slot and a square cap. */
+.settings-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.settings-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--plate-000);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: #000;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.settings-slider::-moz-range-track {
+  height: 6px;
+  background: var(--plate-000);
+  border: 1px solid var(--border-durasteel);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.settings-slider::-moz-range-progress { height: 6px; background: rgba(229, 155, 36, 0.55); }
+.settings-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 22px;
+  margin-top: -9px;
+  background: linear-gradient(180deg, var(--plate-600), var(--plate-400));
+  border: 1px solid #000;
+  box-shadow: inset 0 1px 0 var(--seam-light), inset 0 -2px 0 rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.6);
+  background-image: linear-gradient(var(--lamp-amber), var(--lamp-amber)), linear-gradient(180deg, var(--plate-600), var(--plate-400));
+  background-size: 100% 2px, 100% 100%;
+  background-position: 0 50%, 0 0;
+  background-repeat: no-repeat;
+}
+.settings-slider::-moz-range-thumb {
+  width: 14px;
+  height: 22px;
+  border-radius: 0;
+  background: linear-gradient(180deg, var(--plate-600), var(--plate-400));
+  border: 1px solid #000;
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+.settings-slider:focus-visible { outline: 1px solid var(--accent-amber); outline-offset: 2px; }
+
+.settings-submit { width: 100%; }

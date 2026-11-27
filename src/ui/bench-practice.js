@@ -76,7 +76,7 @@ export function runBenchPractice(worldId, questId) {
         </div>
         <div class="lq-practice-feedback" role="status" aria-live="polite"></div>
         <div class="lq-practice-keys">
-          <button type="button" class="btn-secondary" data-skip>Skip</button>
+          <button type="button" class="btn-secondary" data-skip>Skip Set</button>
           <button type="button" class="btn-primary" data-next hidden>Next</button>
         </div>
       `, { labelledBy: 'bp-title', onClose: finish });

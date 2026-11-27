@@ -97,8 +97,8 @@ export function renderBridge(container) {
               <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting 12/1 in 702</div>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" title="Main Briefing">
-                Main Briefing
+              <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" >
+                Prologue
               </button>
               <button type="button" id="bridge-announcement-close" class="btn-chip" style="font-size: 0.72rem; padding: 2px 8px; color: var(--accent-amber); border-color: rgba(217, 148, 35, 0.4); cursor: pointer;" title="Close [X]">Close [X]</button>
             </div>
@@ -151,7 +151,7 @@ export function renderBridge(container) {
               <div class="bridge-decks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <a href="#/starmap" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Star Map</a>
                 <a href="#/contracts" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Contracts</a>
-                <a href="#/casefile" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Case Board</a>
+                <a href="#/briefing" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Briefing</a>
                 <a href="#/leaderboard" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Standings</a>
                 <a href="#/inventory" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Inventory</a>
                 <a href="#/quarters" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Crew</a>

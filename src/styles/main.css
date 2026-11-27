@@ -80,9 +80,55 @@ body::after {
   overflow: hidden;
 }
 
+/* The wear layer. Fasteners on top, then the scuffs, the sandblast and the
+   dirt in the lower edge. It sits under the content (children are lifted
+   by the rule below) and never takes a press. */
 .plate::before,
 .glass-panel::before {
-  display: none;
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--screws), var(--scuff), var(--grain), var(--grime);
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat, no-repeat;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 420px 220px, 180px 180px, 100% 100%, 100% 100%;
+  opacity: 0.9;
+}
+
+/* A plate too small to carry four bolts (a toolbar strip, a row in a list)
+   keeps the wear and drops the fasteners. */
+.page-header::before,
+.lq-tstrip.plate::before,
+.lq-tdock.plate::before,
+.learn-host-bar.plate::before {
+  background-image: var(--scuff), var(--grain), var(--grime);
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
+  background-size: 420px 220px, 180px 180px, 100% 100%, 100% 100%;
+}
+
+/* Form controls take the ship's face, not the browser's. */
+button, input, select, textarea { font-family: inherit; }
+input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: var(--accent-amber); }
+
+::selection { background: rgba(229, 155, 36, 0.32); color: var(--text-bright); }
+
+/* Scrollbars are part of the plate: a dark well with a worn thumb. */
+* { scrollbar-width: thin; scrollbar-color: var(--plate-500) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--plate-500); border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background-color: var(--plate-600); }
+
+/* The [E] prompt names what the walk is aimed at. While a page, a terminal or
+   a dialog holds the glass, nothing is being walked toward, and the prompt
+   would sit on top of that page's text. */
+body:has(.app-viewport .m-learn) #fps-interact-prompt,
+body:has(.app-viewport .m-drills) #fps-interact-prompt,
+body:has(.app-viewport .m-starmap:not([style*="display: none"])) #fps-interact-prompt,
+body:has(.app-viewport .m-casefile:not([style*="display: none"])) #fps-interact-prompt,
+body:has(.app-viewport .m-settings:not([style*="display: none"])) #fps-interact-prompt,
+body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
+  display: none !important;
 }
 
 .plate > *,
@@ -1014,10 +1060,19 @@ body::after {
   width: min(580px, calc(100vw - 3rem));
   max-height: calc(100vh - var(--hud-h) - 3rem);
   overflow-y: auto;
-  background: rgba(14, 12, 10, 0.90);
+  background-color: rgba(14, 12, 10, 0.92);
+  /* The wear scrolls with the page it is printed on (`local`), so a long
+     terminal is worn all the way down, not just behind its first screen. */
+  background-image: var(--scuff), var(--grain), linear-gradient(180deg, rgba(255, 240, 220, 0.03), transparent 120px);
+  background-repeat: repeat, repeat, no-repeat;
+  background-size: 420px 220px, 180px 180px, 100% 100%;
+  background-attachment: local, local, scroll;
   border: 1px solid var(--border-durasteel);
   border-top: 2px solid var(--accent-amber);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+  box-shadow:
+    inset 0 1px 0 var(--seam-light),
+    inset 1px 0 0 rgba(255, 240, 220, 0.04),
+    0 16px 40px rgba(0, 0, 0, 0.85);
   padding: 1.25rem;
   z-index: 50;
   color: var(--text-primary);
@@ -1041,6 +1096,7 @@ body::after {
   padding: 4px 8px;
   cursor: pointer;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
   transition: all 0.15s ease;
 }
 

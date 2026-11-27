@@ -41,6 +41,19 @@
   .hud::after { display: none !important; }
   :root:has(#hud-nav.hidden) .hud { grid-template-rows: none; }
 
+  /* Over a page that scrolls (the Learn road, Practice, and the 2D tiers'
+     boards), the bar gets its plate back: text sliding under a see-through
+     header read as a rendering fault. Over the walk it stays clear. */
+  :root:has(.app-viewport > .m-learn) .hud,
+  :root:has(.app-viewport > .m-drills) .hud,
+  :root:has(.app-viewport > .screen-container.m-casefile) .hud,
+  :root:has(.app-viewport > .screen-container.m-settings) .hud,
+  :root:has(.app-viewport > .screen-container.m-starmap) .hud {
+    background: rgba(10, 9, 10, 0.97) !important;
+    border-bottom: 1px solid var(--border-durasteel) !important;
+    box-shadow: inset 0 -1px 0 var(--seam-dark), 0 6px 16px rgba(0, 0, 0, 0.6) !important;
+  }
+
   .hud-left {
     display: flex !important;
     align-items: center !important;
@@ -659,7 +672,7 @@
     bottom: max(0.5rem, env(safe-area-inset-bottom));
     max-height: none;
     padding: 0.9rem;
-    background: rgba(14, 12, 10, 0.97);
+    background-color: rgba(14, 12, 10, 0.97);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     overscroll-behavior: contain;
