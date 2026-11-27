@@ -43,7 +43,7 @@ export function runBenchPractice(worldId, questId) {
       if (settled) return;
       settled = true;
       closeCalculator();
-      modalEl?.classList.remove('modal-fullscreen-practice');
+      modalEl?.classList.remove('modal-fullscreen-practice', 'modal-worked');
       view?.dispose();
       resolve();
     };
@@ -131,7 +131,8 @@ export function runBenchPractice(worldId, questId) {
     }
 
     function startWorked() {
-      showModal('<div id="bp-host"></div>', { labelledBy: 'bp-title', onClose: finish });
+      modalEl?.classList.add('modal-worked');
+      showModal('<div id="bp-host" class="bp-host"></div>', { labelledBy: 'bp-title', onClose: finish });
       const host = document.getElementById('bp-host');
       view = mountWorked(host, worked, {
         onDone: () => { note(worked.id, true); leave(); },

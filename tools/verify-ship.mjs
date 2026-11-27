@@ -547,6 +547,38 @@ console.log('\nPhysical occupancy — nothing shares space with anything else\n'
   await measure('Erebus', () => new worldModule.WorldScene(null).scene);
 
   /*
+   * The overhead pipe and cable-tray runs are lining, so they belong to the
+   * hull object and the pairwise check above cannot see a tall rack standing
+   * up into one. Test it directly: no vertex of anything that is not hull may
+   * sit inside a run's footprint above the run's underside.
+   */
+  {
+    const { CEILING_RUNS } = await import('../src/three/ship/kit.js');
+    assert(CEILING_RUNS.length > 0, `the Avalon: overhead runs are laid (${CEILING_RUNS.length})`);
+    ship.group.updateMatrixWorld(true);
+    const v = new THREE.Vector3();
+    const clash = new Map();
+    for (const child of ship.group.children) {
+      if (child === ship.hull || child.userData?.phys === 'ambient' || child.isPoints) continue;
+      child.traverse(o => {
+        if (!o.isMesh || !o.geometry?.attributes?.position || o.isInstancedMesh) return;
+        const pos = o.geometry.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
+          for (const r of CEILING_RUNS) {
+            if (v.y > r.bottomY - 0.02 && v.y < r.bottomY + 0.4 &&
+                v.x > r.minX && v.x < r.maxX && v.z > r.minZ && v.z < r.maxZ) {
+              clash.set(`${child.name || child.type} at ${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)}`, true);
+            }
+          }
+        }
+      });
+    }
+    for (const k of [...clash.keys()].slice(0, 8)) console.error(`       ${k}`);
+    assert(clash.size === 0, 'the Avalon: nothing stands up into an overhead pipe or cable run');
+  }
+
+  /*
    * Erebus is walked, not just looked at: the rocks, the arch, the bones and
    * the derelict all carry colliders, and a landmark dropped in the wrong
    * place would wall a pylon off from the player. Flood-fill the walk from

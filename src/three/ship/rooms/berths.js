@@ -495,13 +495,14 @@ export function buildBerth(ship, roomId, { locker, designator }) {
   // The bunk alcove and the desk stand against plating kept plain for them;
   // over the bunk the chamfer comes off so its stowage bin reaches the deckhead.
   dressRoomShell(ship, roomId, {
+    ceilingRuns: false,   // the upper bunks reach the deckhead
     keepClear: [
       { side: 'S', from: -5.6, to: -3.45, top: 3.0 },
       { side: 'W', from: zS + dz, to: -1.25 + dz, top: 3.0 },
       { side: 'W', from: -1.25 + dz, to: -0.9 + dz },
       { side: 'N', from: -3.98, to: -1.36 }
     ],
-    fill: { panels: 4, vent: 1.2, conduit: 1.4, machinery: 0.8, light: 0.6 },
+    fill: { panels: 4, vent: 1.2, conduit: 1.4, machinery: 0.8, light: 0.6, pipes: 0.6, breakers: 0.6 },
     seed: roomId === 'quarters' ? 11 : 17
   });
 

@@ -129,6 +129,42 @@ export function deepWorked(worlds, scope = 'all') {
     });
 }
 
+/**
+ * The benches a deep problem draws on, from its `after` list ("<worldId>:<questId>").
+ * It opens once every one of them is cleared.
+ */
+export function deepRefs(wk) {
+  return (wk?.after || []).map(ref => {
+    const [worldId, questId] = String(ref).split(':');
+    return { worldId, questId };
+  });
+}
+
+/**
+ * Where on the road a deep problem sits: right after the last bench it needs,
+ * in road order. `worlds` is the road (curriculum order). Null when a ref is unknown.
+ */
+export function deepAnchor(wk, worlds) {
+  let best = null;
+  let bestKey = -1;
+  for (const r of deepRefs(wk)) {
+    const wi = worlds.findIndex(w => w.id === r.worldId);
+    const qi = wi < 0 ? -1 : worlds[wi].quests.findIndex(q => q.id === r.questId);
+    if (wi < 0 || qi < 0) return null;
+    const key = wi * 1000 + qi;
+    if (key > bestKey) { bestKey = key; best = r; }
+  }
+  return best;
+}
+
+/** The deep problems that sit in `world`'s road, each stamped with `anchorQuestId`. */
+export function worldDeepWorked(world, worlds) {
+  return deepWorked(worlds, 'all')
+    .map(wk => ({ wk, at: deepAnchor(wk, worlds) }))
+    .filter(x => x.at && x.at.worldId === world.id)
+    .map(({ wk, at }) => ({ ...wk, anchorQuestId: at.questId }));
+}
+
 /** The questions asked together at the end of a world. */
 export function endProblems(world) {
   const title = titler(world);

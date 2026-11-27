@@ -430,7 +430,7 @@ export function createTallowCelestials() {
  * light is the crust itself, throwing most of it back up under everything.
  */
 export function createTallowLights({ shadows }) {
-  const sun = new THREE.DirectionalLight(new THREE.Color('#fff1dc'), 2.7);
+  const sun = new THREE.DirectionalLight(new THREE.Color('#fff1dc'), 2.95);
   sun.position.copy(TALLOW_SUN).multiplyScalar(160);
   sun.castShadow = Boolean(shadows);
   if (shadows) {
@@ -443,9 +443,10 @@ export function createTallowLights({ shadows }) {
     // A veiled sun casts a soft-edged shadow; PCFSoft takes the hint.
     sun.shadow.radius = 3;
   }
-  // Sky above, lit salt below. The ground term is the brighter of the two
-  // near the pan, which is exactly what makes the undersides of things glow.
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#bfc0bd'), new THREE.Color('#dcd0b9'), 1.15);
+  // Sky above, lit salt below. The bounce off the crust is warm and strong enough to lift every underside, but it
+  // stays below the sky: at 1.15 with the ground term the brighter, every face read the same and the plant was flat
+  // (realism pass, 2026-11-26). The environment map carries the sun-side brightening of the sky.
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#c2c2bd'), new THREE.Color('#bfb29b'), 0.92);
   return { sun, hemi };
 }
 

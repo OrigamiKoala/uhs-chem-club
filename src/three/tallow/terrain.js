@@ -155,6 +155,11 @@ export function buildTallowTerrainGeometry(field, { step = 1.25, growth = 1.07, 
 }
 
 const MAX_RUTS = 24;
+/** Footprints that darken the ground round their foot (`setTallowContacts`): boxes and circles. */
+export const MAX_CONTACT_BOXES = 12;
+export const MAX_CONTACT_CIRCLES = 16;
+/** Metres one tile of the procedural grit normal covers; the photographed grain replaces it (`setTallowGrain`). */
+const GRIT_TILE = 6 / 7.3;
 const MAX_PATHS = 16;
 /** Polylines per kind: each gets a bounding box the shader tests before its segments. */
 export const MAX_TRACK_LINES = 8;
@@ -230,8 +235,21 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
     uPaths: { value: paths.list },
     uPathBox: { value: paths.boxes },
     uPathSpan: { value: paths.spans },
-    uPathLines: { value: paths.lineN }
+    uPathLines: { value: paths.lineN },
+    // The crystal grain at the player's feet: the procedural grit normal and a neutral grey until the
+    // photographed pack lands, then the photo's normal and its high-passed luminance (`setTallowGrain`).
+    uGrainAlb: { value: neutralGrey() },
+    uGritTile: { value: GRIT_TILE },
+    uGrainK: { value: 0.0 },
+    uGritK: { value: 0.35 },
+    // Contact occlusion: the ground darkens toward the foot of every building and round structure.
+    uContactBox: { value: Array.from({ length: MAX_CONTACT_BOXES }, () => new THREE.Vector4()) },
+    uContactN: { value: 0 },
+    uContactCirc: { value: Array.from({ length: MAX_CONTACT_CIRCLES }, () => new THREE.Vector4()) },
+    uContactCN: { value: 0 }
   };
+  mat.userData.terrainUniforms = uniforms;
+  mat.userData.surfaceMaps.push(uniforms.uGrainAlb.value);
 
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms, tallowSkyUniforms, tallowHazeUniforms);
@@ -259,6 +277,14 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
         uniform vec4 uPathBox[${MAX_TRACK_LINES}];
         uniform vec2 uPathSpan[${MAX_TRACK_LINES}];
         uniform int uPathLines;
+        uniform sampler2D uGrainAlb;
+        uniform float uGritTile;
+        uniform float uGrainK;
+        uniform float uGritK;
+        uniform vec4 uContactBox[${MAX_CONTACT_BOXES}];
+        uniform int uContactN;
+        uniform vec4 uContactCirc[${MAX_CONTACT_CIRCLES}];
+        uniform int uContactCN;
         varying vec4 vMask;
         varying vec3 vTW;
         varying vec3 vTN;
@@ -305,6 +331,33 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
         ground = mix(ground, avg * (0.95 + 0.1 * m2), smoothstep(60.0, 260.0, gCamD) * 0.7);
         ground *= 0.9 + 0.2 * m1;
         ground = mix(ground, ground * vec3(1.03, 0.99, 0.93), smoothstep(0.55, 0.8, m2) * 0.5);
+
+        // Crystal grain, photographed: a high-passed detail layer that fades out by 25 m.
+        {
+          vec2 gu = mat2(0.96, -0.28, 0.28, 0.96) * vTW.xz / uGritTile;
+          float gl = texture2D(uGrainAlb, gu).r;
+          ground *= 1.0 + (gl - 0.5) * 0.55 * uGrainK * (1.0 - smoothstep(6.0, 25.0, gCamD));
+        }
+        // Contact occlusion round every footprint: darker at the foot, gone by about two metres.
+        {
+          float occ = 0.0;
+          for (int i = 0; i < ${MAX_CONTACT_BOXES}; i++) {
+            if (i >= uContactN) break;
+            vec4 b = uContactBox[i];
+            vec2 q = abs(vTW.xz - b.xy) - b.zw;
+            float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+            d = max(d, 0.0);
+            occ = max(occ, max(exp(-d / 0.3), 0.6 * exp(-d / 1.6)));
+          }
+          for (int i = 0; i < ${MAX_CONTACT_CIRCLES}; i++) {
+            if (i >= uContactCN) break;
+            vec4 c = uContactCirc[i];
+            float d = distance(vTW.xz, c.xy) - c.z;
+            d = max(d, 0.0);
+            occ = max(occ, max(exp(-d / 0.3), 0.6 * exp(-d / (0.6 + 0.15 * c.z))) * c.w);
+          }
+          ground *= 1.0 - 0.45 * occ;
+        }
 
         // Damp: greyer and darker where brine sits under the skin.
         ground = mix(ground, ground * vec3(0.78, 0.77, 0.76), gDamp * 0.7);
@@ -377,8 +430,8 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
           vec3 mapN = texture2D(normalMap, vNormalMapUv).xyz * 2.0 - 1.0;
           vec3 mapN2 = texture2D(normalMap, mat2(0.8, -0.6, 0.6, 0.8) * vNormalMapUv * 0.37 + vec2(0.31, 0.57)).xyz * 2.0 - 1.0;
           mapN.xy = mix(mapN.xy, mapN2.xy, 0.3);
-          vec3 gritN = texture2D(uGrit, vNormalMapUv * 7.3).xyz * 2.0 - 1.0;
-          mapN.xy += gritN.xy * 0.35 * (1.0 - smoothstep(4.0, 20.0, gCamD));
+          vec3 gritN = texture2D(uGrit, mat2(0.96, -0.28, 0.28, 0.96) * vTW.xz / uGritTile).xyz * 2.0 - 1.0;
+          mapN.xy += gritN.xy * uGritK * (1.0 - smoothstep(3.0, 12.0, gCamD));
           float flatK = max(gWet, max(gPath * 0.7, gRut * 0.5));
           mapN.xy *= normalScale * (1.0 - flatK) * (1.0 - 0.8 * smoothstep(30.0, 180.0, gCamD));
           normal = normalize(tbn * mapN);
@@ -409,6 +462,40 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
           ${TALLOW_FOG_APPLY}
         #endif`);
   };
-  mat.customProgramCacheKey = () => 'tallow-terrain-v2';
+  mat.customProgramCacheKey = () => 'tallow-terrain-v3';
   return mat;
+}
+
+/** A 1x1 mid-grey: the grain layer's neutral value, so the program is the same before and after the photo lands. */
+function neutralGrey() {
+  const t = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1, THREE.RGBAFormat);
+  t.needsUpdate = true;
+  return t;
+}
+
+/**
+ * Hand the ground the photographed grain (`texture-pack.js` pack `grain`): its normal replaces the procedural grit
+ * and its luminance is laid over the crust as detail. `tile` is the photo's size in metres.
+ */
+export function setTallowGrain(mat, { alb, nor, tile }) {
+  const u = mat?.userData.terrainUniforms;
+  if (!u) return;
+  // The photo's normal is fine enough to alias into a combed sheen at grazing angles: kept light, faded early.
+  if (nor) { u.uGrit.value = nor; u.uGritK.value = 0.12; }
+  if (alb) { u.uGrainAlb.value = alb; u.uGrainK.value = 1.6; }
+  if (nor || alb) u.uGritTile.value = tile;
+}
+
+/**
+ * The footprints the ground darkens round. `boxes` are world rectangles [cx, cz, halfX, halfZ] (a building's
+ * outside faces); `circles` are [x, z, r, strength] (an evaporator's shell, a tower's foot).
+ */
+export function setTallowContacts(mat, { boxes = [], circles = [] }) {
+  const u = mat?.userData.terrainUniforms;
+  if (!u) return;
+  const nb = Math.min(boxes.length, MAX_CONTACT_BOXES), nc = Math.min(circles.length, MAX_CONTACT_CIRCLES);
+  for (let i = 0; i < nb; i++) u.uContactBox.value[i].set(...boxes[i]);
+  for (let i = 0; i < nc; i++) u.uContactCirc.value[i].set(...circles[i]);
+  u.uContactN.value = nb;
+  u.uContactCN.value = nc;
 }

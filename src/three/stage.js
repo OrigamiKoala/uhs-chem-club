@@ -49,7 +49,7 @@ import { api } from "../api.js";
  * at the ship's exposure washes the crust out to white paper.
  */
 const SHIP_EXPOSURE = 1.28;
-const TALLOW_EXPOSURE = 0.92;
+const TALLOW_EXPOSURE = 0.98;   // realism pass 2026-11-26: the ambient is less flat, so the pan needs a little more
 // Ligar is black stone at dusk: almost nothing bounces off it and the sun is on
 // the horizon, so it takes MORE exposure than the salt pan rather than less.
 const LIGAR_EXPOSURE = 1.16;
@@ -188,19 +188,22 @@ class Stage {
     this.shipScene.background = new THREE.Color(0x020203);
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.shipScene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    this.shipScene.environmentIntensity = 0.58;
+    // Blurred and dim: the room environment is a clean white studio, and a
+    // sharp bright copy of it in every metal edge is what makes a ship
+    // interior read as a product render.
+    this.shipScene.environment = pmrem.fromScene(new RoomEnvironment(), 0.3).texture;
+    this.shipScene.environmentIntensity = 0.42;
     pmrem.dispose();
 
     // Lighting rig: atmospheric bounce + forward canopy starlight + personal inspection light
-    const hemiLight = new THREE.HemisphereLight(0x8faac8, 0x2e3544, 2.2);
-    const ambientLight = new THREE.AmbientLight(0x4a5668, 1.5);
+    const hemiLight = new THREE.HemisphereLight(0x8faac8, 0x2e3544, 1.85);
+    const ambientLight = new THREE.AmbientLight(0x4a5668, 1.1);
     const starlight = new THREE.DirectionalLight(0xdce6f8, 2.6);
     starlight.position.set(-8, 16, 26);
     starlight.target.position.set(0, 1.5, 0);
 
     // Personal camera inspection light (cadet suit chest luminaire)
-    this.cameraLight = new THREE.PointLight(0xffedd2, 1.4, 12, 1.3);
+    this.cameraLight = new THREE.PointLight(0xffedd2, 1.1, 12, 1.3);
     this.camera.add(this.cameraLight);
 
     this.shipScene.add(this.camera);

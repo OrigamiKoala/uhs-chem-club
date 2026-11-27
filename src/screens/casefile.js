@@ -44,9 +44,6 @@ export function renderCaseFile(container) {
   const foundLore = loreEntries(foundLoreIds);
 
   const allClues = Object.values(CLUES);
-  const totalClues = allClues.length;
-  const collectedCount = allClues.filter(c => collectedClueIds.has(c.id)).length;
-  const worldNames = new Map(WORLDS.map(w => [w.id, w.world]));
 
   // Prologue lines the player has seen
   const prologueEntries = foundLore.filter(e => e.act === 'prologue');
@@ -86,7 +83,6 @@ export function renderCaseFile(container) {
     <div class="terminal-header case-terminal-head">
       <div class="case-terminal-title">
         <h2 class="section-title">Briefing</h2>
-        <span class="case-terminal-count">${collectedCount} / ${totalClues} clues</span>
       </div>
       <div class="case-terminal-keys">
         <button type="button" id="caseboard-briefing-btn" class="btn-secondary quest-btn-sm m-tap">Prologue</button>
@@ -98,7 +94,6 @@ export function renderCaseFile(container) {
     title: 'Briefing',
     actions: `
       ${statRow([
-        { label: 'Clues', value: `${collectedCount} / ${totalClues}`, plain: true },
         { label: 'Bench Notes', value: `${totalPinsEarned}`, plain: true }
       ])}
       <button type="button" id="caseboard-briefing-btn" class="btn-secondary quest-btn-sm m-tap">Prologue</button>
@@ -107,28 +102,20 @@ export function renderCaseFile(container) {
 
   const prologueMarkup = prologueEntries.length ? `
     <section class="holo-card case-prologue">
-      <h3 class="case-section-label">Prologue · Vess</h3>
       ${prologueEntries.map(e => `<p class="case-prologue-line">${esc(e.text)}</p>`).join('')}
     </section>
   ` : '';
 
   const actsMarkup = ACTS.map(act => {
     const actClues = allClues.filter(c => c.act === act.id);
-    const foundClues = actClues.filter(c => collectedClueIds.has(c.id));
     const actPins = earnedPinsByAct.get(act.id) || [];
     const actMessages = SPINE_BEATS.filter(b => b.act === act.id && seenBeatIds.has(b.id));
     const actSeenNotes = seenNotesByAct.get(act.id) || [];
     const actWorldClues = actClues.filter(c => c.id !== 'clue_erebus_mark');
     const solved = actWorldClues.length > 0 && actWorldClues.every(c => collectedClueIds.has(c.id));
-    const worldList = act.worlds.map(id => worldNames.get(id) || id).join(' · ');
 
     return `
       <section class="holo-card case-act${solved ? ' is-solved' : ''}">
-        <div class="case-act-head">
-          <span class="case-act-worlds">Act ${act.order} · ${esc(worldList)}</span>
-          <span class="tag ${solved ? 'live' : ''}">${solved ? 'Answered' : `${foundClues.length} / ${actClues.length} clues`}</span>
-        </div>
-
         <h3 class="case-act-question">${esc(act.question)}</h3>
 
         <div class="case-clues">
@@ -136,7 +123,7 @@ export function renderCaseFile(container) {
             const unlocked = collectedClueIds.has(clue.id);
             return `
               <article class="case-clue${unlocked ? ' is-found' : ''}">
-                <div class="case-clue-source">${esc(clue.source)}</div>
+                <div class="case-clue-source">${esc(String(clue.source).split('·')[0].trim())}</div>
                 <div class="case-clue-name">${unlocked ? esc(clue.name) : 'Not found yet'}</div>
                 ${unlocked ? `
                   <p class="case-clue-summary">${esc(clue.summary)}</p>

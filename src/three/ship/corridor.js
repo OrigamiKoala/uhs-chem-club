@@ -22,7 +22,7 @@ export function buildCorridor(ship) {
     handrail: true,
     chamferStrip: true,
     ribSpacing: 1.04,
-    fill: { panels: 4, vent: 1.2, conduit: 2.2, machinery: 1.4, light: 1.0 },
+    fill: { panels: 4, vent: 1.2, conduit: 2.2, machinery: 1.4, light: 1.0, pipes: 1.2, breakers: 0.9 },
     troughs: 1,
     seed: 3
   });

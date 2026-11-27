@@ -655,6 +655,7 @@ function buildShoulderStations(ship, F) {
 
 export function buildBridgeRoom(ship) {
   dressRoomShell(ship, 'bridge', {
+    ceilingRuns: false,
     keepClear: [
       { side: 'W', from: 0.74, to: 3.2 },
       { side: 'E', from: 0.68, to: 3.2 },
@@ -667,7 +668,7 @@ export function buildBridgeRoom(ship) {
     handrail: true,
     chamferStrip: true,
     ribSpacing: 1.2,
-    fill: { panels: 4, vent: 1.2, conduit: 1.8, machinery: 1.2, light: 0.9 },
+    fill: { panels: 4, vent: 1.2, conduit: 1.8, machinery: 1.2, light: 0.9, pipes: 0.5, breakers: 1.0 },
     troughs: 2,
     ceilingTo: 4.3,
     seed: 11

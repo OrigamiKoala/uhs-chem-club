@@ -144,6 +144,23 @@ export function checkBanks(worlds, { fail, ok }) {
     if (EMOJI.test([wk.title, wk.setup, wk.strategy || '', wk.finish, wk.takeaway || ''].join(' '))) {
       fail(`${label}: emoji in text`); deepBad++;
     }
+    // Placement on the road: every `after` ref is a live bench in one of the problem's worlds,
+    // and a single-world problem sits in its own world (after the last bench it needs).
+    const refs = Array.isArray(wk.after) ? wk.after : [];
+    if (!refs.length) { fail(`${label}: after must list the benches it draws on ("<world>:<quest>")`); deepBad++; }
+    let lastRef = null;
+    let lastKey = -1;
+    for (const ref of refs) {
+      const [wid, qid] = String(ref).split(':');
+      const wi = worlds.findIndex(x => x.id === wid);
+      const qi = wi < 0 ? -1 : worlds[wi].quests.findIndex(q => q.id === qid && q.status === 'live');
+      if (qi < 0) { fail(`${label}: after "${ref}" is not a live bench`); deepBad++; continue; }
+      if (Array.isArray(wk.worlds) && !wk.worlds.includes(wid)) { fail(`${label}: after "${ref}" is outside its worlds list`); deepBad++; }
+      if (wi * 1000 + qi > lastKey) { lastKey = wi * 1000 + qi; lastRef = wid; }
+    }
+    if (lastRef && wk.world !== 'cross' && lastRef !== wk.world) {
+      fail(`${label}: its last bench is in ${lastRef}, so its world must be ${lastRef} (is ${wk.world})`); deepBad++;
+    }
     deepBad += checkWorked(wk, label, fail);
   }
   if (!deepBad) ok(`deep worked bank holds ${apCount} AP Synthesis and ${olyCount} Olympiad worked problems, all verified`);

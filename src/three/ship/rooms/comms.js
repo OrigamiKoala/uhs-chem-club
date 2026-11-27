@@ -166,7 +166,7 @@ export function buildCommsRoom(ship) {
       { side: 'S', from: -2.6, to: -1.32 },
       { side: 'N', from: -4.62, to: -2.9 }
     ],
-    fill: { panels: 3, vent: 1.2, conduit: 2.2, machinery: 1.6, light: 0.5 },
+    fill: { panels: 3, vent: 1.2, conduit: 2.2, machinery: 1.6, light: 0.5, pipes: 0.8, breakers: 1.6 },
     seed: 23
   });
 

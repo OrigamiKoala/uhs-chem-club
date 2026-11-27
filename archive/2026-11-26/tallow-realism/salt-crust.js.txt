@@ -1,0 +1,64 @@
+export function saltCrust({ size = 512, seed = 3, cells = 5 } = {}) {
+  const S = size;
+  const sd = hashStr(`crust${seed}`);
+  const border = new Float32Array(S * S);
+
+  const height = heightField(S, (u, v, x, y) => {
+    const big = worley(u * cells, v * cells, cells, sd);
+    const sub = worley(u * cells * 3, v * cells * 3, cells * 3, sd ^ 0x71);
+    // Jitter the ridge line so it is hand-grown, not ruled.
+    const wob = (fbm(u * 40, v * 40, { octaves: 3, period: 40, seed: sd ^ 0x13 }) - 0.5) * 0.05;
+    const b = big.border + wob;
+    border[y * S + x] = b;
+    // The ridge: a crystal wall standing proud of the plates on either side.
+    const ridge = Math.exp(-Math.pow(b / 0.045, 2)) * 0.34 + Math.exp(-Math.pow(b / 0.11, 2)) * 0.12;
+    // The plate: dishes very slightly toward its middle, as it sags drying.
+    let h = 0.42 - Math.min(big.f1, 0.6) * 0.06 + ridge;
+    // Faint second-generation ridges inside the big plates.
+    h += Math.exp(-Math.pow(sub.border / 0.03, 2)) * 0.05;
+    // Crystal grain.
+    h += (fbm(u * 150, v * 150, { octaves: 2, period: 150, seed: sd ^ 0x5a }) - 0.5) * 0.07;
+    h += (fbm(u * 38, v * 38, { octaves: 3, period: 38, seed: sd ^ 0x77 }) - 0.5) * 0.05;
+    return h;
+  });
+
+  const hf = readHeight(height);
+  const alb = canvas2d(S, S);
+  const actx = alb.getContext('2d');
+  const img = actx.createImageData(S, S);
+  const rough = new Float32Array(S * S);
+
+  const plate = hex(0xbdb4a2);     // the grey, finer plate between ridges
+  const plateDamp = hex(0xa39a88);
+  const ridgeC = hex(0xf1ece2);    // the crystal walls: the whitest thing here
+  const grit = hex(0xb0a38a);      // blown grit caught along the ridge's foot
+
+  for (let i = 0; i < S * S; i++) {
+    const x = i % S, y = (i / S) | 0;
+    const u = x / S, v = y / S;
+    const b = border[i];
+    const h = hf.data[i];
+    const ridge = Math.exp(-Math.pow(b / 0.06, 2));
+    const foot = Math.exp(-Math.pow((b - 0.08) / 0.03, 2));
+    const damp = clamp01((fbm(u * 6, v * 6, { octaves: 4, period: 6, seed: sd ^ 0x21 }) - 0.45) * 2.2);
+    let c = mix3(plate, plateDamp, damp * 0.7);
+    c = mix3(c, grit, foot * 0.35);
+    c = mix3(c, ridgeC, clamp01(ridge * 1.15));
+    const k = 0.93 + (h - 0.45) * 0.35;
+    img.data[i * 4] = Math.min(255, c[0] * k);
+    img.data[i * 4 + 1] = Math.min(255, c[1] * k);
+    img.data[i * 4 + 2] = Math.min(255, c[2] * k);
+    img.data[i * 4 + 3] = 255;
+    // Crystal is chalk-rough; a damp plate has a faint sheen.
+    rough[i] = clamp01(0.9 - damp * 0.28 + ridge * 0.1);
+  }
+  actx.putImageData(img, 0, 0);
+
+  return {
+    albedo: alb,
+    height,
+    roughness: writeField({ data: rough, w: S, h: S }),
+    ao: heightToAO(height, { radius: Math.max(3, S >> 7), strength: 1.1 }),
+    normalStrength: 2.4
+  };
+}

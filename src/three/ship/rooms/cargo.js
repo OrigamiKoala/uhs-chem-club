@@ -191,7 +191,7 @@ export function buildCargoRoom(ship) {
   dressRoomShell(ship, 'cargo', {
     // The whole starboard plating carries the rack, the terminal and the skid.
     keepClear: [{ side: 'E', from: -2.79, to: 0.39 }],
-    fill: { panels: 4, vent: 1.2, conduit: 2.0, machinery: 1.2, light: 0.9 },
+    fill: { panels: 4, vent: 1.2, conduit: 2.0, machinery: 1.2, light: 0.9, pipes: 1.4, breakers: 0.6 },
     ribSpacing: 1.1,
     chamferStrip: true,
     seed: 17

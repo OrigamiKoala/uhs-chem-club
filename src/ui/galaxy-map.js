@@ -1001,6 +1001,7 @@ export function mountGalaxyMap(root, opts) {
     return { k: fitScale(w, h), cx: GALAXY_W / 2, cy: GALAXY_H / 2 };
   }
 
+  const PLATE_ALLOWANCE = 200;
   let sized = false;
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -1015,6 +1016,14 @@ export function mountGalaxyMap(root, opts) {
       const hostTop = host ? host.getBoundingClientRect().top - host.scrollTop : -(window.scrollY || 0);
       const glass = Math.round(window.visualViewport?.height || window.innerHeight || 360);
       nh = Math.max(170, glass - Math.round(rect.top - hostTop) - 8);
+    }
+    else if (typeof window !== 'undefined') {
+      // Everything under the chart (the world plate) stays on screen with it: the chart takes what is left of the
+      // terminal, or of the window, after a fixed allowance for the plate. It is never taller than it was before.
+      const term = canvas.closest?.('.in-world-terminal');
+      const bottom = term ? term.getBoundingClientRect().bottom - 24 : (window.visualViewport?.height || window.innerHeight || 800) - 16;
+      const room = Math.round(bottom - rect.top - PLATE_ALLOWANCE);
+      nh = Math.min(nh, Math.max(200, room));
     }
     const nd = Math.min(2, window.devicePixelRatio || 1);
     if (nw === w && nh === h && nd === dpr) return;

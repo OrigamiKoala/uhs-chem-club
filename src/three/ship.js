@@ -35,6 +35,7 @@ import { session } from "../session.js";
 
 import { createShipMaterials } from "./ship/materials.js";
 import { applyWorldUVs } from "./ship/kit.js";
+import { applyShipWear } from "./ship/wear.js";
 import { buildHull } from "./ship/hull.js";
 import { buildDoors, updateDoors } from "./ship/doors.js";
 import { buildCorridor } from "./ship/corridor.js";
@@ -94,6 +95,7 @@ export class ShipInterior {
     mergeStatic(this.hull);
     for (const g of this._bakes) mergeStatic(g);
     this.enableAmbientOcclusion();
+    applyShipWear(this.group, { deckY: 0, ceilY: CEIL.room });
 
     this.scene.add(this.group);
 

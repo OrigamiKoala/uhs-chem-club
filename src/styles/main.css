@@ -127,6 +127,7 @@ body:has(.app-viewport .m-drills) #fps-interact-prompt,
 body:has(.app-viewport .m-starmap:not([style*="display: none"])) #fps-interact-prompt,
 body:has(.app-viewport .m-casefile:not([style*="display: none"])) #fps-interact-prompt,
 body:has(.app-viewport .m-settings:not([style*="display: none"])) #fps-interact-prompt,
+body:has(.app-viewport .m-info) #fps-interact-prompt,
 body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
   display: none !important;
 }
@@ -235,6 +236,7 @@ body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
   cursor: pointer;
   transition: all 0.2s var(--ease-spring);
   min-height: 38px;
+  box-sizing: border-box;
   box-shadow: inset 0 1px 0 var(--seam-light);
   white-space: nowrap;
 }
@@ -263,12 +265,20 @@ body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
   display: none;
 }
 
-/* ---- Telemetry cluster ---- */
+/* ---- Telemetry cluster ----
+   Every key and readout in the bar is the same height. */
 .hud-stats {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
+}
+
+.xp-badge,
+.level-badge,
+.team-badge {
+  box-sizing: border-box;
+  min-height: 38px;
 }
 
 .xp-badge {
@@ -311,6 +321,8 @@ body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
 }
 
 .level-badge {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 400;
@@ -354,6 +366,7 @@ body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
   padding: 6px 9px;
   cursor: pointer;
   min-height: 38px;
+  box-sizing: border-box;
   box-shadow: inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark);
   transition: color 0.15s ease, background 0.15s ease;
   white-space: nowrap;
@@ -368,8 +381,8 @@ body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
 }
 
 .btn-chip-icon {
-  width: 36px;
-  min-width: 36px;
+  width: 38px;
+  min-width: 38px;
   padding: 0;
   justify-content: center;
 }

@@ -303,6 +303,7 @@ export function buildFurnaceRoom(ship) {
   const S = stripeMat(ship);
 
   dressRoomShell(ship, 'furnace', {
+    ceilingRuns: false,   // the flue takes the deckhead
     keepClear: [
       { side: 'S', from: -4.35, to: -2.05, top: 4.0 },   // coolant into the stern plating
       { side: 'S', from: -1.5, to: 1.85 },                // the control console
@@ -312,7 +313,7 @@ export function buildFurnaceRoom(ship) {
       { side: 'N', from: 1.95, to: 3.95 },                // motivator watch
       { side: 'N', from: 3.95, to: 5.6, top: 4.0 }        // coolant return, floor to deckhead
     ],
-    fill: { panels: 3, vent: 1.4, conduit: 2.4, machinery: 1.6, light: 0.6 },
+    fill: { panels: 3, vent: 1.4, conduit: 2.4, machinery: 1.6, light: 0.6, pipes: 2.0, breakers: 0.6 },
     ribSpacing: 1.0,
     chamferStrip: true,
     seed: 41

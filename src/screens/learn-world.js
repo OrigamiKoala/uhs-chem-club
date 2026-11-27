@@ -7,7 +7,9 @@
 
 import { stage } from '../three/stage.js';
 import { pageHeader, esc } from '../ui/layout.js';
-import { getWorld, ARENAS } from '../learn/curriculum.js';
+import { getWorld, getQuest, WORLDS, ARENAS } from '../learn/curriculum.js';
+import { benchWorked, worldDeepWorked, deepRefs } from '../learn/bank.js';
+import { openWorkedProblem, isWorkedDone } from '../ui/worked-open.js';
 import { worldStatus, worldProgress, questStatus, questProgress, nextQuest, isQuestComplete } from '../learn/progress.js';
 import { canWalk, world3dFor } from '../learn/worlds3d.js';
 import { openWorldPractice, worldHasPractice, practiceOfferedFlag } from '../learn/practice.js';
@@ -111,6 +113,114 @@ export function bindPracticeKeys(root) {
   });
 }
 
+/* ---------------------------------------------------------------
+   WORKED PROBLEMS ON THE ROAD
+   A bench's own worked problem reopens from its row once the bench is
+   cleared. AP and Olympiad problems sit right after the last bench they
+   draw on (`after` in bank/worked-deep.json) and open once every one of
+   those benches is cleared.
+   --------------------------------------------------------------- */
+
+/** The worked problems this world's road shows: { bench: Map<questId, wk>, deep: Map<questId, wk[]>, byId }. */
+function roadWorked(world) {
+  const bench = new Map();
+  const deep = new Map();
+  const byId = new Map();
+  for (const q of world.quests) {
+    const wk = q.status === 'live' ? benchWorked(world, q.id) : null;
+    if (wk) { bench.set(q.id, wk); byId.set(wk.id, wk); }
+  }
+  for (const wk of worldDeepWorked(world, WORLDS)) {
+    if (!deep.has(wk.anchorQuestId)) deep.set(wk.anchorQuestId, []);
+    deep.get(wk.anchorQuestId).push(wk);
+    byId.set(wk.id, wk);
+  }
+  for (const list of deep.values()) list.sort((a, b) => (a.tier === b.tier ? 0 : a.tier === 'ap' ? -1 : 1));
+  return { bench, deep, byId };
+}
+
+/** The benches a deep problem draws on, named for this world's reader, and whether all are cleared. */
+function deepNeeds(wk, world) {
+  const refs = deepRefs(wk).map(r => {
+    const q = getQuest(r.worldId, r.questId);
+    const w = getWorld(r.worldId);
+    const name = q ? (r.worldId === world.id ? q.title : `${w?.world || r.worldId}: ${q.title}`) : r.questId;
+    return { name, done: q ? isQuestComplete(q) : false };
+  });
+  return { refs, open: refs.length > 0 && refs.every(r => r.done) };
+}
+
+function andList(names) {
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+function workedTag(id) {
+  const done = isWorkedDone(id);
+  return `<span class="tag${done ? ' live' : ''}" data-worked-tag="${esc(id)}"${done ? '' : ' hidden'}>Worked</span>`;
+}
+
+/** One AP / Olympiad problem as a road row. `site` picks the Sites-list markup. */
+function deepRowHtml(wk, world, { site = false } = {}) {
+  const { refs, open } = deepNeeds(wk, world);
+  const mark = wk.tier === 'olympiad' ? 'OLY' : 'AP';
+  const line = open
+    ? `${wk.steps.length} steps. Uses ${andList(refs.map(r => r.name))}.`
+    : `Opens after ${andList(refs.filter(r => !r.done).map(r => r.name))}.`;
+  const tags = `${wk.tier === 'olympiad' ? '<span class="tag tag-dim">Beyond AP</span>' : ''}${workedTag(wk.id)}`;
+  const action = open
+    ? `<button type="button" class="btn-secondary${site ? ' quest-btn-sm' : ''} learn-worked-open m-tap" data-open-worked="${esc(wk.id)}">Open</button>`
+    : `<span class="tag locked">Locked</span>`;
+  if (site) {
+    return `
+      <li class="learn-site-row learn-site-worked learn-worked-${wk.tier}${open ? '' : ' learn-locked'}">
+        <span class="learn-site-index learn-worked-mark">${mark}</span>
+        <span class="learn-site-body">
+          <span class="learn-site-title">${esc(wk.title)}</span>
+          <span class="learn-site-line">${esc(line)}</span>
+        </span>
+        <span class="learn-worked-actions">${tags}${action}</span>
+      </li>`;
+  }
+  return `
+    <article class="plate learn-worked-row learn-worked-${wk.tier}${open ? '' : ' learn-locked'}">
+      <div class="learn-worked-mark">${mark}</div>
+      <div class="learn-worked-body">
+        <div class="learn-worked-head">
+          <h3 class="learn-worked-title">${esc(wk.title)}</h3>
+          <div class="learn-worked-tags">${tags}</div>
+        </div>
+        <p class="learn-worked-line">${esc(line)}</p>
+      </div>
+      <div class="learn-worked-action">${action}</div>
+    </article>`;
+}
+
+/** The key on a cleared bench's row that reopens its own worked problem. */
+function benchWorkedKey(wk, { site = false } = {}) {
+  if (!wk) return '';
+  return `<button type="button" class="btn-secondary${site ? ' quest-btn-sm' : ''} learn-worked-open m-tap" data-open-worked="${esc(wk.id)}" title="${esc(wk.title)}">Worked problem</button>`;
+}
+
+/** Wire every worked-problem key inside `root`. `before` and `after` hide and restore a covering panel. */
+function bindWorkedKeys(root, road, { before, after } = {}) {
+  root.querySelectorAll('[data-open-worked]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const wk = road.byId.get(btn.dataset.openWorked);
+      if (!wk) return;
+      before?.();
+      openWorkedProblem(wk, {
+        onClose: () => {
+          if (isWorkedDone(wk.id)) {
+            root.querySelectorAll(`[data-worked-tag="${CSS.escape(wk.id)}"]`).forEach(t => { t.hidden = false; t.classList.add('live'); });
+          }
+          after?.();
+        }
+      });
+    });
+  });
+}
+
 export function renderLearnWorld(container, params = {}) {
   const world = getWorld(params.worldId);
 
@@ -153,6 +263,7 @@ export function renderLearnWorld(container, params = {}) {
   const wStatus = worldStatus(world);
   const prog = worldProgress(world);
   const resume = nextQuest(world);
+  const road = roadWorked(world);
 
   container.innerHTML = `
     <div class="screen-container m-screen m-learn-world">
@@ -213,11 +324,13 @@ export function renderLearnWorld(container, params = {}) {
               </div>
 
               <div class="learn-quest-action" style="display: flex; gap: 0.4rem; align-items: center;">
+                ${qp.complete ? benchWorkedKey(road.bench.get(q.id)) : ''}
                 ${enterable
                   ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
                   : `<span class="eyebrow learn-quest-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
               </div>
             </article>
+            ${(road.deep.get(q.id) || []).map(wk => deepRowHtml(wk, world)).join('')}
           `;
         }).join('')}
       </div>
@@ -225,6 +338,7 @@ export function renderLearnWorld(container, params = {}) {
   `;
 
   bindPracticeKeys(container);
+  bindWorkedKeys(container, road);
   maybeOfferPractice(world);
   maybeOfferStory(world, { returningFromBench: Boolean(sessionStorage.getItem('avalon_learn_last_site')) });
 }
@@ -236,6 +350,7 @@ export function renderLearnWorld(container, params = {}) {
  */
 function renderWalkHud(container, world) {
   const prog = worldProgress(world);
+  const road = roadWorked(world);
   const total = prog.liveTotal || world.questCount;
   const isCollapsed = sessionStorage.getItem('avalon_learn_hud_collapsed') === '1';
   const ep = getEpisode(world.id);
@@ -327,11 +442,13 @@ function renderWalkHud(container, world) {
                     </span>
                   </span>
                   <span style="display: inline-flex; gap: 0.35rem; align-items: center;">
+                    ${qp.complete ? benchWorkedKey(road.bench.get(q.id), { site: true }) : ''}
                     ${enterable
                       ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" data-quest-id="${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
                       : `<span class="tag ${tag.cls}">${tag.label}</span>`}
                   </span>
                 </li>
+                ${(road.deep.get(q.id) || []).map(wk => deepRowHtml(wk, world, { site: true })).join('')}
               `;
             }).join('')}
           </ul>
@@ -381,6 +498,11 @@ function renderWalkHud(container, world) {
   };
 
   openSitesBtn?.addEventListener('click', openSitesPopup);
+  // A worked problem opened from the Sites list takes the whole view; the list comes back when it closes.
+  bindWorkedKeys(container, road, {
+    before: () => scrim?.classList.add('hidden'),
+    after: () => { if (scrim) { scrim.classList.remove('hidden'); closeSitesBtn?.focus?.(); } }
+  });
   closeSitesBtn?.addEventListener('click', closeSitesPopup);
 
   // Teleporting to a bench from the Sites list still plays its opening scene first.

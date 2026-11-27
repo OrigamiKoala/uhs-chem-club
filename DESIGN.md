@@ -435,7 +435,7 @@ the only glowing element in the header.
 - **Active:** the button is pressed *into* the bulkhead — `plate-100` fill, an inset
   shadow, amber legend, and a 2px amber bar down its left edge.
 - **Nav labels match page titles exactly:** BRIDGE, STAR MAP, LEARN, PRACTICE, BRIEFING,
-  INVENTORY. `#/practice` and `#/briefing` are the URLs; `#/drills` and `#/casefile` still route.
+  INVENTORY, INFO. `#/practice` and `#/briefing` are the URLs; `#/drills` and `#/casefile` still route.
   The campaign's opening story is the **Prologue**, so it is never confused with the Briefing board.
   A label that does not match its destination's title is a bug.
 - **On phones** the nav becomes a horizontally scrolling strip on the HUD's second row.

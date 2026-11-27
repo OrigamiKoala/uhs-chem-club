@@ -34,6 +34,7 @@ import { renderVoyageHud } from './screens/voyage.js';
 import { renderCaseFile } from './screens/casefile.js';
 import { renderDrills } from './screens/drills.js';
 import { renderContracts } from './screens/contracts.js';
+import { renderInfo } from './screens/info.js';
 import { trackPageView } from './analytics.js';
 
 const ROUTE_ROOM = {
@@ -57,6 +58,7 @@ const ROUTE_ROOM = {
   '/casefile': 'comms',
   '/briefing': 'comms',
   '/contracts': 'starmap',
+  '/info': 'bridge',
   '/admin': 'bridge'
 };
 
@@ -81,6 +83,7 @@ const ROUTE_BACKDROPS = {
   '/casefile': '/art/comms.jpg',
   '/briefing': '/art/comms.jpg',
   '/contracts': '/art/starmap.jpg',
+  '/info': '/art/cockpit.jpg',
   '/admin': '/art/airlock.jpg'
 };
 
@@ -99,7 +102,8 @@ const ROUTE_NAV = {
   '/inventory': 'inventory',
   '/cargo': 'inventory',
   '/quarters': 'quarters',
-  '/settings': 'quarters'
+  '/settings': 'quarters',
+  '/info': 'info'
 };
 
 const ROUTES = {
@@ -125,6 +129,7 @@ const ROUTES = {
   '/inventory': { render: renderInventory, auth: true },
   '/quarters': { render: renderQuarters, auth: true },
   '/settings': { render: renderSettings, auth: true },
+  '/info': { render: renderInfo, auth: false },
   '/admin': { render: renderAdmin, auth: true, admin: true }
 };
 

@@ -565,14 +565,9 @@ body.touch-primary:not(.touch-walking) #fps-interact-prompt { display: none !imp
   .lq-practice-keys .btn-secondary,
   .lq-practice-keys .btn-primary { flex: 0 0 auto; min-height: 42px; }
   .lq-practice-keys { justify-content: flex-end; }
-  .bp-worked { gap: 0.45rem; }
-  .bp-head { padding-bottom: 0.35rem; }
-  .bp-setup { font-size: 0.86rem; line-height: 1.4; }
-  .bp-say { font-size: 0.95rem; margin-top: 0; }
   .lq-practice-feedback { min-height: 0; margin-bottom: 0.5rem; }
   .lq-practice-options { margin-bottom: 0.5rem; }
   .lq-practice-verdict { font-size: 0.9rem; line-height: 1.4; padding: 0.4rem 0.7rem; }
-  .bp-input { font-size: 16px; }
 
   /* ---------- Sign in and registration: fields two across ----------
      Two fields side by side keep the form on one screen, and keep the

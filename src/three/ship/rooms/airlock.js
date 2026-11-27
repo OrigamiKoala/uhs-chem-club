@@ -217,7 +217,7 @@ export function buildAirlockRoom(ship) {
       { side: 'N', from: 2.3, to: 4.85 },
       { side: 'S', from: 2.3, to: 4.85 }
     ],
-    fill: { panels: 4, vent: 1.4, conduit: 2.2, machinery: 1.0, light: 0.8 },
+    fill: { panels: 4, vent: 1.4, conduit: 2.2, machinery: 1.0, light: 0.8, pipes: 1.4, breakers: 0.8 },
     handrail: true,
     seed: 29
   });

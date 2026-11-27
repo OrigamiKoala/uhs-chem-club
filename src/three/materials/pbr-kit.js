@@ -1377,6 +1377,131 @@ export function addMacroVariation(material, macroTexture, { strength = 0.35, rou
   return material;
 }
 
+/**
+ * World-space variation for a material whose uvs are laid in metres (box uvs, a wall strip, a merged prop), where
+ * `addMacroVariation` cannot help because raw uv repeats with the tile. Opt-in; nothing calls it by default.
+ *
+ * Three things, all keyed to the fragment's world position so no two walls agree:
+ *  - a slow tint drift of `strength` over `scale` metres (weathering is never even across a building),
+ *  - a roughness drift of `roughShift` with it,
+ *  - ANTI-TILE: the albedo is sampled a second time at 0.43 of the rate, rotated, and the two are blended by
+ *    a second noise, so a photographed metre of sheet does not visibly repeat down a thirty-metre wall,
+ *  - STREAKS (0 by default): long vertical runs, darker, where water ran down a wall from its laps and fixings.
+ * Chains with any patch already on the material and keeps every `#include` it touches, so later patches land.
+ */
+export function addWorldVariation(material, { scale = 9, strength = 0.12, roughShift = 0.1, antiTile = 0.5, streaks = 0 } = {}) {
+  if (!material || material.userData.worldVariation) return material;
+  material.userData.worldVariation = true;
+  const prev = material.onBeforeCompile;
+  const prevKey = material.customProgramCacheKey ? material.customProgramCacheKey() : '';
+  material.onBeforeCompile = (shader, renderer) => {
+    prev?.call(material, shader, renderer);
+    shader.uniforms.uWVScale = { value: scale };
+    shader.uniforms.uWVStrength = { value: strength };
+    shader.uniforms.uWVRough = { value: roughShift };
+    shader.uniforms.uWVTile = { value: antiTile };
+    shader.uniforms.uWVStreak = { value: streaks };
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+        varying vec3 vWVPos;`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+        {
+          vec4 wvp = vec4(transformed, 1.0);
+          #ifdef USE_INSTANCING
+            wvp = instanceMatrix * wvp;
+          #endif
+          vWVPos = (modelMatrix * wvp).xyz;
+        }`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+        uniform float uWVScale;
+        uniform float uWVStrength;
+        uniform float uWVRough;
+        uniform float uWVTile;
+        uniform float uWVStreak;
+        varying vec3 vWVPos;
+        float wvMacro = 0.5;
+        float wvH(vec3 p) { return fract(sin(dot(p, vec3(17.13, 61.7, 31.9))) * 24634.6345); }
+        float wvN(vec3 p) {
+          vec3 i = floor(p), f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(mix(wvH(i), wvH(i + vec3(1, 0, 0)), f.x), mix(wvH(i + vec3(0, 1, 0)), wvH(i + vec3(1, 1, 0)), f.x), f.y),
+            mix(mix(wvH(i + vec3(0, 0, 1)), wvH(i + vec3(1, 0, 1)), f.x), mix(wvH(i + vec3(0, 1, 1)), wvH(i + vec3(1, 1, 1)), f.x), f.y),
+            f.z);
+        }`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        {
+          vec3 q = vWVPos / uWVScale;
+          wvMacro = 0.6 * wvN(q) + 0.4 * wvN(q * 2.7 + 11.3);
+          #ifdef USE_MAP
+            // Anti-tile: a second, coarser, rotated sample of the same map, blended in patches.
+            vec2 uv2 = mat2(0.8, -0.6, 0.6, 0.8) * vMapUv * 0.43 + vec2(0.37, 0.11);
+            vec3 s1 = texture2D(map, vMapUv).rgb;
+            vec3 s2 = texture2D(map, uv2).rgb;
+            float w = smoothstep(0.35, 0.65, wvN(vWVPos * 0.31 + 5.0)) * uWVTile;
+            diffuseColor.rgb *= mix(vec3(1.0), clamp(s2 / max(s1, vec3(0.03)), 0.4, 2.5), w);
+          #endif
+          diffuseColor.rgb *= 1.0 + (wvMacro - 0.5) * 2.0 * uWVStrength;
+          if (uWVStreak > 0.0) {
+            float st = wvN(vec3(vWVPos.x * 2.3 + vWVPos.z * 2.3, vWVPos.y * 0.11, vWVPos.z * 1.7 - vWVPos.x * 0.6));
+            st = smoothstep(0.55, 0.95, st) * (0.6 + 0.4 * wvN(vWVPos * 0.4));
+            diffuseColor.rgb *= 1.0 - st * uWVStreak;
+          }
+        }`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor + (wvMacro - 0.5) * 2.0 * uWVRough, 0.04, 1.0);`);
+  };
+  const key = `${prevKey}|wvar:${scale}:${strength}:${roughShift}:${antiTile}:${streaks}`;
+  material.customProgramCacheKey = () => key;
+  material.needsUpdate = true;
+  return material;
+}
+
+
+/**
+ * Lay a material's uvs from world position, box-projected, `metres` per uv unit, for geometry whose own uvs are
+ * 0..1 per face (a stock BoxGeometry) so a texture would stretch with the box. Every map slot (`map`, `normalMap`,
+ * `roughnessMap`, `metalnessMap`, `aoMap`) reads the projected uv through its own transform, so the maps stay
+ * registered; the normal map's tangent frame is derived from the same uv, so it stays right. Opt-in.
+ * Only for things that do not move (the projection is in the world's frame).
+ */
+export function addWorldBoxUV(material, { metres = 2 } = {}) {
+  if (!material || material.userData.worldBoxUV) return material;
+  material.userData.worldBoxUV = true;
+  const prev = material.onBeforeCompile;
+  const prevKey = material.customProgramCacheKey ? material.customProgramCacheKey() : '';
+  const slot = (def, v, t) => `#ifdef ${def}\n  ${v} = (${t} * vec3(wbUv, 1.0)).xy;\n#endif`;
+  material.onBeforeCompile = (shader, renderer) => {
+    prev?.call(material, shader, renderer);
+    shader.uniforms.uWBMetres = { value: metres };
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+        uniform float uWBMetres;`)
+      .replace('#include <uv_vertex>', `#include <uv_vertex>
+        {
+          vec4 wbP = vec4(position, 1.0);
+          vec3 wbN = normal;
+          #ifdef USE_INSTANCING
+            wbP = instanceMatrix * wbP;
+            wbN = mat3(instanceMatrix) * wbN;
+          #endif
+          wbP = modelMatrix * wbP;
+          wbN = abs(normalize(mat3(modelMatrix) * wbN));
+          vec2 wbUv = (wbN.y > 0.7 ? wbP.xz : (wbN.x > 0.7 ? wbP.zy : wbP.xy)) / uWBMetres;
+          ${slot('USE_MAP', 'vMapUv', 'mapTransform')}
+          ${slot('USE_NORMALMAP', 'vNormalMapUv', 'normalMapTransform')}
+          ${slot('USE_ROUGHNESSMAP', 'vRoughnessMapUv', 'roughnessMapTransform')}
+          ${slot('USE_METALNESSMAP', 'vMetalnessMapUv', 'metalnessMapTransform')}
+          ${slot('USE_AOMAP', 'vAoMapUv', 'aoMapTransform')}
+        }`);
+  };
+  const key = `${prevKey}|wbuv:${metres}`;
+  material.customProgramCacheKey = () => key;
+  material.needsUpdate = true;
+  return material;
+}
+
 
 /* ==========================================================================
    7. DRAW-CALL BUDGET

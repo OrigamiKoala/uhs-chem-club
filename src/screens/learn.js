@@ -42,8 +42,8 @@ export function renderLearn(container) {
         artAlt: '',
         title: 'Learn',
         actions: `
-          <a href="#/briefing" class="btn-secondary quest-btn-sm m-tap learn-head-link">Briefing</a>
-          <button type="button" class="btn-secondary quest-btn-sm m-tap learn-head-link" id="learn-campaign-story-btn">Prologue</button>
+          <a href="#/briefing" class="btn-secondary m-tap learn-head-link">Briefing</a>
+          <button type="button" class="btn-secondary m-tap learn-head-link" id="learn-campaign-story-btn">Prologue</button>
           ${resumeQuest
             ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary learn-continue">Continue · ${esc(resume.world)}</a>`
             : ''}

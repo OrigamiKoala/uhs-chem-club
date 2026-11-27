@@ -24,8 +24,8 @@
   padding: 1.1rem 1.35rem;
 }
 
-.learn-world-row { grid-template-columns: 76px 1fr 200px; }
-.learn-quest-row { grid-template-columns: 54px 1fr 150px; }
+.learn-world-row { grid-template-columns: 76px minmax(0, 1fr) 236px; }
+.learn-quest-row { grid-template-columns: 54px minmax(0, 1fr) minmax(150px, auto); }
 
 /* A world that is not yet built, or not yet reachable, is dimmed rather than
    hidden: the whole road should be visible from the first day. */
@@ -54,6 +54,16 @@
 .learn-head-link,
 .learn-continue,
 .learn-enter { text-decoration: none; }
+
+/* Header keys share one height, whichever is primary. */
+.learn-head-link,
+.learn-continue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  box-sizing: border-box;
+}
 
 /* The world the player is on: its edge catches the lamp. */
 .learn-world-row.is-resume { border-color: var(--border-strong); }
@@ -96,7 +106,8 @@
 .learn-quest-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 2px;
 }
@@ -138,6 +149,8 @@
   gap: 0.5rem;
 }
 
+.learn-world-meta { align-items: stretch; }
+.learn-world-meta .learn-meter { justify-content: flex-end; }
 .learn-world-count,
 .learn-world-blocked,
 .learn-quest-blocked {
@@ -3072,6 +3085,24 @@ body.touch-walking .lq-dock-bar {
 }
 
 .learn-brief-foot { justify-content: space-between; }
+
+/* Enter and Problems share one row and one width, so their edges line up
+   from card to card. A lone key (no Problems) spans the row. */
+.learn-world-row .learn-world-keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  width: 100%;
+}
+.learn-world-row .learn-world-keys > * {
+  width: 100%;
+  min-height: 38px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.learn-world-row .learn-world-keys > :only-child { grid-column: 1 / -1; }
 .map-learn-action { display: flex; flex-direction: column; gap: 0.4rem; align-items: stretch; }
 
 /* ==========================================================================
@@ -4485,22 +4516,6 @@ body.bench-leaning .toast-container {
 /* ---- Bench practice and worked problems (`ui/bench-practice.js`, `ui/worked-problem.js`) ---- */
 .lq-practice-keys [hidden] { display: none; }
 
-.bp-worked { display: flex; flex-direction: column; gap: 0.75rem; }
-.bp-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.9rem;
-  flex-wrap: wrap;
-  padding-bottom: 0.7rem;
-  border-bottom: 1px solid var(--border-durasteel);
-}
-.bp-head-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
 .lq-practice-calc {
   display: inline-flex;
   align-items: center;
@@ -4508,43 +4523,6 @@ body.bench-leaning .toast-container {
   padding: 0.35rem 0.5rem;
   line-height: 1;
 }
-.bp-title { margin: 3px 0 0; }
-.bp-setup { font-size: 0.95rem; line-height: 1.55; color: var(--text-primary); margin: 0; }
-.bp-strategy,
-.bp-takeaway {
-  margin: 0;
-  padding: 0.5rem 0.75rem;
-  background: var(--plate-000);
-  border: 1px solid var(--border-durasteel);
-  border-left: 2px solid var(--amber, #e59b24);
-  font-size: 0.88rem;
-  line-height: 1.5;
-  color: var(--text-primary);
-}
-.bp-strategy-label {
-  display: inline-block;
-  margin-right: 0.45rem;
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--amber, #e59b24);
-}
-.bp-beat {
-  display: inline-block;
-  margin-right: 0.35rem;
-  padding: 0.08rem 0.38rem;
-  border: 1px solid var(--border-durasteel);
-  background: var(--plate-000);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--amber, #e59b24);
-  vertical-align: middle;
-}
-.bp-say { font-size: 1rem; line-height: 1.45; margin: 0.25rem 0 0; color: var(--text-bright); }
-
 .drill-worked-filters {
   display: flex;
   align-items: center;
@@ -4556,26 +4534,7 @@ body.bench-leaning .toast-container {
   color: var(--amber, #e59b24);
   background: var(--plate-000);
 }
-
-.bp-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
-.bp-done {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.15rem 0.75rem;
-  padding: 0.45rem 0.7rem;
-  background: var(--plate-000);
-  border: 1px solid var(--border-durasteel);
-  border-left: 2px solid var(--accent-green);
-  font-size: 0.85rem;
-  line-height: 1.45;
-}
-.bp-done-q { color: var(--text-muted); }
-.bp-done-a { font-family: var(--font-mono); color: var(--text-bright); text-align: right; }
-.bp-done-w { grid-column: 1 / -1; color: var(--text-primary); }
-
-.bp-input-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-.bp-input { width: 9rem; font-family: var(--font-mono); }
-.bp-unit { font-family: var(--font-mono); color: var(--text-muted); }
+/* The worked-problem worksheet itself is in styles/worked.css. */
 .lq-tour-demo { display: block; width: 100%; height: auto; margin: 0 0 0.6rem; background: #100f0c; border: 1px solid var(--plate-400, #3a3a3a); }
 
 .lq-tour-overlay {

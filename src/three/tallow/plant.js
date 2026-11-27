@@ -552,6 +552,11 @@ function kitFor(ctx) {
   return kit;
 }
 
+/** The plant kit's own materials for the world whose drum metal is `drumMat`, once any prop has been built. */
+export function plantKitMaterials(drumMat) {
+  return KITS.get(drumMat)?.K || null;
+}
+
 /* ==========================================================================
    THE RIG — a prop under construction
    ========================================================================== */

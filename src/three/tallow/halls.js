@@ -308,13 +308,193 @@ function buildLamps(w, g, h, M) {
   }
 }
 
+/* ------------------------------------------------------------------ trim: flashings, gutters, downpipes */
+
+/**
+ * A box on a wall line: centred `a` along it, `d` out from the wall's centre line, `y` up; sized `[along, up, out]`.
+ * No rotation, so the box's faces stay square to the wall either way the wall runs.
+ */
+function onLine(w, g, line, [sa, sy, so], mat, a, d, y, shadow = true) {
+  const size = line.axis === 'x' ? [sa, sy, so] : [so, sy, sa];
+  const p = line.axis === 'x' ? [a, y, line.at + line.out * d] : [line.at + line.out * d, y, a];
+  return box(w, g, size, mat, p, shadow);
+}
+
+/** A vertical pipe on a wall line from `y0` to `y1`, `d` out from the wall's centre line. */
+function pipeOnLine(w, g, line, a, d, y0, y1, r, mat) {
+  const p = line.axis === 'x' ? [a, (y0 + y1) / 2, line.at + line.out * d] : [line.at + line.out * d, (y0 + y1) / 2, a];
+  const m = new THREE.Mesh(w.own(new THREE.CylinderGeometry(r, r, y1 - y0, 8, 1, true)), mat);
+  m.position.set(...p);
+  m.castShadow = m.receiveShadow = w.t4;
+  g.add(m);
+  return m;
+}
+
+/** The wall the roof drains onto (an eaves wall: level top, the roof falling toward it), with the roof's fall. */
+function eavesWalls(h) {
+  const { type, low, high } = h.roof, r = h.room;
+  switch (type) {
+    case 'gable-z': return [['left', (high - low) / ((r.x1 - r.x0) / 2)], ['right', (high - low) / ((r.x1 - r.x0) / 2)]];
+    case 'gable-x': return [['back', (high - low) / ((r.z1 - r.z0) / 2)], ['front', (high - low) / ((r.z1 - r.z0) / 2)]];
+    case 'mono-z': return [['front', (high - low) / (r.z1 - r.z0)]];
+    case 'mono-x': return [['left', (high - low) / (r.x1 - r.x0)]];
+    default: return [];
+  }
+}
+
+/**
+ * What a real sheet building has at its edges and a box does not: an angle flashing down every corner (so the
+ * corner is two lapped legs, not one knife edge), a drip flashing where the sheet stops on the masonry, and along
+ * each eaves a gutter with a downpipe at either end running into a shoe at the foot.
+ */
+function buildTrim(w, g, h, M) {
+  if (h.kind === 'block') return;
+  const t = h.wall;
+  const foot = h.kind === 'plinth' ? PLINTH : KERB;
+  const ribOut = t / 2 + 0.03;                 // the outside of the sheet's ribs, from the wall's centre line
+  for (const wall of ['left', 'right', 'back', 'front']) {
+    if (!h.walls[wall]) continue;
+    const line = wallLine(h, wall);
+    const perp = line.axis === 'x' ? ['left', 'right'] : ['back', 'front'];
+    // Corner flashings: one leg of each corner's L on this wall.
+    for (const [a, s, other] of [[line.a0, 1, perp[0]], [line.a1, -1, perp[1]]]) {
+      if (!h.walls[other]) continue;
+      const top = wallTop(h, wall, a) - 0.02;
+      if (top - foot < 0.2) continue;
+      onLine(w, g, line, [0.17, top - foot, 0.012], M.sheet, a + s * 0.035, ribOut + 0.01, (foot + top) / 2);
+    }
+    // The drip flashing along the foot of the sheet, under every stretch of sheet that stands on the masonry.
+    for (const pc of wallPieces(h).filter(q => q.wall === wall)) {
+      if (pc.y0 > foot + 1e-3 || Math.min(pc.ya, pc.yb) < foot + 0.2) continue;
+      onLine(w, g, line, [pc.a1 - pc.a0, 0.05, 0.05], M.sheet, (pc.a0 + pc.a1) / 2, t / 2 + 0.025, foot + 0.025, false);
+    }
+  }
+  // Gutters and downpipes along each eaves.
+  for (const [wall, fall] of eavesWalls(h)) {
+    if (!h.walls[wall]) continue;
+    const line = wallLine(h, wall);
+    const mid = (line.a0 + line.a1) / 2;
+    const top = wallTop(h, wall, mid);
+    // The roof sheet passes over the gutter: keep the gutter's lip under it where the gutter's outer edge is.
+    const out = ribOut + 0.17;
+    const sheetY = top - fall * (t + (out - t / 2)) + 0.03;
+    const gTop = sheetY - 0.05, gH = 0.12;
+    const len = line.a1 - line.a0 + 0.2;
+    onLine(w, g, line, [len, gH, 0.14], M.dark, mid, ribOut + 0.09, gTop - gH / 2);
+    const ops = openingsOf(h, wall).filter(o => o.kind !== 'window');
+    for (const a of [line.a0 + 0.4, line.a1 - 0.4]) {
+      if (ops.some(o => a > o.a - 0.3 && a < o.b + 0.3)) continue;
+      pipeOnLine(w, g, line, a, ribOut + 0.07, 0.22, gTop - gH, 0.05, M.dark);
+      // Brackets at about two-metre centres, and the shoe throwing the water clear of the foot.
+      for (let y = 1.4; y < gTop - gH - 0.3; y += 2.1) onLine(w, g, line, [0.03, 0.05, 0.1], M.dark, a, ribOut + 0.045, y, false);
+      onLine(w, g, line, [0.11, 0.1, 0.22], M.dark, a, ribOut + 0.12, 0.17);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ the foot: salt drifted against the walls */
+
+/**
+ * SALT DRIFTED AGAINST EVERY WALL, built once the host stands where it stands (it reads the real ground under it).
+ * Wind-blown crystal banks where a wall stops it: a low wedge against the masonry, deeper and wider on the windward
+ * faces, thinning to nothing at doorways and belt slots and at the wall's ends. It stays under 0.3 m, below
+ * anything the walk measures, and it is how a building stops looking set down on the pan.
+ *
+ * @param {(x: number, z: number) => number} groundAt the pan's height in the world's frame
+ * @param {(x: number, z: number) => boolean} avoid true where something else stands (a neighbouring room of the
+ *   same shed, another host's machinery): the drift thins to nothing there rather than run under it
+ */
+export function buildHallFoot(w, h, g, mat, groundAt, avoid = () => false) {
+  if (!mat) return null;
+  g.updateMatrixWorld(true);
+  const c = Math.cos(g.rotation.y), sn = Math.sin(g.rotation.y);
+  const toWorld = (lx, lz) => [g.position.x + lx * c + lz * sn, g.position.z - lx * sn + lz * c];
+  const groundLocal = (lx, lz) => { const [x, z] = toWorld(lx, lz); return groundAt(x, z) - g.position.y; };
+  // The prevailing wind is from the west on Tallow (the dunes' lee is the east, `vista.js`).
+  const WIND = new THREE.Vector2(-1, 0.25).normalize();
+  const t = h.wall;
+  const pos = [], uv = [], idx = [];
+  const hash = (k) => { const x = Math.sin(k * 127.1 + h.id.length * 311.7) * 43758.5453; return x - Math.floor(x); };
+  const smoothN = (a, seed) => {
+    const i = Math.floor(a), f = a - i, u = f * f * (3 - 2 * f);
+    return hash(i + seed) * (1 - u) + hash(i + 1 + seed) * u;
+  };
+  let seed = 0;
+  for (const wall of ['left', 'right', 'back', 'front']) {
+    if (!h.walls[wall]) continue;
+    seed += 37;
+    const line = wallLine(h, wall);
+    // Which way this face looks, in the world: the windward faces hold the deepest drift.
+    const nl = line.axis === 'x' ? [0, line.out] : [line.out, 0];
+    const nw = new THREE.Vector2(nl[0] * c + nl[1] * sn, -nl[0] * sn + nl[1] * c);
+    const lee = 0.45 + 0.75 * Math.max(0, nw.dot(WIND));
+    // Every opening (a door, and a belt's slot whose machinery runs down to the floor) and every stretch where
+    // something else stands against the wall.
+    const gaps = openingsOf(h, wall).filter(o => o.kind !== 'window').map(o => [o.a - 0.35, o.b + 0.35]);
+    const a0 = line.a0 - 0.1, a1 = line.a1 + 0.1;
+    const n = Math.max(2, Math.ceil((a1 - a0) / 0.4));
+    const at = (a, d) => toWorld(line.axis === 'x' ? a : line.at + line.out * d, line.axis === 'x' ? line.at + line.out * d : a);
+    for (let i = 0; i <= n; i++) {
+      const a = a0 + (a1 - a0) * i / n;
+      if ([0.05, 0.3, 0.6].some(e => avoid(...at(a, t / 2 + e)))) gaps.push([a - 0.25, a + 0.25]);
+    }
+    const rowStart = pos.length / 3;
+    for (let i = 0; i <= n; i++) {
+      const a = a0 + (a1 - a0) * i / n;
+      // Fade to nothing at the ends and across every gap.
+      let fade = Math.min(1, (a - a0) / 0.8, (a1 - a) / 0.8);
+      for (const [q0, q1] of gaps) {
+        if (a > q0 && a < q1) fade = 0;
+        else fade = Math.min(fade, Math.max(0, Math.min(Math.abs(a - q0), Math.abs(a - q1)) / 0.6));
+      }
+      fade = Math.max(0, fade);
+      const H = (0.05 + 0.2 * smoothN(a / 1.7, seed) * (0.6 + 0.4 * smoothN(a / 0.45, seed + 9))) * lee * fade;
+      // Never more than half a metre out: a host stays within 0.6 m of its building (verify-tallow).
+      const W = Math.min(0.5, (0.3 + 0.3 * smoothN(a / 2.3, seed + 3)) * (0.7 + 0.5 * lee));
+      const prof = [[t / 2 - 0.03, 1.0], [t / 2 + 0.12 * W / 0.6, 0.8], [t / 2 + 0.35 * W / 0.6, 0.38], [t / 2 + W, 0.0]];
+      for (let k = 0; k < prof.length; k++) {
+        const [d, f] = prof[k];
+        const lx = line.axis === 'x' ? a : line.at + line.out * d;
+        const lz = line.axis === 'x' ? line.at + line.out * d : a;
+        const base = groundLocal(lx, lz);
+        // Where it has faded out it lies a hand under the crust, out of sight and out of anything's way.
+        const y = base + H * f - (k === prof.length - 1 || fade === 0 ? 0.1 : 0.01);
+        pos.push(lx, y, lz);
+        uv.push(a / 2, d / 2);
+      }
+    }
+    for (let i = 0; i < n; i++) {
+      for (let k = 0; k < 3; k++) {
+        const p = rowStart + i * 4 + k, q = p + 4;
+        // Wind the quads so their faces look out of the wall and up, whichever way the wall runs.
+        const flip = (line.axis === 'x') === (line.out > 0);
+        if (flip) idx.push(p, p + 1, q, p + 1, q + 1, q);
+        else idx.push(p, q, p + 1, p + 1, q, q + 1);
+      }
+    }
+  }
+  if (!idx.length) return null;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(w.own(geo), mat);
+  m.name = 'hall-drift';
+  // The pan's own surface banked up: ground, like the slab and the crust (overlap.mjs exempts it as such).
+  m.userData.phys = 'ground';
+  m.receiveShadow = w.t4;
+  g.add(m);
+  return m;
+}
+
 /** Build hall `h` into host group `g`. */
 export function buildHall(w, h, g) {
   const M = {
-    sheet: w.plateMat,
+    sheet: w.sheetMat || w.plateMat,
     dark: w.darkSteelMat,
     concrete: w.concreteMaterial(),
-    floor: w.hallFloorMat || (w.hallFloorMat = w.own(new THREE.MeshStandardMaterial({ color: 0x8a8173, roughness: 0.95, metalness: 0.0 }))),
+    floor: w.hallFloorMaterial ? w.hallFloorMaterial() : (w.hallFloorMat || (w.hallFloorMat = w.own(new THREE.MeshStandardMaterial({ color: 0x8a8173, roughness: 0.95, metalness: 0.0 })))),
     glass: w.glassMat
   };
   const hall = new THREE.Group();
@@ -323,6 +503,7 @@ export function buildHall(w, h, g) {
   buildWalls(w, hall, h, M);
   buildFrame(w, hall, h, M);
   buildRoof(w, hall, h, M);
+  buildTrim(w, hall, h, M);
   buildLamps(w, hall, h, M);
   g.add(hall);
   return hall;

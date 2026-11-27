@@ -1,0 +1,45 @@
+   */
+  initPanRims() {
+    const bundMat = this.own(new THREE.MeshStandardMaterial({
+      color: 0xb8ad98, roughness: 1.0, metalness: 0.0
+    }));
+    bundMat.userData.salt = { creep: 1.4, top: 0.9, tide: 0.2 };
+    const tints = [0xb7a4a0, 0x9fae9f, 0xc9b996, 0xcfc9bd];
+    let k = 0;
+    for (const lm of this.data.landmarks) {
+      if (lm.asset !== 'pan-rim') continue;
+      const s = lm.scale;
+      const R = 8.2 * s;
+      const y = this.surfaceHeight(lm.pos[0], lm.pos[2]);
+      const g = new THREE.Group();
+      const rand = mulberry32(((lm.pos[0] * 73856093) ^ (lm.pos[2] * 19349663)) >>> 0);
+      const ph = rand() * 10;
+      const plan = th => R * (1 + 0.06 * Math.sin(th * 2 + ph) + 0.04 * Math.sin(th * 5 - ph));
+
+      // The bund: a low trapezoid of scraped crust, swept round the plan.
+      const N = this.t4 ? 96 : 48;
+      const prof = [[-0.9, 0], [-0.35, 0.42], [0.3, 0.42], [0.85, 0]];
+      const verts = [], idx = [];
+      for (let i = 0; i <= N; i++) {
+        const th = (i / N) * Math.PI * 2;
+        const rr = plan(th);
+        const bump = 1 + (rand() - 0.5) * 0.25;
+        for (const [dr, hy] of prof) {
+          verts.push(Math.cos(th) * (rr + dr * s), hy * s * bump, Math.sin(th) * (rr + dr * s));
+        }
+      }
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < prof.length - 1; j++) {
+          const a = i * prof.length + j, b = a + 1, c = a + prof.length, d = c + 1;
+          idx.push(a, c, b, b, c, d);
+        }
+      }
+      const bg = new THREE.BufferGeometry();
+      bg.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      bg.setIndex(idx);
+      bg.computeVertexNormals();
+      this.own(bg);
+      const bund = new THREE.Mesh(bg, bundMat);
+      bund.position.y = -0.04;
+      bund.receiveShadow = bund.castShadow = this.t4;
+      g.add(bund);

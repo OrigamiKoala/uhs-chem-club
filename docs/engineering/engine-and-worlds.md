@@ -340,6 +340,15 @@ iff a quest has a module). Plans: `docs/archive/2026-11-26/plans/learn-track.md`
   1 m to the side of the belt's line, so anything over the tail must clear it; raising a host 5 cm onto a slab pushed the weigh hopper's lamp into the belt head (the lamps moved
   off the belt's line, which crosses the whole head house); a host that is baked loses its parts' names, so the extent check builds a second, unbaked world; the old pad, belt
   tail and pit gauge board had low bodies over walkable ground that the single-floor check found, now collided.
+- **Tallow realism pass (2026-11-26, `docs/plans/realism-tallow.md`).** Photographed CC0 surfaces through a shared,
+  opt-in loader: `materials/texture-pack.js` (`dressWorld` / `dressFromPack`) fetches `public/textures/<world>/<name>_{diff,nor,arm}.jpg`
+  after the world is built and swaps them into the map slots the procedural materials already hold (same program, no
+  recompile), uploading each with `renderer.initTexture` during the flight; nothing is fetched with no renderer (Node
+  checks), no DOM or below T4, and a failed file leaves the procedural map. `arm` is R=AO, G=roughness, B=metalness,
+  three's own channel order. Two opt-in `pbr-kit.js` patches came with it: `addWorldVariation` (world-space tone and
+  roughness drift, anti-tile second sample, optional run streaks) and `addWorldBoxUV` (box-projected world uvs for
+  stock boxes). Tallow's ground shader takes contact occlusion as distance fields (`setTallowContacts`) and a
+  photographed grain (`setTallowGrain`); salt drifts at hall feet are `phys: 'ground'` and stay within 0.5 m of the wall.
 - **Bellows** (`unit04`, `three/bellows.js` + `bellows/`, `tools/gen-bellows-layout.mjs`, `tools/verify-bellows.mjs`; site rebuilt 2026-11-18, `docs/archive/2026-11-26/plans/bellows-world.md`
   "Site rebuild (2026-11-18)"): A GAS WORKS OVER THE CLOUD, NO GROUND. `bellows/works-plan.js` (pure data on `lib/workings.js`) declares the floor levels (`LEVEL`: stage and
   apron 0, sphere +8, tower hall -4, holder -8, mooring deck +4, cradle -5, cold deck +12), the structures (`PLINTH`, `SPHERE`, `HOLDER`, `COLDBOX`, `BAGS` with `bagBelly`),

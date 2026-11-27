@@ -123,18 +123,9 @@ function learnPanel() {
   `;
 }
 
-/**
- * The Story tab: a chart of every world, with the plain list kept underneath it
- * for anyone who would rather read than aim (and for a screen reader).
- */
+/** The Story tab: a chart of every world. */
 function galaxyPanel() {
-  return `
-    <div data-galaxy-root></div>
-    <details class="galaxy-list">
-      <summary class="eyebrow">World list</summary>
-      ${learnPanel()}
-    </details>
-  `;
+  return `<div data-galaxy-root></div>`;
 }
 
 /** What the chart is told about each system. Everything is read, nothing is made up. */
@@ -272,10 +263,6 @@ export function renderStarMap(container) {
 
         <!-- Integrated Active Quest: Sector 01 (The Charge Gardens) -->
         <section class="glass-panel" style="margin-bottom: 1.2rem; padding: 1.1rem;">
-          <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.4rem;">
-            <span class="tag ${isComplete ? "live" : "warn"}">${isComplete ? "RESOLVED" : cleared > 0 ? "UNDERWAY" : "STANDBY"}</span>
-          </div>
-
           <h3 style="font-family: var(--font-imperial); font-size: 1.2rem; color: var(--text-bright); text-transform: uppercase; margin: 0 0 0.8rem;">
             THE CHARGE GARDENS
           </h3>
@@ -288,24 +275,6 @@ export function renderStarMap(container) {
             </button>
           </div>
         </section>
-
-        <!-- Charted Sectors Grid -->
-        <div class="eyebrow" style="margin-bottom: 0.5rem; letter-spacing: 0.12em;">SECTORS</div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem;">
-          ${SECTORS.map(s => {
-            const isLive = s.status === "live";
-            return `
-              <div class="holo-card" style="padding: 0.8rem; ${isLive ? "border-color: var(--accent-amber);" : "opacity: 0.5;"}">
-                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; margin-bottom: 0.2rem;">
-                  <span class="eyebrow ${isLive ? "lit" : ""}">SEC ${s.code}</span>
-                  <span class="tag ${isLive ? "live" : "locked"}">${isLive ? "OPEN" : "LOCKED"}</span>
-                </div>
-                <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-bright);">${s.world}</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">${s.quest}</div>
-              </div>
-            `;
-          }).join("")}
-        </div>
 
         </div><!-- /sectors -->
 
@@ -353,8 +322,8 @@ export function renderStarMap(container) {
         ${tabRow("learn")}
 
         <div class="m-grid-1 sector-grid" data-map-panel="sectors" hidden style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-          ${SECTORS.map(s => {
-            const isLive = s.status === "live";
+          ${SECTORS.filter(s => s.status === "live").map(s => {
+            const isLive = true;
             return `
               <article class="holo-card sector-card" style="${isLive ? "" : "opacity: 0.5;"} display: flex; flex-direction: column;">
                 <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem;">

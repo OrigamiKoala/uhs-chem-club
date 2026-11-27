@@ -48,6 +48,26 @@ function worldUV(mat, metres) {
   return mat;
 }
 
+/** Painted sheet, chipped back to metal at its worn spots. */
+function worn(opts, metres) {
+  return worldUV(buildMaterial(
+    platedMetal({ panels: 0, rivets: false, size: texSize(256), ...opts }),
+    { repeat: 1, roughness: 1.0 }
+  ), metres);
+}
+
+/**
+ * Bare metal: metallic all over, its wear carried by the roughness map
+ * (scaled by `roughScale`) and the albedo's mottle.
+ */
+function bare(opts, metres, metalness, roughScale) {
+  const mat = worn(opts, metres);
+  mat.metalnessMap = null;
+  mat.metalness = metalness;
+  mat.roughness = roughScale;
+  return mat;
+}
+
 export function createShipMaterials() {
   const M = {};
 
@@ -118,17 +138,25 @@ export function createShipMaterials() {
     }),
     { repeat: 1, roughness: 1.0, metalness: 0.55 }
   ), 1.8);
-  M.trimMat = new THREE.MeshStandardMaterial({ color: 0x3b3d41, roughness: 0.46, metalness: 0.78 });
-  M.gunmetalMat = new THREE.MeshStandardMaterial({ color: 0x26282b, roughness: 0.55, metalness: 0.7 });
-  M.steelMat = new THREE.MeshStandardMaterial({ color: 0x8d8c88, roughness: 0.34, metalness: 0.9 });
-  M.greebleMat = new THREE.MeshStandardMaterial({ color: 0x55565a, roughness: 0.62, metalness: 0.55 });
-  M.ventMat = new THREE.MeshStandardMaterial({ color: 0x121315, roughness: 0.8, metalness: 0.4 });
-  M.rubberMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.94, metalness: 0.0 });
-  M.cableMat = new THREE.MeshStandardMaterial({ color: 0x1b1b1c, roughness: 0.78, metalness: 0.1 });
+  /*
+   * SMALL PARTS. Brackets, housings, frames, handrails and fittings make up
+   * most of what the eye lands on, so none of them is a flat colour: each is
+   * painted sheet with its edges chipped back to metal, mottled by hands and
+   * dulled by grime, on a fine world-scale tile so the wear is part-sized.
+   * Bare steel and brass keep their metal everywhere and take their wear as
+   * roughness: polished where handled, dull and filmed everywhere else.
+   */
+  M.trimMat = worn({ paint: '#3d3f43', metal: '#87847c', rust: '#5b3a24', seed: 151, weather: 0.55 }, 1.1);
+  M.gunmetalMat = worn({ paint: '#2a2c2f', metal: '#6b6963', rust: '#4f3421', seed: 163, weather: 0.5 }, 1.0);
+  M.steelMat = bare({ paint: '#7f7d78', metal: '#9b988f', rust: '#5f4a36', seed: 177, weather: 0.6 }, 0.9, 0.8, 0.72);
+  M.greebleMat = worn({ paint: '#535458', metal: '#8a877f', rust: '#5d3b24', seed: 181, weather: 0.6 }, 1.0);
+  M.ventMat = new THREE.MeshStandardMaterial({ color: 0x121315, roughness: 0.86, metalness: 0.35 });
+  M.rubberMat = new THREE.MeshStandardMaterial({ color: 0x151413, roughness: 0.96, metalness: 0.0 });
+  M.cableMat = new THREE.MeshStandardMaterial({ color: 0x1c1b1a, roughness: 0.84, metalness: 0.05 });
   // Faded livery paint: the rust-orange band a freighter's owners striped on
   // the frames decades ago and nobody has touched up since.
-  M.liveryMat = new THREE.MeshStandardMaterial({ color: 0x7c4526, roughness: 0.85, metalness: 0.15 });
-  M.paintWhiteMat = new THREE.MeshStandardMaterial({ color: 0xa7a296, roughness: 0.8, metalness: 0.1 });
+  M.liveryMat = worn({ paint: '#72432a', metal: '#6e6a62', rust: '#5a3520', seed: 191, weather: 0.75 }, 1.4);
+  M.paintWhiteMat = worn({ paint: '#a29d91', metal: '#77746d', rust: '#6a4a30', seed: 197, weather: 0.65 }, 1.4);
 
   // Deckhead: darker, busier plate, seen from below.
   M.ceilingMat = worldUV(buildMaterial(
@@ -175,7 +203,7 @@ export function createShipMaterials() {
   );
 
   // Legacy names the room builders still ask for.
-  M.brassMat = new THREE.MeshStandardMaterial({ color: 0x826732, roughness: 0.58, metalness: 0.82 });
+  M.brassMat = bare({ paint: '#7a6233', metal: '#9a7c42', rust: '#4a4a32', seed: 211, weather: 0.6 }, 0.8, 0.85, 0.82);
   M.ironMat = new THREE.MeshStandardMaterial({ color: 0x17191c, roughness: 0.9, metalness: 0.4 });
   M.fireboxMat = new THREE.MeshStandardMaterial({ color: 0x2a211c, roughness: 0.95, metalness: 0.45 });
 

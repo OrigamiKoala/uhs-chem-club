@@ -1,77 +1,91 @@
-# Avalon — UHS Chemistry Club RPG Competition
+# Avalon
 
-**Avalon** is a year-long RPG competition and spaceborne molecular simulator for the University High School Chemistry Club, for students aged 12 to 17. Four Imperial guilds aboard one salvage starship explore derelict alien worlds and unlock chemical principles from the ground up: plain words first, the real chemistry term once it is earned.
+Welcome to **Avalon**, a 3D video game built by Carl (@origamikoala) to help students explore AP Chemistry. Hope you enjoy!
 
-Two roads: the Learn track (fourteen worlds, six built, no XP) and the Charge Gardens campaign (the competition: XP and Standings). Product truth is in `PRODUCT.md`; engineering rules in `CLAUDE.md`.
+Feedback is always appreciated. The feedback form is at [bit.ly/avalon-feedback](https://bit.ly/avalon-feedback)
 
----
+## Advice for AP Chem
 
-## Architecture
+Unfortunately, playing video games probably won't be enough to do well on the AP exam; you're going to have to practice *a lot*. I provided a bunch of practice problems, but that may not be enough. I recommend checking out Khan Academy, or textbooks (like Zumdahl's *Chemistry*) for practice problems.
 
-```
-Browser — Vite + Three.js, DOM UI layered over one persistent WebGL canvas
-   │  same-origin fetch, no CORS client-side
-   ▼
-/api/*  — Vercel Node function: proxy, rate limit, and scrypt password hashing
-   │  server-to-server POST, shared secret in payload
-   ▼
-Apps Script Web App (doPost) — routing, grading, scoring, never hashes passwords
-   │
-   ▼
-Google Sheet (7 tabs: Config, Players, Progress, LearnProgress, PlayerState, Submissions, Inventory)
-```
+However, you should always try to understand the concepts in the AP curriculum. Don't memorize or grind until you can solve every problem you've seen before - because there wil be problems you've never seen before. The most important thing is to learn how to think like a chemist - figure out what's going on, and then draw conclusions. Understanding chemistry is fun, but grinding is not.
 
----
+If there are concepts you still struggle to understand, check out the Organic Chemistry Tutor on YouTube - he's really good at explaining stuff.
 
-## Quickstart (Local Development)
+## Advice for Chemistry Olympiads and Science Bowl
 
-1. Clone the repository and install dependencies:
-   ```bash
-   npm install
-   ```
+If you want to go deeper into high school chemistry, consider the USNCO (United States National Chemistry Olympiad) or other chemistry olympiads. 
 
-2. Start the local development server:
-   ```bash
-   npm run dev
-   ```
-   Open `http://localhost:3000` in your browser. The embedded dev proxy middleware handles `/api/*` requests in-memory out-of-the-box.
+Making the jump from AP to chemistry olympiads is difficult. Olympiads go much deeper into the content and really require an intuitive understanding of what's going on. Hopefully, Avalon will help you build some of that intuition.
 
----
+However, grinding is also incredibly important for chemistry olympiads. Though it might not be fun, there is a big difference between "I know how to do this problem" and "I can do this problem fast enough and accurately enough even when I'm tired".
 
-## Graphics
+That being said, here are my recommendations:
 
-Two settings, chosen in Settings (a measured tier is never written down, only a chosen one):
-- **3D On (T4, default):** walk the ship and the worlds in first person; every bench is built into its world and the camera leans in over the table. A phone is not disqualified (DPR capped at 1.5, no shadow map on handsets).
-- **3D Off (T1):** no WebGL needed. The same tabletops are drawn on a canvas, with static SVG backdrops and native form controls. Every stage is solvable here.
+### Learning
 
----
+**Start with any of the following (you only need one):**
 
-## Production Deployment
+- [*Chemical Principles* by Zumdahl](https://www.amazon.com/Chemical-Principles-Steven-Zumdahl/dp/1535884495/ref=sr_1_2?crid=DOUSFQ2UPV1C&dib=eyJ2IjoiMSJ9.b1x6_GhIatKqqoJDYfMBxdH0YNhicqcOPq4R853bG81yoVItd-VgzfXwckupyN-2p4yWX7_zRwck2C7HQzo6ROojP1NKxFM3_yeaha-pbJ726U95Om1uxF8fxxdzCNA-3M_V_9yKRwrbBYkcE2iMejGxGHiCLCscSqzp4FJa3Z7XDA4fpEpD-kuMsWtuD-575WAc2iWUZugH3f-wq2RNQ8vLqeUGzVeHe8PQRw3A4sE.GNDYVyo2_9RsXDFlIlreG2PPhxT-yC-Lm8pitQEG9K0&dib_tag=se&keywords=chemical+principles+zumdahl&qid=1783272274&sprefix=chemical+principles+zumdah,aps,186&sr=8-2)  
+- [*Chemical Principles: The Quest for Insight* by Atkins](https://www.amazon.com/dp/1319137989?lv=shuf&channelId=500&plpRedirect=mhFallback) (Harder)
 
-### 1. Google Apps Script Backend
-1. In `apps-script/`, log in and link to your Google Spreadsheet:
-   ```bash
-   cd apps-script
-   npx clasp login
-   ```
-2. Set Script Properties in the Apps Script project:
-   - `SPREADSHEET_ID`: ID of your Google Sheet
-   - `PROXY_SECRET`: Shared secret for server-to-server calls
-   - `SESSION_SECRET`: Secret for signing HMAC session tokens
-   - `SEASON_SALT`: Salt for deterministic random event rolls
-3. Deploy as a Web App (Execute as: Me, Access: Anyone).
+**Then, check out:**
 
-### 2. Vercel Frontend
-Set the following environment variables in Vercel:
-- `APPS_SCRIPT_URL`: URL of your deployed Apps Script web app
-- `PROXY_SECRET`: Matching proxy secret
-- `PEPPER`: Random salt pepper string for scrypt password hashing
-- `SESSION_SECRET`: Matching session secret
+- Organic chemistry: [*Organic Chemistry* by David Klein](https://www.amazon.com/dp/1119659590?lv=shuf&channelId=500&plpRedirect=mhFallback)   
+- Inorganic chemistry: [Inorganic Chemistry by Rayner-Canham](https://www.amazon.com/Inorganic-Chemistry-Prof-Mark-Weller-dp-0198866917/dp/0198866917/ref=dp_ob_image_bk)
 
----
+Both of these are mostly beyond the scope of the USNCO, but will help you for a few questions, so they might be worth a read.
 
-## Utility Tools
+### Practice
 
-- `npm run bake:stills`: Generates fallback SVG/WebP backdrops in `public/fallback/`.
-- `npm run test:load`: Simulates 40 concurrent recruits to verify team slot capping and race-condition immunity.
-- `npm run seed`: Generates mock explorer records across all four flagships for local testing.
+As I mentioned earlier, for chemistry olympiad, practice is the most important factor.
+
+[https\://www\.acs.org/education/olympiad/prepare-for-exams.html](https://www.acs.org/education/olympiad/prepare-for-exams.html) \- Previous USNCO tests, as well as more information on the USNCO.  
+[https\://chem.isodn.org](https://chem.isodn.org) \- Chemistry Olympiad Discord Server (CODS) website (has lots of great resources/past exams), as well as a link to the CODS Discord server.  
+[https\://mock.dcho.us/dashboard](https://mock.dcho.us/dashboard) \- USNCO mock tests  
+[IChO Generator](https://gemini.google.com/gem/1JUXnAaxtt31e3Z_n3FkZs0cr1e6_nG9T?usp=sharing)   
+[https\://github.com/OrigamiKoala/chem-oly-generator](https://github.com/OrigamiKoala/chem-oly-generator) \- mock USNCO generator (agent skill)
+
+### Science Bowl
+
+**Start with any of the following (you only need one):**
+
+- [*Chemistry* by Zumdahl](https://www.amazon.com/Chemistry-Steven-S-Zumdahl/dp/1305957407/ref=sr_1_1?crid=1IAOCM43UKD2M&dib=eyJ2IjoiMSJ9.Cc2To76OxttDBoW6lqhr2AE3pMM7K05N8a3mUiYEdOlmrd6VCzQ3XoWqJCDGkI2LCoyy4cZNOSshNaFLip6vrhmJV3WToeu05XN6U7vBNI3fCqAkKkFxAc5XAn6WTyU-MytIj3SwxxcRxYtKOoSc_9gn5zdrgNj9jTeBYKYp_fvCZfnOekKMhfq3UrdnH-D7zoP14PR0HECE7J7-x6kFQVt0-BTPASB3_z91wRFwrMY.T_-4CU9jC1grGvz0HlkN11xzDCJPjRFo2ZEtRkKx3TY&dib_tag=se&keywords=chemistry+by+zumdahl&qid=1783272250&sprefix=chemistry+by+zumdah,aps,211&sr=8-1) (Standard AP textbook)  
+- [*Chemical Principles* by Zumdahl](https://www.amazon.com/Chemical-Principles-Steven-Zumdahl/dp/1535884495/ref=sr_1_2?crid=DOUSFQ2UPV1C&dib=eyJ2IjoiMSJ9.b1x6_GhIatKqqoJDYfMBxdH0YNhicqcOPq4R853bG81yoVItd-VgzfXwckupyN-2p4yWX7_zRwck2C7HQzo6ROojP1NKxFM3_yeaha-pbJ726U95Om1uxF8fxxdzCNA-3M_V_9yKRwrbBYkcE2iMejGxGHiCLCscSqzp4FJa3Z7XDA4fpEpD-kuMsWtuD-575WAc2iWUZugH3f-wq2RNQ8vLqeUGzVeHe8PQRw3A4sE.GNDYVyo2_9RsXDFlIlreG2PPhxT-yC-Lm8pitQEG9K0&dib_tag=se&keywords=chemical+principles+zumdahl&qid=1783272274&sprefix=chemical+principles+zumdah,aps,186&sr=8-2) (Harder)  
+- [*Chemical Principles: The Quest for Insight* by Atkins](https://www.amazon.com/dp/1319137989?lv=shuf&channelId=500&plpRedirect=mhFallback) (Even harder)  
+- [Organic Chemistry Tutor](https://www.youtube.com/@TheOrganicChemistryTutor) (Youtube)
+
+**Then check out:**
+
+- Physical Chemistry: *Atkins’ Physical Chemistry* ([Volume 1](https://www.amazon.com/Atkins-Physical-Chemistry-V1-Peter/dp/0198851308/ref=sr_1_5?crid=3BZ15K74C5OB3&dib=eyJ2IjoiMSJ9.b-mxvkxwhR96tgQzUfRWP_cUwaqR1BorOej3b-oU56RT6TkbiIe5thHDts_G4dB5rzDFRoH6kB4ARyzM5EI3p-FzPupzX_djLDidowWJVEqi5UdmFwLhLTAb_QwmsHzUNM2X2qF-itreBAVTsDV6sNAoPusl1g2FF9Ocb4P2O2aq4I5siMX3lNBCR5yDyyum1qfJljoZzVVYD_IbVK5i1TZ9BiRhuPb1Jp9VpvWHtws.m0rej5XJSzcPnMWqnDKAZV47-1tnFuhJUtsApjAUxwM&dib_tag=se&keywords=atkins+physical+chemistry+11th+edition&qid=1783272406&sprefix=atkins+phys,aps,174&sr=8-5) and [Volume 2](https://www.amazon.com/Atkins-Physical-Chemistry-V2-Peter/dp/0198851316/ref=pd_bxgy_thbs_d_sccl_1/147-5739511-8605410?pd_rd_w=BrbMT&content-id=amzn1.sym.dcf559c6-d374-405e-a13e-133e852d81e1&pf_rd_p=dcf559c6-d374-405e-a13e-133e852d81e1&pf_rd_r=QJJXM8FQCFE93NZ2XFBC&pd_rd_wg=cX0oX&pd_rd_r=dbd071fd-8473-48cd-b967-9a343f24ab8f&pd_rd_i=0198851316&psc=1))  
+- Organic Chemistry: [*Organic Chemistry* by Clayden](https://www.amazon.com/Organic-Chemistry-Jonathan-Clayden/dp/0199270295/ref=sr_1_1?crid=2VLNPDVYYLDVC&dib=eyJ2IjoiMSJ9.SNCdQB6dtk8WZzD7i1P00jbpC40oUv-7nQQgfRGuO_2nVtU79NnFi4X_HJMeRZzeHWzVP-e7EAKxslBi4caBTQNME53M2ZYtfumoNtSbasnpBt1t5vafayduGlQUDOCrKqTkcqkzt34vxsl2iCj6y5QYxYTjS4-6CTIzwlfXYnAaWrnOIfcVKW54YDSlJnHfRK7fJR8zh_1OURGK2uql7Oxr91TVs66zqLrqQZRaqz4.ZlG_xDkXfvyCfkwXQ-st1jJYu17jw_S-QU3VGWFpfy0&dib_tag=se&keywords=clayden+organic+chemistry&qid=1783272495&sprefix=clayden+organi,aps,189&sr=8-1)  
+- Inorganic Chemistry: [Chemical Structure and Reactivity](https://www.amazon.com/dp/0199604134?lv=shuf&channelId=500&plpRedirect=mhFallback) by Keeler OR [Inorganic Chemistry by Miessler](https://www.amazon.com/Inorganic-Chemistry-5th-Gary-Miessler-dp-0321811054/dp/0321811054/ref=dp_ob_image_bk) Descriptive Chemistry: [Inorganic Chemistry by Rayner-Canham](https://www.amazon.com/Inorganic-Chemistry-Prof-Mark-Weller-dp-0198866917/dp/0198866917/ref=dp_ob_image_bk) OR [Chemistry of the Elements by Greenwood](https://www.amazon.com/Chemistry-Elements-N-Greenwood/dp/0750633654)
+
+**Wikipedia\!**
+
+Science Bowl is mostly about speed, though, so reading textbooks definitely won't be enough. You have to practice a lot, until your instict is good enough that you can interrupt and get stuff right. However, I have noticed Science Bowl training makes me more competitive at chemistry olympiads (maybe because it improves the intuition/speed factor).
+
+## Communities
+
+Chemistry is full of fun people, and we have Discord servers where you can get more help with competition prep!
+
+[https\://discord.gg/5CRZaPk](https://discord.gg/5CRZaPk) \- official chemistry server (chill)  
+[https\://discord.gg/chemistryolympiad](https://discord.gg/chemistryolympiad) \- chem oly server (not chill)
+
+## How to run locally
+
+Okay, now for the traditional part of the README.
+
+If you're planning on running this game locally, just download the code from [the Github repo](https://github.com/OrigamiKoala/uhs-chem-club). Then, in the folder, run:
+
+```npm install```
+
+which will install all of the necessary web modules.
+
+Then, whenever you're ready, run
+
+```npm run dev```
+
+This should automatically open up a local server, and allow you to play the game. You won't be able to sign in, so just continue as a guest.
+
+Most of this repo is either code or notes left over for Claude (since Claude did write all the code...), so don't worry if you don't understand the docs, because I barely do either.

@@ -76,26 +76,29 @@ import {
   buildMaterial, enableAO,
   texSize, heightField, heightToNormal, asDataTexture, fbm,
   boltLine, weldBead, cableRun, pipeFlange, placard,
-  hazardStripe, mergeStatic, consolidateStatic
+  hazardStripe, mergeStatic, consolidateStatic, addWorldVariation, addWorldBoxUV
 } from './materials/pbr-kit.js';
+import { dressWorld, loadTexturePack, packsAvailable } from './materials/texture-pack.js';
 import { createSalvageCrateTexture } from './materials/tallow-textures.js';
 import { roundedSlab, boxUVs } from '../learn/engine/table-props.js';
 import {
   createTallowSkyDome, createTallowCelestials, createTallowLights, followTallowShadow,
   createTallowEnvironment, applyTallowAir, tallowSkyUniforms, TSKY
 } from './tallow/atmosphere.js';
-import { makeTallowField, buildTallowTerrainGeometry, createTallowTerrainMaterial } from './tallow/terrain.js';
+import {
+  makeTallowField, buildTallowTerrainGeometry, createTallowTerrainMaterial, setTallowGrain, setTallowContacts
+} from './tallow/terrain.js';
 import {
   saltCrust, saltGrain, createTallowStrataTexture, createGroundHeightTexture, applySaltWeather
 } from './tallow/surfaces.js';
 import { createTallowEffects } from './tallow/effects.js';
 import {
   buildEvaporator, buildCrackingTower, buildPipeBridge, buildConveyor, buildLoadoutScale,
-  buildCommsMast, buildDebrisField, buildStakeMarker, mulberry32, SUPPORT_POINTS
+  buildCommsMast, buildDebrisField, buildStakeMarker, mulberry32, SUPPORT_POINTS, plantKitMaterials
 } from './tallow/plant.js';
 import { HOST_BUILDERS, HOPPER } from './tallow/stations.js';
 import { HALLS, hallFor, hallRect, hallColliders, hallCoverBoxes, pitCoverBox, routeTo as hallRoute } from './tallow/hall-plan.js';
-import { buildHall } from './tallow/halls.js';
+import { buildHall, buildHallFoot } from './tallow/halls.js';
 import { makeCover } from './lib/cover.js';
 import { buildHauler } from './tallow/hauler.js';
 import { attachCrew } from './npc/attach.js';
@@ -147,6 +150,7 @@ export class TallowWorld {
     this.initLandingPad();
     this.initHosts();
     this.initVista();
+    this.initContacts();
     this.initEffects();
     this.initLampPool();
     this.bakeStatics();
@@ -155,6 +159,94 @@ export class TallowWorld {
     this.weatherTheWorld();
     this.initCover();
     this.initCrew();
+    this.initPacks();
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (`materials/texture-pack.js`, `public/textures/tallow/`, CC0, see LICENSE.md there).
+   * The world is complete with its procedural maps; at 3D On with a renderer the photo packs are fetched and put
+   * into the same map slots as they land, each sent to the GPU at once, during the flight. Nothing is fetched in
+   * Node or below T4, and a pack that fails leaves the procedural surface it would have replaced.
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const base = '/textures/tallow';
+    const live = () => !this._disposed;
+    const K = plantKitMaterials(this.drumMat);
+    // `scale` = metres the procedural tile covered / metres the photo covers (LICENSE.md lists the photo sizes).
+    const concrete = 2.22 / 2.71;
+    this.packsReady = dressWorld([
+      {
+        name: 'sheet', mats: [
+          [this.sheetMat, { scale: 1.0, normalScale: 0.9, aoIntensity: 0.7 }],
+          // The bench's plate and the instrument cabinet: the same painted steel, kept quiet under the pieces.
+          [this.benchTopMat, { scale: 1.0, normalScale: 0.5, aoIntensity: 0.5 }],
+          ...(this.caseMats ? [[this.caseMats.plate, { scale: 1.0, normalScale: 0.5, aoIntensity: 0.5 }]] : [])
+        ]
+      },
+      {
+        name: 'concrete', mats: [
+          [this.concreteMaterial(), { scale: concrete, normalScale: 1.0 }],
+          [this.hallFloorMaterial(), { scale: concrete, normalScale: 0.45, aoIntensity: 0.5 }],
+          ...(K ? [[K.concrete, { scale: 2.2 / 2.71, normalScale: 1.0 }]] : [])
+        ]
+      },
+      { name: 'drum', mats: [[this.drumMat, { scale: 2.4 / 2.0, normalScale: 1.0 }]] }
+    ], { base, renderer: this.renderer, own: (...t) => this.own(...t), isLive: live });
+    loadTexturePack(base, 'grain', { arm: false }).then(pack => {
+      if (!live() || !pack) return;
+      setTallowGrain(this.terrainMesh?.material, { alb: pack.diff, nor: pack.nor, tile: 1.23 });
+      for (const t of [pack.diff, pack.nor]) {
+        if (!t) continue;
+        t.anisotropy = this.renderer.capabilities?.getMaxAnisotropy?.() || 8;
+        try { this.renderer.initTexture(t); } catch (e) { /* drawn later instead */ }
+      }
+    });
+  }
+
+  /**
+   * CONTACT SHADOW ON THE PAN. A building or a drum standing on the white crust darkens the ground at its foot (the
+   * sky cannot reach it); without that the plant looks set down on the pan rather than standing in it. The ground
+   * shader takes every hall's outside footprint and the shell of every evaporator and the tower as distance fields.
+   */
+  initContacts() {
+    const boxes = this.hallSlabs.map(s => [(s.minX + s.maxX) / 2, (s.minZ + s.maxZ) / 2, (s.maxX - s.minX) / 2, (s.maxZ - s.minZ) / 2]);
+    const circles = [];
+    const box = new THREE.Box3(), part = new THREE.Box3();
+    for (const o of this.scene.children) {
+      if (!/^(evaporator|cracking-tower)@/.test(o.name)) continue;
+      o.updateMatrixWorld(true);
+      box.makeEmpty();
+      o.traverse(m => { if (m.isMesh && m.material === this.drumMat) box.union(part.setFromObject(m)); });
+      if (box.isEmpty()) continue;
+      const c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+      circles.push([c.x, c.z, Math.min(sz.x, sz.z) / 2, 0.9]);
+    }
+    setTallowContacts(this.terrainMesh.material, { boxes, circles });
+  }
+
+  /** A copy of a material that shares its maps but not its bookkeeping (Material.clone would serialise the maps). */
+  cloneBare(m) {
+    const ud = m.userData;
+    m.userData = {};
+    const c = m.clone();
+    m.userData = ud;
+    if (ud.salt) c.userData.salt = { ...ud.salt };
+    return c;
+  }
+
+  /**
+   * The hall floors: power-floated concrete, the same pour as the kerbs but trowelled smooth and swept. Kept out of
+   * the salt (the slab is `noSalt`) and out of the world variation (it is seen from a metre, lit by sodium).
+   */
+  hallFloorMaterial() {
+    if (this._hallFloor) return this._hallFloor;
+    const m = this.cloneBare(this.concreteMaterial());
+    m.color.set(0xc9c0b0);
+    m.roughness = 0.88;
+    m.normalScale.set(0.5, 0.5);
+    this._hallFloor = this.own(m);
+    return m;
   }
 
   /**
@@ -403,6 +495,17 @@ export class TallowWorld {
       m.normalScale.set(1.25, 1.25);
       m.aoMapIntensity = 0.85;
     }
+    // The halls' profiled sheet: the same plate until the photographed sheet lands (`initPacks`), then its own.
+    this.sheetMat = this.own(this.cloneBare(this.plateMat));
+    addWorldVariation(this.sheetMat, { scale: 7, strength: 0.15, roughShift: 0.1, antiTile: 0.55, streaks: 0.22 });
+    addWorldVariation(this.drumMat, { scale: 6, strength: 0.08, roughShift: 0.08, antiTile: 0.35 });
+    // The plate a student works on is wiped: the salt still crusts its foot and its frame, but does not settle in
+    // white blooms on the working surface, where it read as blotches behind the table pieces.
+    this.benchTopMat = this.own(this.cloneBare(this.plateMat));
+    this.benchTopMat.userData.salt = { creep: 0.55, top: 0.05, tide: 0.3 };
+    // The shared bench lays 0..1 uvs per face, which stretched the plate's texture 2.4 m along and 0.65 m across;
+    // laid from the world instead, one tile is a metre square on every face (at the material's repeat of 2).
+    addWorldBoxUV(this.benchTopMat, { metres: 2 });
   }
 
   /** What the plant builders are handed: the metals, disposal, and the tier. */
@@ -444,7 +547,7 @@ export class TallowWorld {
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.5;
+      this.scene.environmentIntensity = 0.6;
     }
   }
 
@@ -529,6 +632,7 @@ export class TallowWorld {
     const mat = this.own(createTallowTerrainMaterial({
       crust, grit, macro, strata: this.strataMap, tracks: this.data.tracks
     }));
+    for (const t of mat.userData.surfaceMaps) this.own(t);
     this.terrainMesh = new THREE.Mesh(geo, mat);
     this.terrainMesh.name = 'tallow-ground';
     // The ground everything else stands on and is bedded into.
@@ -1141,6 +1245,7 @@ export class TallowWorld {
     grain.normalScale.set(1.2, 1.2);
     // A pile is salt: it does not grow a salt crust, it IS one.
     grain.userData.noSalt = true;
+    this.saltGrainMat = grain;
 
     for (const lm of this.data.landmarks) {
       if (lm.asset !== 'salt-heap') continue;
@@ -1192,9 +1297,11 @@ export class TallowWorld {
    * four stages of the same process, and they are the only colour on the flat.
    */
   initPanRims() {
-    const bundMat = this.own(new THREE.MeshStandardMaterial({
+    // Scraped crust is granular salt and mud: the heaps' grain, a shade greyer, salted over again where it stands.
+    const bundMat = this.own(this.saltGrainMat ? this.cloneBare(this.saltGrainMat) : new THREE.MeshStandardMaterial({
       color: 0xb8ad98, roughness: 1.0, metalness: 0.0
     }));
+    bundMat.color.set(0xd2c9b8);
     bundMat.userData.salt = { creep: 1.4, top: 0.9, tide: 0.2 };
     const tints = [0xb7a4a0, 0x9fae9f, 0xc9b996, 0xcfc9bd];
     let k = 0;
@@ -1208,16 +1315,29 @@ export class TallowWorld {
       const ph = rand() * 10;
       const plan = th => R * (1 + 0.06 * Math.sin(th * 2 + ph) + 0.04 * Math.sin(th * 5 - ph));
 
-      // The bund: a low trapezoid of scraped crust, swept round the plan.
-      const N = this.t4 ? 96 : 48;
-      const prof = [[-0.9, 0], [-0.35, 0.42], [0.3, 0.42], [0.85, 0]];
-      const verts = [], idx = [];
+      // The bund: crust scraped up by a blade into a low bank, swept round the plan. A blade leaves it lumpy:
+      // the crest wanders in height and width, the flanks slump in places, and every pass left a slight step.
+      const N = this.t4 ? 160 : 64;
+      const prof = [[-1.0, 0], [-0.72, 0.13], [-0.42, 0.34], [-0.15, 0.45], [0.18, 0.43], [0.5, 0.28], [0.92, 0]];
+      const wave = (th, f, p) => Math.sin(th * f + p + ph);
+      const verts = [], uvs = [], idx = [];
       for (let i = 0; i <= N; i++) {
         const th = (i / N) * Math.PI * 2;
         const rr = plan(th);
-        const bump = 1 + (rand() - 0.5) * 0.25;
-        for (const [dr, hy] of prof) {
-          verts.push(Math.cos(th) * (rr + dr * s), hy * s * bump, Math.sin(th) * (rr + dr * s));
+        // Seam the last ring onto the first so the bank closes without a step.
+        const k = i === N ? 0 : i;
+        const thk = (k / N) * Math.PI * 2;
+        const crest = 1 + 0.16 * wave(thk, 7, 0.3) + 0.09 * wave(thk, 17, 1.7) + 0.05 * wave(thk, 41, 4.2);
+        const spread = 1 + 0.12 * wave(thk, 5, 2.2) + 0.06 * wave(thk, 23, 0.9);
+        const slump = Math.max(0, wave(thk, 11, 3.1)) * 0.18;
+        for (let j = 0; j < prof.length; j++) {
+          const [dr, hy] = prof[j];
+          const edge = j === 0 || j === prof.length - 1;
+          const jit = edge ? 0 : 0.04 * Math.sin(thk * 53 + j * 2.1 + ph);
+          const d = (dr * spread + (dr > 0 ? slump : 0)) * s;
+          const hgt = edge ? -0.03 : (hy * crest * (dr > 0 ? 1 - slump * 0.8 : 1) + jit) * s;
+          verts.push(Math.cos(th) * (rr + d), hgt, Math.sin(th) * (rr + d));
+          uvs.push(th * R / 2, (dr + 1) * 0.6);
         }
       }
       for (let i = 0; i < N; i++) {
@@ -1228,6 +1348,7 @@ export class TallowWorld {
       }
       const bg = new THREE.BufferGeometry();
       bg.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      bg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
       bg.setIndex(idx);
       bg.computeVertexNormals();
       this.own(bg);
@@ -1329,6 +1450,7 @@ export class TallowWorld {
     const mat = buildMaterial({ albedo: alb, height, normalStrength: 1.8 }, { repeat: 1, roughness: 0.95 });
     for (const t of mat.userData.surfaceMaps) this.own(t);
     mat.userData.salt = { creep: 0.9, top: 0.7, tide: 0.4 };
+    addWorldVariation(mat, { scale: 7, strength: 0.1, roughShift: 0.06, antiTile: 0.4 });
     this._concrete = this.own(mat);
     return mat;
   }
@@ -1628,7 +1750,7 @@ export class TallowWorld {
     return buildBayBench(ctx, {
       skin: opts.skin || 'shelf',
       plate: opts.plate || 'BN-01',
-      mats: { top: this.plateMat, dark: this.darkSteelMat },
+      mats: { top: this.benchTopMat, dark: this.darkSteelMat },
       // Tool rail: the cutter and the shaker, racked where a hand would reach.
       rail: { len: 0.9, x: -0.58, y: 0.34, r: 0.018, tools: [[-0.82, 0.22], [-0.58, 0.3], [-0.34, 0.18]] },
       dormant: (dormant, { height }) => {
@@ -1638,7 +1760,7 @@ export class TallowWorld {
         // crept up all of it; the cabinet is the instrument somebody uses, so it keeps its own
         // metal, a little less rough, and the salt does not reach it.
         this.caseMats = this.caseMats || {
-          plate: this.own(Object.assign(this.plateMat.clone(), { roughness: 0.66 })),
+          plate: this.own(addWorldBoxUV(Object.assign(this.cloneBare(this.plateMat), { roughness: 0.66 }), { metres: 2 })),
           dark: this.own(Object.assign(this.darkSteelMat.clone(), { roughness: 0.66 }))
         };
         const housing = new THREE.Mesh(
@@ -1908,6 +2030,14 @@ export class TallowWorld {
       const y = site.pos[1] < -1 ? this.sub.floorY : (hall ? this.hallFloors.get(site.id) : this.surfaceHeight(site.pos[0], site.pos[2]));
       g.position.set(site.pos[0], y, site.pos[2]);
       g.rotation.y = this.siteFacing(site);
+      if (hall) {
+        // Keep the drift off the shed's other rooms and off every other host's and landmark's footprint.
+        const others = HALLS.filter(o => o !== hall).map(hallRect);
+        const near = this.data.landmarks.filter(l => l.host !== site.id && l.radius && l.asset !== 'pan-rim');
+        const avoid = (x, z) => others.some(r => x > r.minX - 0.15 && x < r.maxX + 0.15 && z > r.minZ - 0.15 && z < r.maxZ + 0.15) ||
+          near.some(l => Math.hypot(x - l.pos[0], z - l.pos[2]) < l.radius * (l.scale || 1) + 0.3);
+        buildHallFoot(this, hall, g, this.saltGrainMat, (x, z) => this.surfaceHeight(x, z), avoid);
+      }
       this.scene.add(g);
 
       this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
@@ -2178,6 +2308,7 @@ export class TallowWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.effects?.dispose();

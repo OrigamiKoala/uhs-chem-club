@@ -61,10 +61,126 @@ function cached(key, make) {
 }
 const k3 = v => Math.round(v * 1000);
 
+/**
+ * EVERY BOX IS CHAMFERED. A mathematically sharp edge has no width, so it
+ * never catches light, and a room built of them reads as a render rather than
+ * as pressed and machined metal, which always has a broken edge. Each box gets
+ * a small 45° chamfer whose normals roll from one face to the next, so every
+ * edge carries a thin soft highlight. Parts too small to show it stay plain.
+ */
 export function boxGeo(w, h, d) {
-  return cached(`b${k3(w)}_${k3(h)}_${k3(d)}`, () => new THREE.BoxGeometry(w, h, d));
+  return cached(`b${k3(w)}_${k3(h)}_${k3(d)}`, () => {
+    const r = Math.min(0.012, Math.min(w, h, d) * 0.18);
+    return Math.min(w, h, d) < 0.03 ? new THREE.BoxGeometry(w, h, d) : chamferBoxGeometry(w, h, d, r);
+  });
 }
+
+/*
+ * Faces in BoxGeometry's order (+x, -x, +y, -y, +z, -z), each with the same
+ * texture orientation BoxGeometry gives it, so a screen or a stencil mapped
+ * onto a face lands the way it did on a plain box.
+ */
+const BOX_FACES = [
+  { k: 0, s: 1, u: [2, -1], v: [1, 1] },
+  { k: 0, s: -1, u: [2, 1], v: [1, 1] },
+  { k: 1, s: 1, u: [0, 1], v: [2, -1] },
+  { k: 1, s: -1, u: [0, 1], v: [2, 1] },
+  { k: 2, s: 1, u: [0, 1], v: [1, 1] },
+  { k: 2, s: -1, u: [0, -1], v: [1, 1] }
+];
+const faceIndex = (k, s) => k * 2 + (s > 0 ? 0 : 1);
+
+function chamferBoxGeometry(w, h, d, r) {
+  const a = [w / 2, h / 2, d / 2];
+  const pos = [], nor = [], uv = [];
+  const groups = BOX_FACES.map(() => []);
+  let nv = 0;
+
+  /** One vertex on face `f` at point `p`, carrying that face's normal and UV. */
+  const vert = (f, p) => {
+    const F = BOX_FACES[f];
+    pos.push(p[0], p[1], p[2]);
+    const n = [0, 0, 0]; n[F.k] = F.s;
+    nor.push(n[0], n[1], n[2]);
+    uv.push(
+      0.5 + (p[F.u[0]] * F.u[1]) / (2 * a[F.u[0]]),
+      0.5 + (p[F.v[0]] * F.v[1]) / (2 * a[F.v[0]])
+    );
+    return nv++;
+  };
+  /** A triangle, wound outward whatever order its corners arrive in. */
+  const tri = (g, i0, i1, i2) => {
+    const P = i => [pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]];
+    const p0 = P(i0), p1 = P(i1), p2 = P(i2);
+    const e1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+    const e2 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+    const n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    const c = [p0[0] + p1[0] + p2[0], p0[1] + p1[1] + p2[1], p0[2] + p1[2] + p2[2]];
+    if (n[0] * c[0] + n[1] * c[1] + n[2] * c[2] < 0) groups[g].push(i0, i2, i1);
+    else groups[g].push(i0, i1, i2);
+  };
+  const quad = (g, q) => { tri(g, q[0], q[1], q[2]); tri(g, q[0], q[2], q[3]); };
+  const inner = i => a[i] - r;
+
+  // The six flat faces, each inset by the chamfer.
+  BOX_FACES.forEach((F, f) => {
+    const [i, j] = [0, 1, 2].filter(x => x !== F.k);
+    const q = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([si, sj]) => {
+      const p = [0, 0, 0];
+      p[F.k] = F.s * a[F.k]; p[i] = si * inner(i); p[j] = sj * inner(j);
+      return vert(f, p);
+    });
+    quad(f, q);
+  });
+
+  // The twelve chamfer strips, each owned by the first of its two faces.
+  for (let k1 = 0; k1 < 3; k1++) for (let k2 = k1 + 1; k2 < 3; k2++) {
+    const m = 3 - k1 - k2;
+    for (const s1 of [1, -1]) for (const s2 of [1, -1]) {
+      const f1 = faceIndex(k1, s1), f2 = faceIndex(k2, s2);
+      const at = (onFirst, sm) => {
+        const p = [0, 0, 0];
+        p[k1] = s1 * (onFirst ? a[k1] : inner(k1));
+        p[k2] = s2 * (onFirst ? inner(k2) : a[k2]);
+        p[m] = sm * inner(m);
+        return vert(onFirst ? f1 : f2, p);
+      };
+      quad(Math.min(f1, f2), [at(true, -1), at(true, 1), at(false, 1), at(false, -1)]);
+    }
+  }
+
+  // The eight corner triangles.
+  for (const sx of [1, -1]) for (const sy of [1, -1]) for (const sz of [1, -1]) {
+    const S = [sx, sy, sz];
+    const ids = [0, 1, 2].map(k => {
+      const p = [sx * inner(0), sy * inner(1), sz * inner(2)];
+      p[k] = S[k] * a[k];
+      return vert(faceIndex(k, S[k]), p);
+    });
+    tri(Math.min(faceIndex(0, sx), faceIndex(1, sy), faceIndex(2, sz)), ids[0], ids[1], ids[2]);
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  const index = [];
+  groups.forEach((list, f) => { g.addGroup(index.length, list.length, f); index.push(...list); });
+  g.setIndex(index);
+  g.computeBoundingBox();
+  g.computeBoundingSphere();
+  return g;
+}
+/**
+ * Round parts get enough sides for their size: a 12-sided drum half a metre
+ * across shows its facets in every highlight, a 12-sided bolt does not.
+ */
+function roundSegs(r, seg) {
+  return Math.max(seg, r >= 0.25 ? 40 : r >= 0.1 ? 28 : r >= 0.04 ? 18 : seg);
+}
+
 export function cylGeo(rt, rb, h, seg = 12) {
+  seg = roundSegs(Math.max(rt, rb), seg);
   return cached(`c${k3(rt)}_${k3(rb)}_${k3(h)}_${seg}`, () => new THREE.CylinderGeometry(rt, rb, h, seg));
 }
 
@@ -105,7 +221,7 @@ export function slab(parent, mat, len, u, y0, z0, y1, z1, thick = 0.02) {
 /** A tube through world-space points (pipes, looms, cables). */
 export function tube(parent, mat, points, r = 0.03, seg = 8, tension = 0.2) {
   const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)), false, 'catmullrom', tension);
-  const g = new THREE.TubeGeometry(curve, Math.max(8, points.length * 8), r, seg, false);
+  const g = new THREE.TubeGeometry(curve, Math.max(12, points.length * 10), r, roundSegs(r, seg), false);
   const m = new THREE.Mesh(g, mat);
   parent.add(m);
   return m;
@@ -405,8 +521,36 @@ function pressedPanel(g, M, u0, u1, y0, y1, dark = false) {
   }
 }
 
+/** An access hatch: a pressed panel on two hinges, with a pull handle and a warning plate. */
+function hatchPanel(g, M, u0, u1, y0, y1) {
+  pressedPanel(g, M, u0, u1, y0, y1);
+  const h = y1 - y0, cy = (y0 + y1) / 2;
+  for (const y of [y0 + h * 0.22, y1 - h * 0.22]) {
+    box(g, M.gunmetalMat, 0.03, 0.09, 0.018, u0 + 0.02, y, 0.031);
+    cyl(g, M.steelMat, 0.007, 0.1, u0 + 0.008, y, 0.04, 'y', 8);
+  }
+  // Pull handle: two stand-offs and a bar.
+  for (const s of [-1, 1]) box(g, M.gunmetalMat, 0.016, 0.016, 0.03, u1 - 0.06, cy + s * 0.06, 0.049);
+  cyl(g, M.steelMat, 0.008, 0.15, u1 - 0.06, cy, 0.064, 'y', 8);
+  if (u1 - u0 > 0.3) box(g, M.hazardMat, 0.14, 0.035, 0.004, (u0 + u1) / 2, y1 - 0.06, 0.036);
+}
+
+/** Two pressed panels where one would do, a dark seam between, and a label plate. */
+function splitPanel(g, M, u0, u1, y0, y1, rng) {
+  const mid = y0 + (y1 - y0) * (0.35 + rng() * 0.3);
+  pressedPanel(g, M, u0, u1, y0, mid - 0.012, rng() < 0.5);
+  pressedPanel(g, M, u0, u1, mid + 0.012, y1, rng() < 0.3);
+  box(g, M.ventMat, u1 - u0, 0.02, 0.01, (u0 + u1) / 2, mid, 0.005);
+  if (u1 - u0 > 0.3) box(g, M.paintWhiteMat, 0.1, 0.04, 0.004, u0 + 0.12, mid + 0.06, 0.036);
+}
+
 function fillPanels(g, M, u0, u1, rng) {
-  COURSES.forEach(([y0, y1], i) => pressedPanel(g, M, u0 + 0.012, u1 - 0.012, y0, y1, i === 0 || rng() < 0.18));
+  COURSES.forEach(([y0, y1], i) => {
+    const r = rng();
+    if (i === 1 && r < 0.25 && u1 - u0 > 0.3) hatchPanel(g, M, u0 + 0.012, u1 - 0.012, y0, y1);
+    else if (r < 0.42) splitPanel(g, M, u0 + 0.012, u1 - 0.012, y0, y1, rng);
+    else pressedPanel(g, M, u0 + 0.012, u1 - 0.012, y0, y1, i === 0 || rng() < 0.18);
+  });
   if (u1 - u0 > 0.5) {
     g.add(boltLine([u0 + 0.06, 1.94, 0.026], [u1 - 0.06, 1.94, 0.026], Math.max(3, Math.round((u1 - u0) / 0.22)), M.steelMat, { size: 0.011 }));
   }
@@ -485,7 +629,99 @@ function fillLightSlot(g, M, u0, u1) {
   box(g, M.troughMat, 0.04, 1.36, 0.006, cu, 1.3, 0.043);
 }
 
-const FILLS = { panels: fillPanels, vent: fillVent, conduit: fillConduit, machinery: fillMachinery, light: fillLightSlot };
+export function torusGeo(R, r, seg = 24, arc = Math.PI * 2) {
+  return cached(`t${k3(R)}_${k3(r)}_${seg}_${k3(arc)}`, () => new THREE.TorusGeometry(R, r, 8, seg, arc));
+}
+
+/**
+ * A pipe bundle: two or three risers on stand-off brackets, flanged where the
+ * runs were joined, one entering the wall through a gland, and now and then a
+ * valve with a handwheel and a gauge on its line.
+ */
+function fillPipes(g, M, u0, u1, rng) {
+  COURSES.forEach(([y0, y1]) => pressedPanel(g, M, u0 + 0.012, u1 - 0.012, y0, y1, true));
+  const len = u1 - u0;
+  const n = len > 0.75 ? 3 : 2;
+  const top = DRESS.chamferStart - 0.02, z = 0.055;
+  const kinds = [
+    { r: 0.034, mat: M.gunmetalMat }, { r: 0.024, mat: M.steelMat }, { r: 0.03, mat: M.liveryMat }
+  ];
+  for (let i = 0; i < n; i++) {
+    const { r, mat } = kinds[(i + Math.floor(rng() * 3)) % 3];
+    const x = u0 + (len * (i + 1)) / (n + 1);
+    const gland = rng() < 0.45;
+    const bot = gland ? 0.55 + rng() * 0.4 : DRESS.kickH + 0.03;
+    cyl(g, mat, r, top - bot, x, (top + bot) / 2, z, 'y', 12);
+    if (gland) {
+      // The riser turns into the wall through a collar.
+      cyl(g, mat, r, z, x, bot, z / 2, 'z', 12);
+      box(g, M.gunmetalMat, r * 2 + 0.05, r * 2 + 0.05, 0.02, x, bot, 0.03);
+      cyl(g, M.steelMat, r + 0.002, 0.001, x, bot, z, 'z', 12);
+    }
+    // Flanges where two lengths were joined.
+    for (const y of [bot + (top - bot) * 0.3, bot + (top - bot) * 0.78]) {
+      cyl(g, M.trimMat, r + 0.011, 0.028, x, y, z, 'y', 12);
+    }
+    // Stand-off brackets back to the plate.
+    for (const y of [bot + 0.18, (top + bot) / 2 + 0.05, top - 0.2]) {
+      box(g, M.trimMat, r * 2 + 0.02, 0.03, z - 0.022, x, y, 0.022 + (z - 0.022) / 2);
+    }
+    if (i === 0 && rng() < 0.55) {
+      // A valve: body, stem, handwheel with two spokes.
+      const vy = 1.2 + rng() * 0.3;
+      box(g, M.gunmetalMat, r * 2 + 0.03, 0.12, r * 2, x, vy, z);
+      cyl(g, M.steelMat, 0.007, 0.03, x, vy, z + r + 0.02, 'z', 8);
+      const wheel = new THREE.Mesh(torusGeo(0.055, 0.007), M.liveryMat);
+      wheel.position.set(x, vy, Math.min(z + r + 0.03, DRESS.maxD - 0.008));
+      g.add(wheel);
+      box(g, M.liveryMat, 0.11, 0.01, 0.008, x, vy, wheel.position.z);
+      box(g, M.liveryMat, 0.01, 0.11, 0.008, x, vy, wheel.position.z);
+    } else if (i === n - 1 && rng() < 0.5) {
+      // A gauge teed off the line.
+      const gy = 1.45 + rng() * 0.25, gx = x - r - 0.05;
+      cyl(g, mat, 0.008, 0.05, x - r - 0.022, gy, z, 'x', 8);
+      cyl(g, M.dialGaugeBarMat, 0.035, 0.018, gx, gy, z + 0.012, 'z', 16);
+    }
+  }
+}
+
+/**
+ * A breaker bank: small boxes in a row, each with a toggle, a lamp and a label
+ * plate, fed from above and joined below by looms that sag between them.
+ */
+function fillBreakers(g, M, u0, u1, rng) {
+  COURSES.forEach(([y0, y1], i) => pressedPanel(g, M, u0 + 0.012, u1 - 0.012, y0, y1, i === 1));
+  const len = u1 - u0;
+  const n = Math.max(2, Math.min(4, Math.floor((len - 0.1) / 0.2)));
+  const y = 1.5, w = 0.14, h = 0.22, d = 0.055, zc = 0.022 + d / 2;
+  const xs = [];
+  for (let i = 0; i < n; i++) {
+    const x = u0 + (len * (i + 0.5)) / n;
+    const yy = y + (i % 2 ? -0.05 : 0.03);
+    xs.push([x, yy]);
+    box(g, M.greebleMat, w, h, d, x, yy, zc);
+    box(g, M.gunmetalMat, w - 0.03, h - 0.03, 0.006, x, yy, zc + d / 2 + 0.002);
+    box(g, M.steelMat, 0.016, 0.032, 0.014, x - 0.025, yy + 0.02, zc + d / 2 + 0.01, rng() < 0.5 ? 0.5 : -0.5);
+    lamp(g, M, x + 0.035, yy + 0.05, zc + d / 2 + 0.004, rng() < 0.7 ? M.greenLampMat : (rng() < 0.5 ? M.amberLampMat : M.redLampMat), 0.009);
+    box(g, M.paintWhiteMat, 0.08, 0.025, 0.004, x, yy - 0.07, zc + d / 2 + 0.004);
+    // Feed from the conduit behind the chamfer.
+    const topY = yy + h / 2;
+    cyl(g, M.cableMat, 0.012, DRESS.chamferStart - topY, x + 0.03, (DRESS.chamferStart + topY) / 2, 0.045, 'y', 8);
+  }
+  // Looms sagging between neighbours, and one long one under the whole bank.
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const [xa, ya] = xs[i], [xb, yb] = xs[i + 1];
+    const sag = 0.16 + rng() * 0.12;
+    tube(g, M.cableMat, [[xa, ya - h / 2, 0.05], [(xa + xb) / 2, Math.min(ya, yb) - h / 2 - sag, 0.068], [xb, yb - h / 2, 0.05]], 0.011, 8, 0.5);
+  }
+  const [x0, y0] = xs[0], [x1, y1] = xs[xs.length - 1];
+  tube(g, M.rubberMat, [[x0 - 0.04, y0 - h / 2, 0.045], [(x0 + x1) / 2, 0.82, 0.07], [x1 + 0.04, y1 - h / 2, 0.045]], 0.016, 8, 0.5);
+}
+
+const FILLS = {
+  panels: fillPanels, vent: fillVent, conduit: fillConduit, machinery: fillMachinery, light: fillLightSlot,
+  pipes: fillPipes, breakers: fillBreakers
+};
 
 /* =========================================================================
    THE LINING
@@ -578,8 +814,11 @@ function dressFace(parent, M, face, opts, rng) {
     box(g, M.gunmetalMat, DRESS.ribW + 0.02, 0.05, DRESS.ribD + 0.01, u, cs - 0.025, (DRESS.ribD + 0.01) / 2);
     // The frame continues up the chamfer.
     slab(g, M.ribMat, DRESS.ribW, u, cs, DRESS.ribD / 2 + 0.01, ceil, DRESS.chamferIn + DRESS.ribD / 2 - 0.01, DRESS.ribD);
-    if (rng() < 0.35) {
-      g.add(boltLine([u, 0.4, DRESS.ribD + 0.002], [u, cs - 0.12, DRESS.ribD + 0.002], 9, M.steelMat, { size: 0.012 }));
+    // A doubler plate down the rib's face, and a lightening slot through its web.
+    box(g, M.trimMat, DRESS.ribW - 0.05, cs - 0.5, 0.01, u, cs / 2 + 0.05, DRESS.ribD + 0.004);
+    box(g, M.ventMat, 0.05, 0.32, 0.004, u, 0.62, DRESS.ribD + 0.01);
+    if (rng() < 0.6) {
+      g.add(boltLine([u - 0.04, 0.4, DRESS.ribD + 0.011], [u - 0.04, cs - 0.12, DRESS.ribD + 0.011], 9, M.steelMat, { size: 0.012 }));
     }
   }
 
@@ -592,9 +831,9 @@ function dressFace(parent, M, face, opts, rng) {
   // --- Bays between ribs, filled ---
   const breaks = mergeSpans([...lowBlocked, ...winBlock, ...ribs.map(u => [u - DRESS.ribW / 2, u + DRESS.ribW / 2])]);
   const bays = freeRuns(L, breaks);
-  const weights = opts.fill || { panels: 5, vent: 1.3, conduit: 1.6, machinery: 1.1, light: 0.8 };
+  const weights = opts.fill || { panels: 5, vent: 1.3, conduit: 1.6, machinery: 1.1, light: 0.8, pipes: 1.0, breakers: 0.8 };
   const pick = w => {
-    const entries = Object.entries(weights).filter(([k]) => (k === 'machinery' ? w > 0.55 : k === 'vent' ? w > 0.5 : k === 'light' ? w > 0.5 : true));
+    const entries = Object.entries(weights).filter(([k]) => (k === 'machinery' ? w > 0.55 : k === 'vent' || k === 'light' ? w > 0.5 : k === 'pipes' ? w > 0.4 : k === 'breakers' ? w > 0.5 : true));
     const total = entries.reduce((s, [, v]) => s + v, 0);
     let r = rng() * total;
     for (const [k, v] of entries) { r -= v; if (r <= 0) return k; }
@@ -657,6 +896,16 @@ function dressFace(parent, M, face, opts, rng) {
 }
 
 /**
+ * Every overhead run laid, as a world-space footprint and the height of its
+ * underside, so `verify:ship` can prove no furniture reaches up into one.
+ */
+export const CEILING_RUNS = [];
+function recordRun([cx, cz], alongZ, len, width, bottomY) {
+  const [hx, hz] = alongZ ? [width / 2, len / 2] : [len / 2, width / 2];
+  CEILING_RUNS.push({ minX: cx - hx, maxX: cx + hx, minZ: cz - hz, maxZ: cz + hz, bottomY });
+}
+
+/**
  * The deckhead lining over a rectangle: a grid of plates hung `ceilDrop`
  * below the structure, beams on the frame spacing and light troughs along
  * the long axis. `clip(x, z)` may veto a plate (the bridge uses its outline).
@@ -712,6 +961,60 @@ function dressCeiling(parent, M, rect, ceil, opts, rng) {
       box(g, M.trimMat, alongZ ? 0.2 : 0.012, 0.012, alongZ ? 0.012 : 0.2, cx + (alongZ ? 0 : s), ceil - 0.108, cz + (alongZ ? s : 0));
     }
   }
+
+  /*
+   * Services overhead: a pipe on one side of the lights and a cable tray on
+   * the other, slung from the beams on hangers, running the room's length.
+   * Skipped where the room's outline would cut a run short.
+   */
+  if (opts.ceilingRuns !== false && across > 1.4) {
+    const len = (long1 - long0) - 0.3;
+    const mid = (long0 + long1) / 2;
+    const at = (off, s) => alongZ ? [(x0 + x1) / 2 + off, (z0 + z1) / 2 + s] : [(x0 + x1) / 2 + s, (z0 + z1) / 2 + off];
+    const fits = off => [-0.5, -0.25, 0, 0.25, 0.5].every(f => clip(...at(off, f * len)));
+    const beamY = ceil - 0.13;
+    const hangers = (off, y) => {
+      for (let i = 1; i < nb; i++) {
+        const sAt = long0 + ((long1 - long0) * i) / nb - mid;
+        const [hx, hz] = at(off, sAt + 0.1);
+        box(g, M.trimMat, 0.02, beamY - y, 0.02, hx, (beamY + y) / 2, hz);
+      }
+    };
+    // Beside the light: one trough leaves room either side of it, two leave
+    // the centre-line between them.
+    const pipeOff = troughs === 1 ? across * 0.22 : 0;
+    const trayOff = troughs === 1 ? -across * 0.22 : null;
+    if (fits(pipeOff)) {
+      const r = 0.04, y = beamY - r - 0.012;
+      const [px, pz] = at(pipeOff, 0);
+      cyl(g, M.gunmetalMat, r, len, px, y, pz, alongZ ? 'z' : 'x', 12);
+      for (const f of [-0.3, 0.12, 0.38]) {
+        const [fx, fz] = at(pipeOff, f * len);
+        cyl(g, M.trimMat, r + 0.012, 0.03, fx, y, fz, alongZ ? 'z' : 'x', 12);
+      }
+      const [sx, sz] = at(pipeOff + (pipeOff > 0 ? -1 : 1) * 0.11, 0);
+      cyl(g, M.liveryMat, 0.022, len, sx, y + 0.01, sz, alongZ ? 'z' : 'x', 10);
+      hangers(pipeOff, y + r);
+      recordRun(at(pipeOff + (pipeOff > 0 ? -0.06 : 0.06), 0), alongZ, len, 0.24, y - r);
+    }
+    if (trayOff !== null && fits(trayOff)) {
+      const tw = 0.22, y = beamY - 0.05;
+      const [tx, tz] = at(trayOff, 0);
+      const W = alongZ ? tw : len, D = alongZ ? len : tw;
+      box(g, M.gunmetalMat, W, 0.008, D, tx, y - 0.03, tz);
+      for (const s of [-1, 1]) {
+        const [lx, lz] = at(trayOff + s * (tw / 2), 0);
+        box(g, M.trimMat, alongZ ? 0.008 : len, 0.06, alongZ ? len : 0.008, lx, y, lz);
+      }
+      // Cables laid loose in it.
+      [-0.06, -0.01, 0.045].forEach((o, i) => {
+        const [cx2, cz2] = at(trayOff + o, 0);
+        cyl(g, i === 1 ? M.rubberMat : M.cableMat, 0.016 + (i % 2) * 0.006, len - 0.05, cx2, y - 0.008, cz2, alongZ ? 'z' : 'x', 8);
+      });
+      hangers(trayOff, y + 0.03);
+      recordRun(at(trayOff, 0), alongZ, len, 0.24, y - 0.035);
+    }
+  }
   return g;
 }
 
@@ -719,7 +1022,7 @@ function dressCeiling(parent, M, rect, ceil, opts, rng) {
  * The deck: tiles in a running grid with a hairline gap, or (for `grate`) a
  * lit service channel down the long axis under grating with tiles either side.
  */
-function dressFloor(parent, M, rect, opts) {
+function dressFloor(parent, M, rect, opts, rng = null) {
   const g = new THREE.Group();
   parent.add(g);
   const { x0, x1, z0, z1 } = rect;
@@ -779,6 +1082,17 @@ function dressFloor(parent, M, rect, opts) {
       }
       if (!clip((xa + xb) / 2, (za + zb) / 2) || inHole(xa, xb, za, zb)) continue;
       box(g, M.deckTileMat, xb - xa - 0.012, 0.02, zb - za - 0.012, (xa + xb) / 2, -0.01, (za + zb) / 2);
+      // Now and then a tile is an access plate: corner bolts and two lift slots.
+      if (rng && rng() < 0.14 && xb - xa > 0.4 && zb - za > 0.4) {
+        const cx = (xa + xb) / 2, cz = (za + zb) / 2;
+        for (const bx of [xa + 0.04, xb - 0.04]) for (const bz of [za + 0.04, zb - 0.04]) {
+          cyl(g, M.steelMat, 0.011, 0.004, bx, 0.001, bz, 'y', 8);
+        }
+        for (const s of [-1, 1]) {
+          const [ox, oz] = alongZ ? [0, s * (zb - za) * 0.28] : [s * (xb - xa) * 0.28, 0];
+          box(g, M.ventMat, alongZ ? 0.1 : 0.022, 0.003, alongZ ? 0.022 : 0.1, cx + ox, 0.0005, cz + oz);
+        }
+      }
     }
   }
   return g;
@@ -844,7 +1158,7 @@ export function dressRoomShell(ship, roomId, opts = {}) {
   if (opts.floor !== 'none') {
     const hole = FLOOR_HATCH.room === roomId ? FLOOR_HATCH : null;
     const rect = { ...inner };
-    dressFloor(group, M, rect, { ...opts, floor: opts.floor || 'tiles', clip: bridgeClip ? ((x, z) => { const s = outlineSpan(BRIDGE_OUTLINE, z); return !!s && x > s[0] + 0.62 && x < s[1] - 0.62; }) : undefined, hole });
+    dressFloor(group, M, rect, { ...opts, floor: opts.floor || 'tiles', clip: bridgeClip ? ((x, z) => { const s = outlineSpan(BRIDGE_OUTLINE, z); return !!s && x > s[0] + 0.62 && x < s[1] - 0.62; }) : undefined, hole }, rng);
   }
   return { faces: out, group };
 }

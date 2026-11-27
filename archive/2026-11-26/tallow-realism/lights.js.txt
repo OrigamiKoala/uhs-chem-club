@@ -1,0 +1,19 @@
+432:export function createTallowLights({ shadows }) {
+433-  const sun = new THREE.DirectionalLight(new THREE.Color('#fff1dc'), 2.7);
+434-  sun.position.copy(TALLOW_SUN).multiplyScalar(160);
+435-  sun.castShadow = Boolean(shadows);
+436-  if (shadows) {
+437-    sun.shadow.mapSize.set(2048, 2048);
+438-    const s = 58;
+439-    Object.assign(sun.shadow.camera, { left: -s, right: s, top: s, bottom: -s, near: 10, far: 420 });
+440-    sun.shadow.camera.updateProjectionMatrix();
+441-    sun.shadow.bias = -0.0004;
+442-    sun.shadow.normalBias = 0.04;
+443-    // A veiled sun casts a soft-edged shadow; PCFSoft takes the hint.
+444-    sun.shadow.radius = 3;
+445-  }
+446-  // Sky above, lit salt below. The ground term is the brighter of the two
+447-  // near the pan, which is exactly what makes the undersides of things glow.
+448-  const hemi = new THREE.HemisphereLight(new THREE.Color('#bfc0bd'), new THREE.Color('#dcd0b9'), 1.15);
+449-  return { sun, hemi };
+450-}

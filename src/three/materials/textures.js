@@ -539,7 +539,7 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
 
 /**
  * Creates 3D Holographic announcement texture for Bridge welcome screen
- * Displaying "UHS Chem Club", "Next meeting 12/1 in 702", and directional navigation arrows.
+ * Displaying "Avalon", subtitle, and directional navigation arrows.
  */
 export function createClubHoloTexture() {
   const canvas = document.createElement('canvas');
@@ -583,14 +583,14 @@ export function createClubHoloTexture() {
   ctx.moveTo(1006 - bLen, 558); ctx.lineTo(1006, 558); ctx.lineTo(1006, 558 - bLen);
   ctx.stroke();
 
-  // Top-right Close [X] badge
+  // Top-right Close [X] badge (aligned with inner divider margin)
   ctx.font = 'bold 15px monospace';
   const closeText = TOUCH ? 'Close' : 'Close [X]';
   const closeW = ctx.measureText(closeText).width;
-  const badgeX = 964 - closeW - 14;
-  const badgeY = 34;
-  const badgeW = closeW + 14;
-  const badgeH = 26;
+  const badgeW = Math.ceil(closeW) + 22;
+  const badgeH = 30;
+  const badgeX = 960 - badgeW;
+  const badgeY = 36;
 
   ctx.fillStyle = 'rgba(217, 148, 35, 0.16)';
   ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
@@ -599,55 +599,78 @@ export function createClubHoloTexture() {
   ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
 
   ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ffaa38';
   ctx.shadowColor = '#d99423';
   ctx.shadowBlur = 6;
-  ctx.fillText(closeText, badgeX + badgeW / 2, badgeY + 18);
+  ctx.fillText(closeText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 1);
   ctx.shadowBlur = 0;
+  ctx.textBaseline = 'alphabetic';
 
-  // Title: UHS Chem Club
-  ctx.font = 'bold 44px sans-serif';
+  const yOff = TOUCH ? 32 : 0;
+
+  // Title: Avalon
+  ctx.font = 'bold 56px sans-serif';
   ctx.fillStyle = '#f6ecd9';
   ctx.shadowColor = '#d99423';
   ctx.shadowBlur = 14;
-  ctx.fillText('UHS Chem Club', 512, 108);
+  ctx.fillText('Avalon', 512, 114 + yOff);
   ctx.shadowBlur = 0;
 
-  // Subtitle: Next meeting 12/1 in 702
-  ctx.font = 'bold 24px monospace';
+  // Subtitle
+  ctx.font = 'bold 22px monospace';
   ctx.fillStyle = '#ffb347';
-  ctx.fillText('Next meeting 12/1 in 702', 512, 154);
+  ctx.fillText('A game to help you understand chemistry', 512, 164 + yOff);
 
   // Horizontal glowing divider
+  const divY = 206 + yOff;
   ctx.strokeStyle = 'rgba(217, 148, 35, 0.6)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(48, 184);
-  ctx.lineTo(976, 184);
+  ctx.moveTo(64, divY);
+  ctx.lineTo(960, divY);
   ctx.stroke();
 
-  // DIRECTIONS: Show Star Map navigation
-  ctx.textAlign = 'center';
+  // Star Map Box (centered focal card with matching tech corner ticks)
+  const boxX = 112;
+  const boxY = 246 + yOff;
+  const boxW = 800;
+  const boxH = 172;
 
-  // Star Map Box
   ctx.fillStyle = 'rgba(217, 148, 35, 0.08)';
-  ctx.fillRect(160, 224, 704, 150);
-  ctx.strokeStyle = 'rgba(217, 148, 35, 0.4)';
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeStyle = 'rgba(217, 148, 35, 0.45)';
   ctx.lineWidth = 1.5;
-  ctx.strokeRect(160, 224, 704, 150);
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
 
+  // Subtle corner ticks on the Star Map box
+  const tLen = 14;
+  ctx.strokeStyle = '#ffaa38';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(boxX, boxY + tLen); ctx.lineTo(boxX, boxY); ctx.lineTo(boxX + tLen, boxY);
+  ctx.moveTo(boxX + boxW - tLen, boxY); ctx.lineTo(boxX + boxW, boxY); ctx.lineTo(boxX + boxW, boxY + tLen);
+  ctx.moveTo(boxX, boxY + boxH - tLen); ctx.lineTo(boxX, boxY + boxH); ctx.lineTo(boxX + tLen, boxY + boxH);
+  ctx.moveTo(boxX + boxW - tLen, boxY + boxH); ctx.lineTo(boxX + boxW, boxY + boxH); ctx.lineTo(boxX + boxW, boxY + boxH - tLen);
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
   ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 36px sans-serif';
+  ctx.font = 'bold 40px sans-serif';
   ctx.shadowColor = '#d99423';
-  ctx.shadowBlur = 8;
-  ctx.fillText('◀  STAR MAP', 512, 305);
+  ctx.shadowBlur = 10;
+  ctx.fillText('◀  STAR MAP', 512, boxY + 72);
   ctx.shadowBlur = 0;
 
-  // Controls hint below Star Map label (desktop only; touch users have on-screen sticks)
+  ctx.font = '21px monospace';
+  ctx.fillStyle = '#f6ecd9';
+  ctx.fillText('Head over to start or continue your journey!', 512, boxY + 124);
+
+  // Controls hint anchored in the lower band (desktop only; touch users have on-screen sticks)
   if (!TOUCH) {
-    ctx.font = 'bold 24px monospace';
+    ctx.font = 'bold 21px monospace';
     ctx.fillStyle = '#ffb347';
-    ctx.fillText('DRAG TO LOOK, WASD/RF TO MOVE', 512, 440);
+    ctx.fillText('DRAG TO LOOK  ·  WASD / RF TO MOVE', 512, 494);
   }
 
   const texture = new THREE.CanvasTexture(canvas);

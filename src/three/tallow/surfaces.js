@@ -19,7 +19,7 @@
 
 import * as THREE from 'three';
 import {
-  heightField, readHeight, writeField, heightToAO, canvas2d, worley, fbm, hashStr
+  heightField, readHeight, writeField, heightToAO, canvas2d, worley, fbm, hashStr, blur
 } from '../materials/pbr-kit.js';
 import { STRATA_Y0, STRATA_SPAN } from '../erebus/rocks.js';
 import { rng } from '../erebus/noise.js';
@@ -38,22 +38,31 @@ export function saltCrust({ size = 512, seed = 3, cells = 5 } = {}) {
   const sd = hashStr(`crust${seed}`);
   const border = new Float32Array(S * S);
 
+  const cellTone = new Float32Array(S * S);
   const height = heightField(S, (u, v, x, y) => {
-    const big = worley(u * cells, v * cells, cells, sd);
+    // Domain warp (periodic over the tile): real polygons are not one size, and their sides bow. Without it
+    // every plate is the same convex cell and the pan reads as laid paving.
+    const wu = u + (fbm(u * 3, v * 3, { octaves: 3, period: 3, seed: sd ^ 0x4a }) - 0.5) * 0.16;
+    const wv = v + (fbm(u * 3, v * 3, { octaves: 3, period: 3, seed: sd ^ 0x4b }) - 0.5) * 0.16;
+    const big = worley(wu * cells, wv * cells, cells, sd);
     const sub = worley(u * cells * 3, v * cells * 3, cells * 3, sd ^ 0x71);
+    cellTone[y * S + x] = big.id;
     // Jitter the ridge line so it is hand-grown, not ruled.
     const wob = (fbm(u * 40, v * 40, { octaves: 3, period: 40, seed: sd ^ 0x13 }) - 0.5) * 0.05;
     const b = big.border + wob;
     border[y * S + x] = b;
-    // The ridge: a crystal wall standing proud of the plates on either side.
-    const ridge = Math.exp(-Math.pow(b / 0.045, 2)) * 0.34 + Math.exp(-Math.pow(b / 0.11, 2)) * 0.12;
+    // The ridge: a crystal wall standing proud of the plates on either side, thick and tall in places, thin and
+    // nearly gone in others (`grow`), as the brine fed it unevenly.
+    const grow = 0.55 + 0.9 * fbm(u * 9, v * 9, { octaves: 2, period: 9, seed: sd ^ 0x2c });
+    const ridge = Math.exp(-Math.pow(b / (0.045 * grow), 2)) * 0.34 * grow + Math.exp(-Math.pow(b / 0.11, 2)) * 0.12;
     // The plate: dishes very slightly toward its middle, as it sags drying.
     let h = 0.42 - Math.min(big.f1, 0.6) * 0.06 + ridge;
     // Faint second-generation ridges inside the big plates.
     h += Math.exp(-Math.pow(sub.border / 0.03, 2)) * 0.05;
-    // Crystal grain.
-    h += (fbm(u * 150, v * 150, { octaves: 2, period: 150, seed: sd ^ 0x5a }) - 0.5) * 0.07;
-    h += (fbm(u * 38, v * 38, { octaves: 3, period: 38, seed: sd ^ 0x77 }) - 0.5) * 0.05;
+    // Crystal grain: one coarse octave only. At 512 px over a 6 m tile the fine octave (150 per tile) was below the
+    // map's resolution and was magnified into a combed fuzz at the player's feet; at 3D On the photographed grain
+    // in the ground shader carries the fine scale instead (realism pass, 2026-11-26).
+    h += (fbm(u * 38, v * 38, { octaves: 2, period: 38, seed: sd ^ 0x77 }) - 0.5) * 0.035;
     return h;
   });
 
@@ -76,7 +85,8 @@ export function saltCrust({ size = 512, seed = 3, cells = 5 } = {}) {
     const ridge = Math.exp(-Math.pow(b / 0.06, 2));
     const foot = Math.exp(-Math.pow((b - 0.08) / 0.03, 2));
     const damp = clamp01((fbm(u * 6, v * 6, { octaves: 4, period: 6, seed: sd ^ 0x21 }) - 0.45) * 2.2);
-    let c = mix3(plate, plateDamp, damp * 0.7);
+    // Each plate dried at its own time: a slightly different grey from its neighbours.
+    let c = mix3(plate, plateDamp, clamp01(damp * 0.7 + (cellTone[i] - 0.5) * 0.35));
     c = mix3(c, grit, foot * 0.35);
     c = mix3(c, ridgeC, clamp01(ridge * 1.15));
     const k = 0.93 + (h - 0.45) * 0.35;
@@ -91,10 +101,12 @@ export function saltCrust({ size = 512, seed = 3, cells = 5 } = {}) {
 
   return {
     albedo: alb,
-    height,
+    // The normal is taken from the height smoothed by a pixel: the ridge's jittered flanks are one or two pixels
+    // wide here, and taken raw they became a field of hairs round every ridge at the player's feet.
+    height: blur(height, 1),
     roughness: writeField({ data: rough, w: S, h: S }),
     ao: heightToAO(height, { radius: Math.max(3, S >> 7), strength: 1.1 }),
-    normalStrength: 2.4
+    normalStrength: 2.8
   };
 }
 

@@ -37,7 +37,7 @@ export function buildStairwellRoom(ship) {
       { side: 'S', from: 2.38, to: 3.42 },
       { side: 'E', from: -4.55, to: -3.75 }
     ],
-    fill: { panels: 4, vent: 1.0, conduit: 2.0, machinery: 1.2, light: 0.6 },
+    fill: { panels: 4, vent: 1.0, conduit: 2.0, machinery: 1.2, light: 0.6, pipes: 1.2, breakers: 0.6 },
     seed: 31
   });
 
