@@ -20,16 +20,16 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { nukeTable, ncountFixture, keptCount, nsrc, nshield, ntissueFixture, nchoiceFixture, chosenIndex, note } from '../../table/kits/nuke.js';
+import { nukeTable, ncountFixture, keptCount, nsrc, nshield, ntissueFixture, nchoiceFixture, chosenIndex, note, plaqueFixture } from '../../table/kits/nuke.js';
 import { commas } from '../../table/kits/nuke-draw.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bgamma rays?\b/i, introducedAt: 1 },
-  { term: /\bbeta particles?\b/i, introducedAt: 2 },
-  { term: /\balpha particles?\b/i, introducedAt: 3 },
-  { term: /\bionizing\b/i, introducedAt: 5 }
+  { term: /\bbeta particles?\b/i, introducedAt: 1 },
+  { term: /\balpha particles?\b/i, introducedAt: 2 },
+  { term: /\bionizing\b/i, introducedAt: 4 }
 ];
 
 /** Radiation, counts and the counter (bench 1); ions (Tallow `q4-ledger`). */
@@ -48,128 +48,141 @@ const PLATES_AT = { x: 98, y: 28 };
 
 /** Which way a source's tracks go between the plates, said as the table shows it. */
 const BEND = {
-  po210: 'tracks bend a little toward the negative plate',
-  po210b: 'tracks bend a little toward the negative plate',
-  sr90: 'tracks bend sharply toward the positive plate',
-  co60s: 'tracks run straight between the plates'
+  po210: 'tracks bend slightly toward the negative plate, so it is positive',
+  po210b: 'tracks bend slightly toward the negative plate, so it is positive',
+  sr90: 'tracks bend sharply toward the positive plate, so it is negative',
+  co60s: 'tracks go straight between the plates, so it has no charge'
 };
 const platesMiss = (card, ask) => (seen(card) ? `${card.label}'s ${BEND[card.props.src]}.` : `${card.label} has not been run between the plates yet; ${ask}`);
-
-function platesStage({ id, title, prompt, briefing = null, cards, slotLabel, answer, hints, reward }) {
-  const R = ncountFixture('rig', PLATES_AT, { plates: true, title: 'Counter, with charged plates' });
-  return {
-    id, title, prompt, widget,
-    ...(briefing ? { briefing: { speaker: SPEAKER, body: briefing } } : {}),
-    table: nukeTable({
-      pieces: cards.map(([cid, src, text], i) => nsrc(cid, src, { x: 12, y: 10 + i * 16 }, { text })),
-      fixtures: [R.fixture],
-      zones: { slots: [R.slot, { id: 'ans', label: slotLabel, at: { x: 38, y: 51 }, size: { w: 22, h: 12 } }] }
-    }),
-    hints,
-    check(state) {
-      const card = inSlot(state, 'ans');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a source card in the answer slot.' };
-      if (card.props.src === answer) return { ok: true };
-      return { ok: false, msg: platesMiss(card, 'run it to see where its tracks go.') };
-    },
-    reward
-  };
-}
 
 const SHIELD_ROW = (y = 56.5) => [nshield('sh-paper', 'paper', { x: 66, y }), nshield('sh-al', 'aluminium', { x: 90, y }), nshield('sh-pb', 'lead', { x: 114, y })];
 
 export const STAGES = [
-  /* ---------------------------------------------------------------- 1 */
-  platesStage({
-    id: 's1-straight',
-    title: 'Between the Plates',
-    briefing: 'Two charged plates stand either side of the tracks: positive above, negative below. Opposite charges attract, and like charges repel.',
-    prompt: 'Which source gives off radiation with no charge?',
-    cards: [['src-p', 'po210', 'Source P'], ['src-q', 'sr90', 'Source Q'], ['src-r', 'co60s', 'Source R']],
-    slotLabel: 'No charge',
-    answer: 'co60s',
-    hints: [
-      'Lay a source in the Sample slot and press "Run", then try the other two.',
-      'Compare which way each source\'s tracks turn between the plates.',
-      'A charged track is pulled toward the plate of the opposite charge, so ask which track nothing pulls.'
-    ],
-    reward: { log: 'Source R: straight between the plates, no charge.', title: 'Gamma Rays', body: 'R: its tracks ran straight between the plates. Radiation with no charge and no mass, energy like light, is a gamma ray.' }
-  }),
+  /* ---------------------------------------------------------------- 1: Gamma and Beta (merged) */
+  (() => {
+    const R = ncountFixture('rig', { x: 98, y: 24 }, { plates: true, h: 42, title: 'Counter, with charged plates' });
+    return {
+      id: 's1-plates',
+      title: 'Between the Plates',
+      briefing: { speaker: SPEAKER, body: 'Two charged plates sit above and below the beam: positive on top, negative on the bottom. Opposite charges attract, and like charges repel.' },
+      prompt: 'Which source gives off uncharged radiation, and which gives off negatively charged particles?',
+      widget,
+      table: nukeTable({
+        pieces: [
+          nsrc('src-p', 'po210', { x: 12, y: 9 }, { text: 'Source P' }),
+          nsrc('src-q', 'sr90', { x: 12, y: 24 }, { text: 'Source Q' }),
+          nsrc('src-r', 'co60s', { x: 12, y: 39 }, { text: 'Source R' })
+        ],
+        fixtures: [R.fixture],
+        zones: {
+          slots: [
+            R.slot,
+            { id: 'gamma', label: 'No charge', at: { x: 38, y: 52 }, size: { w: 22, h: 11 } },
+            { id: 'beta', label: 'Negative', at: { x: 66, y: 52 }, size: { w: 22, h: 11 } }
+          ]
+        }
+      }),
+      hints: [
+        'Drag each source into the Sample slot and press "Run" to watch its tracks.',
+        'Notice which way each source\'s tracks bend between the positive and negative plates.',
+        'An uncharged ray goes straight, while a negative particle bends toward the positive plate.'
+      ],
+      check(state) {
+        const g = inSlot(state, 'gamma');
+        const b = inSlot(state, 'beta');
+        if (!g && !b) return { ok: false, notYet: true, msg: 'Place a source card in each answer slot.' };
+        if (g && g.props.src !== 'co60s') return { ok: false, msg: platesMiss(g, 'run it to see where its tracks go.') };
+        if (b && b.props.src !== 'sr90') return { ok: false, msg: platesMiss(b, 'run it to see where its tracks go.') };
+        if (!g || !b) return { ok: false, notYet: true, msg: 'Fill both answer slots before submitting.' };
+        return { ok: true };
+      },
+      reward: {
+        log: 'R: gamma ray (no charge); Q: beta particle (negative).',
+        title: 'Gamma Rays and Beta Particles',
+        body: 'Source R gives off gamma rays, high-energy light with no charge. Source Q gives off beta particles, negatively charged electrons ejected when a neutron changes.'
+      }
+    };
+  })(),
 
-  /* ---------------------------------------------------------------- 2 */
-  platesStage({
-    id: 's2-negative',
-    title: 'Toward the Positive Plate',
-    prompt: 'Which source throws out negatively charged particles?',
-    cards: [['src-p', 'po210', 'Source P'], ['src-q', 'sr90', 'Source Q'], ['src-r', 'co60s', 'Source R']],
-    slotLabel: 'Negative',
-    answer: 'sr90',
-    hints: [
-      'Run each source between the plates.',
-      'Look at which plate each source\'s tracks turn toward.',
-      'A negative particle is pulled toward the plate whose charge is opposite to its own.'
-    ],
-    reward: { log: 'Source Q: bent toward the positive plate, negative.', title: 'Beta Particles', body: 'Q: its particles bend toward the positive plate, so they are negative. Each is an electron thrown out of a nucleus: a beta particle.' }
-  }),
+  /* ---------------------------------------------------------------- 2: Alpha */
+  (() => {
+    const R = ncountFixture('rig', PLATES_AT, { plates: true, title: 'Counter, with charged plates' });
+    return {
+      id: 's2-alpha',
+      title: 'Heavy and Positive',
+      prompt: 'Which of these three new sources gives off positively charged alpha particles?',
+      widget,
+      table: nukeTable({
+        pieces: [
+          nsrc('src-s', 'sr90', { x: 12, y: 10 }, { text: 'Source S' }),
+          nsrc('src-t', 'po210b', { x: 12, y: 26 }, { text: 'Source T' }),
+          nsrc('src-u', 'co60s', { x: 12, y: 42 }, { text: 'Source U' })
+        ],
+        fixtures: [R.fixture],
+        zones: { slots: [R.slot, { id: 'ans', label: 'Alpha', at: { x: 38, y: 51 }, size: { w: 22, h: 12 } }] }
+      }),
+      hints: [
+        'Run each of the three new sources between the charged plates.',
+        'Watch which plate each beam bends toward and how sharply it turns.',
+        'A positively charged particle bends toward the negative plate.'
+      ],
+      check(state) {
+        const card = inSlot(state, 'ans');
+        if (!card) return { ok: false, notYet: true, msg: 'Place a source card in the answer slot.' };
+        if (card.props.src === 'po210b') return { ok: true };
+        return { ok: false, msg: platesMiss(card, 'run it to see where its tracks go.') };
+      },
+      reward: {
+        log: 'Source T: positive and bent only a little, alpha particles.',
+        title: 'Alpha Particles',
+        body: 'Source T bends slightly toward the negative plate because it is positive and heavy. Each alpha particle consists of 2 protons and 2 neutrons bound together.'
+      }
+    };
+  })(),
 
-  /* ---------------------------------------------------------------- 3 */
-  platesStage({
-    id: 's3-alpha',
-    title: 'Heavy and Positive',
-    briefing: 'An alpha particle is two protons and two neutrons bound together, over 7,000 times as heavy as an electron. Its charge is +2, so the plates pull on it, but its mass turns it far less.',
-    prompt: 'Which of these three new sources throws out alpha particles?',
-    cards: [['src-s', 'sr90', 'Source S'], ['src-t', 'po210b', 'Source T'], ['src-u', 'co60s', 'Source U']],
-    slotLabel: 'Alpha',
-    answer: 'po210b',
-    hints: [
-      'Run each of the three new sources between the plates.',
-      'Compare both the plate each track turns toward and how far it turns.',
-      'A positive particle turns toward the negative plate, and a heavy one turns only a little.'
-    ],
-    reward: { log: 'Source T: positive and bent a little, alpha particles.', title: 'Alpha Particles', body: 'T: positive, and bent only a little because it is heavy. Each alpha particle is a helium-4 nucleus, two protons and two neutrons, written ⁴₂He.' }
-  }),
-
-  /* ---------------------------------------------------------------- 4 */
+  /* ---------------------------------------------------------------- 3: Predict shields */
   {
-    id: 's4-predict',
+    id: 's3-predict',
     title: 'Through or Not',
     predict: true,
-    prompt: 'Which radiation do you expect to pass most easily through a sheet of paper and a slab of aluminium?',
+    prompt: 'Which radiation do you expect to pass most easily through paper and aluminium?',
     widget,
     table: nukeTable({
       pieces: [
-        note('g-alpha', 'Alpha: the heaviest, charge +2', { x: 34, y: 14 }),
-        note('g-beta', 'Beta: a light electron, charge −1', { x: 34, y: 33 }),
-        note('g-gamma', 'Gamma: no mass, no charge', { x: 34, y: 52 })
+        note('g-alpha', 'Alpha: heavy, charge +2', { x: 34, y: 12 }),
+        note('g-beta', 'Beta: light electron, charge −1', { x: 34, y: 31 }),
+        note('g-gamma', 'Gamma: no mass, no charge', { x: 34, y: 50 }),
+        { ...nshield('ref-p', 'paper', { x: 96, y: 52 }), fixed: true },
+        { ...nshield('ref-a', 'aluminium', { x: 122, y: 52 }), fixed: true }
       ],
       fixtures: [],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 30 }, size: { w: 46, h: 16 } }] }
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 24 }, size: { w: 46, h: 15 } }] }
     }),
     hints: [
-      'Each card says how heavy the radiation is and what charge it carries.',
-      'A sheet of paper or metal is atoms, each with electrons round its nucleus.',
-      'Think about what a charged particle does to every electron it passes close to, and what that costs it.'
+      'There is no wrong prediction, so drag the card you expect into the slot.',
+      'Paper and metal are made of atoms surrounded by electrons.',
+      'Think about how strongly a charged particle interacts with the electrons it passes.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Drag a prediction card into the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Test it with the shields.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Test your prediction with the shields next.' }
   },
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 4: Test shields (with lead too) */
   (() => {
-    const R = ncountFixture('rig', { x: 98, y: 26 }, { shields: true, h: 44, title: 'Counter, with a shield slot' });
+    const R = ncountFixture('rig', { x: 100, y: 24 }, { shields: true, h: 42, title: 'Counter, with a shield slot' });
     const guess = () => GUESS[recall(QUEST_KEY)];
     return {
-      id: 's5-shields',
+      id: 's4-shields',
       title: 'Paper, Aluminium, Lead',
-      briefing: { speaker: SPEAKER, body: 'A charged particle pulls on the electrons of every atom it passes and tears some off, leaving a trail of ions. Each one it makes costs it energy.' },
-      get prompt() { const g = guess(); return `Which radiation gets through 5 mm of aluminium?${g ? ` You predicted ${g}.` : ''}`; },
+      briefing: { speaker: SPEAKER, body: 'Ions are atoms that have lost electrons. Test alpha, beta, and gamma behind paper, aluminium, and lead to see what stops each one.' },
+      get prompt() { const g = guess(); return `Which radiation passes through 5 mm of aluminium?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: nukeTable({
         pieces: [
@@ -179,137 +192,103 @@ export const STAGES = [
           ...SHIELD_ROW()
         ],
         fixtures: [R.fixture],
-        zones: { slots: [R.slot, R.shieldSlot, { id: 'ans', label: 'Through aluminium', at: { x: 12, y: 52 }, size: { w: 20, h: 12 } }] }
+        zones: { slots: [R.slot, R.shieldSlot, { id: 'ans', label: 'Passes aluminium', at: { x: 36, y: 53 }, size: { w: 22, h: 11 } }] }
       }),
       hints: [
-        'Lay a source in the Sample slot and a shield in the Shield slot, then press "Count".',
-        'In the window, compare how many ions each track leaves and where each one stops.',
-        'Each ion a particle makes costs it energy, so ask which radiation makes fewest.'
+        'Place a source in the Sample slot and a shield in the Shield slot, then press "Count".',
+        'Watch how many ions each track leaves behind and where each beam stops.',
+        'Each ion a charged particle creates drains its energy, so ask which radiation creates the fewest ions.'
       ],
       check(state) {
         const card = inSlot(state, 'ans');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a source card in the answer slot.' };
-        if (card.props.src === 'co60s') return { ok: true };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a source card in the answer slot.' };
+        if (card.props.src === 'co60s') {
+          const testedPb = keptCount(state.table, 'src-g', { shield: 'lead' }) != null;
+          if (!testedPb) return { ok: false, notYet: true, msg: 'Test the gamma source behind lead too to see what slows it down.' };
+          return { ok: true };
+        }
         const c = keptCount(state.table, card.id, { shield: 'aluminium' });
-        return { ok: false, msg: c != null ? `With aluminium in the Shield slot, the ${card.label.toLowerCase()} counted ${commas(c)}, the background.` : `The ${card.label.toLowerCase()} has not been counted behind aluminium.` };
+        return { ok: false, msg: c != null ? `Behind aluminium, the ${card.label.toLowerCase()} counted ${commas(c)}, about the same as background.` : `Count the ${card.label.toLowerCase()} behind aluminium first.` };
       },
       get reward() {
         const g = guess();
         return {
-          log: 'Gamma passed aluminium; alpha stopped in paper, beta in aluminium.',
+          log: 'Gamma passed aluminium; only thick lead slowed it.',
           title: 'Ionizing Radiation',
-          body: `Gamma${g ? ` (you predicted ${g})` : ''}: alpha's dense trail of ions stopped it in paper and beta's in aluminium, while gamma rarely ionizes. Radiation that tears electrons off atoms is ionizing radiation.`
+          body: `${g ? `You predicted ${g}. ` : ''}Gamma passed through aluminium and only thick lead slowed it, while alpha and beta lost energy tearing electrons off atoms (ionizing radiation).`
         };
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 5: Tissue strip */
   {
-    id: 's6-inside',
+    id: 's5-inside',
     title: 'Inside the Body',
-    prompt: 'A source is swallowed: which radiation does most damage to the cells right beside it?',
+    prompt: 'Which radiation harms cells right beside a source inside the body the most?',
     widget,
     table: nukeTable({
       pieces: [],
       fixtures: [
-        ntissueFixture('cells', { x: 55, y: 31 }, { w: 104, h: 48 }),
-        nchoiceFixture('ans', 'Most damage beside it', { x: 128, y: 32 }, { options: ['Alpha', 'Beta', 'Gamma'], w: 38 })
+        ntissueFixture('cells', { x: 54, y: 31 }, { w: 102, h: 48 }),
+        nchoiceFixture('ans', 'Most harmful inside', { x: 128, y: 32 }, { options: ['Beta', 'Alpha', 'Gamma'], w: 38 })
       ]
     }),
     hints: [
-      'Tap Alpha, Beta and Gamma on the strip in turn.',
-      'Count the broken molecules each trail leaves in the first few cells beside the source.',
-      'Damage to a cell comes from the molecules broken inside it, so look for the trail that spends itself closest.'
+      'Tap Alpha, Beta, and Gamma on the strip to compare their trails.',
+      'Compare how many molecules each trail breaks in the first two cells beside the source.',
+      'Cell damage depends on how many molecules break inside a cell, so look for the densest trail.'
     ],
     check(state) {
       const pick = chosenIndex(state.table, 'ans');
-      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three.' };
-      if (pick === 1) return { ok: true };
-      if (pick === 3) return { ok: false, msg: 'The gamma ray broke one molecule in the whole strip.' };
-      return { ok: false, msg: 'The beta trail broke a few molecules, spread over many cells.' };
+      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
+      if (pick === 2) return { ok: true };
+      if (pick === 3) return { ok: false, msg: 'The gamma ray broke only 1 molecule across the whole strip.' };
+      return { ok: false, msg: 'The beta particle broke 5 molecules spread across many cells.' };
     },
-    reward: { log: 'Alpha breaks most molecules beside the source.', title: 'Close and Dense', body: 'Alpha: inside the body it spends all its energy in the first few cells, breaking many molecules there. Outside the body, the dead outer layer of skin stops it.' }
+    reward: { log: 'Alpha breaks 26 molecules in the first 2 cells.', title: 'Close and Dense', body: 'Alpha: inside the body, it dumps all its energy into the first two cells, breaking 26 molecules in one spot.' }
   },
 
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 6: Mixed source (replaces redundant s8) */
   (() => {
-    const R = ncountFixture('rig', { x: 80, y: 22 }, { shields: true, w: 70, h: 40, title: 'Counter, with a shield slot' });
+    const R = ncountFixture('rig', { x: 78, y: 23 }, { shields: true, w: 68, h: 40, title: 'Counter, with a shield slot' });
     return {
-      id: 's7-mixed',
+      id: 's6-mixed',
       title: 'The Mixed Source',
-      prompt: 'Which radiations does source M give off?',
+      prompt: 'Which types of radiation does sealed drum source M give off?',
       widget,
       table: nukeTable({
         pieces: [
-          nsrc('src-m', 'am241', { x: 12, y: 8 }, { text: 'Source M' }),
+          nsrc('src-m', 'am241', { x: 12, y: 8 }, { text: 'Source M', hideLast: true }),
           nshield('sh-paper', 'paper', { x: 12, y: 24 }), nshield('sh-al', 'aluminium', { x: 12, y: 40 }), nshield('sh-pb', 'lead', { x: 12, y: 56 })
         ],
-        fixtures: [R.fixture, nchoiceFixture('ans', 'Source M gives off', { x: 131, y: 44 }, { options: ['Alpha only', 'Alpha and gamma', 'Beta and gamma', 'Alpha and beta'], w: 28 })],
+        fixtures: [
+          R.fixture,
+          plaqueFixture('bg', 'Reference', { x: 131, y: 12 }, ['Background: ~25/min'], { w: 30 }),
+          nchoiceFixture('ans', 'Source M gives off', { x: 131, y: 44 }, { options: ['Alpha only', 'Beta and gamma', 'Alpha and gamma', 'Alpha and beta'], w: 30 })
+        ],
         zones: { slots: [R.slot, R.shieldSlot] }
       }),
       hints: [
-        'Count source M with no shield, then behind each shield in turn.',
-        'Look at which shield takes the biggest bite out of the count, and what is left behind each.',
-        'Paper stops alpha, aluminium stops beta, and only thick lead slows gamma.'
+        'Count Source M with no shield, then behind paper, aluminium, and lead.',
+        'Compare each count with background (~25/min) to see what each shield blocked.',
+        'Paper stops alpha, aluminium stops beta, and only thick lead reduces gamma near background.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the four statements.' };
-        if (pick === 2) return { ok: true };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the four choices.' };
         const t = state.table;
         const cnt = sh => keptCount(t, 'src-m', { shield: sh });
-        const open = cnt('open'); const paper = cnt('paper'); const al = cnt('aluminium');
-        if (pick === 1) return { ok: false, msg: paper != null ? `Behind paper, source M still counted ${commas(paper)}.` : 'Source M has not been counted behind paper.' };
-        if (pick === 3) return { ok: false, msg: open != null && paper != null ? `Paper took source M from ${commas(open)} to ${commas(paper)}.` : 'Source M has not been counted open and behind paper.' };
-        return { ok: false, msg: al != null && paper != null ? `Behind aluminium source M counted ${commas(al)}, against ${commas(paper)} behind paper.` : 'Source M has not been counted behind paper and aluminium.' };
-      },
-      reward: { log: 'Source M: alpha and gamma.', title: 'Two at Once', body: 'Alpha and gamma: paper took most of the count, and what passed the paper also passed aluminium, stopped only by lead.' }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const R = ncountFixture('rig', { x: 98, y: 22 }, { shields: true, h: 40, title: 'Counter, with a shield slot' });
-    const KIND = { co60s: 'gamma', sr90: 'beta', po210: 'alpha' };
-    return {
-      id: 's8-sealed',
-      title: 'Three Sealed Sources',
-      prompt: 'Which radiation does each of the sealed sources X, Y and Z give off?',
-      widget,
-      table: nukeTable({
-        pieces: [
-          nsrc('src-x', 'co60s', { x: 12, y: 8 }, { text: 'Source X' }), nsrc('src-y', 'sr90', { x: 12, y: 24 }, { text: 'Source Y' }), nsrc('src-z', 'po210', { x: 12, y: 40 }, { text: 'Source Z' }),
-          nshield('sh-paper', 'paper', { x: 12, y: 56 }), nshield('sh-al', 'aluminium', { x: 36, y: 56 }), nshield('sh-pb', 'lead', { x: 60, y: 56 })
-        ],
-        fixtures: [R.fixture],
-        zones: {
-          slots: [R.slot, R.shieldSlot,
-            { id: 'alpha', label: 'Alpha', at: { x: 88, y: 50 }, size: { w: 21, h: 12 } },
-            { id: 'beta', label: 'Beta', at: { x: 112, y: 50 }, size: { w: 21, h: 12 } },
-            { id: 'gamma', label: 'Gamma', at: { x: 136, y: 50 }, size: { w: 21, h: 12 } }]
+        const open = cnt('open'); const paper = cnt('paper'); const al = cnt('aluminium'); const pb = cnt('lead');
+        if (pick === 3) {
+          if (pb == null) return { ok: false, notYet: true, msg: 'Test Source M behind lead too to see if lead blocks what passed aluminium.' };
+          return { ok: true };
         }
-      }),
-      hints: [
-        'Count each sealed source with no shield, then behind paper and behind aluminium.',
-        'For each source, find the first shield that brings its count down to the background.',
-        'Paper stops alpha, aluminium stops beta, and gamma gets through both.'
-      ],
-      check(state) {
-        const placed = ['alpha', 'beta', 'gamma'].map(k => [k, inSlot(state, k)]);
-        if (placed.every(([, c]) => !c)) return { ok: false, notYet: true, msg: 'Lay each source card in the slot of the radiation it gives off.' };
-        for (const [k, c] of placed) {
-          if (!c) continue;
-          if (KIND[c.props.src] !== k) {
-            const shield = KIND[c.props.src] === 'alpha' ? 'paper' : KIND[c.props.src] === 'beta' ? (k === 'alpha' ? 'paper' : 'aluminium') : (k === 'alpha' ? 'paper' : 'aluminium');
-            const n = keptCount(state.table, c.id, { shield });
-            return { ok: false, msg: n != null ? `${c.label} counted ${commas(n)} behind ${shield}.` : `${c.label} has not been counted behind ${shield}.` };
-          }
-        }
-        if (placed.some(([, c]) => !c)) return { ok: false, notYet: true, msg: 'One of the slots is still empty.' };
-        return { ok: true };
+        if (pick === 1) return { ok: false, msg: paper != null ? `Behind paper, Source M still counted ${commas(paper)}, far above background (25), so something passes paper.` : 'Count Source M behind paper first.' };
+        if (pick === 2) return { ok: false, msg: open != null && paper != null ? `Paper dropped Source M from ${commas(open)} to ${commas(paper)}, so alpha was blocked.` : 'Count Source M both open and behind paper first.' };
+        return { ok: false, msg: al != null && paper != null ? `Behind aluminium, Source M still counted ${commas(al)} (far above 25), nearly the same as behind paper (${commas(paper)}).` : 'Count Source M behind paper and aluminium first.' };
       },
-      reward: { log: 'X gamma, Y beta, Z alpha, by shields alone.', title: 'Told Apart by What Stops Them', body: 'X gamma, Y beta, Z alpha: paper stops alpha, aluminium stops beta, and only thick lead slows gamma.' }
+      reward: { log: 'Sample M: alpha and gamma.', title: 'Two at Once', body: 'Alpha and gamma: paper blocked most of the count (alpha), aluminium changed almost nothing, and lead dropped the rest (gamma) to background.' }
     };
   })()
 ];
@@ -317,7 +296,7 @@ export const STAGES = [
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'Three radiations come off: alpha, heavy and positive; beta, a light negative electron; gamma, energy with no charge. The charged ones tear electrons off atoms as they go, so they stop soonest.' }]
+  sections: [{ heading: 'What You Found', body: 'Three types of radiation leave unstable nuclei: heavy positive alpha, light negative beta, and uncharged gamma. Charged particles tear electrons off atoms and stop quickly, while uncharged gamma travels furthest.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */
@@ -328,26 +307,21 @@ const S = 'slot:rig.sample'; const SH = 'slot:rig.shield';
 const look = id => [put(id, S), run('rig')];
 
 export const SOLUTIONS = [
-  [...look('src-p'), ...look('src-q'), ...look('src-r'), put('src-r', 'slot:ans')],
-  [...look('src-p'), ...look('src-q'), put('src-q', 'slot:ans')],
+  [...look('src-p'), ...look('src-q'), ...look('src-r'), put('src-r', 'slot:gamma'), put('src-q', 'slot:beta')],
   [...look('src-s'), ...look('src-t'), ...look('src-u'), put('src-t', 'slot:ans')],
   [put('g-alpha', 'slot:guess')],
-  [put('sh-al', SH), ...look('src-a'), ...look('src-b'), ...look('src-g'), put('src-g', 'slot:ans')],
-  [{ setDial: { fixture: 'cells', dial: 'kind', value: 1 } }, { setDial: { fixture: 'cells', dial: 'kind', value: 2 } }, choose(1)],
-  [...look('src-m'), put('sh-paper', SH), run('rig'), put('sh-al', SH), run('rig'), put('sh-pb', SH), run('rig'), choose(2)],
-  [put('sh-paper', SH), ...look('src-x'), ...look('src-y'), ...look('src-z'), put('sh-al', SH), ...look('src-x'), ...look('src-y'),
-    put('src-z', 'slot:alpha'), put('src-y', 'slot:beta'), put('src-x', 'slot:gamma')]
+  [put('sh-al', SH), ...look('src-a'), ...look('src-b'), ...look('src-g'), put('sh-pb', SH), run('rig'), put('src-g', 'slot:ans')],
+  [{ setDial: { fixture: 'cells', dial: 'kind', value: 1 } }, { setDial: { fixture: 'cells', dial: 'kind', value: 2 } }, choose(2)],
+  [...look('src-m'), put('sh-paper', SH), run('rig'), put('sh-al', SH), run('rig'), put('sh-pb', SH), run('rig'), choose(3)]
 ];
 
 export const MISSES = [
-  [...look('src-p'), put('src-p', 'slot:ans')],
-  [...look('src-p'), put('src-p', 'slot:ans')],
+  [...look('src-p'), put('src-p', 'slot:gamma')],
   [...look('src-u'), put('src-u', 'slot:ans')],
   [],
   [put('sh-al', SH), ...look('src-b'), put('src-b', 'slot:ans')],
   [choose(3)],
-  [...look('src-m'), put('sh-paper', SH), run('rig'), choose(1)],
-  [put('sh-paper', SH), ...look('src-y'), put('src-y', 'slot:alpha')]
+  [...look('src-m'), put('sh-paper', SH), run('rig'), choose(1)]
 ];
 
 function blankState() { return {}; }

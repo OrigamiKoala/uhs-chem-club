@@ -830,9 +830,10 @@ export class LearnFrame {
     const entryHtml = e
       ? `<label class="lq-entry"><span class="lq-entry-label">${esc(e.label)}</span><input class="form-input lq-entry-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="12" data-entry="${esc(e.id)}" data-unit="${esc(e.unit || '')}" aria-label="${esc(e.label)}"><span class="lq-entry-unit">${escSuper(e.unit || '')}</span></label>`
       : '';
+    const hintHtml = this.isPredictStage() ? '' : '<button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>';
     this.el.actions.innerHTML = `
       ${entryHtml}
-      <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
+      ${hintHtml}
       <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
@@ -1124,9 +1125,10 @@ export class LearnFrame {
     const entryHtml = e
       ? `<label class="lq-entry"><span class="lq-entry-label">${esc(e.label)}</span><input class="form-input lq-entry-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="12" data-entry="${esc(e.id)}" data-unit="${esc(e.unit || '')}" aria-label="${esc(e.label)}"><span class="lq-entry-unit">${escSuper(e.unit || '')}</span></label>`
       : '';
+    const hintHtml = this.isPredictStage() ? '' : '<button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>';
     this.el.actions.innerHTML = `
       ${entryHtml}
-      <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
+      ${hintHtml}
       <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;

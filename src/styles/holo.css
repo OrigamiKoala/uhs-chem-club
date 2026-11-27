@@ -1325,13 +1325,13 @@
 }
 
 .story-anim-tx .transmission-card {
-  min-height: 7.2rem;
-  font-size: 1rem;
+  min-height: 7.4rem;
+  font-size: 1.12rem;
   line-height: 1.55;
 }
 
 .story-anim-tx .transmission-text {
-  font-size: 0.98rem;
+  font-size: 1.12rem;
   line-height: 1.55;
 }
 

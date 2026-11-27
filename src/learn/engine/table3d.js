@@ -573,12 +573,18 @@ export class Table3D extends BenchViewer3D {
         const rp = this.map.toPlate({ x: (key.x0 + key.x1) / 2, y: (key.y0 + key.y1) / 2 });
         const kw = (key.x1 - key.x0) * s;
         const kd = (key.y1 - key.y0) * s;
-        const cap = buildKey(kw, kd, { capMat: this.kitMats.enamelDark });
+        const cap = buildKey(kw, kd, { capMat: this.kitMats.brass || this.kitMats.enamelDark });
         cap.position.set(rp.x, DECK_TOP, rp.z);
         this.fixtureRoot.add(cap);
         const label = new THREE.Mesh(
-          new THREE.PlaneGeometry(kw * 0.9, kd * 0.78),
-          this.mine(new THREE.MeshStandardMaterial({ map: this.plaque(key.label, Math.max(160, Math.round((key.x1 - key.x0) * 16)), 72, { bg: '#2f271b' }), roughness: 0.75, metalness: 0.15 }))
+          new THREE.PlaneGeometry(kw * 0.92, kd * 0.8),
+          this.mine(new THREE.MeshStandardMaterial({
+            map: this.plaque(key.label, Math.max(180, Math.round((key.x1 - key.x0) * 18)), 78, { bg: '#3d2a12', border: '#e59b24', fg: '#f6d598' }),
+            emissive: new THREE.Color('#2a1a06'),
+            emissiveIntensity: 0.45,
+            roughness: 0.6,
+            metalness: 0.1
+          }))
         );
         label.rotation.x = -Math.PI / 2;
         label.position.set(rp.x, DECK_TOP + 0.0165, rp.z);

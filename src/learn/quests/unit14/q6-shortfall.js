@@ -23,7 +23,7 @@ import { remember, recall } from '../../engine/predict.js';
 import { nukeTable, nscaleFixture, scaleRead, ncurveFixture, curvePick, nchainFixture, chainRead, nchoiceFixture, chosenIndex, note, plaqueFixture } from '../../table/kits/nuke.js';
 import { BE_PER_NUCLEON, longName } from '../../engine/nucdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bmass defect\b/i, introducedAt: 2 },
@@ -56,27 +56,27 @@ export const STAGES = [
     id: 's1-predict',
     title: 'Whole or Parts',
     predict: true,
-    prompt: 'A helium-4 nucleus is two protons and two neutrons: do you expect it to weigh more, less or the same as those four apart?',
+    prompt: 'Does a helium-4 nucleus have more, less, or the same mass as its four separate parts?',
     widget,
     table: nukeTable({
-      pieces: [note('g-more', 'More than its parts', { x: 34, y: 14 }), note('g-same', 'The same as its parts', { x: 34, y: 33 }), note('g-less', 'Less than its parts', { x: 34, y: 52 })],
-      fixtures: [],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 30 }, size: { w: 46, h: 16 } }] }
+      pieces: [note('g-more', 'More mass than its parts', { x: 32, y: 14 }), note('g-same', 'Same mass as its parts', { x: 32, y: 33 }), note('g-less', 'Less mass than its parts', { x: 32, y: 52 })],
+      fixtures: [nscaleFixture('scale', { x: 112, y: 44 }, { left: null, right: null, leftLabel: '4 separate parts', rightLabel: 'Helium-4 nucleus', w: 66, h: 32, title: 'Balance (ready to weigh)' })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 14 }, size: { w: 46, h: 14 } }] }
     }),
     hints: [
-      'A nucleus holds together, so pulling its protons and neutrons apart takes energy.',
-      'Think about whether the four parts have more energy apart or together.',
-      'Ask whether energy put into something could show up as mass.'
+      'There is no wrong prediction, so drag the card you expect into the slot.',
+      'Think about whether the four particles have more energy apart or bound together.',
+      'Ask whether a change in energy could show up as a change in mass.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Drag a prediction card into the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Weigh them.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Compare helium-4 against its separate protons and neutrons on the balance next.' }
   },
 
   /* ---------------------------------------------------------------- 2 */
@@ -85,35 +85,34 @@ export const STAGES = [
     return {
       id: 's2-balance',
       title: 'The Balance',
-      get prompt() { const g = guess(); return `Does a helium-4 nucleus weigh the same as the protons and neutrons it is made of?${g ? ` You predicted ${g}.` : ''}`; },
+      get prompt() { const g = guess(); return `Does a helium-4 nucleus have the same mass as its separate protons and neutrons?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: nukeTable({
         pieces: [],
         fixtures: [
-          nscaleFixture('scale', { x: 56, y: 31 }, { build: true, right: 'He4', rightLabel: 'Helium-4 nucleus', w: 104, h: 50 }),
-          nchoiceFixture('ans', 'The nucleus weighs', { x: 130, y: 32 }, { options: ['The same', 'More', 'Less'], w: 34 })
+          nscaleFixture('scale', { x: 56, y: 31 }, { build: true, right: 'He4', rightLabel: 'Helium-4 nucleus', showDiff: true, w: 104, h: 50 }),
+          nchoiceFixture('ans', 'The nucleus has', { x: 130, y: 32 }, { options: ['Same mass', 'More mass', 'Less mass'], w: 34 })
         ]
       }),
       hints: [
-        'Tap "Add Proton" and "Add Neutron" until the left pan holds what a helium-4 nucleus is made of.',
-        'Compare the two masses the pans print, to the last decimal place.',
-        'The beam tips toward the heavier pan.'
+        'Tap "Add Proton" and "Add Neutron" until the left pan holds 2 protons and 2 neutrons.',
+        'Compare the two pan readings down to the last decimal place.',
+        'The balance tips down toward the heavier side.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three statements.' };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
         if (pick === 3) return { ok: true };
         const r = scaleRead(state.table, 'scale');
-        if (r.left == null) return { ok: false, msg: 'The left pan is empty: nothing has been weighed against the nucleus.' };
-        return { ok: false, msg: `The pans read ${r.left.toFixed(6)} u on the left and ${r.right.toFixed(6)} u for the nucleus.` };
+        if (r.left == null) return { ok: false, msg: 'Load protons and neutrons onto the left pan first.' };
+        return { ok: false, msg: `The left pan reads ${r.left.toFixed(3)} u and the helium-4 nucleus reads ${r.right.toFixed(3)} u.` };
       },
       get reward() {
         const g = guess();
         return {
-          log: 'Helium-4 weighs 0.030376 u less than its parts.',
+          log: 'Helium-4 weighs 0.0304 u less than its parts.',
           title: 'Mass Defect',
-          body: `Less${g ? ` (you predicted ${g})` : ''}: 0.030376 u less than two protons and two neutrons apart. The mass a nucleus lacks against its separate parts is its mass defect.`,
-          model: { type: 'atom', p: 2, n: 2, caption: 'Helium-4: 2 protons and 2 neutrons, lighter together than apart. Not to scale.' }
+          body: `Less mass.${g ? ` You predicted ${g}.` : ''} Helium-4 has 0.0304 u less mass than its separate parts, and that missing mass is its mass defect.`
         };
       }
     };
@@ -125,8 +124,8 @@ export const STAGES = [
     title: 'Mass Into Energy',
     briefing: {
       speaker: SPEAKER,
-      body: 'Mass and energy are one thing in two forms, E = mc²: 1 u of mass is 931.5 MeV of energy, where an MeV is a unit of energy sized for one nucleus. Deuterium, one proton and one neutron, lacks 0.002388 u.',
-      worked: ['Deuterium: 2.015941 u apart, 2.013553 u together', '0.002388 u × 931.5 MeV per u = 2.22 MeV']
+      body: 'Mass and energy are equivalent (E = mc²): 1 u of mass equals 931.5 MeV, an energy unit sized for single nuclei.',
+      worked: ['Deuterium: 2.016 u apart vs. 2.014 u together (0.002388 u missing)', '0.002388 u × 931.5 MeV/u = 2.22 MeV']
     },
     prompt: 'How much energy, in MeV, holds a helium-4 nucleus together?',
     widget,
@@ -134,162 +133,141 @@ export const STAGES = [
     table: nukeTable({
       pieces: [],
       fixtures: [
-        nscaleFixture('scale', { x: 56, y: 31 }, { left: 'He4-parts', right: 'He4', leftLabel: '2 protons + 2 neutrons', rightLabel: 'Helium-4 nucleus', w: 104, h: 50 }),
+        nscaleFixture('scale', { x: 56, y: 31 }, { left: 'He4-parts', right: 'He4', leftLabel: '2 protons + 2 neutrons', rightLabel: 'Helium-4 nucleus', showDiff: true, w: 104, h: 50 }),
         plaqueFixture('ref', 'Mass as energy', { x: 132, y: 22 }, ['1 u = 931.5 MeV'], { w: 30 })
       ]
     }),
     hints: [
-      'Read the two masses on the balance.',
-      'Find how much mass the nucleus lacks against its parts.',
-      'Turn that missing mass into energy with the plate, as the worked case did for deuterium.'
+      'Read the two pan masses and their difference on the balance.',
+      'Find how much mass is missing when the parts combine into helium-4.',
+      'Multiply that missing mass by 931.5 MeV/u, just like the deuterium example.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'mev');
       if (v == null) return { ok: false, notYet: true, msg: 'Type the energy in MeV.' };
-      if (v >= 28.1 && v <= 28.5) return { ok: true };
-      if (v < 0.05) return { ok: false, msg: `${v} is the missing mass in u; the plate turns u into MeV.` };
-      if (v > 3000) return { ok: false, msg: 'That turns the whole of a pan\'s mass into energy, not the part the nucleus lacks.' };
-      if (Math.abs(v - 2.22) < 0.05) return { ok: false, msg: '2.22 MeV is deuterium\'s, from the worked case.' };
-      if (Math.abs(v - 7.07) < 0.05) return { ok: false, msg: 'That is the energy for each one of the four protons and neutrons.' };
-      return { ok: false, msg: `${v} MeV is the energy of ${(v / 931.5).toFixed(6)} u of mass; the balance shows a different difference.` };
+      if (v >= 27.9 && v <= 28.6) return { ok: true };
+      if (v < 0.05) return { ok: false, msg: `${v} is the missing mass in u; multiply by 931.5 to convert u to MeV.` };
+      if (v > 3000) return { ok: false, msg: 'That converts the entire pan\'s mass into energy, not just the missing mass.' };
+      if (Math.abs(v - 2.22) < 0.05) return { ok: false, msg: '2.22 MeV is for deuterium from the example.' };
+      if (Math.abs(v - 7.07) < 0.05) return { ok: false, msg: 'That is the energy per particle rather than for all four particles together.' };
+      return { ok: false, msg: `${v} MeV equals ${(v / 931.5).toFixed(4)} u of mass; check the difference shown on the balance.` };
     },
-    reward: { log: 'Helium-4: 0.030376 u, 28.3 MeV.', title: 'Binding Energy', body: '28.3 MeV: the mass defect as energy. The energy needed to pull a nucleus apart into its protons and neutrons is its binding energy.' }
+    reward: { log: 'Helium-4: 0.0304 u, 28.3 MeV.', title: 'Binding Energy', body: '28.3 MeV: the energy equivalent of the mass defect. The energy needed to pull a nucleus apart into free protons and neutrons is its binding energy.' }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     id: 's4-curve',
     title: 'Held Tightest',
-    briefing: { speaker: SPEAKER, body: 'Binding energy per nucleon is a nucleus\'s binding energy shared out over its protons and neutrons: the higher it is, the more tightly each one is held.' },
+    briefing: { speaker: SPEAKER, body: 'Binding energy per nucleon is a nucleus\'s total binding energy divided by its protons and neutrons. Higher on the curve means more tightly held.' },
     prompt: 'Which nucleus holds each of its protons and neutrons most tightly?',
     widget,
     table: nukeTable({ pieces: [], fixtures: [ncurveFixture('curve', { x: 75, y: 31 }, { w: 140, h: 58 })] }),
     hints: [
-      'Tap points on the curve to read them.',
-      'Compare the heights of the points across the whole curve.',
-      'The most tightly held nucleons belong to the nucleus whose point stands highest.'
+      'Tap points along the curve to read their values.',
+      'Compare the heights of points across the entire curve.',
+      'The most tightly bound nucleus sits at the highest point on the curve.'
     ],
     check(state) {
       const p = curvePick(state.table, 'curve');
       if (!p) return { ok: false, notYet: true, msg: 'Tap a point on the curve.' };
       if (p.name === 'Fe-56' || p.name === 'Ni-62') return { ok: true };
-      return { ok: false, msg: `${longName(p.name)} reads ${be1(p.name)} MeV per nucleon, and points round mass number 60 stand higher.` };
+      return { ok: false, msg: `${longName(p.name)} is at ${be1(p.name)} MeV per nucleon, but a higher point sits on the curve.` };
     },
-    reward: { log: 'Iron-56 and nickel-62 top the curve at 8.8 MeV.', title: 'Binding Energy per Nucleon', body: 'Iron-56 and nickel-62, at 8.8 MeV for each nucleon. Nuclei near iron are the most tightly bound; lighter and heavier ones hold theirs less tightly.' }
+    reward: { log: 'Iron-56 and nickel-62 top the curve at 8.8 MeV.', title: 'Binding Energy per Nucleon', body: 'Iron-56 and nickel-62 peak at 8.8 MeV per nucleon. Nuclei near iron are the most tightly bound, with higher binding energy per nucleon than lighter or heavier nuclei.' }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-fission',
     title: 'Splitting Uranium',
-    briefing: { speaker: SPEAKER, body: 'When a slow neutron enters a uranium-235 nucleus, the nucleus can split in two. The balance weighs everything before and after.' },
-    prompt: 'Does splitting uranium-235 into barium-141 and krypton-92 give energy out or take energy in?',
+    briefing: { speaker: SPEAKER, body: 'When a slow neutron hits uranium-235, the nucleus splits in two. The balance compares total mass before and after the split.' },
+    prompt: 'Does splitting uranium-235 into barium-141 and krypton-92 release energy or absorb energy?',
     widget,
     table: nukeTable({
       pieces: [],
       fixtures: [
         nchainFixture('chamber', { x: 42, y: 17 }, { mode: 'split', w: 80, h: 32 }),
-        nscaleFixture('scale', { x: 42, y: 48 }, { left: 'U235-fuel', right: 'U235-split', leftLabel: 'Before', rightLabel: 'After', w: 80, h: 30, title: 'Balance' }),
-        nchoiceFixture('ans', 'Splitting it', { x: 118, y: 32 }, { options: ['Gives energy out', 'Takes energy in'], w: 54 })
+        nscaleFixture('scale', { x: 42, y: 48 }, { left: 'U235-fuel', right: 'U235-split', leftLabel: 'Before', rightLabel: 'After', hideRightUntil: 'chamber', showDiff: true, w: 80, h: 30, title: 'Balance' }),
+        nchoiceFixture('ans', 'Splitting it', { x: 118, y: 32 }, { options: ['Absorbs energy', 'Releases energy'], w: 54 })
       ]
     }),
     hints: [
-      'Press "Fire Neutron" and read what the balance weighs before and after.',
-      'Compare the mass before the split with the mass after it.',
-      'Mass that goes missing has become energy, as it did in the helium nucleus.'
+      'Press "Fire Neutron" and compare the balance readings before and after.',
+      'Compare total mass before the split with total mass after it.',
+      'Any mass that disappears after the split is released as energy.'
     ],
     check(state) {
       const pick = chosenIndex(state.table, 'ans');
-      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the two statements.' };
-      if (pick === 1) return { ok: true };
-      return { ok: false, msg: 'The balance reads 236.052595 u before and 235.866571 u after.' };
+      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the two choices.' };
+      if (!chainRead(state.table, 'chamber').fired) return { ok: false, notYet: true, msg: 'Press "Fire Neutron" first to split the uranium-235 nucleus.' };
+      if (pick === 2) return { ok: true };
+      return { ok: false, msg: 'After the split, the pieces have 0.186 u less mass (235.867 u vs. 236.053 u), so that missing mass became energy.' };
     },
-    reward: { log: 'Fission of uranium-235: 0.186 u less after.', title: 'Fission', body: 'Out: the pieces weigh 0.186 u less than the uranium and its neutron. A heavy nucleus splitting into two lighter ones is fission.' }
+    reward: { log: 'Fission of uranium-235: 0.186 u less (about 173 MeV).', title: 'Fission', body: 'Releases energy: the pieces have 0.186 u less mass, releasing about 173 MeV. A heavy nucleus splitting into two lighter ones is fission.' }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     id: 's6-chain',
     title: 'The Chain',
-    briefing: { speaker: SPEAKER, body: 'A fission like the one you watched frees three neutrons, and each can split another nucleus. Control rods soak up neutrons.' },
-    prompt: 'Of each fission\'s three neutrons, how many must the rods soak up for the reaction to hold steady?',
+    briefing: { speaker: SPEAKER, body: 'Each uranium-235 fission frees three neutrons that can split more nuclei. Control rods absorb neutrons to regulate the reaction.' },
+    prompt: 'Out of each fission\'s three neutrons, how many must the rods absorb to keep the reaction steady?',
     widget,
     table: nukeTable({
       pieces: [],
       fixtures: [
-        nchainFixture('chamber', { x: 58, y: 31 }, { mode: 'chain', w: 112, h: 56 }),
-        nchoiceFixture('ans', 'Soaked up', { x: 134, y: 32 }, { options: ['0', '1', '2', '3'], w: 26 })
+        nchainFixture('chamber', { x: 56, y: 31 }, { mode: 'chain', w: 110, h: 56 }),
+        nchoiceFixture('ans', 'Absorbed (of 3)', { x: 132, y: 32 }, { options: ['0', '1', '2', '3'], w: 32 })
       ]
     }),
     hints: [
-      'Set the rods with the keys and press "Fire Neutron" at each setting.',
-      'Compare how the number of fissions changes from one generation to the next at each setting.',
-      'Holding steady means each generation has as many fissions as the one before.'
+      'Try each rod setting and press "Fire Neutron" to watch four generations.',
+      'Watch how the number of fissions changes from generation to generation at each setting.',
+      'A steady reaction keeps exactly 1 fission in every generation.'
     ],
     check(state) {
       const pick = chosenIndex(state.table, 'ans');
-      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the four.' };
+      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the four choices.' };
       if (pick === 3) return { ok: true };
-      return { ok: false, msg: ['With none soaked up, each generation tripled: 1, 3, 9, 27.', 'With one soaked up, each generation doubled: 1, 2, 4, 8.', '', 'With all three soaked up, it stopped after one fission.'][pick - 1] };
+      return { ok: false, msg: ['With 0 absorbed, each generation tripled: 1, 3, 9, 27.', 'With 1 absorbed, each generation doubled: 1, 2, 4, 8.', '', 'With all 3 absorbed, the reaction stopped after 1 fission.'][pick - 1] };
     },
-    reward: { log: 'Two of three soaked up: one fission causes one more.', title: 'Chain Reaction', body: 'Two: then each fission causes exactly one more. A run of fissions whose neutrons cause more is a chain reaction, and one that holds steady is critical.' }
+    reward: { log: 'Two of three soaked up: one fission causes one more.', title: 'Chain Reaction', body: 'Two absorbed: each fission triggers exactly one more (1, 1, 1, 1). Self-sustaining fissions form a chain reaction, and a steady one is critical.' }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     id: 's7-fusion',
     title: 'Joining Hydrogen',
-    prompt: 'Which gives energy out: joining two hydrogen-2 nuclei into helium-4, or splitting helium-4 into two hydrogen-2?',
+    prompt: 'Which releases energy: joining two hydrogen-2 nuclei into helium-4, or splitting helium-4 apart?',
     widget,
     table: nukeTable({
       pieces: [],
       fixtures: [
-        nscaleFixture('scale', { x: 42, y: 17 }, { left: 'H2-pair', right: 'He4', leftLabel: 'Two hydrogen-2 nuclei', rightLabel: 'Helium-4 nucleus', w: 80, h: 32 }),
-        ncurveFixture('curve', { x: 42, y: 49 }, { marks: [{ name: 'H-2' }, { name: 'He-4' }], all: false, w: 80, h: 30, title: 'The curve' }),
-        nchoiceFixture('ans', 'Energy comes out from', { x: 118, y: 32 }, { options: ['Joining them', 'Splitting helium-4'], w: 54 })
+        nscaleFixture('scale', { x: 42, y: 16 }, { left: 'H2-pair', right: 'He4', leftLabel: 'Two hydrogen-2 nuclei', rightLabel: 'Helium-4 nucleus', showDiff: true, w: 80, h: 30 }),
+        ncurveFixture('curve', { x: 42, y: 48 }, { marks: [{ name: 'H-2' }, { name: 'He-4' }], all: false, w: 80, h: 32, title: 'The curve' }),
+        nchoiceFixture('ans', 'Energy is released by', { x: 118, y: 32 }, { options: ['Splitting helium-4', 'Joining them'], w: 54 })
       ]
     }),
     hints: [
-      'Read both pans of the balance, and tap the two points on the curve.',
-      'Compare which side weighs less, and which nucleus holds its nucleons more tightly.',
-      'A change gives energy out when what it makes weighs less than what it started from.'
+      'Compare both pans of the balance and tap the two points on the curve.',
+      'Check which side has less mass and which nucleus sits higher on the curve.',
+      'A reaction releases energy when the products have less mass than the starting nuclei.'
     ],
     check(state) {
       const pick = chosenIndex(state.table, 'ans');
-      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the two statements.' };
-      if (pick === 1) return { ok: true };
-      return { ok: false, msg: 'The balance reads 4.027106 u for two hydrogen-2 nuclei and 4.001506 u for helium-4.' };
+      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the two choices.' };
+      if (pick === 2) return { ok: true };
+      return { ok: false, msg: 'Helium-4 has 0.0256 u less mass than two hydrogen-2 nuclei (4.002 u vs. 4.027 u), so joining them releases energy.' };
     },
-    reward: { log: 'Joining hydrogen-2 into helium-4 gives 0.0256 u out.', title: 'Fusion', body: 'Joining them: helium-4 weighs 0.0256 u less and sits far higher on the curve. Light nuclei joining into a heavier one is fusion, which powers the stars.' }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    id: 's8-neither',
-    title: 'Neither Way',
-    prompt: 'Which marked nucleus could give energy out neither by splitting nor by joining with another?',
-    widget,
-    table: nukeTable({ pieces: [], fixtures: [ncurveFixture('curve', { x: 75, y: 31 }, { marks: [{ name: 'He-4', label: 'X' }, { name: 'Fe-56', label: 'Y' }, { name: 'U-238', label: 'Z' }], all: false, w: 140, h: 58 })] }),
-    hints: [
-      'Tap the three marked points to read them.',
-      'For each mark, look at which way along the curve its nucleons would be held more tightly.',
-      'A change gives energy out only when it moves nucleons up the curve.'
-    ],
-    check(state) {
-      const p = curvePick(state.table, 'curve');
-      if (!p) return { ok: false, notYet: true, msg: 'Tap a marked point.' };
-      if (p.name === 'Fe-56') return { ok: true };
-      if (p.name === 'He-4') return { ok: false, msg: 'X sits at mass number 4, with points higher on the curve to its right.' };
-      return { ok: false, msg: 'Z sits at mass number 238, with points higher on the curve to its left.' };
-    },
-    reward: { log: 'Y, iron-56, at the top: no energy either way.', title: 'The Top of the Curve', body: 'Y, iron-56, at the top: splitting it or joining it would move its nucleons down the curve, so either change would take energy in.' }
+    reward: { log: 'Joining hydrogen-2 into helium-4 gives 0.0256 u out.', title: 'Fusion', body: 'Joining them: helium-4 has 0.0256 u less mass and sits higher on the curve. Light nuclei combining into a heavier one is fusion.' }
   }
 ];
 
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'A nucleus weighs less than its parts, and the missing mass is the energy that binds it. Splitting heavy nuclei or joining light ones moves toward iron and gives energy out.' }]
+  sections: [{ heading: 'What You Found', body: 'A nucleus has less mass than its separate parts, and that missing mass is its binding energy. Splitting heavy nuclei or joining light ones moves toward iron and releases energy.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */
@@ -307,10 +285,9 @@ export const SOLUTIONS = [
   [...add('np', 2), ...add('nn', 2), choose(3)],
   [typed('mev', 28.3)],
   [ptName('U-238'), ptName('Fe-56')],
-  [fire, choose(1)],
+  [fire, choose(2)],
   [fire, rods(1), fire, rods(2), fire, choose(3)],
-  [pt(1), pt(2), choose(1)],
-  [pt(1), pt(3), pt(2)]
+  [pt(1), pt(2), choose(2)]
 ];
 
 export const MISSES = [
@@ -318,10 +295,9 @@ export const MISSES = [
   [...add('np', 2), ...add('nn', 2), choose(1)],
   [typed('mev', 0.0304)],
   [ptName('U-238')],
-  [fire, choose(2)],
+  [fire, choose(1)],
   [fire, rods(1), fire, choose(2)],
-  [choose(2)],
-  [pt(3)]
+  [choose(1)]
 ];
 
 function blankState() { return {}; }

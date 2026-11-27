@@ -14,19 +14,19 @@ export { frameOf, say, title, foot, progress, ease, lerp, clamp };
 
 export const C = Object.freeze({
   ...THORN_C,
-  proton: '#b4572f',
-  protonRim: '#d47a4c',
-  neutron: '#8a8478',
-  neutronRim: '#aaa395',
+  proton: '#d96b38',
+  protonRim: '#f08c5a',
+  neutron: '#9e988c',
+  neutronRim: '#bfb8aa',
   e: '#efe6cf',
   positron: '#9ab6d4',
-  alpha: '#c9933e',
+  alpha: '#d99e42',
   beta: '#e6dcc4',
-  gamma: '#c8c2a0',
-  ion: '#d9b26a',
+  gamma: '#d4ceaa',
+  ion: '#e5be72',
   win: '#100f0c',
-  plus: '#c0652b',
-  minus: '#6f8fb0',
+  plus: '#e07b39',
+  minus: '#7ea6cc',
   shield: { paper: '#d8cfb8', aluminium: '#9aa3ab', lead: '#4b4f56' }
 });
 

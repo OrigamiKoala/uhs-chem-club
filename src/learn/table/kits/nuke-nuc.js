@@ -13,7 +13,7 @@
 
 import { DECAY, decayOf, symbolOf, nameOf } from '../../engine/nucdata.js';
 import { registerFixture } from './nuke-registry.js';
-import { C, frameOf, say, title, foot, progress, clamp, lerp, ease, drawNucleus, nucleonPlace, protonSlots, nucleon, lepton, gammaWave } from './nuke-draw.js';
+import { C, frameOf, say, title, foot, progress, clamp, lerp, ease, box, drawNucleus, nucleonPlace, protonSlots, nucleon, lepton, gammaWave } from './nuke-draw.js';
 import { chartPick } from './nuke-chart-read.js';
 
 /** @param {object} o `Z`, `N` the parent; `mode` a DECAY key; `hideAfter` hides the counts once it has decayed; `follow` a chart id. */
@@ -49,82 +49,104 @@ function paintDecay(ctx, f, F, b) {
   const R = Math.min((f.size.h - 18) / 2, f.size.w * 0.22) * Math.min(1, Math.sqrt(n / 60) * 0.55 + 0.45);
   const isP = protonSlots(p.Z, p.N, `${f.id}:${p.Z}:${p.N}`);
   const watched = p.last.n > 0;
-  const k = watched ? progress(`${f.id}:watch`, b, p.last.n, 3.2) : 0;
+  const k = watched ? progress(`${f.id}:watch`, b, p.last.n, p.mode === 'alpha' ? 4.2 : 3.4) : 0;
   const clock = b.clock || 0;
   const skip = new Set(); const turn = new Map();
   const r = Math.max(0.35, (R / Math.sqrt(n)) * 0.95);
   const D = p.mode ? DECAY[p.mode] : null;
+  let highlightTurn = null;
   if (watched && p.mode === 'alpha') {
     const leave = [...edgeIndices(isP, 'p', 2), ...edgeIndices(isP, 'n', 2)];
     for (const i of leave) skip.add(i);
-    const t = ease(clamp((k - 0.15) / 0.75, 0, 1));
-    const ox = cx + R * 0.9 + t * (f.size.w * 0.6 - R); const oy = cy;
-    [[-0.6, -0.6, 'p'], [0.6, 0.6, 'p'], [0.6, -0.6, 'n'], [-0.6, 0.6, 'n']].forEach(([dx, dy, kind]) => nucleon(ctx, F, ox + dx * Math.max(r, 1.1), oy + dy * Math.max(r, 1.1), Math.max(r, 1.1), kind));
-    if (t > 0.05) say(ctx, '2 protons + 2 neutrons', F.x(ox), F.y(oy + 4.2), F.size(1.6, 6), { align: 'center', color: C.alpha });
+    const t = ease(clamp((k - 0.12) / 0.78, 0, 1));
+    const maxOx = f.size.w - 16;
+    const ox = Math.min(maxOx, cx + R * 0.95 + t * (maxOx - (cx + R * 0.95)));
+    const oy = cy;
+    const nr = Math.max(r * 1.4, 2.0);
+    [[-0.65, -0.65, 'p'], [0.65, 0.65, 'p'], [0.65, -0.65, 'n'], [-0.65, 0.65, 'n']].forEach(([dx, dy, kind]) => nucleon(ctx, F, ox + dx * nr, oy + dy * nr, nr, kind));
+    if (t > 0.05) {
+      const lx = clamp(ox, 16, f.size.w - 16);
+      say(ctx, '2 protons + 2 neutrons', F.x(lx), F.y(oy + nr * 2.4 + 2.4), F.size(1.8, 7), { align: 'center', color: C.alpha, weight: 700, maxW: F.len(30) });
+    }
   }
   if (watched && (p.mode === 'beta' || p.mode === 'positron' || p.mode === 'capture')) {
     const from = p.mode === 'beta' ? 'n' : 'p';
     const [i] = edgeIndices(isP, from, 1);
     const mixAt = p.mode === 'capture' ? 0.55 : 0.25;
-    turn.set(i, { to: from === 'n' ? 'p' : 'n', k: clamp((k - mixAt) / 0.2, 0, 1) });
+    const mix = clamp((k - mixAt) / 0.2, 0, 1);
+    const to = from === 'n' ? 'p' : 'n';
+    turn.set(i, { to, k: mix });
     const q = nucleonPlace(i, n); const sx = cx + q.x * R; const sy = cy + q.y * R;
+    highlightTurn = { sx, sy, kind: mix >= 0.5 ? to : from, flipped: mix >= 0.5 };
     if (p.mode === 'capture') {
       // The innermost shell, and one of its electrons falling in.
-      ctx.strokeStyle = C.dim; ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), F.len(R * 1.7), 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = C.dust; ctx.lineWidth = 1.4; ctx.setLineDash?.([4, 3]);
+      ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), F.len(R * 1.65), 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash?.([]); ctx.lineWidth = 1;
       const t = ease(clamp(k / 0.55, 0, 1));
-      const a = -Math.PI / 2 + t * Math.PI * 1.2;
-      const rr = lerp(R * 1.7, 0.2, t);
-      if (t < 1) lepton(ctx, F, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, 0.7);
-      if (!watched || k < 0.2) say(ctx, 'Innermost electron', F.x(cx), F.y(cy - R * 1.7 - 1.6), F.size(1.5, 5.6), { align: 'center', color: C.dust });
+      const a = -Math.PI / 2 + t * Math.PI * 0.9;
+      const ex = lerp(cx + Math.cos(a) * R * 1.65, sx, t);
+      const ey = lerp(cy + Math.sin(a) * R * 1.65, sy, t);
+      if (t < 1) {
+        lepton(ctx, F, ex, ey, 1.35);
+        say(ctx, 'e⁻', F.x(ex + 2.2), F.y(ey - 1.5), F.size(1.7, 6.5), { color: C.e, weight: 700 });
+      }
+      if (k < 0.3) say(ctx, 'Inner electron', F.x(cx), F.y(cy - R * 1.65 - 1.8), F.size(1.6, 6.2), { align: 'center', color: C.dust });
     } else {
-      const t = ease(clamp((k - 0.35) / 0.6, 0, 1));
-      if (k > 0.3) {
-        const ex = lerp(sx, f.size.w - 6, t); const ey = lerp(sy, cy - 2, t);
-        lepton(ctx, F, ex, ey, 0.75, p.mode === 'positron');
-        say(ctx, p.mode === 'positron' ? 'positron, ⁰₊₁e' : 'electron, ⁰₋₁e', F.x(ex), F.y(ey + 3), F.size(1.6, 6), { align: 'center', color: p.mode === 'positron' ? C.positron : C.e });
+      const t = ease(clamp((k - 0.32) / 0.62, 0, 1));
+      if (k > 0.28) {
+        const ex = lerp(sx, f.size.w - 13, t); const ey = lerp(sy, cy - 2, t);
+        lepton(ctx, F, ex, ey, 1.35, p.mode === 'positron');
+        const lx = clamp(ex, 13, f.size.w - 13);
+        say(ctx, p.mode === 'positron' ? 'positron, ⁰₊₁e' : 'electron, ⁰₋₁e', F.x(lx), F.y(ey + 3.6), F.size(1.8, 7), { align: 'center', color: p.mode === 'positron' ? C.positron : C.e, weight: 700, maxW: F.len(24) });
       }
     }
-    if (k > mixAt) say(ctx, from === 'n' ? 'a neutron became a proton' : 'a proton became a neutron', F.x(cx), F.y(cy + R + 3), F.size(1.6, 6), { align: 'center', color: C.amber });
   }
   const jitter = watched && p.mode === 'gamma' && k < 0.45 ? Math.max(0.15, r * 0.25) * (1 - k / 0.45) : 0;
   drawNucleus(ctx, F, cx, cy, R, isP, { skip, turn, jitter, clock });
+  // Enlarged, ringed nucleon on top of the nucleus so the colour change is unmistakable even in 234-nucleon nuclei.
+  if (highlightTurn) {
+    const hr = Math.max(r * 2.2, 2.3);
+    nucleon(ctx, F, highlightTurn.sx, highlightTurn.sy, hr, highlightTurn.kind);
+    ctx.strokeStyle = C.amber; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(F.x(highlightTurn.sx), F.y(highlightTurn.sy), F.len(hr + 0.9), 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 1;
+  }
   if (watched && p.mode === 'gamma' && k > 0.3) {
     const t = clamp((k - 0.3) / 0.7, 0, 1);
     gammaWave(ctx, F, cx + R + 1, cy, 0, (f.size.w - cx - R - 5) * t, clock * 8);
-    say(ctx, 'gamma ray', F.x(cx + R + 4 + (f.size.w - cx - R - 10) * t * 0.6), F.y(cy + 3), F.size(1.6, 6), { align: 'center', color: C.gamma });
+    say(ctx, 'gamma ray', F.x(clamp(cx + R + 4 + (f.size.w - cx - R - 10) * t * 0.6, 12, f.size.w - 12)), F.y(cy + 3.6), F.size(1.8, 7), { align: 'center', color: C.gamma, weight: 700 });
   }
-  // Counts: the parent's, then (unless hidden) what is left.
+  // Counts: the parent's, then (unless hidden) what is left. Leave enough right margin for "Watch the Nucleus".
+  const rightPad = p.mode ? Math.max(36, (f.runLabel?.length || 17) * 2.0 + 4) : 0;
   const after = D && watched && k >= 1 ? decayOf(p.Z, p.Z + p.N, p.mode) : null;
-  if (!after) foot(ctx, f, F, counts(p.Z, p.N), C.text, p.mode ? 23 : 0);
-  else if (p.hideAfter) foot(ctx, f, F, '? protons · ? neutrons left', C.dust, 23);
-  else foot(ctx, f, F, `${counts(after.Z, after.A - after.Z)} left`, C.amber, 23);
-  if (p.meta && (!watched || k < 0.3)) say(ctx, 'The m: this nucleus holds extra energy', F.x(cx), F.y(8.6), F.size(1.6, 6), { align: 'center', color: C.dust });
+  if (!after) foot(ctx, f, F, counts(p.Z, p.N), C.text, rightPad);
+  else if (p.hideAfter) foot(ctx, f, F, '? protons · ? neutrons left', C.dust, rightPad);
+  else foot(ctx, f, F, `${counts(after.Z, after.A - after.Z)} left`, C.amber, rightPad);
+  if (p.meta && (!watched || k < 0.3)) say(ctx, 'Extra energy (m)', F.x(cx), F.y(8.4), F.size(1.7, 6.5), { align: 'center', color: C.amber, weight: 600 });
 }
 
-/** The nucleus of the picked square, with every push between two protons and every hold between two touching nucleons. */
+/** The nucleus of the picked square, with clear bars comparing proton repulsion against strong-force hold. */
 function paintPushes(ctx, f, F, state, b) {
   const pick = chartPick(state, f.props.follow);
-  if (!pick || pick.N == null) { say(ctx, 'Tap an element on the chart', F.x(f.size.w / 2), F.y(f.size.h / 2), F.size(1.8, 6.2), { align: 'center', color: C.dim }); return; }
+  if (!pick || pick.N == null) { say(ctx, 'Tap an element on the chart', F.x(f.size.w / 2), F.y(f.size.h / 2), F.size(1.9, 7), { align: 'center', color: C.dim }); return; }
   const { Z, N } = pick; const n = Z + N;
-  const cx = f.size.w * 0.5; const cy = 9 + (f.size.h - 17) / 2;
-  const R = Math.min((f.size.h - 19) / 2, f.size.w * 0.3) * Math.min(1, Math.sqrt(n / 80) * 0.6 + 0.4);
+  const cx = f.size.w * 0.28; const cy = 14.5;
+  const R = Math.min(7.5, f.size.w * 0.19) * Math.min(1, Math.sqrt(n / 80) * 0.55 + 0.45);
   const isP = protonSlots(Z, N, `${f.id}:${Z}:${N}`);
-  const r = Math.max(0.35, (R / Math.sqrt(n)) * 0.95);
-  const pts = Array.from({ length: n }, (_, k) => { const q = nucleonPlace(k, n); return { x: cx + q.x * R, y: cy + q.y * R, p: isP[k] }; });
-  // Holds: touching neighbours (centres closer than 2.3 disc radii).
-  let holds = 0;
-  ctx.strokeStyle = '#8f8a6a'; ctx.lineWidth = 1;
-  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-    if (Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) < r * 2.3) { holds++; ctx.beginPath(); ctx.moveTo(F.x(pts[i].x), F.y(pts[i].y)); ctx.lineTo(F.x(pts[j].x), F.y(pts[j].y)); ctx.stroke(); }
-  }
-  // Pushes: every pair of protons, drawn faint.
-  const prot = pts.filter(q => q.p);
-  const pushes = (Z * (Z - 1)) / 2;
-  ctx.strokeStyle = 'rgba(192,101,43,0.16)';
-  for (let i = 0; i < prot.length; i++) for (let j = i + 1; j < prot.length; j++) { ctx.beginPath(); ctx.moveTo(F.x(prot[i].x), F.y(prot[i].y)); ctx.lineTo(F.x(prot[j].x), F.y(prot[j].y)); ctx.stroke(); }
   drawNucleus(ctx, F, cx, cy, R, isP);
-  say(ctx, `${nameOf(Z)}-${n}`, F.x(2.2), F.y(8.4), F.size(1.9, 6.4), { color: C.text, weight: 600 });
-  foot(ctx, f, F, `${pushes} proton pairs repelling · ${holds} touching pairs held`, C.text);
+  say(ctx, `${nameOf(Z)}-${n}`, F.x(f.size.w * 0.54), F.y(10.5), F.size(2.0, 7.5), { color: C.text, weight: 700 });
+  say(ctx, `${Z}p · ${N}n`, F.x(f.size.w * 0.54), F.y(14.5), F.size(1.8, 6.8), { color: C.amber, weight: 600 });
+  // Normalized bars: repulsion scales as Z(Z-1), hold scales with nucleons N+Z.
+  const repFrac = clamp((Z * (Z - 1)) / (82 * 81), 0.04, 1);
+  const holdFrac = clamp(n / 208, 0.08, 1);
+  const bx = 3; const bw = f.size.w - 6;
+  say(ctx, 'Proton repulsion', F.x(bx), F.y(22.2), F.size(1.6, 6.2), { color: C.protonRim });
+  box(ctx, F, bx, 23.4, bw, 2.0, '#221e1a', C.steel);
+  box(ctx, F, bx, 23.4, bw * repFrac, 2.0, C.proton);
+  say(ctx, 'Strong-force hold', F.x(bx), F.y(27.0), F.size(1.6, 6.2), { color: C.amber });
+  box(ctx, F, bx, 28.2, bw, 2.0, '#221e1a', C.steel);
+  box(ctx, F, bx, 28.2, bw * holdFrac, 2.0, C.alpha);
 }
 
 function paintNuc(ctx, f, state, b) {

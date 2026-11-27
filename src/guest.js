@@ -93,6 +93,8 @@ export async function guestCall(route, body = {}, publicCall) {
         addItem(clean.trinket);
       }
       const team = (session.teams || []).find(t => t.team_id === teamId) || { team_id: teamId };
+      session.team = team;
+      session.saveSession();
       return { ...guestProfile(), team };
     }
 
@@ -101,6 +103,7 @@ export async function guestCall(route, body = {}, publicCall) {
         player.avatar_json = typeof clean.avatar_json === 'object' ? JSON.stringify(clean.avatar_json) : clean.avatar_json;
       }
       if (typeof clean.board_optout === 'boolean') player.board_optout = clean.board_optout;
+      session.saveSession();
       return guestProfile();
 
     case 'player/rename':
@@ -108,6 +111,7 @@ export async function guestCall(route, body = {}, publicCall) {
         player.display_name = String(clean.displayName);
         player.display_name_lc = player.display_name.toLowerCase();
       }
+      session.saveSession();
       return guestProfile();
 
     case 'loadout/set':

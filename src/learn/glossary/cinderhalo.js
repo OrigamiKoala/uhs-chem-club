@@ -8,38 +8,38 @@ export const QUESTS = ['q1-still-warm', 'q2-what-comes-off', 'q3-equations', 'q4
 
 export const TERMS = [
   { id: 'radiation', term: 'radiation', gloss: 'energy or a particle thrown out of an atom', quest: 'q1-still-warm', stage: 1, re: /\bradiation\b/i },
-  { id: 'radioactive', term: 'radioactive', gloss: 'giving off radiation on its own, because its nuclei change', quest: 'q1-still-warm', stage: 1, re: /\bradioactive\b/i },
-  { id: 'background-radiation', term: 'background radiation', gloss: 'the steady radiation from rock, air and space that every count includes', quest: 'q1-still-warm', stage: 2, re: /\bbackground radiation\b/i },
+  { id: 'radioactive', term: 'radioactive', gloss: 'giving off radiation on its own as unstable nuclei decay', quest: 'q1-still-warm', stage: 1, re: /\bradioactive\b/i },
+  { id: 'background-radiation', term: 'background radiation', gloss: 'steady radiation from rock, air, and space included in every count', quest: 'q1-still-warm', stage: 2, re: /\bbackground radiation\b/i },
   { id: 'radioactive-decay', term: 'radioactive decay', gloss: 'a nucleus changing on its own and giving off radiation', quest: 'q1-still-warm', stage: 3, re: /\bradioactive decay\b/i },
-  { id: 'count-rate', term: 'count rate', gloss: 'the number of counts a counter makes each minute', quest: 'q1-still-warm', stage: 6, re: /\bcount rate\b/i },
+  { id: 'count-rate', term: 'count rate', gloss: 'the number of radiation counts recorded per minute', quest: 'q1-still-warm', stage: 6, re: /\bcount rate\b/i },
   // q2-what-comes-off
-  { id: 'gamma', term: 'gamma ray', gloss: 'radiation with no charge and no mass: energy, like light', quest: 'q2-what-comes-off', stage: 1, re: /\bgamma rays?\b/i },
-  { id: 'beta', term: 'beta particle', gloss: 'an electron thrown out of a nucleus', quest: 'q2-what-comes-off', stage: 2, re: /\bbeta particles?\b/i },
-  { id: 'alpha', term: 'alpha particle', gloss: 'two protons and two neutrons thrown out together: a helium-4 nucleus', quest: 'q2-what-comes-off', stage: 3, re: /\balpha particles?\b/i },
-  { id: 'ionizing', term: 'ionizing radiation', gloss: 'radiation that tears electrons off the atoms it passes, leaving ions', quest: 'q2-what-comes-off', stage: 5, re: /\bionizing\b/i },
+  { id: 'gamma', term: 'gamma ray', gloss: 'high-energy light with no charge and no mass', quest: 'q2-what-comes-off', stage: 1, re: /\bgamma rays?\b/i },
+  { id: 'beta', term: 'beta particle', gloss: 'a negatively charged electron ejected from a nucleus', quest: 'q2-what-comes-off', stage: 1, re: /\bbeta particles?\b/i },
+  { id: 'alpha', term: 'alpha particle', gloss: 'two protons and two neutrons ejected together (a helium-4 nucleus)', quest: 'q2-what-comes-off', stage: 2, re: /\balpha particles?\b/i },
+  { id: 'ionizing', term: 'ionizing radiation', gloss: 'radiation that knocks electrons off atoms, leaving ions behind', quest: 'q2-what-comes-off', stage: 4, re: /\bionizing\b/i },
   // q3-equations
-  { id: 'nuclear-equation', term: 'nuclear equation', gloss: 'an equation of nuclei in which the mass numbers and the atomic numbers each add up the same on both sides', quest: 'q3-equations', stage: 1, re: /\bnuclear equations?\b/i },
-  { id: 'positron', term: 'positron', gloss: 'a particle like an electron with a positive charge', quest: 'q3-equations', stage: 4, re: /\bpositrons?\b/i },
-  { id: 'positron-emission', term: 'positron emission', gloss: 'a decay in which a proton becomes a neutron and a positron leaves', quest: 'q3-equations', stage: 4, re: /\bpositron emission\b/i },
-  { id: 'electron-capture', term: 'electron capture', gloss: 'a decay in which the nucleus pulls in an inner electron and a proton becomes a neutron', quest: 'q3-equations', stage: 5, re: /\belectron capture\b/i },
-  { id: 'decay-series', term: 'decay series', gloss: 'a chain of decays, one after another, that ends on a stable nucleus', quest: 'q3-equations', stage: 7, re: /\bdecay series\b/i },
+  { id: 'nuclear-equation', term: 'nuclear equation', gloss: 'an equation where mass numbers and atomic numbers both balance on each side', quest: 'q3-equations', stage: 1, re: /\bnuclear equations?\b/i },
+  { id: 'positron', term: 'positron', gloss: 'a particle like an electron, but with a positive charge', quest: 'q3-equations', stage: 4, re: /\bpositrons?\b/i },
+  { id: 'positron-emission', term: 'positron emission', gloss: 'decay in which a proton turns into a neutron and ejects a positron', quest: 'q3-equations', stage: 4, re: /\bpositron emission\b/i },
+  { id: 'electron-capture', term: 'electron capture', gloss: 'decay in which a nucleus pulls in an inner electron and turns a proton into a neutron', quest: 'q3-equations', stage: 5, re: /\belectron capture\b/i },
+  { id: 'decay-series', term: 'decay series', gloss: 'a chain of nuclear decays ending in a stable nucleus', quest: 'q3-equations', stage: 7, re: /\bdecay series\b/i },
   // q4-stability
-  { id: 'band', term: 'band of stability', gloss: 'the band the stable nuclei make on the chart of protons and neutrons', quest: 'q4-stability', stage: 1, re: /\bband of stability\b/i },
-  { id: 'strong-force', term: 'strong nuclear force', gloss: 'the attraction that holds touching protons and neutrons together, reaching only to their neighbours', quest: 'q4-stability', stage: 3, re: /\bstrong nuclear force\b/i },
-  { id: 'np-ratio', term: 'neutron-to-proton ratio', gloss: 'a nucleus\'s neutrons divided by its protons', quest: 'q4-stability', stage: 7, re: /\bneutron-to-proton ratio\b/i },
+  { id: 'band', term: 'band of stability', gloss: 'the region of stable nuclei on a chart of protons versus neutrons', quest: 'q4-stability', stage: 1, re: /\bband of stability\b/i },
+  { id: 'strong-force', term: 'strong nuclear force', gloss: 'the short-range force that holds touching protons and neutrons together', quest: 'q4-stability', stage: 3, re: /\bstrong nuclear force\b/i },
+  { id: 'np-ratio', term: 'neutron-to-proton ratio', gloss: 'a nucleus\'s number of neutrons divided by its number of protons', quest: 'q4-stability', stage: 7, re: /\bneutron-to-proton ratio\b/i },
   // q5-half-gone
-  { id: 'half-life', term: 'half-life', gloss: 'the time for half of the nuclei of a radioactive sample to decay', quest: 'q5-half-gone', stage: 1, re: /\bhalf-li(fe|ves)\b/i },
-  { id: 'rate-constant', term: 'rate constant', gloss: 'k, the fraction of the nuclei that decay in each unit of time, for small times', quest: 'q5-half-gone', stage: 6, re: /\brate constant\b/i },
-  { id: 'radiocarbon', term: 'radiocarbon dating', gloss: 'finding how long ago something died from the carbon-14 it has left', quest: 'q5-half-gone', stage: 7, re: /\bradiocarbon dating\b/i },
+  { id: 'half-life', term: 'half-life', gloss: 'the time it takes for half of a radioactive sample\'s nuclei to decay', quest: 'q5-half-gone', stage: 1, re: /\bhalf-li(fe|ves)\b/i },
+  { id: 'rate-constant', term: 'rate constant', gloss: 'k, a value measuring how fast an isotope decays (larger k means a shorter half-life)', quest: 'q5-half-gone', stage: 5, re: /\brate constant\b/i },
+  { id: 'radiocarbon', term: 'radiocarbon dating', gloss: 'finding the age of once-living material from its remaining carbon-14', quest: 'q5-half-gone', stage: 6, re: /\bradiocarbon dating\b/i },
   // q6-shortfall
-  { id: 'mass-defect', term: 'mass defect', gloss: 'how much less a nucleus weighs than its protons and neutrons apart', quest: 'q6-shortfall', stage: 2, re: /\bmass defect\b/i },
-  { id: 'mev', term: 'MeV', gloss: 'a million electron volts, a unit of energy sized for one nucleus (1.6 × 10⁻¹³ J)', quest: 'q6-shortfall', stage: 3, re: /\bMeV\b/ },
-  { id: 'binding-energy', term: 'binding energy', gloss: 'the energy needed to pull a nucleus apart into its protons and neutrons', quest: 'q6-shortfall', stage: 3, re: /\bbinding energy\b/i },
-  { id: 'be-per-nucleon', term: 'binding energy per nucleon', gloss: 'a nucleus\'s binding energy shared out over its protons and neutrons', quest: 'q6-shortfall', stage: 4, re: /\bbinding energy per nucleon\b/i },
-  { id: 'fission', term: 'fission', gloss: 'a heavy nucleus splitting into two lighter ones', quest: 'q6-shortfall', stage: 5, re: /\bfission\b/i },
-  { id: 'chain-reaction', term: 'chain reaction', gloss: 'fissions whose neutrons cause more fissions, on their own', quest: 'q6-shortfall', stage: 6, re: /\bchain reactions?\b/i },
-  { id: 'critical', term: 'critical', gloss: 'a chain reaction in which each fission causes exactly one more', quest: 'q6-shortfall', stage: 6, re: /\bcritical\b/i },
-  { id: 'fusion', term: 'fusion', gloss: 'light nuclei joining into a heavier one', quest: 'q6-shortfall', stage: 7, re: /\bfusion\b/i }
+  { id: 'mass-defect', term: 'mass defect', gloss: 'how much less mass a nucleus has than its separate protons and neutrons', quest: 'q6-shortfall', stage: 2, re: /\bmass defect\b/i },
+  { id: 'mev', term: 'MeV', gloss: 'one million electron volts, an energy unit sized for single nuclei (1.6 × 10⁻¹³ J)', quest: 'q6-shortfall', stage: 3, re: /\bMeV\b/i },
+  { id: 'binding-energy', term: 'binding energy', gloss: 'the energy needed to pull a nucleus apart into separate protons and neutrons', quest: 'q6-shortfall', stage: 3, re: /\bbinding energy\b/i },
+  { id: 'be-per-nucleon', term: 'binding energy per nucleon', gloss: 'a nucleus\'s total binding energy divided by its protons and neutrons', quest: 'q6-shortfall', stage: 4, re: /\bbinding energy per nucleon\b/i },
+  { id: 'fission', term: 'fission', gloss: 'a heavy nucleus splitting into two lighter nuclei', quest: 'q6-shortfall', stage: 5, re: /\bfission\b/i },
+  { id: 'chain-reaction', term: 'chain reaction', gloss: 'fissions whose released neutrons trigger further fissions on their own', quest: 'q6-shortfall', stage: 6, re: /\bchain reactions?\b/i },
+  { id: 'critical', term: 'critical', gloss: 'a chain reaction where each fission triggers exactly one more', quest: 'q6-shortfall', stage: 6, re: /\bcritical\b/i },
+  { id: 'fusion', term: 'fusion', gloss: 'light nuclei combining into a heavier nucleus', quest: 'q6-shortfall', stage: 7, re: /\bfusion\b/i }
 ];
 
 export const BANNED = [
@@ -63,8 +63,8 @@ export const STORY_ALLOW = ['drum', 'drums', 'ore', 'crater', 'Core', 'slag', 's
 export const NEEDS = {
   'q1-still-warm:1': ['nucleons'],
   'q1-still-warm:3': ['nucleons'],
-  'q2-what-comes-off:5': ['ions'],
+  'q2-what-comes-off:4': ['ions'],
   'q3-equations:1': ['nucleons'],
   'q5-half-gone:1': ['firstorder'],
-  'q5-half-gone:6': ['firstorder', 'log']
+  'q5-half-gone:5': ['firstorder', 'log']
 };

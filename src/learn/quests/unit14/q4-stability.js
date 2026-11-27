@@ -23,7 +23,7 @@ import { remember, recall } from '../../engine/predict.js';
 import { nukeTable, nchartFixture, nnucFixture, nchoiceFixture, chosenIndex, chartMove, pickValue, chartPick, note } from '../../table/kits/nuke.js';
 import { nameOf, stable, stepOf, DECAY } from '../../engine/nucdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bband of stability\b/i, introducedAt: 1 },
@@ -36,7 +36,7 @@ export const BUILDS_ON = ['unit14/q3-equations'];
 
 const SPEAKER = 'Vess';
 const QUEST_KEY = 'unit14/q4-stability';
-const GUESS = { 'g-same': 'as many', 'g-more': 'more', 'g-fewer': 'fewer' };
+const GUESS = { 'g-same': 'the same number', 'g-more': 'more', 'g-fewer': 'fewer' };
 const widget = { type: 'table', label: 'The bench' };
 
 export function toolNoteFor() { return null; }
@@ -48,14 +48,14 @@ function moveStage({ id, title, prompt, briefing = null, Z, N, label, z, n, answ
   return {
     id, title, prompt, widget,
     ...(briefing ? { briefing: { speaker: SPEAKER, body: briefing } } : {}),
-    table: nukeTable({ pieces: [], fixtures: [nchartFixture('chart', { x: 74, y: 31 }, { z, n, band: true, line: true, mode: 'move', marks: [{ Z, N, label }], preview: false, w: 140, h: 60 })] }),
+    table: nukeTable({ pieces: [], fixtures: [nchartFixture('chart', { x: 74, y: 31 }, { z, n, band: true, line: true, mode: 'move', marks: [{ Z, N, label }], preview: true, w: 142, h: 60 })] }),
     hints,
     check(state) {
       const mv = chartMove(state.table, 'chart');
       if (!mv) return { ok: false, notYet: true, msg: 'Tap one of the moves on the chart.' };
       if (mv === answer) return { ok: true };
       const s = stepOf(mv); const to = { Z: Z + s.dZ, N: N + s.dN };
-      return { ok: false, msg: `${DECAY[mv].name[0].toUpperCase()}${DECAY[mv].name.slice(1)} lands on ${nameOf(to.Z)}-${to.Z + to.N}, which is not a filled square.` };
+      return { ok: false, msg: `${DECAY[mv].name[0].toUpperCase()}${DECAY[mv].name.slice(1)} lands on ${nameOf(to.Z)}-${to.Z + to.N}, which is not stable (not a filled square).` };
     },
     reward
   };
@@ -66,8 +66,8 @@ export const STAGES = [
   {
     id: 's1-band',
     title: 'The Stable Squares',
-    briefing: { speaker: SPEAKER, body: 'On this chart a filled square is a stable nucleus, one that never decays, and the dashed line marks where protons equal neutrons. Tap a column to read an element\'s stable nuclei.' },
-    prompt: 'For elements up to calcium, how do the neutrons of a stable nucleus compare with its protons?',
+    briefing: { speaker: SPEAKER, body: 'Filled amber squares are stable nuclei that never decay, and the dashed line marks equal protons and neutrons. Tap any column to inspect an element\'s stable isotopes.' },
+    prompt: 'For elements up to calcium, how does a stable nucleus\'s neutron count compare with its proton count?',
     widget,
     table: nukeTable({
       pieces: [],
@@ -77,18 +77,18 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Tap columns on the chart to read which nuclei of each element are stable.',
-      'Compare where the filled squares sit with the dashed line of equal numbers.',
-      'A square on the line holds as many neutrons as protons; a square above it holds more.'
+      'Tap columns on the chart to see which isotopes of each element are stable.',
+      'Compare where the filled squares sit relative to the dashed equal-number line.',
+      'Squares on the dashed line have equal neutrons and protons, while squares above it have more neutrons.'
     ],
     check(state) {
       const pick = chosenIndex(state.table, 'ans');
-      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three statements.' };
+      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
       if (pick === 1) return { ok: true };
-      if (pick === 2) return { ok: false, msg: 'Calcium has a stable nucleus with 20 protons and 20 neutrons.' };
-      return { ok: false, msg: 'Every filled square up to calcium sits on the dashed line or just above it.' };
+      if (pick === 2) return { ok: false, msg: 'Stable calcium has 20 protons and 20 neutrons, not twice as many.' };
+      return { ok: false, msg: 'Every filled square up to calcium sits on or just above the dashed line.' };
     },
-    reward: { log: 'Up to calcium, stable nuclei hold about as many neutrons as protons.', title: 'Band of Stability', body: 'About equal: the filled squares lie on the line or just above it. The stable nuclei make a band on the chart, the band of stability.' }
+    reward: { log: 'Up to calcium, stable nuclei hold about as many neutrons as protons.', title: 'Band of Stability', body: 'About equal: the filled squares sit on or just above the line. Together, all stable nuclei form the band of stability.' }
   },
 
   /* ---------------------------------------------------------------- 2 */
@@ -96,31 +96,31 @@ export const STAGES = [
     id: 's2-predict',
     title: 'The Heavy End',
     predict: true,
-    prompt: 'Lead-208 is stable and holds 82 protons: how many neutrons do you expect it holds, compared with its protons?',
+    prompt: 'With 82 protons, do you expect stable lead to have more, fewer, or the same number of neutrons?',
     widget,
     table: nukeTable({
       pieces: [
-        note('g-same', 'As many as its protons', { x: 34, y: 14 }),
-        note('g-more', 'More than its protons', { x: 34, y: 33 }),
-        note('g-fewer', 'Fewer than its protons', { x: 34, y: 52 })
+        note('g-same', 'Same as protons', { x: 34, y: 14 }),
+        note('g-more', 'More than protons', { x: 34, y: 33 }),
+        note('g-fewer', 'Fewer than protons', { x: 34, y: 52 })
       ],
       fixtures: [],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 30 }, size: { w: 46, h: 16 } }] }
     }),
     hints: [
-      'Lead-208\'s mass number, 208, is its protons and neutrons together.',
-      'Protons all carry a positive charge, and like charges repel.',
-      'Think about what a nucleus with many protons would need more of to hold together.'
+      'There is no wrong prediction, so drag the card you expect into the slot.',
+      'Protons all have a positive charge, and like charges repel each other.',
+      'Think about what a nucleus packed with 82 protons needs to hold together.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Drag a prediction card into the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Look at the whole band.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Check the full band of stability on the next bench to test your prediction.' }
   },
 
   /* ---------------------------------------------------------------- 3 */
@@ -129,34 +129,34 @@ export const STAGES = [
     return {
       id: 's3-heavy',
       title: 'Repulsion and the Strong Force',
-      briefing: { speaker: SPEAKER, body: 'Every proton repels every other proton in the nucleus. The strong nuclear force holds protons and neutrons together, but only those that touch.' },
-      get prompt() { const g = guess(); return `Do stable heavy nuclei hold more neutrons than protons, as many, or fewer?${g ? ` You predicted ${g}.` : ''}`; },
+      briefing: { speaker: SPEAKER, body: 'Every proton repels every other proton in the nucleus. The strong nuclear force pulls touching protons and neutrons together.' },
+      get prompt() { const g = guess(); return `Do stable heavy nuclei have more neutrons than protons, the same number, or fewer?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: nukeTable({
         pieces: [],
         fixtures: [
           nchartFixture('chart', { x: 52, y: 31 }, { z: [1, 83], n: [0, 127], band: true, line: true, mode: 'columns', w: 100, h: 60 }),
-          nnucFixture('nuc', { x: 126, y: 16 }, { follow: 'chart', w: 44, h: 30, title: 'Repulsion and hold' }),
-          nchoiceFixture('ans', 'Stable heavy nuclei hold', { x: 124, y: 48 }, { options: ['More neutrons', 'As many', 'Fewer neutrons'], w: 40 })
+          nnucFixture('nuc', { x: 126, y: 16 }, { follow: 'chart', w: 46, h: 31, title: 'Repulsion and hold' }),
+          nchoiceFixture('ans', 'Stable heavy nuclei hold', { x: 124, y: 48 }, { options: ['More neutrons', 'The same number', 'Fewer neutrons'], w: 42 })
         ]
       }),
       hints: [
-        'Tap a light column and a heavy column on the chart, and read the counts under the nucleus view.',
-        'Compare how the proton pairs that repel grow with how the touching pairs held grow, from a small nucleus to a big one.',
-        'A neutron adds to the strong force\'s hold without adding any repulsion, so ask what a big nucleus needs more of.'
+        'Tap a light column and a heavy column on the chart, and watch the repulsion and hold bars.',
+        'Notice where the amber band bends relative to the dashed line for heavy elements.',
+        'Neutrons add strong-force attraction without adding electrical repulsion, so ask what heavy nuclei need more of.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three statements.' };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
         if (pick === 1) return { ok: true };
-        return { ok: false, msg: 'Lead\'s stable nuclei hold 122 to 126 neutrons with their 82 protons.' };
+        return { ok: false, msg: 'Stable lead nuclei hold 122 to 126 neutrons alongside their 82 protons.' };
       },
       get reward() {
         const g = guess();
         return {
           log: 'Heavy stable nuclei hold more neutrons than protons.',
           title: 'Strong Nuclear Force',
-          body: `More${g ? ` (you predicted ${g})` : ''}: the band bends above the line. Extra neutrons add the strong nuclear force's hold without adding any repulsion.`
+          body: `More neutrons.${g ? ` You predicted ${g}.` : ''} The band bends upward because extra neutrons add strong nuclear force attraction without adding proton repulsion.`
         };
       }
     };
@@ -166,43 +166,44 @@ export const STAGES = [
   moveStage({
     id: 's4-above',
     title: 'Too Many Neutrons',
-    briefing: 'The keys beside the chart are the three moves a decay can make, each drawn as an arrow. A nucleus off the band decays, and the decay moves it one of those ways.',
-    prompt: 'Carbon-14 sits above the band: which decay brings it toward the band?',
+    briefing: 'The buttons beside the chart preview three decay moves. Unstable nuclei decay toward the filled amber squares.',
+    prompt: 'Which decay moves carbon-14 from above the band of stability onto the band?',
     Z: 6, N: 8, label: 'Carbon-14', z: [1, 10], n: [0, 12], answer: 'beta',
     hints: [
-      'Find carbon-14 on the chart, the filled squares near it, and the three arrows in the legend.',
-      'Compare carbon-14\'s neutrons with those of the stable carbons in its column.',
-      'Follow each arrow from carbon-14 in your head and ask which one heads toward the filled squares.'
+      'Tap each decay button beside the chart to preview where its arrow lands.',
+      'Compare carbon-14\'s neutron count with the stable carbon isotopes in its column.',
+      'Pick the decay whose arrow lands on a filled amber square.'
     ],
-    reward: { log: 'Carbon-14 decays by beta decay onto nitrogen-14.', title: 'Above the Band', body: 'Beta decay: a neutron becomes a proton, moving carbon-14 onto nitrogen-14, a filled square.' }
+    reward: { log: 'Carbon-14 decays by beta decay onto nitrogen-14.', title: 'Above the Band', body: 'Beta decay: a neutron turns into a proton, moving carbon-14 onto stable nitrogen-14.' }
   }),
 
   /* ---------------------------------------------------------------- 5 */
   moveStage({
     id: 's5-below',
     title: 'Too Few Neutrons',
-    prompt: 'Oxygen-15 sits below the band: which decay brings it toward the band?',
+    prompt: 'Which decay moves oxygen-15 from below the band of stability onto the band?',
     Z: 8, N: 7, label: 'Oxygen-15', z: [1, 10], n: [0, 12], answer: 'positron',
     hints: [
-      'Find oxygen-15 on the chart, the filled squares near it, and the three arrows in the legend.',
-      'Compare oxygen-15\'s neutrons with those of the stable oxygens in its column.',
-      'Follow each arrow from oxygen-15 in your head and ask which one heads toward the filled squares.'
+      'Tap each decay button beside the chart to preview where its arrow lands.',
+      'Compare oxygen-15\'s neutron count with the stable oxygen isotopes in its column.',
+      'Pick the decay whose arrow lands on a filled amber square.'
     ],
-    reward: { log: 'Oxygen-15 decays by positron emission onto nitrogen-15.', title: 'Below the Band', body: 'Positron emission: a proton becomes a neutron, moving oxygen-15 onto nitrogen-15. Electron capture would make the same move.' }
+    reward: { log: 'Oxygen-15 decays by positron emission onto nitrogen-15.', title: 'Below the Band', body: 'Positron emission: a proton turns into a neutron, moving oxygen-15 onto stable nitrogen-15.' }
   }),
 
   /* ---------------------------------------------------------------- 6 */
   moveStage({
     id: 's6-past',
     title: 'Past Lead',
-    prompt: 'Polonium-210 holds 84 protons, more than any stable nucleus: which decay does it undergo?',
+    briefing: 'No nucleus with more than 83 protons is stable. Nuclei past the dashed line must lose protons to reach the band.',
+    prompt: 'With 84 protons past the end of the band, which decay brings polonium-210 onto the band?',
     Z: 84, N: 126, label: 'Polonium-210', z: [76, 90], n: [118, 132], answer: 'alpha',
     hints: [
-      'Find polonium-210 on the chart and the last column that has filled squares.',
-      'Count how many protons polonium-210 has beyond that last column.',
-      'Compare how many protons each arrow takes away with how far polonium-210 is past the band\'s end.'
+      'Find polonium-210 past the 83-proton line and tap the decay buttons to preview.',
+      'Compare how many protons each decay removes.',
+      'Pick the decay whose arrow lands on a filled amber square.'
     ],
-    reward: { log: 'Polonium-210 decays by alpha decay onto lead-206.', title: 'Past the End', body: 'Alpha: it takes away two protons and two neutrons at once, landing on lead-206. No nucleus with more than 83 protons is stable.' }
+    reward: { log: 'Polonium-210 decays by alpha decay onto lead-206.', title: 'Past the End', body: 'Alpha decay: it removes 2 protons and 2 neutrons at once, landing on stable lead-206.' }
   }),
 
   /* ---------------------------------------------------------------- 7 */
@@ -211,50 +212,36 @@ export const STAGES = [
     title: 'The Ratio',
     briefing: {
       speaker: SPEAKER,
-      body: 'A nucleus\'s neutron-to-proton ratio is its neutrons divided by its protons.',
-      worked: ['Iron-56: 26 protons, 56 − 26 = 30 neutrons', '30 ÷ 26 = 1.15 neutrons for each proton']
+      body: 'A nucleus\'s neutron-to-proton ratio is its number of neutrons divided by its number of protons.',
+      worked: ['Iron-56: 26 protons, 56 − 26 = 30 neutrons', '30 ÷ 26 = 1.15 neutrons per proton']
     },
     prompt: 'What is the neutron-to-proton ratio of stable gold-197?',
     widget,
     entry: { id: 'ratio', label: 'Neutrons per proton', unit: '' },
     table: nukeTable({ pieces: [], fixtures: [nchartFixture('chart', { x: 74, y: 31 }, { z: [70, 83], n: [112, 124], band: true, line: false, mode: 'pick', marks: [{ Z: 79, N: 118, label: 'Gold-197' }], w: 140, h: 60 })] }),
     hints: [
-      'Tap the marked square to read its protons and neutrons.',
-      'Compare the neutrons with the protons as a division.',
-      'Divide the neutrons by the protons, not the protons by the neutrons.'
+      'Tap the marked gold-197 square to read its proton and neutron counts.',
+      'Set up a division comparing the neutrons to the protons.',
+      'Divide neutrons by protons, not protons by neutrons.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ratio');
-      if (v == null) return { ok: false, notYet: true, msg: 'Type the ratio in the field.' };
+      if (v == null) return { ok: false, notYet: true, msg: 'Type the ratio in the box.' };
       if (v >= 1.48 && v <= 1.5 + 1e-9) return { ok: true };
-      if (Math.abs(v - 2.49) < 0.02) return { ok: false, msg: 'That is 197 ÷ 79: the mass number counts the protons too.' };
-      if (Math.abs(v - 0.67) < 0.02) return { ok: false, msg: 'That is 79 ÷ 118: protons for each neutron.' };
-      if (Math.abs(v - 1) < 0.01) return { ok: false, msg: 'Gold-197 does not sit where protons equal neutrons.' };
+      if (Math.abs(v - 2.49) < 0.02) return { ok: false, msg: 'That is 197 ÷ 79, which uses the mass number (protons plus neutrons) instead of neutrons alone.' };
+      if (Math.abs(v - 0.67) < 0.02) return { ok: false, msg: 'That is 79 ÷ 118, protons per neutron instead of neutrons per proton.' };
+      if (Math.abs(v - 1) < 0.01) return { ok: false, msg: 'Gold-197 has more neutrons than protons, so its ratio is greater than 1.' };
       if (v > 50) return { ok: false, msg: `${v} is the number of neutrons, not the ratio.` };
       return { ok: false, msg: `A ratio of ${v} with 79 protons would mean ${Math.round(v * 79)} neutrons.` };
     },
-    reward: { log: 'Gold-197: 118 neutrons for 79 protons, 1.49.', title: 'Neutron-to-Proton Ratio', body: '1.49: 118 neutrons for 79 protons. Heavy stable nuclei hold about one and a half neutrons for each proton.' }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  moveStage({
-    id: 's8-vial',
-    title: 'The Fifth\'s Isotope',
-    prompt: 'A sealed vial holds a nucleus of 27 protons and 33 neutrons: which decay will it undergo?',
-    Z: 27, N: 33, label: 'The vial', z: [20, 32], n: [24, 38], answer: 'beta',
-    hints: [
-      'Find the vial\'s square on the chart and the filled squares in its column.',
-      'Compare the vial\'s neutrons with those of the stable nucleus of the same element.',
-      'Follow each arrow from the vial\'s square in your head and ask which one heads toward the filled squares.'
-    ],
-    reward: { log: 'Cobalt-60 decays by beta decay onto nickel-60.', title: 'One Neutron Too Many', body: 'Beta decay: one neutron more than cobalt-59, the stable one, so a neutron becomes a proton, and cobalt-60 becomes nickel-60.' }
-  })
+    reward: { log: 'Gold-197: 118 neutrons for 79 protons, 1.49.', title: 'Neutron-to-Proton Ratio', body: '1.49 (118 neutrons ÷ 79 protons). Heavy stable nuclei hold roughly one and a half neutrons for every proton.' }
+  }
 ];
 
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'Stable nuclei lie in a band that bends toward more neutrons as nuclei grow. A nucleus off the band decays toward it: beta from above, positron emission from below, alpha past lead.' }]
+  sections: [{ heading: 'What You Found', body: 'Stable nuclei form a band that curves toward more neutrons for heavier elements. Unstable nuclei decay toward the band: beta from above, positron emission from below, and alpha past 83 protons.' }]
 };
 
 /** Slips a student makes on stage 7 (typed), each refused with a reason. */
@@ -275,8 +262,7 @@ export const SOLUTIONS = [
   [move('positron'), move('beta')],
   [move('positron')],
   [move('alpha')],
-  [tap(6, 79, 118), typed('ratio', 1.49)],
-  [move('beta')]
+  [tap(6, 79, 118), typed('ratio', 1.49)]
 ];
 
 export const MISSES = [
@@ -286,8 +272,7 @@ export const MISSES = [
   [move('positron')],
   [move('beta')],
   [move('beta')],
-  [tap(6, 79, 118), typed('ratio', 2.49)],
-  [move('positron')]
+  [tap(6, 79, 118), typed('ratio', 2.49)]
 ];
 
 function blankState() { return {}; }

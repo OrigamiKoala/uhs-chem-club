@@ -27,7 +27,7 @@ function paintChoice(ctx, f, state, b) {
     ctx.strokeStyle = on ? C.amber : C.steel; ctx.lineWidth = on ? 2 : 1;
     ctx.strokeRect(Math.round(F.x(1.2)) + 0.5, Math.round(F.y(5.8 + i * 7.4)) + 0.5, Math.round(F.len(f.size.w - 2.4)), Math.round(F.len(6)));
     ctx.lineWidth = 1;
-    say(ctx, o, F.x(2.6), F.y(8.8 + i * 7.4), F.size(2.1, 7), { color: on ? C.amber : C.text, weight: on ? 700 : 500, maxW: F.len(f.size.w - 5) });
+    say(ctx, o, F.x(3.2), F.y(8.8 + i * 7.4), F.size(2.1, 7.5), { color: on ? C.amber : C.text, weight: on ? 700 : 500, maxW: F.len(f.size.w - 6) });
   });
 }
 registerFixture('nchoice', { paint: paintChoice });
@@ -52,20 +52,23 @@ registerFixture('nlead', { paint: paintLead, live: () => true });
 /** A neighbouring case for the cold-drum prediction: the same fizzing tablet in warm water and in ice-cold water (a chemical reaction). */
 addNukeLead('fizz', (ctx, f, F, t) => {
   const period = 6; const tt = t > 1e5 ? period * 0.7 : t % period;
-  const glasses = [{ x: 6, label: 'Warm water, 40 °C', rate: 9 }, { x: f.size.w / 2 + 2, label: 'Ice-cold water, 2 °C', rate: 1.6 }];
+  const glasses = [{ x: 5, label: 'Warm water, 40 °C', rate: 14 }, { x: f.size.w / 2 + 2, label: 'Ice-cold water, 2 °C', rate: 1.2 }];
   for (const g of glasses) {
-    const gw = f.size.w / 2 - 10; const gy = 6.5; const gh = f.size.h - 15;
-    box(ctx, F, g.x, gy + 2, gw, gh - 2, '#1c2226', '#cfd8de');
-    // The tablet, shrinking as it reacts.
-    const left = clamp(1 - (tt * g.rate) / 40, 0.15, 1);
-    box(ctx, F, g.x + gw / 2 - 3 * left, gy + gh - 2.2, 6 * left, 1.8, '#d6cebd');
-    // Bubbles of gas rising, as many each second as the reaction's speed.
+    const gw = f.size.w / 2 - 8; const gy = 6.2; const gh = f.size.h - 14.5;
+    box(ctx, F, g.x, gy + 1.5, gw, gh - 1.5, '#1c2429', '#cfd8de');
+    // The fizzing tablet, labelled and shrinking as it reacts.
+    const left = clamp(1 - (tt * g.rate) / 55, 0.2, 1);
+    box(ctx, F, g.x + gw / 2 - 3.6 * left, gy + gh - 2.6, 7.2 * left, 2.2, '#e2dac9');
+    say(ctx, 'Tablet', F.x(g.x + gw / 2), F.y(gy + gh - 1.5), F.size(1.3, 5.2), { align: 'center', color: '#221e1a', weight: 700 });
+    // Bubbles of gas rising, many in warm water, almost none in cold.
     const n = Math.floor(tt * g.rate);
-    for (let i = Math.max(0, n - 14); i < n; i++) {
-      const born = i / g.rate; const age = tt - born; if (age < 0 || age > 1.6) continue;
-      const bx = g.x + gw / 2 + Math.sin(i * 2.7) * gw * 0.3; const by = lerp(gy + gh - 2.6, gy + 3, age / 1.6);
-      ctx.strokeStyle = '#a9b8c0'; ctx.beginPath(); ctx.arc(F.x(bx), F.y(by), Math.max(1.2, F.len(0.5)), 0, Math.PI * 2); ctx.stroke();
+    for (let i = Math.max(0, n - 22); i < n; i++) {
+      const born = i / g.rate; const age = tt - born; if (age < 0 || age > 1.5) continue;
+      const bx = g.x + gw / 2 + Math.sin(i * 2.7) * gw * 0.34; const by = lerp(gy + gh - 3.0, gy + 2.6, age / 1.5);
+      ctx.strokeStyle = '#cfe0ea'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(F.x(bx), F.y(by), Math.max(1.8, F.len(0.75)), 0, Math.PI * 2); ctx.stroke();
     }
-    say(ctx, g.label, F.x(g.x + gw / 2), F.y(gy + gh + 2), F.size(1.6, 6), { align: 'center', color: C.dust });
+    ctx.lineWidth = 1;
+    say(ctx, g.label, F.x(g.x + gw / 2), F.y(gy + gh + 2.2), F.size(1.7, 6.5), { align: 'center', color: C.text });
   }
 });

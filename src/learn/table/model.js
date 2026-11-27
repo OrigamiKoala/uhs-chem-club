@@ -660,7 +660,7 @@ function drop(s, kit, id, t) {
       return { placed: 'free' };
     }
     const group = clusterOf(s, id);
-    const dest = clampTo(s, t.at, radiusOf(kit, p));
+    let dest = clampTo(s, t.at, radiusOf(kit, p));
     const dx = dest.x - p.at.x;
     const dy = dest.y - p.at.y;
     for (const g of group) {
@@ -669,6 +669,20 @@ function drop(s, kit, id, t) {
       for (const o of Object.values(s.pieces)) {
         if (o.hidden || !o.fixed || o.id === g || !o.zone?.startsWith('slot:')) continue;
         if (rectsOverlap(box, pieceRect(kit, o, o.at))) return fail('That holder is fixed in place.');
+      }
+    }
+    // Prevent Cinder Halo sample/shield cards from stacking on top of each other and hiding a card.
+    if (group.length === 1 && (p.kind === 'nsrc' || p.kind === 'nshield')) {
+      const overlapsOther = pt => {
+        const b = pieceRect(kit, p, pt);
+        return Object.values(s.pieces).some(o => !o.hidden && o.id !== id && !o.zone?.startsWith('slot:') && rectsOverlap(b, pieceRect(kit, o, o.at)));
+      };
+      if (overlapsOther(dest)) {
+        const hw = (kit.kinds[p.kind]?.rect?.hw || 8) * 2 + 2;
+        const hh = (kit.kinds[p.kind]?.rect?.hh || 5) * 2 + 2;
+        const tries = [p.home, { x: dest.x, y: dest.y + hh }, { x: dest.x, y: dest.y - hh }, { x: dest.x + hw, y: dest.y }, { x: dest.x - hw, y: dest.y }].filter(Boolean);
+        const clear = tries.map(pt => clampTo(s, pt, radiusOf(kit, p))).find(pt => !overlapsOther(pt));
+        if (clear) dest = clear;
       }
     }
     if (isTool(kit, p)) unlinkAll(s, id);

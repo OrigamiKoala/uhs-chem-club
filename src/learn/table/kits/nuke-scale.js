@@ -17,17 +17,18 @@ import { C, frameOf, say, title, foot, box, key, keyRow, progress, clamp, lerp, 
 
 /* ------------------------------------------------------------------ the balance */
 
-export function nscaleFixture(id, at, { build = false, left = null, right, leftLabel = '', rightLabel = '', w = 96, h = 40, title: ttl = 'Balance' } = {}) {
+export function nscaleFixture(id, at, { build = false, left = null, right, leftLabel = '', rightLabel = '', hideRightUntil = null, showDiff = false, w = 96, h = 40, title: ttl = 'Balance' } = {}) {
   const dials = build ? { np: { min: 0, max: 4, step: 1, value: 0, label: 'Protons' }, nn: { min: 0, max: 4, step: 1, value: 0, label: 'Neutrons' } } : {};
-  return { id, kind: 'nscale', label: ttl, at: { ...at }, size: { w, h }, noRun: true, dials, props: { build, left, right, leftLabel, rightLabel, hidden: Object.keys(dials) } };
+  return { id, kind: 'nscale', label: ttl, at: { ...at }, size: { w, h }, noRun: true, dials, props: { build, left, right, leftLabel, rightLabel, hideRightUntil, showDiff, hidden: Object.keys(dials) } };
 }
 /** The two pans' loads and masses (u); the left is null while empty. */
 export function scaleRead(state, id) {
   const f = state.fixtures[id];
   const p = f.props;
-  const leftLoad = p.build ? { p: Math.round(f.dials.np.value), n: Math.round(f.dials.nn.value) } : LOADS[p.left];
-  const empty = p.build && !leftLoad.p && !leftLoad.n;
-  return { leftLoad, left: empty ? null : massOf(leftLoad), right: massOf(LOADS[p.right]) };
+  const leftLoad = p.build ? { p: Math.round(f.dials.np.value), n: Math.round(f.dials.nn.value) } : (p.left ? LOADS[p.left] : null);
+  const empty = !leftLoad || (p.build && !leftLoad.p && !leftLoad.n);
+  const rightHidden = p.hideRightUntil && !(state.fixtures?.[p.hideRightUntil]?.props?.last?.n > 0);
+  return { leftLoad, left: empty ? null : massOf(leftLoad), right: (rightHidden || !p.right) ? null : massOf(LOADS[p.right]) };
 }
 const scaleKeys = f => {
   if (!f.props.build) return [];
@@ -41,36 +42,43 @@ function paintScale(ctx, f, state, b) {
   const r = scaleRead(state, f.id);
   for (const z of scaleKeys(f)) key(ctx, F, z, z.text);
   const cx = f.size.w / 2; const py = 9; const arm = f.size.w * 0.3;
-  const tilt = r.left == null ? 0 : clamp((r.left - r.right) * 6, -0.16, 0.16);
+  const tilt = (r.left == null || r.right == null) ? 0 : clamp((r.left - r.right) * 6, -0.16, 0.16);
   const k = progress(`${f.id}:tilt`, b, Math.round(tilt * 1000) + 1000, 0.8);
   const a = tilt * ease(k);
   // Post, beam, pans.
   box(ctx, F, cx - 0.6, py, 1.2, f.size.h * 0.42, '#55534c');
+  say(ctx, 'tilt not to scale', F.x(cx), F.y(py + f.size.h * 0.42 + 2.2), F.size(1.4, 5.8), { align: 'center', color: C.dim });
   const lx = cx - arm * Math.cos(a); const ly = py + 1 + arm * Math.sin(a);
   const rx = cx + arm * Math.cos(a); const ry = py + 1 - arm * Math.sin(a);
   ctx.strokeStyle = C.dust; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(F.x(lx), F.y(ly)); ctx.lineTo(F.x(rx), F.y(ry)); ctx.stroke(); ctx.lineWidth = 1;
-  const pan = (x, y, label, mass, draw) => {
+  const pan = (x, y, label, mass, draw, waitLabel = 'empty') => {
     ctx.strokeStyle = C.steel; ctx.beginPath(); ctx.moveTo(F.x(x), F.y(y)); ctx.lineTo(F.x(x), F.y(y + 7)); ctx.stroke();
-    box(ctx, F, x - 10, y + 7, 20, 1.2, '#6b625a');
-    draw(x, y + 5.4);
-    say(ctx, label, F.x(x), F.y(y + 11), F.size(1.6, 6), { align: 'center', color: C.dust, maxW: F.len(arm * 1.1) });
-    say(ctx, mass == null ? 'empty' : `${mass.toFixed(6)} u`, F.x(x), F.y(y + 14.4), F.size(2.1, 7), { align: 'center', color: mass == null ? C.dim : C.amber, weight: 700, sans: true });
+    box(ctx, F, x - 11, y + 7, 22, 1.4, '#6b625a');
+    if (draw) draw(x, y + 5.2);
+    say(ctx, label, F.x(x), F.y(y + 11), F.size(1.7, 6.5), { align: 'center', color: C.dust, maxW: F.len(arm * 1.15) });
+    say(ctx, mass == null ? waitLabel : `${mass.toFixed(6)} u`, F.x(x), F.y(y + 14.5), F.size(2.2, 7.5), { align: 'center', color: mass == null ? C.dim : C.amber, weight: 700, sans: true });
   };
   const loadDraw = load => (x, y) => {
+    if (!load) return;
     const parts = [];
     for (const [kname, c] of Object.entries(load)) for (let i = 0; i < c; i++) parts.push(kname);
     parts.forEach((kname, i) => {
-      const px = x - (parts.length - 1) * 1.6 + i * 3.2;
-      if (kname === 'p' || kname === 'n') nucleon(ctx, F, px, y - 1, 1.3, kname);
-      else { box(ctx, F, px - 1.4, y - 2.6, 2.8, 2.8, '#7b6a52', C.dust); }
+      const px = x - (parts.length - 1) * 2.1 + i * 4.2;
+      if (kname === 'p' || kname === 'n') nucleon(ctx, F, px, y - 1.2, 1.85, kname);
+      else { box(ctx, F, px - 1.8, y - 3.2, 3.6, 3.4, '#8b775b', C.dust); }
     });
   };
-  const nucDraw = (Z, N) => (x, y) => drawNucleus(ctx, F, x, y - 1.6, 2.4, protonSlots(Z, N, `${f.id}:${Z}`));
-  const leftDraw = p.build ? loadDraw(r.leftLoad) : loadDraw(LOADS[p.left]);
-  const rightLoad = LOADS[p.right];
-  const rightDraw = rightLoad.He4n ? nucDraw(2, 2) : loadDraw(rightLoad);
-  pan(lx, ly, p.leftLabel || (p.build ? 'Free protons and neutrons' : ''), r.left, leftDraw);
-  pan(rx, ry, p.rightLabel, r.right, rightDraw);
+  const nucDraw = (Z, N) => (x, y) => drawNucleus(ctx, F, x, y - 2.0, 3.3, protonSlots(Z, N, `${f.id}:${Z}`));
+  const leftDraw = p.build ? loadDraw(r.leftLoad) : (p.left ? loadDraw(LOADS[p.left]) : null);
+  const rightLoad = p.right ? LOADS[p.right] : null;
+  const rightDraw = r.right == null ? null : (rightLoad?.He4n ? nucDraw(2, 2) : loadDraw(rightLoad));
+  pan(lx, ly, p.leftLabel || (p.build ? 'Free protons and neutrons' : ''), r.left, leftDraw, 'empty');
+  pan(rx, ry, p.rightLabel, r.right, rightDraw, p.hideRightUntil ? '? (fire neutron)' : 'empty');
+  if (p.showDiff && r.left != null && r.right != null) {
+    const diff = r.left - r.right;
+    const msg = diff > 0 ? `Right pan is ${diff.toFixed(4)} u lighter` : `Left pan is ${(-diff).toFixed(4)} u lighter`;
+    say(ctx, msg, F.x(cx), F.y(f.size.h - 2.4), F.size(1.8, 7), { align: 'center', color: C.amber, weight: 700 });
+  }
 }
 registerFixture('nscale', {
   paint: paintScale,
@@ -105,22 +113,31 @@ function paintCurve(ctx, f, state, b) {
   title(ctx, f, F, b);
   const G = curveGeom(f);
   box(ctx, F, G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0, null, C.dim);
-  for (const e of [2, 4, 6, 8]) { const y = G.y1 - (e / G.Emax) * (G.y1 - G.y0); say(ctx, String(e), F.x(G.x0 - 0.8), F.y(y), F.size(1.5, 5.6), { align: 'right', color: C.dim }); }
-  for (const A of [50, 100, 150, 200]) say(ctx, String(A), F.x(G.x0 + (A / G.Amax) * (G.x1 - G.x0)), F.y(G.y1 + 1.8), F.size(1.5, 5.6), { align: 'center', color: C.dim });
-  say(ctx, 'MeV per nucleon', F.x(G.x0 + 0.8), F.y(G.y0 + 1.8), F.size(1.5, 5.6), { color: C.dust });
-  say(ctx, 'Mass number →', F.x(G.x1), F.y(G.y1 + 4.4), F.size(1.6, 6), { align: 'right', color: C.dust });
-  // The whole curve, faint.
-  ctx.strokeStyle = 'rgba(184,175,160,0.45)'; ctx.beginPath();
+  for (const e of [2, 4, 6, 8]) { const y = G.y1 - (e / G.Emax) * (G.y1 - G.y0); say(ctx, String(e), F.x(G.x0 - 1.0), F.y(y), F.size(1.9, 8.5), { align: 'right', color: C.dust, weight: 600 }); }
+  for (const A of [50, 100, 150, 200]) say(ctx, String(A), F.x(G.x0 + (A / G.Amax) * (G.x1 - G.x0)), F.y(G.y1 + 2.2), F.size(1.9, 8.5), { align: 'center', color: C.dust, weight: 600 });
+  say(ctx, 'MeV per nucleon', F.x(G.x0 + 1.2), F.y(G.y0 + 2.2), F.size(1.8, 8), { color: C.text });
+  say(ctx, 'Mass number →', F.x(G.x1), F.y(G.y1 + 4.8), F.size(1.9, 8.5), { align: 'right', color: C.text });
+  // The whole curve, clearly visible.
+  ctx.strokeStyle = 'rgba(200,192,175,0.6)'; ctx.lineWidth = 1.6; ctx.beginPath();
   [...BE_PER_NUCLEON].sort((a, c) => a.A - c.A).forEach((row, i) => { const q = ptXY(f, row); if (i) ctx.lineTo(F.x(q.x), F.y(q.y)); else ctx.moveTo(F.x(q.x), F.y(q.y)); });
-  ctx.stroke();
+  ctx.stroke(); ctx.lineWidth = 1;
   const picked = curvePick(state, f.id);
-  if (p.all && !p.marks) for (const row of BE_PER_NUCLEON) { const q = ptXY(f, row); ctx.fillStyle = picked?.name === row.name ? C.amber : C.e; ctx.fillRect(F.x(q.x) - 2, F.y(q.y) - 2, 4, 4); }
+  if (p.all && !p.marks) for (const row of BE_PER_NUCLEON) {
+    const q = ptXY(f, row); const on = picked?.name === row.name;
+    ctx.fillStyle = on ? C.amber : C.e;
+    ctx.beginPath(); ctx.arc(F.x(q.x), F.y(q.y), on ? 6 : 4, 0, Math.PI * 2); ctx.fill();
+  }
   for (const m of p.marks || []) {
     const row = BE_PER_NUCLEON.find(r => r.name === m.name); const q = ptXY(f, row);
     const on = picked?.name === m.name;
-    ctx.fillStyle = on ? C.amber : C.e; ctx.beginPath(); ctx.arc(F.x(q.x), F.y(q.y), on ? 4 : 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = on ? C.amber : C.e; ctx.beginPath(); ctx.arc(F.x(q.x), F.y(q.y), on ? 6.5 : 4.8, 0, Math.PI * 2); ctx.fill();
     const lab = m.label ?? longName(m.name);
-    if (lab) say(ctx, lab, F.x(q.x + 1.6), F.y(q.y + 2.6), F.size(1.7, 6.2), { color: on ? C.amber : C.text, weight: 600 });
+    if (lab) {
+      const lx = q.x < G.x0 + 12 ? q.x + 2.6 : q.x > G.x1 - 12 ? q.x - 2.6 : q.x + 2.2;
+      const align = q.x > G.x1 - 12 ? 'right' : 'left';
+      const ly = row.A <= 4 ? q.y - 2.0 : q.y + 3.0;
+      say(ctx, lab, F.x(lx), F.y(ly), F.size(2.1, 9), { align, color: on ? C.amber : C.text, weight: 700 });
+    }
   }
   if (picked) {
     const lab = picked.mark?.label ?? longName(picked.name);
@@ -129,22 +146,22 @@ function paintCurve(ctx, f, state, b) {
 }
 registerFixture('ncurve', {
   paint: paintCurve,
-  tapZones: f => (f.dials.pick ? f.props.pts.map((name, i) => { const q = ptXY(f, BE_PER_NUCLEON.find(r => r.name === name)); return { x0: q.x - 2.2, x1: q.x + 2.2, y0: q.y - 2.2, y1: q.y + 2.2, dial: 'pick', value: i + 1 }; }) : [])
+  tapZones: f => (f.dials.pick ? f.props.pts.map((name, i) => { const q = ptXY(f, BE_PER_NUCLEON.find(r => r.name === name)); return { x0: q.x - 3.2, x1: q.x + 3.2, y0: q.y - 3.2, y1: q.y + 3.2, dial: 'pick', value: i + 1 }; }) : [])
 });
 
 /* ------------------------------------------------------------------ the chain chamber */
 
-const ROD = ['None', 'One', 'All three'];
-const ROD_N = [0, 1, 3];
+const ROD = ['None', 'One', 'Two', 'All three'];
+const ROD_N = [0, 1, 2, 3];
 export function nchainFixture(id, at, { mode = 'chain', w = 96, h = 40, title: ttl = null } = {}) {
-  const dials = mode === 'chain' ? { rods: { min: 0, max: 2, step: 1, value: 0, label: 'Rods soak up' } } : {};
+  const dials = mode === 'chain' ? { rods: { min: 0, max: 3, step: 1, value: 0, label: 'Rods soak up' } } : {};
   return { id, kind: 'nchain', label: ttl || (mode === 'chain' ? 'Chain chamber' : 'One uranium-235 nucleus'), at: { ...at }, size: { w, h }, dials, runLabel: 'Fire Neutron', props: { mode, hidden: Object.keys(dials), last: { n: 0, absorbed: 0 } } };
 }
 /** The last firing: the generations it ran (chain) or that it split (split). */
 export const chainRead = (state, id) => { const f = state.fixtures[id]; return { fired: f.props.last.n, absorbed: f.props.last.absorbed, gens: generations(f.props.last.absorbed, 4) }; };
 const rodKeys = f => {
   if (f.props.mode !== 'chain') return [];
-  const zs = keyRow(ROD.map(r => `Soak up ${r.toLowerCase()}`), 0, 1.0, { h: 4.6, per: 1.6 });
+  const zs = keyRow(ROD.map(r => `Soak up ${r.toLowerCase()}`), 0, 1.0, { h: 4.6, per: 1.45, pad: 1.8, gap: 0.9 });
   const width = zs[zs.length - 1].x1;
   return zs.map((z, i) => ({ ...z, x0: z.x0 + f.size.w - width - 2, x1: z.x1 + f.size.w - width - 2, value: i, text: `Soak up ${ROD[i].toLowerCase()}` }));
 };
@@ -159,33 +176,59 @@ function paintChain(ctx, f, state, b) {
   title(ctx, f, F, b);
   const rods = p.mode === 'chain' ? Math.round(f.dials.rods.value) : 0;
   for (const z of rodKeys(f)) key(ctx, F, z, z.text, rods === z.value);
-  const right = Math.max(9, f.runLabel.length * 1.9 + 3) + 3;
-  const k = p.last.n ? progress(`${f.id}:fire`, b, p.last.n, p.mode === 'chain' ? 4 : 2.6) : 0;
+  const right = Math.max(10, f.runLabel.length * 2.0 + 4) + 3;
+  const k = p.last.n ? progress(`${f.id}:fire`, b, p.last.n, p.mode === 'chain' ? 4 : 2.8) : 0;
   const wy = 7.5; const wh = f.size.h - 15.5;
   box(ctx, F, 2, wy, f.size.w - 4, wh, C.win, C.steel);
   if (p.mode === 'split') {
     const cx = f.size.w * 0.42; const cy = wy + wh / 2;
-    const t = ease(clamp((k - 0.25) / 0.5, 0, 1));
-    const nx = lerp(6, cx - 4, clamp(k / 0.25, 0, 1));
-    if (!p.last.n || k < 0.25) { nucleon(ctx, F, nx, cy, 0.9, 'n'); drawNucleus(ctx, F, cx, cy, 4.2, protonSlots(92, 143, 'u235')); say(ctx, 'uranium-235', F.x(cx), F.y(cy + 6.4), F.size(1.6, 6), { align: 'center', color: C.dust }); }
-    else {
-      drawNucleus(ctx, F, cx - t * 14, cy - t * 3, 3.4, protonSlots(56, 85, 'ba')); drawNucleus(ctx, F, cx + t * 14, cy + t * 3, 2.9, protonSlots(36, 56, 'kr'));
-      for (let i = 0; i < 3; i++) nucleon(ctx, F, cx + t * (10 + i * 4), cy - 6 + i * 6 * t, 0.9, 'n');
-      if (k >= 1) { say(ctx, 'barium-141', F.x(cx - 14), F.y(cy + 3.2), F.size(1.6, 6), { align: 'center', color: C.text }); say(ctx, 'krypton-92', F.x(cx + 14), F.y(cy + 7), F.size(1.6, 6), { align: 'center', color: C.text }); }
+    const t = ease(clamp((k - 0.25) / 0.55, 0, 1));
+    const nx = lerp(6, cx - 4.5, clamp(k / 0.25, 0, 1));
+    if (!p.last.n || k < 0.25) {
+      nucleon(ctx, F, nx, cy, 1.2, 'n', C.e);
+      drawNucleus(ctx, F, cx, cy, 4.6, protonSlots(92, 143, 'u235'));
+      say(ctx, 'uranium-235', F.x(cx), F.y(cy + 6.6), F.size(1.7, 6.5), { align: 'center', color: C.dust });
+    } else {
+      drawNucleus(ctx, F, cx - t * 15, cy - t * 3, 3.6, protonSlots(56, 85, 'ba'));
+      drawNucleus(ctx, F, cx + t * 15, cy + t * 3, 3.1, protonSlots(36, 56, 'kr'));
+      // Three distinct freed neutrons flying out with trails.
+      [[-0.35, -5.5], [0.05, 0], [0.35, 5.5]].forEach(([vy, yOff]) => {
+        const fx = cx + 4 + t * 24;
+        const fy = cy + yOff * t + vy * t * 4;
+        ctx.strokeStyle = 'rgba(239,230,207,0.45)'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(F.x(cx + 2), F.y(cy)); ctx.lineTo(F.x(fx), F.y(fy)); ctx.stroke(); ctx.lineWidth = 1;
+        nucleon(ctx, F, fx, fy, 1.25, 'n', C.e);
+      });
+      if (k >= 1) {
+        say(ctx, 'barium-141', F.x(cx - 15), F.y(cy + 3.4), F.size(1.7, 6.5), { align: 'center', color: C.text, weight: 600 });
+        say(ctx, 'krypton-92', F.x(cx + 15), F.y(cy + 7.2), F.size(1.7, 6.5), { align: 'center', color: C.text, weight: 600 });
+        say(ctx, '3 neutrons', F.x(cx + 28), F.y(cy - 6.8), F.size(1.6, 6.2), { align: 'center', color: C.e, weight: 600 });
+      }
     }
     foot(ctx, f, F, p.last.n && k >= 1 ? 'Split: barium-141, krypton-92 and 3 neutrons' : `Press "${f.runLabel}"`, p.last.n && k >= 1 ? C.text : C.dust, right);
     return;
   }
-  // Chain: four generations as columns; each fission a nucleus, each freed neutron a dot that goes on, or stops in a rod.
+  // Chain: four generations as columns; bright amber fissions with neutron paths between generations (or stopped at rods).
   const gens = generations(p.last.absorbed, 4);
   const shown = p.last.n ? Math.min(4, Math.floor(k * 4.2) + 1) : 0;
   const colW = (f.size.w - 8) / 4;
   for (let g = 0; g < shown; g++) {
     const x = 4 + colW * (g + 0.5); const n = gens[g];
-    const draw = Math.min(n, 27); const rows = Math.ceil(Math.sqrt(draw)) || 1; const step = Math.min(3.2, (wh - 8) / rows);
-    for (let i = 0; i < draw; i++) nucleon(ctx, F, x - (rows - 1) * step / 2 + (i % rows) * step, wy + 3 + Math.floor(i / rows) * step, Math.min(1.1, step * 0.38), 'n', '#7b6a52');
-    say(ctx, `${n} fission${n === 1 ? '' : 's'}`, F.x(x), F.y(wy + wh - 2.2), F.size(1.7, 6.2), { align: 'center', color: C.amber, weight: 600 });
-    if (g < 3 && p.last.absorbed) box(ctx, F, x + colW / 2 - 0.4, wy + 1, 0.8, wh - 6, '#3e4248');
+    const draw = Math.min(n, 27); const rows = Math.ceil(Math.sqrt(draw)) || 1; const step = Math.min(3.2, (wh - 9) / rows);
+    if (g < 3 && n > 0) {
+      const rodX = x + colW / 2;
+      const nextX = x + colW;
+      const cy = wy + (wh - 6) / 2;
+      ctx.strokeStyle = 'rgba(239,230,207,0.35)'; ctx.lineWidth = 1.2;
+      for (let b = -1; b <= 1; b++) {
+        const soaked = (b + 1) < p.last.absorbed;
+        ctx.beginPath(); ctx.moveTo(F.x(x + 2), F.y(cy)); ctx.lineTo(F.x(soaked ? rodX - 0.8 : nextX - 2), F.y(cy + b * 5)); ctx.stroke();
+      }
+      ctx.lineWidth = 1;
+      if (p.last.absorbed) box(ctx, F, rodX - 0.6, wy + 1, 1.2, wh - 6.5, '#686e78', '#8e95a0');
+    }
+    for (let i = 0; i < draw; i++) nucleon(ctx, F, x - (rows - 1) * step / 2 + (i % rows) * step, wy + 3.5 + Math.floor(i / rows) * step, Math.min(1.25, step * 0.42), 'p', C.alpha);
+    say(ctx, `${n} fission${n === 1 ? '' : 's'}`, F.x(x), F.y(wy + wh - 2.2), F.size(1.8, 6.8), { align: 'center', color: C.amber, weight: 700 });
   }
   foot(ctx, f, F, p.last.n ? `Rods soak up ${p.last.absorbed} of each fission's 3 neutrons` : `Set the rods, then press "${f.runLabel}"`, C.dust, right);
 }

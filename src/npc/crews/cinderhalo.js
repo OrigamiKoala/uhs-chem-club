@@ -47,7 +47,7 @@ export const CREW = Object.freeze([
       ],
       afterClue: {
         clue_cinderhalo_core: [
-          ['It was uranium atoms splitting inside this reactor all along. The Fifth Guild simply restarted the oldest reactor nobody was watching.']
+          ['It was uranium nuclei splitting inside this reactor all along. The Fifth Guild simply restarted the oldest reactor nobody was watching.']
         ]
       }
     }

@@ -355,9 +355,13 @@ export function drawTable(ctx, w, h, state, view = {}) {
     }
     if (view.controls === false) continue;
     if (!lay.run) continue;
-    ctx.strokeStyle = PLATE_COLORS.steel;
+    ctx.fillStyle = '#3a2912';
+    ctx.fillRect(Math.round(X(lay.run.x0)), Math.round(Y(lay.run.y0)), Math.round((lay.run.x1 - lay.run.x0) * sc), Math.round((lay.run.y1 - lay.run.y0) * sc));
+    ctx.strokeStyle = PLATE_COLORS.amber;
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(Math.round(X(lay.run.x0)) + 0.5, Math.round(Y(lay.run.y0)) + 0.5, Math.round((lay.run.x1 - lay.run.x0) * sc), Math.round((lay.run.y1 - lay.run.y0) * sc));
-    text(f.runLabel || 'Run', (lay.run.x0 + lay.run.x1) / 2, (lay.run.y0 + lay.run.y1) / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.text });
+    ctx.lineWidth = 1;
+    text(f.runLabel || 'Run', (lay.run.x0 + lay.run.x1) / 2, (lay.run.y0 + lay.run.y1) / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.amber, weight: 700 });
     for (const k of lay.keys || []) {
       ctx.strokeRect(Math.round(X(k.x0)) + 0.5, Math.round(Y(k.y0)) + 0.5, Math.round((k.x1 - k.x0) * sc), Math.round((k.y1 - k.y0) * sc));
       text(k.label, (k.x0 + k.x1) / 2, (k.y0 + k.y1) / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.text });

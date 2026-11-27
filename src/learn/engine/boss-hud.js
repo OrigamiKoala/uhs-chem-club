@@ -95,7 +95,7 @@ export class BossHud {
     this.el.bar.setAttribute('aria-valuenow', String(Math.round(hp)));
     if (hp > 0) {
       const lit = Math.max(1, Math.ceil((hp / this.maxHp) * this.total));
-      this.el.hp.innerHTML = `<span class="boss-hud-lamps" aria-label="${lit} of ${this.total} trials left"><span style="font-size:0.65rem;letter-spacing:0.08em;color:var(--text-muted,#9a9285);margin-right:4px">TRIALS</span>${Array.from({ length: this.total }, (_, i) => `<i class="${i < lit ? 'on' : ''}"></i>`).join('')}</span>`;
+      this.el.hp.innerHTML = `<span class="boss-hud-lamps" aria-label="${lit} of ${this.total} phases left"><span style="font-size:0.65rem;letter-spacing:0.08em;color:var(--text-muted,#9a9285);margin-right:4px">PHASES</span>${Array.from({ length: this.total }, (_, i) => `<i class="${i < lit ? 'on' : ''}"></i>`).join('')}</span>`;
     } else {
       this.el.hp.textContent = 'Dispersed';
     }
@@ -112,7 +112,7 @@ export class BossHud {
   /** The foe's blow lands: a pip goes out. */
   setRig(integrity, max = this.rigMax, { hit = false } = {}) {
     this.rigMax = max;
-    this.el.rig.innerHTML = `<span style="font-size:0.65rem;letter-spacing:0.08em;color:var(--text-muted,#9a9285);margin-right:4px">RIG</span>` + Array.from({ length: max }, (_, i) =>
+    this.el.rig.innerHTML = `<span style="font-size:0.65rem;letter-spacing:0.08em;color:var(--text-muted,#9a9285);margin-right:4px">INTEGRITY</span>` + Array.from({ length: max }, (_, i) =>
       `<i class="${i < integrity ? 'on' : ''}"></i>`).join('');
     if (hit) this.kick(this.el.rig);
   }

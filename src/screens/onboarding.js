@@ -9,7 +9,7 @@ import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
-import { stepRail, esc } from '../ui/layout.js';
+import { esc } from '../ui/layout.js';
 import { playCinematic } from '../ui/cinematic.js';
 import { soundscape } from '../audio/soundscape.js';
 import { TRINKETS, getTrinketForRoll, getDeterministicRoll } from '../story/trinkets.js';
@@ -181,10 +181,7 @@ export async function renderOnboarding(container) {
     const members = rosterCache.get(selectedTeam);
 
     const titleEl = container.querySelector('#party-manifest-title');
-    if (titleEl) titleEl.textContent = `YOUR PARTY · ${activeMeta.title.toUpperCase()} CREW`;
-
-    const countEl = container.querySelector('#party-manifest-count');
-    if (countEl) countEl.textContent = members ? `${members.length} Signed On` : 'Syncing…';
+    if (titleEl) titleEl.textContent = `Team ${activeMeta.title}`;
 
     const listEl = container.querySelector('#party-manifest-list');
     if (listEl) listEl.innerHTML = renderRosterListHtml(members);
@@ -322,15 +319,14 @@ export async function renderOnboarding(container) {
 
     container.innerHTML = `
       <div class="screen-container m-screen m-onboarding" style="max-width: 760px;">
-        <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-          ${stepRail(2)}
+        <div class="m-topbar" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.8rem;">
           <a href="#/bridge" id="skip-to-bridge-link" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip</a>
         </div>
 
         <div class="glass-panel">
           <!-- Guild Cards Grid -->
           <div role="radiogroup" aria-label="Guild" class="guild-grid"
-               style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+               style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
             ${teamsData.map(t => {
               const isFull = (t.available !== undefined && t.available <= 0);
               const isSelected = selectedTeam === t.team_id;
@@ -344,16 +340,12 @@ export async function renderOnboarding(container) {
                      ${isFull ? 'disabled aria-disabled="true"' : ''}
                      data-team="${t.team_id}"
                      style="flex-direction: column; align-items: flex-start; text-align: left; padding: 0.9rem; opacity: ${isFull ? 0.4 : 1}; cursor: ${isFull ? 'not-allowed' : 'pointer'}; ${isSelected ? `border-left-color: ${meta.accent};` : ''}">
-                  <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.35rem;">
-                    <span style="display: flex; align-items: baseline; gap: 0.4rem;">
-                      <span aria-hidden="true" style="font-family: var(--font-mono); font-size: 0.68rem; color: ${meta.accent};">${meta.mark}</span>
-                      <span style="font-family: var(--font-imperial); font-weight: 700; font-size: 0.96rem; letter-spacing: 0.14em; text-transform: uppercase; color: ${meta.accent}; text-shadow: var(--engrave);">${meta.title}</span>
-                    </span>
-                    <span class="tag ${isFull ? 'danger' : 'live'}" style="font-size: 0.58rem; padding: 2px 6px;">
+                  <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; width: 100%;">
+                    <span style="font-family: var(--font-imperial); font-weight: 700; font-size: 0.96rem; letter-spacing: 0.14em; text-transform: uppercase; color: ${meta.accent}; text-shadow: var(--engrave);">${meta.title}</span>
+                    <span class="tag ${isFull ? 'danger' : 'live'}" style="font-size: 0.58rem; padding: 2px 6px; white-space: nowrap;">
                       ${isFull ? 'Full' : `${t.available ?? 12} open`}
                     </span>
                   </div>
-                  <span class="eyebrow" style="font-size: 0.62rem; line-height: 1.2;">${meta.guild}</span>
                 </button>
               `;
             }).join('')}
@@ -362,8 +354,7 @@ export async function renderOnboarding(container) {
           <!-- Party Manifest Roster -->
           <div id="party-manifest-card" class="m-subpanel" style="background: var(--plate-200); border: 1px solid var(--border-durasteel); padding: 1rem; margin-bottom: 1.5rem;">
             <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.4rem;">
-              <span id="party-manifest-title" class="eyebrow lit">MEMBERS · ${activeMeta.title.toUpperCase()}</span>
-              <span id="party-manifest-count" class="eyebrow">${members ? `${members.length} members` : 'Loading…'}</span>
+              <span id="party-manifest-title" class="eyebrow lit">Team ${activeMeta.title}</span>
             </div>
             <div id="party-manifest-list">
               ${renderRosterListHtml(members)}
@@ -464,8 +455,7 @@ export async function renderOnboarding(container) {
 
     container.innerHTML = `
       <div class="screen-container m-screen m-onboarding m-oath" style="max-width: 620px;">
-        <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-          ${stepRail(3)}
+        <div class="m-topbar" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.8rem;">
           <a href="#/bridge" id="skip-to-bridge-link-3" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip</a>
         </div>
 
@@ -628,8 +618,7 @@ export async function renderOnboarding(container) {
 
       return `
         <div class="screen-container m-screen m-onboarding m-storyline" style="max-width: 720px;">
-          <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-            ${stepRail(4)}
+          <div class="m-topbar" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.8rem;">
             <button type="button" id="skip-to-bridge-btn-4" class="eyebrow m-skip" style="background: none; border: none; cursor: pointer; text-decoration: underline; color: var(--text-muted);">
               Skip to Bridge
             </button>

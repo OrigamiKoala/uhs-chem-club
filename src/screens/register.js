@@ -11,8 +11,6 @@ import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
-import { stepRail, esc } from '../ui/layout.js';
-import { BACKGROUNDS } from '../story/trinkets.js';
 import { gameMode } from '../game-mode.js';
 
 const NAME_PATTERN = /^[a-zA-Z0-9 _-]+$/;
@@ -38,16 +36,9 @@ export function renderRegister(container) {
     return;
   }
 
-  let selectedBg = 'salvager';
-  try {
-    const saved = localStorage.getItem('avalon_pending_bg');
-    if (saved && BACKGROUNDS[saved]) selectedBg = saved;
-  } catch (e) {}
-
   container.innerHTML = `
     <div class="screen-container m-screen m-register" style="max-width: 520px;">
-      <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-        ${stepRail(1)}
+      <div class="m-topbar" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.8rem;">
         <a href="#/login" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Sign In</a>
       </div>
 
@@ -77,20 +68,6 @@ export function renderRegister(container) {
             <span class="form-help warn" id="reg-pw-help">Not your school password.</span>
           </div>
 
-          <!-- Background Selection -->
-          <div class="form-group" style="margin-top: 1.4rem;">
-            <label class="form-label">Background</label>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;" role="radiogroup" aria-label="Background">
-              ${Object.values(BACKGROUNDS).map(bg => `
-                <button type="button" class="choice-option bg-option ${bg.id === selectedBg ? 'selected' : ''}"
-                        role="radio" aria-checked="${bg.id === selectedBg}" data-bg="${bg.id}"
-                        style="padding: 9px 12px; text-align: left; display: flex; flex-direction: column; gap: 2px;">
-                  <span style="font-family: var(--font-display); font-weight: 600; font-size: 0.92rem; color: var(--text-bright); text-transform: uppercase;">${bg.title}</span>
-                </button>
-              `).join('')}
-            </div>
-          </div>
-
           <div id="reg-error" class="form-banner hidden" role="alert"></div>
 
           <button type="submit" id="reg-submit-btn" class="btn-primary" style="width: 100%; margin-top: 1.25rem;">
@@ -100,7 +77,6 @@ export function renderRegister(container) {
 
         <div class="m-foot" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; font-family: var(--font-mono); font-size: 0.72rem;">
           <a href="#/login" class="link-accent">Sign in</a>
-          <span style="color: var(--text-muted);">Step 1 of 4</span>
         </div>
       </div>
     </div>
@@ -118,25 +94,6 @@ export function renderRegister(container) {
   const vessLine = container.querySelector('#vess-line');
 
   bindPasswordReveal(container);
-
-  // Background toggle
-  container.querySelectorAll('.bg-option').forEach(btn => {
-    btn.addEventListener('click', () => {
-      container.querySelectorAll('.bg-option').forEach(b => {
-        b.classList.remove('selected');
-        b.setAttribute('aria-checked', 'false');
-      });
-      btn.classList.add('selected');
-      btn.setAttribute('aria-checked', 'true');
-      selectedBg = btn.getAttribute('data-bg');
-      try { localStorage.setItem('avalon_pending_bg', selectedBg); } catch (e) {}
-
-      const bgDef = BACKGROUNDS[selectedBg];
-      if (vessLine && bgDef) {
-        vessLine.textContent = `"${bgDef.flavor}"`;
-      }
-    });
-  });
 
   // Live feedback + Vess in-character reaction
   nameInput.addEventListener('input', () => {
@@ -195,11 +152,8 @@ export function renderRegister(container) {
       const res = await api.register(email, password, displayName);
       session.setToken(res.token);
 
-      // Save background choice
-      try { localStorage.setItem('avalon_pending_bg', selectedBg); } catch (e) {}
-
       session.setUserData({
-        player: { ...(res.player || {}), background: selectedBg }
+        player: { ...(res.player || {}) }
       });
 
       showToast('Account created.', 'success');
@@ -207,7 +161,7 @@ export function renderRegister(container) {
     } catch (err) {
       failWith(err.message || 'Registration failed. Check connection and retry.');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Record on Manifest';
+      submitBtn.textContent = 'Create Account';
     }
   });
 

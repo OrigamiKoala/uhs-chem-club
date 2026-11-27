@@ -272,7 +272,7 @@ export function createRunner(container, ctx, cfg) {
     // A predict stage keeps the guess for the stage that tests it (`predict.js`).
     try { stage.onClear?.(state); } catch (err) { /* a guess is never worth a failed stage */ }
     frame.setCleared(cleared);
-    frame.clear(stage.reward);
+    frame.clear({ ...stage.reward, last: index === STAGES.length - 1 });
     if (index === STAGES.length - 1) ctx.reportComplete();
   }
 
@@ -557,6 +557,7 @@ export function createRunner(container, ctx, cfg) {
     const verb = action && typeof action === 'object' ? Object.keys(action)[0] : null;
     if (verb === 'undo') return undo();
     if (verb === 'restart') return restart();
+    if (verb && verb !== 'type') frame.clearBanner();
     const before = state.table;
     const after = applyTable(before, action);
     if (verb === 'pick') {

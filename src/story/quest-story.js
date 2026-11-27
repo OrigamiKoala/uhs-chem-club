@@ -26,79 +26,79 @@ export const QUEST_STORY = {
   'unit14/q1-still-warm': {
     scene: 'ch-warm',
     role: 'Direct Clue',
-    mystery: 'The Fifth\'s ore drums are warm in freezing air, and no fire is anywhere near them. What keeps them warm?',
+    mystery: 'The Fifth\'s ore drums stay warm in freezing air with no fire nearby. What keeps them warm?',
     beats: [
-      { to: 0.32, say: 'Ore A counted far above the empty counter and ore B did not: only ore A is radioactive.' },
-      { to: 0.65, say: 'One of its uranium nuclei threw out two protons and two neutrons, and 90 protons left it thorium.' },
-      { to: 0.96, say: 'Cold or hot, the ore counted the same. Heat and cold never reach the nucleus.' }
+      { to: 0.32, say: 'Ore A counted far above the empty counter, while Ore B and Ore C matched it. Only Ore A is radioactive.' },
+      { to: 0.65, say: 'A uranium nucleus ejected 2 protons and 2 neutrons, leaving 90 protons: thorium.' },
+      { to: 0.96, say: 'Hot or cold, the ore counted the same. Temperature does not reach inside the nucleus.' }
     ],
-    pin: 'Their ore is radioactive: its nuclei decay, and each decay releases heat.'
+    pin: 'Radioactive ore decays on its own, and radiation stopping inside the walls keeps them warm.'
   },
   'unit14/q2-what-comes-off': {
     scene: 'ch-rays',
     role: 'Direct Clue',
-    mystery: 'The counter clicks fast beside the closed drums. What is coming out through the walls, and what would stop it?',
+    mystery: 'The counter clicks fast beside the sealed drums. What is escaping through the walls, and what stops it?',
     beats: [
-      { to: 0.32, say: 'The plates sorted three radiations: alpha bent a little toward negative, beta sharply toward positive, gamma straight on.' },
-      { to: 0.65, say: 'Alpha stopped in paper and beta in aluminium. Gamma, with no charge, went on into the lead.' },
-      { to: 0.96, say: 'Inside the body alpha spends itself in a few cells, so it does its harm there.' }
+      { to: 0.32, say: 'Charged plates sorted three radiations: alpha bent slightly toward negative, beta sharply toward positive, and gamma went straight.' },
+      { to: 0.65, say: 'Alpha stopped in paper and beta stopped in aluminium. Uncharged gamma passed both and slowed only in thick lead.' },
+      { to: 0.96, say: 'Inside the body, alpha dumps its energy into the first two cells, breaking 26 molecules.' }
     ],
-    pin: 'The drums leak gamma rays, which only lead stops: the reason Thornmere\'s armor hid lead plates.'
+    pin: 'Source M emits alpha and gamma rays; only thick lead slowed the gamma rays.'
   },
   'unit14/q3-equations': {
     scene: 'ch-equations',
     role: 'Direct Clue',
-    mystery: 'The reactor slag holds metals nobody fed the reactor, like thorium and lead. Where did they come from?',
+    mystery: 'The reactor slag holds metals nobody loaded in, like thorium and lead. Where did they come from?',
     beats: [
-      { to: 0.32, say: 'Uranium-238 threw out two protons and two neutrons: 238 is 234 plus 4, and 92 is 90 plus 2.' },
-      { to: 0.65, say: 'In beta decay a neutron became a proton, so thorium became protactinium and the mass number stayed 234.' },
-      { to: 0.96, say: 'Eight alpha steps and six beta steps walked uranium-238 all the way down to lead-206.' }
+      { to: 0.32, say: 'Uranium-238 lost 2 protons and 2 neutrons, balancing both numbers: 238 = 234 + 4 and 92 = 90 + 2.' },
+      { to: 0.65, say: 'In beta decay, a neutron turned into a proton, changing thorium-234 into protactinium-234 with the same mass number.' },
+      { to: 0.96, say: 'Eight alpha decays and six beta decays stepped uranium-238 all the way down to lead-206.' }
     ],
-    pin: 'The uranium decayed into them, step by step, through alpha and beta decay.'
+    pin: 'Uranium decayed into them step by step through alpha and beta decay.'
   },
   'unit14/q4-stability': {
     scene: 'ch-stability',
     role: 'Direct Clue',
-    mystery: 'The Fifth\'s store holds many different nuclei. Which of them stay as they are, and which keep decaying?',
+    mystery: 'The Fifth\'s store holds many different nuclei. Which ones last, and which keep decaying?',
     beats: [
-      { to: 0.32, say: 'Up to calcium the stable squares sit on the line: about as many neutrons as protons.' },
-      { to: 0.65, say: 'Heavier, the band bends above it: lead-208 holds 126 neutrons with its 82 protons, because neutrons hold without repelling.' },
-      { to: 0.96, say: 'Carbon-14, above the band, decays by beta decay onto nitrogen-14, a filled square.' }
+      { to: 0.32, say: 'Up to calcium, stable nuclei sit along the equal-number line with roughly equal protons and neutrons.' },
+      { to: 0.65, say: 'Heavier stable nuclei need extra neutrons, like lead-208 with 126 neutrons and 82 protons, to add strong nuclear force hold without adding repulsion.' },
+      { to: 0.96, say: 'Carbon-14 sits above the band of stability and undergoes beta decay to reach stable nitrogen-14.' }
     ],
-    pin: 'Nuclei with the wrong neutron count keep decaying, and the Fifth\'s store is full of them.'
+    pin: 'Nuclei with too many or too few neutrons decay toward the band of stability.'
   },
   'unit14/q5-half-gone': {
     scene: 'ch-halflife',
     role: 'Direct Clue',
-    mystery: 'The Fifth\'s crater camp left no records. Can the decay in its samples tell us how long they have worked here?',
+    mystery: 'The Fifth\'s crater camp left no logs. Can the decay in its samples tell us how long they worked here?',
     beats: [
-      { to: 0.32, say: 'In 8 days half of the 256 iodine nuclei decayed, leaving 128.' },
-      { to: 0.65, say: 'In the next 8 days half of those 128 decayed, leaving 64, or one quarter of the original amount.' },
-      { to: 0.96, say: 'A fossil bone counted 1.9 compared to 15.3 in living tissue, which equals three half-lives, or about 17,190 years.' }
+      { to: 0.32, say: 'In 8 days, half of the 256 iodine-131 nuclei decayed, leaving 128.' },
+      { to: 0.65, say: 'In the next 8 days, half of those 128 decayed, leaving 64, one quarter of the starting sample.' },
+      { to: 0.96, say: 'Crater charcoal counted 1.9 against 15.3 in living wood: three half-lives, or about 17,190 years.' }
     ],
-    pin: 'Counting half-lives in their samples shows the Fifth Guild has worked here for decades.'
+    pin: 'Half-lives act as clocks: crater charcoal is 17,190 years old, while the 6-hour vial is fresh.'
   },
   'unit14/q6-shortfall': {
     scene: 'ch-shortfall',
     role: 'Direct Clue',
-    mystery: 'The Fifth\'s reactor puts out huge amounts of energy, yet no fuel line runs into it. Where does the energy come from?',
+    mystery: 'The Fifth\'s reactor puts out huge energy with no fuel line going in. Where does that energy come from?',
     beats: [
-      { to: 0.32, say: 'Helium-4 weighed 0.030376 u less than its four separate parts, a difference equal to 28.3 MeV of binding energy.' },
-      { to: 0.65, say: 'When uranium-235 split after absorbing a neutron, the pieces weighed 0.186 u less, releasing that lost mass as energy.' },
+      { to: 0.32, say: 'Helium-4 has 0.0304 u less mass than its four separate parts, equal to 28.3 MeV of binding energy.' },
+      { to: 0.65, say: 'When uranium-235 split after absorbing a neutron, the products had 0.186 u less mass, releasing 173 MeV.' },
       { to: 0.96, say: 'Each fission frees three neutrons. Absorbing two kept the chain reaction steady, while absorbing none tripled it every step.' }
     ],
-    pin: 'Splitting uranium loses a tiny bit of mass, which turns into huge energy.'
+    pin: 'Hidden uranium powers the reactor: fission turns a tiny mass loss into huge energy.'
   },
   'unit14/boss-core': {
     scene: 'ch-core',
     role: 'Boss Payoff',
     mystery: 'The Fifth claims it can turn one element into another. What is really happening inside the Cinder Halo core?',
     beats: [
-      { to: 0.3, say: 'The frozen sample counted far above background, and the storage cask leaked both beta and gamma radiation.' },
-      { to: 0.62, say: 'The sodium coolant had turned into magnesium, and the cobalt source dropped to one eighth after three half-lives.' },
-      { to: 0.96, say: 'Each fission released 173 MeV. Lowering the control rods slowed the chain reaction until the reactor core cooled down.' }
+      { to: 0.3, say: 'The frozen can counted far above background, and the leaking cask emitted both beta and gamma radiation.' },
+      { to: 0.62, say: 'Sodium-24 coolant turned into magnesium-24 by beta decay, and the cobalt-60 source dropped to one eighth in 15.8 years.' },
+      { to: 0.96, say: 'Each fission released 173 MeV. Lowering the control rods slowed the chain reaction until the core cooled.' }
     ],
-    pin: 'It is nuclear fission, not alchemy. The Fifth Guild\'s reactor is now stable.'
+    pin: 'Nuclear decay and fission change elements, not alchemy; the Fifth\'s reactor is now under control.'
   },
   /* ---- Thornmere: what is the Fifth's armor made of, and where can it be cut? ---- */
   'unit13/q1-chains': {

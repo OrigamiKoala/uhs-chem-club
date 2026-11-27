@@ -133,6 +133,7 @@ function fixtureStep(f, kitId, table) {
   const runSentence = f.runLabel ? `Press "${f.runLabel}" to record.` : '';
   const rawTitle = typeof entry.title === 'function' ? entry.title(f, table) : entry.title;
   const rawText = typeof entry.text === 'function' ? entry.text(f, table) : entry.text;
+  const rawKey = typeof entry.key === 'function' ? entry.key(f, table) : entry.key;
   if (rawText == null || rawText === '') return null;
   const text = rawText
     .replace('{run}', f.runLabel || 'Run')
@@ -140,11 +141,11 @@ function fixtureStep(f, kitId, table) {
     .replace('{runSentence}', runSentence)
     .replace('{counters}', '')
     .trim();
-  return { title: rawTitle || f.label, text };
+  return { title: rawTitle || f.label, text, ...(rawKey ? { key: rawKey } : {}) };
 }
 
 // Fixtures that are pure answer-picking UI, answer-entry dials, or static displays, not tools to explain.
-const SKIP_FIXTURES = new Set(['plaque', 'plate', 'tchoice', 'lchoice', 'choice', 'marker', 'selector', 'tally', 'stamp']);
+const SKIP_FIXTURES = new Set(['plaque', 'plate', 'tchoice', 'lchoice', 'nchoice', 'choice', 'marker', 'selector', 'tally', 'stamp']);
 
 // Pieces that are self-explanatory cards, statements, or inputs already covered by an instrument step.
 const SKIP_PIECES = new Set([

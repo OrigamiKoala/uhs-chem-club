@@ -487,9 +487,8 @@ export class BossArena {
         this.monster.setDamage(1 - expected / MAX_HP);
       }
       if (index > this.phase && !this.reduced) {
-        // The next phase: it rears up and closes in, and the view goes up to watch it.
-        this.after(0.3, () => { if (!this.defeated) this.monster?.triggerRoar(); });
-        this.gaze(1.7);
+        // Keep the camera on the bench so the next phase is immediately usable while the boss roars in the background.
+        this.after(0.25, () => { if (!this.defeated) this.monster?.triggerRoar(); });
       }
     }
     this.phase = Math.max(this.phase, index);
@@ -577,9 +576,9 @@ export class BossArena {
     this.after(dur, () => {
       if (!this.monster) return;
       const c = m.getCenterWorld(new THREE.Vector3());
-      this.fx?.explosion(c, { scale: 2.4, color: 0xffd08a });
-      this.fx?.shockwave(new THREE.Vector3(c.x, m.groundAt(c.x, c.z), c.z), { radius: m.radius * 5, life: 0.9 });
-      this.fx?.addTrauma(0.9);
+      this.fx?.explosion(c, { scale: 1.25, color: 0xd99b43 });
+      this.fx?.shockwave(new THREE.Vector3(c.x, m.groundAt(c.x, c.z), c.z), { radius: m.radius * 3.5, life: 0.7 });
+      this.fx?.addTrauma(0.45);
       m.shatter();
     });
   }
@@ -602,9 +601,8 @@ export class BossArena {
       return;
     }
     this.queuedHit = rig;
-    const wind = this.reduced ? 0.15 : 0.3;
-    // Brief gaze up for the bolt, then back to the bench so the miss message stays readable.
-    this.gaze(wind + 0.35, { inS: 0.2, outS: 0.35 });
+    const wind = this.reduced ? 0.12 : 0.22;
+    // Keep the bench in view on a miss so the student can read the reason and retry immediately.
     this.monster.triggerTelegraph(wind);
     this.fx?.chargeOrb(() => this.mouthPoint(), wind, this.look.attack);
   }
@@ -613,7 +611,7 @@ export class BossArena {
   playerHit(rig) {
     if (this.disposed) return;
     const heavy = Boolean(rig?.knockedBack);
-    this.fx?.addTrauma(heavy ? 1 : 0.75);
+    this.fx?.addTrauma(heavy ? 0.35 : 0.18);
     if (this.fx && this.camera) {
       const at = this.camera.getWorldPosition(new THREE.Vector3());
       const q = this.camera.getWorldQuaternion(new THREE.Quaternion());

@@ -182,9 +182,34 @@ export async function buildLiveDemo(table, step) {
     const bedId = typeof f.props?.bed === 'string' && f.props.bed.startsWith('tray:') ? f.props.bed.slice(5) : null;
     const bedTray = bedId ? table.zones?.trays?.[bedId] : null;
 
-    if (f.kind === 'lead' || f.kind === 'rxn' || f.kind === 'clip' || f.kind === 'qk' || f.kind === 'kreader' || f.kind === 'rig' || f.kind === 'choice' || f.kind === 'pulls' || f.kind === 'ice') {
+    if (f.kind === 'lead' || f.kind === 'nlead' || f.kind === 'rxn' || f.kind === 'clip' || f.kind === 'qk' || f.kind === 'kreader' || f.kind === 'rig' || f.kind === 'choice' || f.kind === 'nchoice' || f.kind === 'pulls' || f.kind === 'ice') {
       // Predict clips, reaction viewers, and answer/test boards highlight in place without giving away answers.
       return null;
+    } else if (f.kind === 'ncount') {
+      if (linkedSlot) {
+        const p = findDraggable(['nsrc']);
+        if (p) {
+          steps.push({ at, drag: { piece: p.id, to: linkedSlot.at }, action: { place: { piece: p.id, to: `slot:${linkedSlot.id}` } } });
+          at += 1.3;
+        }
+      }
+      if (f.props?.shieldSlot) {
+        const shSlot = table.zones?.slots?.[f.props.shieldSlot];
+        const sh = shSlot && findDraggable(['nshield']);
+        if (sh) {
+          steps.push({ at, drag: { piece: sh.id, to: shSlot.at }, action: { place: { piece: sh.id, to: `slot:${shSlot.id}` } } });
+          at += 1.2;
+        }
+      }
+      if (f.props?.housing) {
+        const z = (kit?.tapZones?.(f, table) || []).find(x => x.dial === 'housed');
+        if (z) {
+          steps.push({ at, press: f.id, action: { run: f.id } });
+          at += 1.3;
+          steps.push({ at, tap: { x: lay.box.x0 + (z.x0 + z.x1) / 2, y: lay.box.y0 + (z.y0 + z.y1) / 2 }, action: { setDial: { fixture: f.id, dial: 'housed', value: 1 } } });
+          at += 1.1;
+        }
+      }
     } else if (f.kind === 'hotplate') {
       const p = findDraggable(['slab', 'salt']);
       if (p) {

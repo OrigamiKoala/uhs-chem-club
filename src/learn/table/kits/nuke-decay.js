@@ -17,11 +17,11 @@ import { C, frameOf, say, title, foot, box, key, keyRow, progress, commas, clamp
  *   `step` clock units per tap; `max` the clock's end; `plot` 'count' | 'ln' | null; `rate` a count rate at time 0 (counter mode) with
  *   `rateUnit`, `rateDp` decimals.
  */
-export function ndecayFixture(id, at, { grids = [{ N0: 256, seed: 7 }], half, unit = 'day', step = 1, max = 24, plot = 'count', rate = null, rateUnit = 'counts per minute', rateDp = 0, w = 116, h = 58, title: ttl = 'Decaying sample' } = {}) {
+export function ndecayFixture(id, at, { grids = [{ N0: 256, seed: 7 }], half, unit = 'day', step = 1, bigStep = 0, max = 24, plot = 'count', rate = null, rateUnit = 'counts per minute', rateDp = 0, w = 116, h = 58, title: ttl = 'Decaying sample' } = {}) {
   return {
     id, kind: 'ndecay', label: ttl, at: { ...at }, size: { w, h }, noRun: true,
     dials: { t: { min: 0, max: Math.round(max / step), step: 1, value: 0, label: 'Clock' } },
-    props: { grids, half, unit, step, max, plot, rate, rateUnit, rateDp, hidden: ['t'] }
+    props: { grids, half, unit, step, bigStep, max, plot, rate, rateUnit, rateDp, hidden: ['t'] }
   };
 }
 /** The clock's time, in its units. */
@@ -38,9 +38,15 @@ export const decayRead = (state, id) => { const f = state.fixtures[id]; const t 
 const plural = (n, word) => `${word}${n === 1 ? '' : 's'}`;
 const keysOf = f => {
   const wait = `Wait ${f.props.step === 1 ? '1' : commas(f.props.step)} ${plural(f.props.step, f.props.unit)}`;
-  const zs = keyRow(['Back', wait], 0, 1.0, { h: 4.6 });
+  const labels = ['Back', wait];
+  const steps = [-1, 1];
+  if (f.props.bigStep) {
+    labels.push(`Wait ${commas(f.props.bigStep * f.props.step)} ${plural(f.props.bigStep * f.props.step, f.props.unit)}`);
+    steps.push(f.props.bigStep);
+  }
+  const zs = keyRow(labels, 0, 1.0, { h: 4.6 });
   const width = zs[zs.length - 1].x1;
-  return zs.map((z, i) => ({ ...z, x0: z.x0 + f.size.w - width - 2, x1: z.x1 + f.size.w - width - 2, step: i ? 1 : -1, text: i ? wait : 'Back' }));
+  return zs.map((z, i) => ({ ...z, x0: z.x0 + f.size.w - width - 2, x1: z.x1 + f.size.w - width - 2, step: steps[i], text: labels[i] }));
 };
 const fmtRate = (f, v) => (f.props.rateDp ? v.toFixed(f.props.rateDp) : commas(v));
 
@@ -72,30 +78,32 @@ function paintDecay(ctx, f, state, b) {
   });
   // The clock and (counter mode) the count rate.
   const clock = `${commas(t)} ${plural(t, p.unit)}`;
-  foot(ctx, f, F, p.rate != null ? `${clock} · count rate ${fmtRate(f, rateAt(f, t))} ${p.rateUnit}` : `Clock: ${clock}. A large sample; a few nuclei alone do not keep to this.`, C.text);
+  foot(ctx, f, F, p.rate != null ? `${clock} · count rate ${fmtRate(f, rateAt(f, t))} ${p.rateUnit}` : `Clock: ${clock}. With only a few nuclei, the numbers would jump around.`, C.text);
   if (!p.plot) return;
-  // The plot: what is left (or ln of it) at every step so far.
+  // The plot: what is left (fraction left when comparing two sample sizes, so both share the same curve), or ln of it.
   const px0 = 2.5 + p.grids.length * (gW + 3) + 6; const px1 = f.size.w - 3; const py0 = 9; const py1 = f.size.h - 11;
   box(ctx, F, px0, py0, px1 - px0, py1 - py0, null, C.dim);
   const N0 = p.grids[0].N0;
-  const yOf = n => {
+  const fracMode = p.grids.length > 1 && p.plot !== 'ln' && p.rate == null;
+  const yOf = (n, gN0 = N0) => {
     if (p.plot === 'ln') return py1 - (Math.log(Math.max(n, 1)) / Math.log(N0)) * (py1 - py0);
+    if (fracMode) return py1 - (n / gN0) * (py1 - py0);
     const top = p.rate != null ? p.rate : N0;
     return py1 - (n / top) * (py1 - py0);
   };
   const xOf = tt => px0 + (tt / p.max) * (px1 - px0);
-  say(ctx, p.plot === 'ln' ? 'ln(nuclei left)' : p.rate != null ? 'Count rate' : 'Nuclei left', F.x(px0 + 0.8), F.y(py0 + 1.8), F.size(1.6, 6), { color: C.dust });
-  say(ctx, `${p.unit[0].toUpperCase()}${p.unit.slice(1)}s →`, F.x(px1), F.y(py1 + 2.2), F.size(1.6, 6), { align: 'right', color: C.dust });
-  say(ctx, '0', F.x(px0), F.y(py1 + 2.2), F.size(1.5, 5.6), { color: C.dim });
-  say(ctx, commas(p.max), F.x(px1 - 9), F.y(py1 + 2.2), F.size(1.5, 5.6), { align: 'right', color: C.dim });
+  say(ctx, p.plot === 'ln' ? 'ln(nuclei left)' : fracMode ? 'Fraction left (0 to 1)' : p.rate != null ? 'Count rate' : 'Nuclei left', F.x(px0 + 0.8), F.y(py0 + 1.8), F.size(1.7, 6.5), { color: C.dust });
+  say(ctx, `${p.unit[0].toUpperCase()}${p.unit.slice(1)}s →`, F.x(px1), F.y(py1 + 2.2), F.size(1.7, 6.5), { align: 'right', color: C.dust });
+  say(ctx, '0', F.x(px0), F.y(py1 + 2.2), F.size(1.6, 6), { color: C.dim });
+  say(ctx, commas(p.max), F.x(px1 - 9), F.y(py1 + 2.2), F.size(1.6, 6), { align: 'right', color: C.dim });
   p.grids.forEach((G, gi) => {
     const times = decayTimes(G.N0, p.half, G.seed ?? 7);
     ctx.fillStyle = gi ? C.e : C.amber;
     for (let s = 0; s <= steps; s++) {
       const tt = s * p.step;
       const v = p.rate != null ? rateAt(f, tt) : gridLeft(times, tt);
-      const y = p.plot === 'ln' ? yOf(v) : p.rate != null ? yOf(v) : py1 - (v / N0) * (py1 - py0) * (G.N0 / N0);
-      ctx.fillRect(F.x(xOf(tt)) - 1.5, F.y(clamp(y, py0, py1)) - 1.5, 3, 3);
+      const y = yOf(v, G.N0);
+      ctx.fillRect(F.x(xOf(tt)) - (gi ? 1.2 : 2.0), F.y(clamp(y, py0, py1)) - (gi ? 1.2 : 2.0), gi ? 2.4 : 4, gi ? 2.4 : 4);
     }
   });
 }

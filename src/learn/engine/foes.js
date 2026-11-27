@@ -394,7 +394,7 @@ export const SPECIES = {
 
   'the core': {
     name: 'The Transmutation Core',
-    counter: 'Trial missed: the reading does not match what the reactor shows.',
+    counter: 'Trial missed: check your bench reading.',
     knockback: 'Knocked back. The Core lifts its rods again, but your bench readings remain.',
     hit: 'A control rod drops home into the Core and its vessel cools a step.',
     lines: {

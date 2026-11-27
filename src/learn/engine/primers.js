@@ -108,24 +108,24 @@ export const PRIMERS = {
   /* Cinder Halo (unit14): the nucleus from Tallow, and first-order change from Quicklight. */
   nucleons: {
     title: 'The nucleus',
-    html: `<p>An atom has a tiny nucleus at its centre, made of protons (positive) and neutrons (no charge), with electrons outside it. The number of protons is the atomic number, and it decides the element. Protons plus neutrons is the mass number. Atoms of one element with different numbers of neutrons are isotopes. Slide the number of protons.</p>
+    html: `<p>An atom has a tiny nucleus at its center made of positive protons and neutral neutrons, with electrons outside. The proton count is the atomic number, which determines the element. Protons plus neutrons is the mass number, and atoms of the same element with different neutron counts are isotopes. Slide the proton count.</p>
       ${slider('nu-z', 'Protons', 88, 92, 1, 92)}<p id="nu-v"></p>`,
     wire(root) {
       const names = { 88: 'radium', 89: 'actinium', 90: 'thorium', 91: 'protactinium', 92: 'uranium' };
       bind(root, ['nu-z'], (v, set) => {
         const z = v('nu-z');
-        set('nu-v', `${z} protons: the element is <strong>${names[z]}</strong>, whatever the number of neutrons.`);
+        set('nu-v', `${z} protons: the element is <strong>${names[z]}</strong>, regardless of how many neutrons it has.`);
       });
     }
   },
   firstorder: {
     title: 'First order and half-life',
-    html: `<p>A change is first order when its rate is in step with how much is left: twice as much, twice as fast. Then the time to lose half, the half-life, is the same whatever the amount, and ln of the amount falls in a straight line with time. The rate constant k fixes it: t½ = 0.693 / k. Slide the number of half-lives.</p>
+    html: `<p>A process is first order when its rate is proportional to how much remains: twice as much sample decays twice as fast. That makes its half-life constant for any sample size, linked to the rate constant k by t½ = 0.693 / k. Slide the number of half-lives.</p>
       ${slider('fo-n', 'Half-lives passed', 0, 5, 1, 1)}<p id="fo-v"></p>`,
     wire(root) {
       bind(root, ['fo-n'], (v, set) => {
         const n = v('fo-n');
-        set('fo-v', `Left of 256: ${256 / Math.pow(2, n)} (each half-life halves what is still there).`);
+        set('fo-v', `Remaining out of 256: ${256 / Math.pow(2, n)} (each half-life cuts the remaining amount in half).`);
       });
     }
   },

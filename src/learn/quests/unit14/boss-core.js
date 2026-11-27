@@ -40,8 +40,8 @@ export const STAGES = [
     return {
       id: 'p1-cans',
       title: 'Phase 1 · The Vented Cans',
-      briefing: { speaker: SPEAKER, body: 'The Core keeps three cans by its vents, one baking, one at deck temperature, one frozen. Only one holds a radioactive sample.' },
-      prompt: 'Which of the Core\'s three vented cans holds a radioactive sample?',
+      briefing: { speaker: SPEAKER, body: 'The Core keeps three cans near its vents. Only one holds a radioactive sample.' },
+      prompt: 'Which of the three vented cans holds a radioactive sample?',
       widget,
       table: nukeTable({
         pieces: [
@@ -56,17 +56,17 @@ export const STAGES = [
       encounter: { species: 'the core', act: 'Find Sample', intent: 'The Core hides its radioactive sample among cans at three temperatures.' },
       hints: [
         'Count each can on the counter.',
-        'Compare each can\'s count with the counter\'s background.',
-        'A can\'s temperature can come from the vents; a decaying nucleus counts the same at any temperature.'
+        'Compare each can\'s count rate with background.',
+        'Vent heat changes a can\'s temperature, not how fast a radioactive nucleus decays.'
       ],
       check(state) {
         const card = inSlot(state, 'hot');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a can\'s card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Drag a can card into the answer slot.' };
         if (card.id === 'can-c') return { ok: true };
         const c = keptCount(state.table, card.id);
-        return { ok: false, msg: c != null ? `${card.label} counted ${commas(c)}, about the background.` : `${card.label} has not been counted.` };
+        return { ok: false, msg: c != null ? `${card.label} counted ${commas(c)}, about the same as background.` : `${card.label} has not been counted yet.` };
       },
-      reward: { log: 'Phase 1: the frozen can, C, is the radioactive one.', title: 'Found Frozen', body: 'Can C, the frozen one: it counted far above the background. The cold did nothing to slow its nuclei.' }
+      reward: { log: 'Phase 1: the frozen can, C, is the radioactive one.', title: 'Found Frozen', body: 'Can C, the frozen one, counted far above background. Cold does not slow nuclear decay.' }
     };
   })(),
 
@@ -76,7 +76,7 @@ export const STAGES = [
     return {
       id: 'p2-cask',
       title: 'Phase 2 · The Leaking Cask',
-      prompt: 'Which radiations does the Core\'s leaking cask give off?',
+      prompt: 'Which types of radiation does the leaking cask give off?',
       widget,
       table: nukeTable({
         pieces: [
@@ -89,19 +89,22 @@ export const STAGES = [
       foes: FOE,
       encounter: { species: 'the core', act: 'Seal Cask', intent: 'The Core\'s fuel cask leaks through its lid.' },
       hints: [
-        'Count the cask open, then behind each shield.',
-        'See which shield takes the biggest bite out of the count, and what each leaves behind.',
+        'Count the cask with no shield, then behind paper, aluminium, and lead.',
+        'Notice which shield drops the count sharply and what gets through each one.',
         'Paper stops alpha, aluminium stops beta, and only thick lead slows gamma.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three statements.' };
-        if (pick === 2) return { ok: true };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
         const n = sh => keptCount(state.table, 'cask', { shield: sh });
-        if (pick === 1) return { ok: false, msg: n('open') != null && n('paper') != null ? `Paper took the cask only from ${commas(n('open'))} to ${commas(n('paper'))}.` : 'The cask has not been counted open and behind paper.' };
-        return { ok: false, msg: n('aluminium') != null ? `Behind aluminium the cask still counted ${commas(n('aluminium'))}.` : 'The cask has not been counted behind aluminium.' };
+        if (pick === 2) {
+          if (n('lead') == null) return { ok: false, notYet: true, msg: 'Test the cask behind lead too to confirm what slows the remaining counts.' };
+          return { ok: true };
+        }
+        if (pick === 1) return { ok: false, msg: n('open') != null && n('paper') != null ? `Paper only changed the count from ${commas(n('open'))} to ${commas(n('paper'))}, so there is no alpha.` : 'Count the cask open and behind paper first.' };
+        return { ok: false, msg: n('aluminium') != null ? `Behind aluminium, the cask still counted ${commas(n('aluminium'))}, so something passes aluminium.` : 'Count the cask behind aluminium first.' };
       },
-      reward: { log: 'Phase 2: the cask gives off beta and gamma.', title: 'Cask Sealed', body: 'Beta and gamma: paper barely changed the count, aluminium took most of it, and what was left went on into the lead.' }
+      reward: { log: 'Phase 2: the cask gives off beta and gamma.', title: 'Cask Identified', body: 'Beta and gamma: paper barely changed the count, aluminium blocked the beta particles, and thick lead slowed the gamma rays.' }
     };
   })(),
 
@@ -109,99 +112,99 @@ export const STAGES = [
   {
     id: 'p3-coolant',
     title: 'Phase 3 · The Coolant',
-    prompt: 'Which nucleus is left when sodium-24 in the Core\'s coolant gives off a beta particle?',
+    prompt: 'Which nucleus forms when sodium-24 in the coolant gives off a beta particle?',
     widget,
     table: nukeTable({
       pieces: [],
       fixtures: [
-        nnucFixture('nuc', { x: 36, y: 34 }, { Z: 11, N: 13, mode: 'beta', hideAfter: true, w: 64, h: 50, title: 'Sodium-24' }),
-        nchartFixture('chart', { x: 96, y: 38 }, { z: [9, 14], n: [10, 15], marks: [{ Z: 11, N: 13, label: '' }], eq: { parent: { Z: 11, A: 24 }, particle: { A: 0, Z: '−1', sym: 'e' } }, w: 56, h: 46 })
+        nnucFixture('nuc', { x: 34, y: 34 }, { Z: 11, N: 13, mode: 'beta', hideAfter: true, w: 62, h: 50, title: 'Sodium-24' }),
+        nchartFixture('chart', { x: 96, y: 37 }, { z: [9, 14], n: [10, 15], marks: [{ Z: 11, N: 13, label: '' }], eq: { parent: { Z: 11, A: 24 }, particle: { A: 0, Z: '−1', sym: 'e' } }, w: 60, h: 48 })
       ]
     }),
     foes: FOE,
-    encounter: { species: 'the core', act: 'Drain Coolant', intent: 'The Core\'s sodium coolant has turned radioactive in its neutrons.' },
+    encounter: { species: 'the core', act: 'Drain Coolant', intent: 'Neutrons from the Core turned its sodium coolant radioactive.' },
     hints: [
-      'Press "Watch the Nucleus", then tap a square on the chart.',
-      'Watch which of the nucleus\'s particles changes, and count the protons before and after.',
-      'The electron carries −1 and almost no mass, so balance both numbers with that.'
+      'Press "Watch the Nucleus", then tap the resulting square on the chart.',
+      'Watch which particle changes and count the protons before and after.',
+      'A beta particle carries −1 charge and zero mass number, so balance both numbers.'
     ],
     check(state) {
       const pk = chartPick(state.table, 'chart');
       if (!pk) return { ok: false, notYet: true, msg: 'Tap a square on the chart.' };
       if (pk.Z === 12 && pk.N === 12) return { ok: true };
-      if (pk.Z + pk.N !== 24) return { ok: false, msg: `On the right the mass numbers add to ${pk.Z + pk.N}; on the left, 24.` };
-      return { ok: false, msg: `On the right the atomic numbers add to ${pk.Z - 1}; on the left, 11.` };
+      if (pk.Z + pk.N !== 24) return { ok: false, msg: `The mass numbers do not balance: left is 24, right adds to ${pk.Z + pk.N}.` };
+      return { ok: false, msg: `The atomic numbers do not balance: left is 11, right adds to ${pk.Z - 1}.` };
     },
-    reward: { log: 'Phase 3: sodium-24 becomes magnesium-24.', title: 'Coolant Drained', body: 'Magnesium-24: a neutron became a proton, so the mass number stayed 24 and the atomic number rose to 12.' }
+    reward: { log: 'Phase 3: sodium-24 becomes magnesium-24.', title: 'Coolant Drained', body: 'Magnesium-24: a neutron turned into a proton, keeping the mass number at 24 and raising the atomic number to 12.' }
   },
 
   /* ---------------------------------------------------------------- 4: The Burned-Out Source */
   {
     id: 'p4-source',
-    title: 'Phase 4 · The Burned-Out Source',
-    prompt: 'The Core\'s cobalt-60 source counted 3,200 per minute when sealed: how many years until it counts 400?',
+    title: 'Phase 4 · The Core Sensor Source',
+    prompt: 'How many years will it take the Core\'s cobalt-60 source to drop from 3,200 to 400 counts per minute?',
     widget,
     entry: { id: 'years', label: 'Years', unit: 'years' },
     table: nukeTable({
       pieces: [],
       fixtures: [
-        ndecayFixture('grid', { x: 62, y: 34 }, { grids: [{ N0: 256, seed: 19, label: 'Cobalt-60' }], half: 5.27, unit: 'year', step: 1, max: 10, plot: 'count', rate: 3200, title: 'The source', w: 112, h: 56 }),
-        plaqueFixture('ref', 'Cobalt-60', { x: 137, y: 46 }, ['t½ 5.27 years'], { w: 22 })
+        ndecayFixture('grid', { x: 60, y: 34 }, { grids: [{ N0: 256, seed: 19, label: 'Cobalt-60' }], half: 5.27, unit: 'year', step: 1, bigStep: 5, max: 20, plot: 'count', rate: 3200, title: 'The source', w: 110, h: 56 }),
+        plaqueFixture('ref', 'Cobalt-60', { x: 136, y: 46 }, ['t½ 5.27 years'], { w: 24 })
       ]
     }),
     foes: FOE,
-    encounter: { species: 'the core', act: 'Spend Source', intent: 'The Core runs its sensors on a cobalt-60 source that is wearing out.' },
+    encounter: { species: 'the core', act: 'Time Source', intent: 'The Core runs its sensors on a cobalt-60 source that is decaying.' },
     hints: [
-      'Move the clock on year by year and watch the count rate.',
-      'Compare 400 with 3,200: how many times smaller is it?',
-      'Each halving of the count takes one half-life.'
+      'Advance the clock and watch the count rate drop toward 400.',
+      'Count how many times 3,200 must halve to reach 400.',
+      'Each halving takes one half-life of 5.27 years.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'years');
       if (v == null) return { ok: false, notYet: true, msg: 'Type the number of years.' };
       if (v >= 15.5 && v <= 16.1) return { ok: true };
-      return { ok: false, msg: `After ${v} years the source would count ${commas(3200 * Math.pow(2, -v / 5.27))} per minute.` };
+      return { ok: false, msg: `After ${v} years, the source would count ${commas(3200 * Math.pow(2, -v / 5.27))} per minute.` };
     },
-    reward: { log: 'Phase 4: 3,200 to 400 in three half-lives, 15.8 years.', title: 'Source Spent', body: '15.8 years: 3,200 halves to 1,600, 800, then 400, three half-lives of 5.27 years.' }
+    reward: { log: 'Phase 4: 3,200 to 400 in three half-lives, 15.8 years.', title: 'Three Half-Lives', body: '15.8 years: 3,200 halves three times (1,600, 800, 400), taking three half-lives of 5.27 years.' }
   },
 
   /* ---------------------------------------------------------------- 5: The Core Itself */
   {
     id: 'p5-core',
     title: 'Phase 5 · The Core Itself',
-    prompt: 'How much energy, in MeV, does one fission of uranium-235 into barium-141, krypton-92 and three neutrons give out?',
+    prompt: 'How much energy, in MeV, does one fission of uranium-235 release?',
     widget,
     entry: { id: 'mev', label: 'Energy, MeV', unit: 'MeV' },
     table: nukeTable({
       pieces: [],
       fixtures: [
-        nscaleFixture('scale', { x: 60, y: 36 }, { left: 'U235-fuel', right: 'U235-split', leftLabel: 'Uranium-235 + a neutron', rightLabel: 'Barium + krypton + 3 neutrons', w: 108, h: 50 }),
-        plaqueFixture('ref', 'Mass as energy', { x: 135, y: 46 }, ['1 u = 931.5 MeV'], { w: 26 })
+        nscaleFixture('scale', { x: 60, y: 31 }, { left: 'U235-fuel', right: 'U235-split', leftLabel: 'Uranium-235 + a neutron', rightLabel: 'Barium + krypton + 3 neutrons', showDiff: true, w: 108, h: 46 }),
+        plaqueFixture('ref', 'Mass as energy', { x: 135, y: 42 }, ['1 u = 931.5 MeV'], { w: 26 })
       ]
     }),
     foes: FOE,
     encounter: { species: 'the core', act: 'Shut Down', intent: 'The Core splits uranium with its rods drawn out.' },
     hints: [
-      'Read both pans of the balance.',
-      'Find how much mass goes missing in the split.',
-      'Turn the missing mass into energy with the plate, as you did for helium-4.'
+      'Read both pans and the mass difference on the balance.',
+      'Find how much mass disappears when the nucleus splits.',
+      'Multiply the missing mass by 931.5 MeV/u, just as you did for helium-4.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'mev');
       if (v == null) return { ok: false, notYet: true, msg: 'Type the energy in MeV.' };
       if (v >= 172 && v <= 175) return { ok: true };
-      if (v < 1) return { ok: false, msg: `${v} is the missing mass in u; the plate turns u into MeV.` };
-      if (v > 10000) return { ok: false, msg: 'That turns a whole pan\'s mass into energy, not the part that goes missing.' };
-      return { ok: false, msg: `${v} MeV is the energy of ${(v / 931.5).toFixed(6)} u; the pans differ by another amount.` };
+      if (v < 1) return { ok: false, msg: `${v} is the missing mass in u; multiply by 931.5 to convert u to MeV.` };
+      if (v > 10000) return { ok: false, msg: 'That converts an entire pan\'s mass into energy, not just the missing mass.' };
+      return { ok: false, msg: `${v} MeV equals ${(v / 931.5).toFixed(4)} u; check the mass difference on the balance.` };
     },
-    reward: { log: 'Phase 5: one fission gives out 173 MeV.', title: 'Rods Home', body: 'About 173 MeV: 0.186 u goes missing in each fission. With the rods dropped home, each fission causes less than one more, and the Core goes quiet.' }
+    reward: { log: 'Phase 5: one fission gives out 173 MeV.', title: 'One Fission', body: 'About 173 MeV: each uranium-235 fission loses 0.186 u of mass, converting it directly into energy.' }
   }
 ];
 
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'The Core Is Down', body: 'Its sample, its cask, its coolant, its source and its fuel each answered to an idea you worked out on the benches.' }]
+  sections: [{ heading: 'The Core Is Down', body: 'Every part of the Core followed the same nuclear rules you uncovered on the benches: decay rates, shielding, nuclear equations, half-life, and fission energy.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */
@@ -215,9 +218,9 @@ const tap = (Z, N) => ({ setDial: { fixture: 'chart', dial: 'pick', value: pickV
 
 export const SOLUTIONS = [
   [put('can-a', S), run('rig'), put('can-c', S), run('rig'), put('can-c', 'slot:hot')],
-  [put('cask', S), run('rig'), put('sh-paper', SH), run('rig'), put('sh-al', SH), run('rig'), choose(2)],
+  [put('cask', S), run('rig'), put('sh-paper', SH), run('rig'), put('sh-al', SH), run('rig'), put('sh-pb', SH), run('rig'), choose(2)],
   [run('nuc'), tap(12, 12)],
-  [...clock(6), typed('years', 15.8)],
+  [...clock(16), typed('years', 15.8)],
   [typed('mev', 173.3)]
 ];
 

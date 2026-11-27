@@ -24,12 +24,12 @@ import { nukeTable, ndecayFixture, decayRead, nchoiceFixture, chosenIndex, note,
 import { commas } from '../../table/kits/nuke-draw.js';
 import { C14_LIVING } from '../../engine/nucdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bhalf-li(fe|ves)\b/i, introducedAt: 1 },
-  { term: /\brate constant\b/i, introducedAt: 6 },
-  { term: /\bradiocarbon dating\b/i, introducedAt: 7 }
+  { term: /\brate constant\b/i, introducedAt: 5 },
+  { term: /\bradiocarbon dating\b/i, introducedAt: 6 }
 ];
 
 /** Radioactive decay and count rate (bench 1); first order, half-life and the rate constant (Quicklight `q3-time`). */
@@ -44,32 +44,32 @@ const I131 = 8.02;
 export function toolNoteFor() { return null; }
 
 const inSlot = (state, slot) => Object.values(state.table.pieces).find(p => p.zone === `slot:${slot}`) || null;
-const iodine = (o = {}) => ndecayFixture('grid', { x: 60, y: 31 }, { grids: [{ N0: 256, seed: 7 }], half: I131, unit: 'day', max: 24, plot: 'count', title: 'Iodine-131', ...o });
+const iodine = ({ at = { x: 60, y: 31 }, ...o } = {}) => ndecayFixture('grid', at, { grids: [{ N0: 256, seed: 7 }], half: I131, unit: 'day', max: 24, plot: 'count', title: 'Iodine-131', ...o });
 
 /** Slips a student makes on the typed stages, each refused with a reason. */
-export const SLIPS = { 5: [0, 51, 16, 32, 128, 6], 6: [5.55, 0.125, 11.6, 0.693, 8, 0.0625], 7: [5730, 11460, 45840, 22920, 2865] };
+export const SLIPS = { 5: [5.55, 0.125, 11.6, 0.693, 8, 0.0625], 6: [5730, 11460, 45840, 22920, 2865] };
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     id: 's1-half',
     title: 'Half the Nuclei',
-    briefing: { speaker: SPEAKER, body: 'Each radioactive nucleus has the same chance of decaying in any day, whatever has happened before. The grid shows 256 nuclei of iodine-131 on one clock.' },
-    prompt: 'How many days pass before half of the iodine-131 nuclei have decayed?',
+    briefing: { speaker: SPEAKER, body: 'Each radioactive nucleus has the same chance of decaying on any day, regardless of its age. The grid shows 256 iodine-131 nuclei on one clock.' },
+    prompt: 'On which day have half of the iodine-131 nuclei decayed?',
     widget,
     table: nukeTable({ pieces: [], fixtures: [iodine()] }),
     hints: [
-      'Tap "Wait 1 day" to move the clock on, and "Back" to move it back.',
-      'Watch the count of nuclei left under the grid against the 256 you started with.',
-      'Stop the clock on the first day the grid holds half the nuclei it started with.'
+      'Tap "Wait 1 day" to advance the clock and "Back" to step backward.',
+      'Watch the remaining count under the grid compared with the starting 256.',
+      'Stop the clock on the day 128 nuclei remain, then press Submit.'
     ],
     check(state) {
       const r = decayRead(state.table, 'grid');
-      if (!r.t) return { ok: false, notYet: true, msg: 'The clock has not moved yet.' };
+      if (!r.t) return { ok: false, notYet: true, msg: 'Advance the clock first.' };
       if (r.t === 8) return { ok: true };
-      return { ok: false, msg: `On day ${r.t} the grid holds ${r.left[0]} of the 256.` };
+      return { ok: false, msg: `On day ${r.t}, ${r.left[0]} of 256 nuclei remain (${r.left[0] > 128 ? 'more' : 'less'} than half, 128).` };
     },
-    reward: { log: 'Iodine-131: 128 of 256 left after 8 days.', title: 'Half-Life', body: 'Eight days: 128 of the 256 are left. The time for half of the nuclei of a radioactive sample to decay is its half-life.' }
+    reward: { log: 'Iodine-131: 128 of 256 left after 8 days.', title: 'Half-Life', body: 'Eight days: 128 of 256 nuclei remain. The time it takes for half of a radioactive sample to decay is its half-life.' }
   },
 
   /* ---------------------------------------------------------------- 2 */
@@ -77,27 +77,27 @@ export const STAGES = [
     id: 's2-predict',
     title: 'Two Half-Lives',
     predict: true,
-    prompt: 'After 8 days, half of the iodine-131 is left: how much do you expect is left after 16 days?',
+    prompt: 'If half of the iodine-131 remains after 8 days, how much do you expect remains after 16 days?',
     widget,
     table: nukeTable({
-      pieces: [note('g-none', 'None of it', { x: 34, y: 14 }), note('g-quarter', 'A quarter of it', { x: 34, y: 33 }), note('g-half', 'Still half of it', { x: 34, y: 52 })],
+      pieces: [note('g-none', 'None', { x: 34, y: 14 }), note('g-quarter', 'A quarter', { x: 34, y: 33 }), note('g-half', 'Still half', { x: 34, y: 52 })],
       fixtures: [],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 112, y: 30 }, size: { w: 46, h: 16 } }] }
     }),
     hints: [
-      'Each nucleus still there has the same chance of decaying as on the first day.',
-      'In the second 8 days, ask how many nuclei there are to decay.',
-      'Half of what was there decays in each half-life, and what was there has changed.'
+      'There is no wrong prediction, so drag the card you expect into the slot.',
+      'During the second 8 days, ask how many nuclei are left to decay.',
+      'Each half-life cuts the remaining amount in half, starting from whatever is still there.'
     ],
     check(state) {
-      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!inSlot(state, 'guess')) return { ok: false, notYet: true, msg: 'Drag a prediction card into the slot.' };
       return { ok: true };
     },
     onClear(state) {
       const card = inSlot(state, 'guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Your prediction is recorded. Run the clock.' }
+    reward: { log: 'Prediction recorded.', title: 'Prediction Recorded', body: 'Run the iodine-131 clock to day 16 on the next bench to test your prediction.' }
   },
 
   /* ---------------------------------------------------------------- 3 */
@@ -106,26 +106,28 @@ export const STAGES = [
     return {
       id: 's3-sixteen',
       title: 'Sixteen Days',
-      get prompt() { const g = guess(); return `How much of the iodine-131 is left after 16 days?${g ? ` You predicted ${g}.` : ''}`; },
+      get prompt() { const g = guess(); return `How much iodine-131 remains after 16 days?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
-      table: nukeTable({ pieces: [], fixtures: [iodine(), nchoiceFixture('ans', 'After 16 days', { x: 134, y: 32 }, { options: ['None', 'A quarter', 'A half'], w: 28 })] }),
+      table: nukeTable({ pieces: [], fixtures: [iodine({ bigStep: 8, w: 108, at: { x: 56, y: 31 } }), nchoiceFixture('ans', 'After 16 days', { x: 131, y: 32 }, { options: ['None (0 of 256)', 'A quarter (64 of 256)', 'A half (128 of 256)'], w: 34 })] }),
       hints: [
-        'Run the clock to 16 days.',
-        'Compare what is left at day 16 with what was left at day 8.',
-        'The second 8 days halve the 128 that were still there, not the 256.'
+        'Advance the clock to day 16 using "Wait 8 days" or "Wait 1 day".',
+        'Compare how many nuclei remain at day 16 with day 8.',
+        'The second 8 days cut the remaining 128 nuclei in half, not the original 256.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
-        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three.' };
+        if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
+        const r = decayRead(state.table, 'grid');
         if (pick === 2) return { ok: true };
-        return { ok: false, msg: pick === 1 ? 'At day 16 the grid still holds 64 nuclei.' : 'At day 8 the grid held 128; at day 16 it holds 64.' };
+        if (r.t < 16) return { ok: false, msg: 'Run the clock to day 16 first to see how many nuclei remain.' };
+        return { ok: false, msg: pick === 1 ? 'At day 16, 64 of 256 nuclei remain (one quarter of the start).' : 'Day 8 left 128 nuclei, and day 16 leaves 64 (one quarter of 256).' };
       },
       get reward() {
         const g = guess();
         return {
           log: 'Iodine-131: 64 of 256 left after 16 days.',
           title: 'Half Again',
-          body: `A quarter${g ? ` (you predicted ${g})` : ''}: in the second 8 days half of the 128 still there decayed, leaving 64. Each half-life halves what is left, so it never reaches zero in a whole half-life.`
+          body: `A quarter.${g ? ` You predicted ${g}.` : ''} Each half-life halves whatever remains, so the amount gets smaller without reaching zero in any whole number of half-lives.`
         };
       }
     };
@@ -135,154 +137,132 @@ export const STAGES = [
   {
     id: 's4-amount',
     title: 'Big Sample, Small Sample',
-    prompt: 'Which takes longer to lose half its nuclei: 256 nuclei of iodine-131, or 64?',
+    prompt: 'Which takes longer to lose half its nuclei: 256 iodine-131 nuclei or 64?',
     widget,
     table: nukeTable({
       pieces: [],
       fixtures: [
-        ndecayFixture('grid', { x: 60, y: 31 }, { grids: [{ N0: 256, seed: 7, label: '256' }, { N0: 64, seed: 11, label: '64' }], half: I131, unit: 'day', max: 24, plot: 'count', title: 'Iodine-131, two samples' }),
-        nchoiceFixture('ans', 'Takes longer', { x: 134, y: 32 }, { options: ['The 256', 'The 64', 'Neither'], w: 28 })
+        ndecayFixture('grid', { x: 60, y: 31 }, { grids: [{ N0: 256, seed: 7, label: '256' }, { N0: 64, seed: 11, label: '64' }], half: I131, unit: 'day', bigStep: 8, max: 24, plot: 'count', title: 'Iodine-131, two samples' }),
+        nchoiceFixture('ans', 'Takes longer', { x: 134, y: 32 }, { options: ['The 256 sample', 'The 64 sample', 'Both take the same time'], w: 28 })
       ]
     }),
     hints: [
-      'Run the clock and watch both grids.',
-      'Find the day each grid has half its nuclei left.',
-      'Each nucleus decays with the same chance whatever its neighbours do, so think about what a bigger sample changes.'
+      'Advance the clock to day 8 and compare both grids and the fraction-left graph.',
+      'Check which day each grid drops to half its starting nuclei.',
+      'Every nucleus decays independently with the same odds, so ask whether sample size changes the half-life.'
     ],
     check(state) {
       const pick = chosenIndex(state.table, 'ans');
-      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three.' };
+      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
       if (pick === 3) return { ok: true };
-      return { ok: false, msg: 'On day 8 the large grid holds 128 of 256 and the small grid 32 of 64.' };
+      const r = decayRead(state.table, 'grid');
+      if (r.t < 8) return { ok: false, msg: 'Run the clock to day 8 first to compare how fast both grids halve.' };
+      return { ok: false, msg: 'On day 8, the large grid dropped to 128 of 256 and the small grid dropped to 32 of 64: both halved together.' };
     },
-    reward: { log: 'Both samples halve in 8 days.', title: 'The Same Half-Life', body: 'Neither: both halved in 8 days. The half-life does not depend on how much there is, the mark of a first-order process.' }
+    reward: { log: 'Both samples halve in 8 days.', title: 'The Same Half-Life', body: 'Both take 8 days. Half-life depends only on the isotope, not on how much sample you start with.' }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    id: 's5-five',
-    title: 'Five Half-Lives',
-    prompt: 'How many of 256 iodine-131 nuclei are left after 40 days?',
+    id: 's5-k',
+    title: 'The Rate Constant',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The rate constant k measures how fast an isotope decays: a larger k means a shorter half-life, linked by t½ = 0.693 / k.',
+      worked: ['Cobalt-60: t½ = 5.27 years', 'k = 0.693 ÷ 5.27 = 0.132 per year']
+    },
+    prompt: 'What is the rate constant k of iodine-131, in per day?',
     widget,
-    entry: { id: 'left', label: 'Nuclei left', unit: '' },
-    table: nukeTable({ pieces: [], fixtures: [iodine()] }),
+    entry: { id: 'k', label: 'k, per day', unit: '' },
+    table: nukeTable({ pieces: [], fixtures: [iodine({ bigStep: 8, plot: 'count', w: 112 }), plaqueFixture('ref', 'Rate constant', { x: 134, y: 20 }, ['t½ = 0.693 / k'], { w: 28 })] }),
     hints: [
-      'The clock runs to 24 days: read the grid on days 8, 16 and 24.',
-      'Compare how much each 8 days takes away with how much was there at its start.',
-      'Count how many half-lives 40 days is, and halve 256 that many times.'
+      'Find iodine-131\'s half-life from the grid (8 days).',
+      'Use the formula on the plate to solve for k.',
+      'Rearrange t½ = 0.693 / k the same way as the cobalt-60 example.'
     ],
     check(state) {
-      const v = entryNumber(state.table, 'left');
-      if (v == null) return { ok: false, notYet: true, msg: 'Type the number of nuclei left.' };
-      if (v === 8) return { ok: true };
-      if (v === 0) return { ok: false, msg: 'At day 24 the grid still holds 32, and each 8 days leaves half of what was there.' };
-      if (v === 16) return { ok: false, msg: '16 is what 32 days leaves: four halvings.' };
-      if (v === 32) return { ok: false, msg: '32 is the grid on day 24.' };
-      if (v === 128) return { ok: false, msg: '128 is the grid on day 8.' };
-      return { ok: false, msg: `The grid read 256, 128, 64, 32 on days 0, 8, 16 and 24, and ${v} does not continue that.` };
+      const v = entryNumber(state.table, 'k');
+      if (v == null) return { ok: false, notYet: true, msg: 'Type the rate constant in the box.' };
+      if (v >= 0.085 && v <= 0.0875 + 1e-9) return { ok: true };
+      if (Math.abs(v - 5.55) < 0.05) return { ok: false, msg: 'A longer half-life means a smaller k, so divide 0.693 by the half-life instead of multiplying.' };
+      if (Math.abs(v - 0.125) < 0.002) return { ok: false, msg: 'That is 1 ÷ 8; use 0.693 on top.' };
+      if (Math.abs(v - 11.6) < 0.1) return { ok: false, msg: 'That is 8 ÷ 0.693, which is flipped upside down.' };
+      if (Math.abs(v - 0.693) < 0.001) return { ok: false, msg: '0.693 is the constant in the formula, not k.' };
+      return { ok: false, msg: `With k = ${v}, the half-life would be ${(0.693 / v).toFixed(1)} days, but this grid halves in 8 days.` };
     },
-    reward: { log: 'Five half-lives: 8 of 256 left.', title: 'Halving and Halving', body: 'Eight: forty days is five half-lives, and 256 halved five times is 128, 64, 32, 16, then 8.' }
+    reward: { log: 'Iodine-131: k = 0.0866 per day.', title: 'Rate Constant', body: '0.0866 per day (0.693 ÷ 8). A larger rate constant always means a shorter half-life.' }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
-    id: 's6-k',
-    title: 'The Rate Constant',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'For first-order decay the rate constant k is the fraction of the nuclei that decay in each day, for short times, and t½ = 0.693 / k. The plot here is ln of the nuclei left, which falls in a straight line.',
-      worked: ['Cobalt-60: t½ = 5.27 years', 'k = 0.693 ÷ 5.27 = 0.132 per year']
-    },
-    prompt: 'What is the rate constant of iodine-131, in per day?',
-    widget,
-    entry: { id: 'k', label: 'k, per day', unit: '' },
-    table: nukeTable({ pieces: [], fixtures: [iodine({ plot: 'ln', w: 112 }), plaqueFixture('ref', 'First order', { x: 134, y: 20 }, ['t½ = 0.693 / k'], { w: 28 })] }),
-    hints: [
-      'Run the clock and watch the points on the plot of ln(nuclei left).',
-      'Read the half-life from the grid as you did on the first stage.',
-      'The plate links the half-life you can read off the grid to k, as the worked case did for cobalt-60.'
-    ],
-    check(state) {
-      const v = entryNumber(state.table, 'k');
-      if (v == null) return { ok: false, notYet: true, msg: 'Type the rate constant in the field.' };
-      if (v >= 0.085 && v <= 0.0875 + 1e-9) return { ok: true };
-      if (Math.abs(v - 5.55) < 0.05) return { ok: false, msg: 'That is 0.693 × 8; the plate divides 0.693 by k.' };
-      if (Math.abs(v - 0.125) < 0.002) return { ok: false, msg: 'That is 1 ÷ 8; the plate has 0.693 on top.' };
-      if (Math.abs(v - 11.6) < 0.1) return { ok: false, msg: 'That is 8 ÷ 0.693, upside down.' };
-      if (Math.abs(v - 0.693) < 0.001) return { ok: false, msg: '0.693 is the constant on the plate, not k.' };
-      return { ok: false, msg: `With k = ${v} the half-life would be ${(0.693 / v).toFixed(1)} days, and the grid halved in 8.` };
-    },
-    reward: { log: 'Iodine-131: k = 0.0866 per day.', title: 'Rate Constant', body: '0.0866 per day: 0.693 ÷ 8. A bigger rate constant means a shorter half-life, and ln of what is left falls by k every day.' }
-  },
-
-  /* ---------------------------------------------------------------- 7 */
-  {
-    id: 's7-carbon',
+    id: 's6-carbon',
     title: 'The Carbon Clock',
     briefing: {
       speaker: SPEAKER,
-      body: 'A living thing keeps the same share of carbon-14 as the air, about 15.3 counts per minute for each gram of its carbon. Once it dies none is added, and its carbon-14 halves every 5,730 years.',
-      worked: ['A bone counts 7.7, half of 15.3', 'One half-life: 5,730 years old']
+      body: 'Living wood gives 15.3 carbon-14 counts per minute per gram. Once cut or burned, its carbon-14 halves every 5,730 years.',
+      worked: ['Charred wood at 7.7 is half of 15.3', '1 half-life = 5,730 years old']
     },
-    prompt: 'How old is a bone whose carbon-14 counts 1.9 per minute per gram?',
+    prompt: 'How old is crater charcoal counting 1.9 per minute per gram?',
     widget,
     entry: { id: 'age', label: 'Age, years', unit: '' },
     table: nukeTable({
       pieces: [],
       fixtures: [
-        ndecayFixture('grid', { x: 60, y: 31 }, { grids: [{ N0: 256, seed: 5, label: 'Carbon-14 in a dead bone' }], half: 5730, unit: 'year', step: 1000, max: 12000, plot: 'count', rate: C14_LIVING, rateUnit: 'per minute per gram', rateDp: 1, title: 'Carbon-14 after death' }),
-        plaqueFixture('ref', 'The old bone', { x: 134, y: 20 }, ['1.9 per minute', 'per gram'], { w: 28 })
+        ndecayFixture('grid', { x: 58, y: 31 }, { grids: [{ N0: 256, seed: 5, label: 'Carbon-14 in charred wood' }], half: 5730, unit: 'year', step: 1000, bigStep: 5, max: 24000, plot: 'count', rate: C14_LIVING, rateUnit: 'per minute per gram', rateDp: 1, title: 'Carbon-14 after death', w: 110 }),
+        plaqueFixture('ref', 'Crater wood', { x: 134, y: 24 }, ['Now: 1.9 /min/g', 'Living: 15.3 /min/g', 't½: 5,730 years'], { w: 32 })
       ]
     }),
     hints: [
-      'Move the clock in thousands of years and watch the count rate.',
-      'Compare 1.9 with 15.3: how many times smaller is it?',
-      'Count how many halvings take 15.3 down to 1.9, and each halving is one half-life.'
+      'Advance the clock to see when the count rate drops to 1.9 per minute per gram.',
+      'Count how many times 15.3 must be halved to reach 1.9.',
+      'Multiply the number of half-lives by 5,730 years.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'age');
       if (v == null) return { ok: false, notYet: true, msg: 'Type the age in years.' };
-      if (v >= 16900 && v <= 17500) return { ok: true };
-      if (Math.abs(v - 5730) < 100) return { ok: false, msg: 'After 5,730 years the bone would count 7.7, half the living count.' };
-      if (Math.abs(v - 11460) < 150) return { ok: false, msg: 'After 11,460 years the bone would count 3.8, a quarter.' };
-      return { ok: false, msg: `After ${commas(v)} years the bone would count ${(C14_LIVING * Math.pow(2, -v / 5730)).toFixed(1)} per minute per gram.` };
+      if (v >= 16800 && v <= 17500) return { ok: true };
+      if (Math.abs(v - 5730) < 100) return { ok: false, msg: 'After 5,730 years (one half-life), the count would be 7.7.' };
+      if (Math.abs(v - 11460) < 150) return { ok: false, msg: 'After 11,460 years (two half-lives), the count would be 3.8.' };
+      return { ok: false, msg: `After ${commas(v)} years, the count would be ${(C14_LIVING * Math.pow(2, -v / 5730)).toFixed(1)} per minute per gram.` };
     },
-    reward: { log: 'The bone: three half-lives, 17,190 years.', title: 'Radiocarbon Dating', body: 'About 17,190 years: 15.3 halves to 7.7, 3.8, then 1.9, three half-lives. Finding an age from the carbon-14 left is radiocarbon dating.' }
+    reward: { log: 'The charred wood: three half-lives, about 17,190 years.', title: 'Radiocarbon Dating', body: 'About 17,190 years: 15.3 halves three times (7.7, 3.8, 1.9), giving three half-lives. Measuring age from remaining carbon-14 is radiocarbon dating.' }
   },
 
-  /* ---------------------------------------------------------------- 8 */
+  /* ---------------------------------------------------------------- 7 */
   {
-    id: 's8-vial',
+    id: 's7-vial',
     title: 'The Unlabelled Vial',
-    prompt: 'Which isotope is in the sealed vial?',
+    prompt: 'Which isotope is inside the sealed camp vial?',
     widget,
     table: nukeTable({
       pieces: [],
       fixtures: [
-        ndecayFixture('grid', { x: 50, y: 31 }, { grids: [{ N0: 256, seed: 13, label: 'The vial' }], half: 6.01, unit: 'hour', step: 1, max: 18, plot: 'count', rate: 1600, title: 'The sealed vial', w: 96 }),
+        ndecayFixture('grid', { x: 50, y: 31 }, { grids: [{ N0: 256, seed: 13, label: 'The vial' }], half: 6.01, unit: 'hour', step: 1, bigStep: 6, max: 18, plot: 'count', rate: 1600, title: 'The sealed vial', w: 96 }),
         plaqueFixture('ref', 'Half-lives', { x: 124, y: 15 }, ['Fluorine-18: 1.8 hours', 'Technetium-99m: 6.0 hours', 'Iodine-131: 8.0 days'], { w: 46 }),
-        nchoiceFixture('ans', 'The vial holds', { x: 124, y: 46 }, { options: ['Fluorine-18', 'Technetium-99m', 'Iodine-131'], w: 44 })
+        nchoiceFixture('ans', 'The vial holds', { x: 124, y: 46 }, { options: ['Iodine-131', 'Technetium-99m', 'Fluorine-18'], w: 44 })
       ]
     }),
     hints: [
-      'Move the clock on hour by hour and watch the vial\'s count rate.',
-      'Find how many hours the count rate takes to halve.',
-      'An isotope\'s half-life is its own, whatever the amount, so match the time you measured to the plate.'
+      'Advance the clock hour by hour and watch the vial\'s count rate.',
+      'Find how many hours it takes the count rate to drop from 1,600 to 800.',
+      'Match the half-life you measured to the reference list.'
     ],
     check(state) {
       const pick = chosenIndex(state.table, 'ans');
-      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three.' };
+      if (!pick) return { ok: false, notYet: true, msg: 'Tap one of the three choices.' };
       if (pick === 2) return { ok: true };
-      return { ok: false, msg: pick === 1 ? 'In 2 hours the vial\'s count rate fell from 1,600 to about 1,270, not to half.' : 'In 12 hours the vial\'s count rate fell from 1,600 to about 400.' };
+      const r = decayRead(state.table, 'grid');
+      if (r.t < 2) return { ok: false, msg: 'Advance the clock first to see how fast the count rate drops.' };
+      return { ok: false, msg: pick === 3 ? 'In 2 hours, the count rate only dropped from 1,600 to about 1,270, not half.' : 'In 6 hours, the count rate already halved to 800, far faster than 8 days.' };
     },
-    reward: { log: 'The vial halves every 6 hours: technetium-99m.', title: 'Its Own Signature', body: 'Technetium-99m: the count rate halved every 6 hours. A half-life belongs to the isotope, so it tells you which isotope you have.' }
+    reward: { log: 'The vial halves every 6 hours: technetium-99m.', title: 'Its Own Signature', body: 'Technetium-99m: the count rate halved every 6 hours. Every isotope has its own half-life, which helps identify it.' }
   }
 ];
 
 
 export const DEBRIEF = {
   speaker: SPEAKER,
-  sections: [{ heading: 'What You Found', body: 'In each half-life, half of the nuclei still there decay, whatever the amount. What is left halves and halves again and never reaches zero in a whole step.' }]
+  sections: [{ heading: 'What You Found', body: 'Every half-life cuts the remaining radioactive nuclei in half, regardless of sample size. That steady halving lets you date old samples and identify unknown isotopes.' }]
 };
 
 /* ---- scripts of the player's own actions ---- */
@@ -296,10 +276,9 @@ export const SOLUTIONS = [
   [put('g-none', 'slot:guess')],
   [...clock(16), choose(2)],
   [...clock(8), choose(3)],
-  [...clock(24), typed('left', 8)],
   [...clock(8), typed('k', 0.0866)],
-  [...clock(12), typed('age', 17190)],
-  [...clock(12), choose(2)]
+  [...clock(17), typed('age', 17190)],
+  [...clock(6), choose(2)]
 ];
 
 export const MISSES = [
@@ -307,10 +286,9 @@ export const MISSES = [
   [],
   [...clock(16), choose(1)],
   [...clock(8), choose(1)],
-  [...clock(24), typed('left', 0)],
   [...clock(8), typed('k', 5.55)],
   [...clock(12), typed('age', 11460)],
-  [...clock(12), choose(1)]
+  [...clock(6), choose(3)]
 ];
 
 function blankState() { return {}; }

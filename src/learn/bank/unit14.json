@@ -7,11 +7,11 @@
         {
           "id": "q1-still-warm#b1",
           "quest": "q1-still-warm",
-          "question": "A counter reads 25 counts a minute with nothing in front of it and 25 with a rock sample in front of it. What does that tell you about the rock?",
+          "question": "A counter reads 25 counts per minute with nothing in front of it and 25 with a rock sample in front of it. What does that tell you about the rock?",
           "options": [
             {
               "id": "a",
-              "label": "It gives off no radiation the counter can find"
+              "label": "It gives off no radiation that the counter can detect"
             },
             {
               "id": "b",
@@ -19,20 +19,20 @@
             },
             {
               "id": "c",
-              "label": "It stops background radiation"
+              "label": "It blocks background radiation"
             },
             {
               "id": "d",
-              "label": "Its nuclei decay only when it is warm"
+              "label": "Its nuclei decay only when warmed"
             }
           ],
           "answer": "a",
-          "explanation": "The 25 counts are background radiation from rock, air and space. A sample that adds nothing to the empty count gives off no radiation the counter can find."
+          "explanation": "The 25 counts come from background radiation in rock, air, and space. A sample that adds nothing above that count gives off no radiation the counter can detect."
         },
         {
           "id": "q1-still-warm#b2",
           "quest": "q1-still-warm",
-          "question": "A radioactive sample counts 3,000 a minute at 20 °C. It is heated to 500 °C. About what will it count?",
+          "question": "A radioactive sample counts 3,000 per minute at 20 °C. If it is heated to 500 °C, about what will it count?",
           "options": [
             {
               "id": "a",
@@ -52,7 +52,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Heat makes the atoms move faster but does not reach the nucleus, so the nuclei decay as often as before and the count stays about 3,000."
+          "explanation": "Heating makes atoms move faster but does not affect the nucleus, so the nuclei keep decaying at the same rate (about 3,000 counts per minute)."
         }
       ]
     },
@@ -61,7 +61,7 @@
         {
           "id": "q2-what-comes-off#b1",
           "quest": "q2-what-comes-off",
-          "question": "A source counts 2,000 a minute with nothing in front, 1,950 behind paper, and 30 behind 5 mm of aluminium. The background is 25. What does it give off?",
+          "question": "A source counts 2,000 per minute with no shield, 1,950 behind paper, and 30 behind 5 mm of aluminium (background is 25). What does it give off?",
           "options": [
             {
               "id": "a",
@@ -81,12 +81,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "Paper barely changed the count, so there is no alpha; aluminium brought it down to about the background, so what passed paper was beta, with no gamma left over."
+          "explanation": "Paper barely changed the count, so there is no alpha. Aluminium dropped it to background, meaning the radiation was beta with no gamma left over."
         },
         {
           "id": "q2-what-comes-off#b2",
           "quest": "q2-what-comes-off",
-          "question": "Between two charged plates, which radiation bends toward the negative plate, and only a little?",
+          "question": "Between two charged plates, which radiation bends slightly toward the negative plate?",
           "options": [
             {
               "id": "a",
@@ -106,7 +106,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Alpha particles are positive, so they are pulled toward the negative plate, and they are over 7,000 times as heavy as an electron, so they turn only a little."
+          "explanation": "Alpha particles have a positive charge, so they bend toward the negative plate, and they are over 7,000 times heavier than electrons, so they bend only slightly."
         }
       ]
     },
@@ -135,7 +135,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "An alpha particle carries away mass number 4 and atomic number 2: 226 − 4 = 222 and 88 − 2 = 86, which is radon."
+          "explanation": "An alpha particle removes 4 from the mass number and 2 from the atomic number: 226 − 4 = 222 and 88 − 2 = 86 (radon)."
         },
         {
           "id": "q3-equations#b2",
@@ -160,14 +160,14 @@
             }
           ],
           "answer": "a",
-          "explanation": "In beta decay a neutron becomes a proton and an electron leaves: the mass number stays 14 and the atomic number rises to 7, nitrogen."
+          "explanation": "In beta decay, a neutron turns into a proton and ejects an electron: the mass number stays 14 and the atomic number rises to 7 (nitrogen)."
         }
       ],
       "worked": {
         "id": "q3-equations#w",
         "quest": "q3-equations",
         "title": "Counting the steps of a decay series",
-        "setup": "Neptunium-237 (atomic number 93) decays in a series that ends on bismuth-209 (atomic number 83). Find how many alpha and beta decays it takes.",
+        "setup": "Neptunium-237 (atomic number 93) decays in a series ending at bismuth-209 (atomic number 83). Find how many alpha and beta decays it takes.",
         "steps": [
           {
             "say": "By how much does the mass number fall?",
@@ -175,7 +175,7 @@
             "answer": 28,
             "unit": "",
             "calc": "237 - 209",
-            "hint": "Subtract the end's mass number from the start's.",
+            "hint": "Subtract the ending mass number from the starting mass number.",
             "explain": "237 − 209 = 28."
           },
           {
@@ -206,7 +206,7 @@
             "explain": "83 − 79 = 4 beta decays."
           }
         ],
-        "finish": "Only alpha decay changes the mass number, by 4 each: the fall in mass number counts the alphas, and the betas make up the atomic number."
+        "finish": "Only alpha decay lowers the mass number (by 4 each), so the mass drop gives the alpha decays, and beta decays adjust the atomic number."
       }
     },
     "q4-stability": {
@@ -214,7 +214,7 @@
         {
           "id": "q4-stability#b1",
           "quest": "q4-stability",
-          "question": "Sodium-24 has 11 protons and 13 neutrons; the only stable sodium has 12 neutrons. Which decay will sodium-24 undergo?",
+          "question": "Sodium-24 has 11 protons and 13 neutrons, while stable sodium-23 has 12 neutrons. Which decay will sodium-24 undergo?",
           "options": [
             {
               "id": "a",
@@ -234,7 +234,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "It holds one neutron more than the stable sodium, so it sits above the band; beta decay turns a neutron into a proton and brings it onto magnesium-24, a stable nucleus."
+          "explanation": "Sodium-24 has an extra neutron and sits above the band of stability. Beta decay turns a neutron into a proton, producing stable magnesium-24."
         },
         {
           "id": "q4-stability#b2",
@@ -243,7 +243,7 @@
           "options": [
             {
               "id": "a",
-              "label": "Every proton pushes on every other, and neutrons add the strong nuclear force's hold without adding any push"
+              "label": "Protons repel each other, and extra neutrons add strong nuclear force hold without adding repulsion"
             },
             {
               "id": "b",
@@ -259,7 +259,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "The push between protons grows with every pair of them, but the strong nuclear force holds only touching nucleons, so a big nucleus needs extra neutrons to stay together."
+          "explanation": "Electrical repulsion grows with every pair of protons, while the strong nuclear force only holds touching nucleons. Heavy nuclei need extra neutrons to hold together."
         }
       ]
     },
@@ -293,7 +293,7 @@
         {
           "id": "q5-half-gone#b2",
           "quest": "q5-half-gone",
-          "question": "Two samples of the same isotope, one of 1 g and one of 10 g, are watched. Which loses half of its nuclei first?",
+          "question": "You watch a 1 g sample and a 10 g sample of the same radioactive isotope. Which loses half its nuclei first?",
           "options": [
             {
               "id": "a",
@@ -313,17 +313,17 @@
             }
           ],
           "answer": "a",
-          "explanation": "Radioactive decay is first order: each nucleus has the same chance of decaying in any day, so the half-life is the same whatever the amount, and temperature does not change it."
+          "explanation": "Radioactive decay is first order: every nucleus has the same chance of decaying each day, so half-life does not depend on sample size or temperature."
         }
       ],
       "worked": {
         "id": "q5-half-gone#w",
         "quest": "q5-half-gone",
         "title": "Dating a wooden beam",
-        "setup": "A wooden beam from the Fifth's works counts 3.8 carbon-14 counts per minute per gram; living wood counts 15.3. Carbon-14's half-life is 5,730 years. Find the beam's age.",
+        "setup": "A wooden beam from the Fifth's site counts 3.8 carbon-14 counts per minute per gram, compared to 15.3 in living wood. Carbon-14's half-life is 5,730 years. Find the beam's age.",
         "steps": [
           {
-            "say": "What fraction of the living count does the beam keep? (as a decimal, three places)",
+            "say": "What fraction of the living count remains? (decimal to three places)",
             "kind": "number",
             "answer": 0.248,
             "unit": "",
@@ -359,7 +359,7 @@
             "explain": "k = 0.693 ÷ 5,730 = 1.21 × 10⁻⁴ per year."
           }
         ],
-        "finish": "Each half-life halves the count: count the halvings, then multiply by the half-life."
+        "finish": "Each half-life cuts the count in half: count the halvings, then multiply by the half-life."
       }
     },
     "q6-shortfall": {
@@ -367,7 +367,7 @@
         {
           "id": "q6-shortfall#b1",
           "quest": "q6-shortfall",
-          "question": "A nucleus weighs 0.0100 u less than its protons and neutrons apart. About how much energy holds it together? (1 u = 931.5 MeV)",
+          "question": "A nucleus has 0.0100 u less mass than its separate protons and neutrons. About how much energy binds it together? (1 u = 931.5 MeV)",
           "options": [
             {
               "id": "a",
@@ -387,16 +387,16 @@
             }
           ],
           "answer": "a",
-          "explanation": "The missing mass times 931.5 MeV per u: 0.0100 × 931.5 = 9.3 MeV is its binding energy."
+          "explanation": "Multiply the missing mass by 931.5 MeV/u: 0.0100 × 931.5 = 9.3 MeV of binding energy."
         },
         {
           "id": "q6-shortfall#b2",
           "quest": "q6-shortfall",
-          "question": "Why does splitting a uranium nucleus give energy out, while splitting an iron nucleus would not?",
+          "question": "Why does splitting a uranium nucleus release energy, while splitting an iron nucleus would not?",
           "options": [
             {
               "id": "a",
-              "label": "Uranium's pieces sit higher on the binding-energy curve; iron is already at the top"
+              "label": "Uranium's fragments sit higher on the binding-energy curve, while iron is already at the peak"
             },
             {
               "id": "b",
@@ -412,14 +412,14 @@
             }
           ],
           "answer": "a",
-          "explanation": "Energy comes out when nucleons end up more tightly held. Uranium's pieces hold theirs more tightly than uranium did; iron's nucleons are already held as tightly as any, so splitting it would take energy in."
+          "explanation": "Energy is released when nucleons become more tightly bound. Uranium's fragments are more tightly bound than uranium, whereas iron is already at the peak, so splitting iron absorbs energy."
         }
       ],
       "worked": {
         "id": "q6-shortfall#w",
         "quest": "q6-shortfall",
         "title": "The energy of one fission",
-        "setup": "Uranium-235 (235.043930 u) takes in a neutron (1.008665 u) and splits into barium-141 (140.914403 u), krypton-92 (91.926173 u) and three neutrons. Find the energy one fission gives out.",
+        "setup": "Uranium-235 (235.043930 u) absorbs a neutron (1.008665 u) and splits into barium-141 (140.914403 u), krypton-92 (91.926173 u), and three neutrons. Find the energy released by one fission.",
         "steps": [
           {
             "say": "What is the mass before the split, in u?",
@@ -436,16 +436,16 @@
             "answer": 235.866571,
             "unit": "u",
             "calc": "140.914403 + 91.926173 + 3 * 1.008665",
-            "hint": "Add the barium, the krypton and three neutrons.",
+            "hint": "Add the barium, the krypton, and three neutrons.",
             "explain": "140.914403 + 91.926173 + 3.025995 = 235.866571 u."
           },
           {
-            "say": "How much mass goes missing, in u?",
+            "say": "How much mass is missing, in u?",
             "kind": "number",
             "answer": 0.186024,
             "unit": "u",
             "calc": "235.043930 + 1.008665 - (140.914403 + 91.926173 + 3 * 1.008665)",
-            "hint": "Take the mass after from the mass before.",
+            "hint": "Subtract the mass after from the mass before.",
             "explain": "236.052595 − 235.866571 = 0.186024 u."
           },
           {
@@ -458,7 +458,7 @@
             "explain": "0.186024 × 931.5 = 173.3 MeV."
           }
         ],
-        "finish": "The mass that goes missing comes out as energy: 931.5 MeV for every u."
+        "finish": "The missing mass converts directly into energy at 931.5 MeV per u."
       }
     },
     "boss-core": {
@@ -466,11 +466,11 @@
         {
           "id": "boss-core#b1",
           "quest": "boss-core",
-          "question": "A reactor's control rods soak up neutrons. Why does pushing them further in slow the chain reaction?",
+          "question": "Control rods in a reactor absorb neutrons. Why does pushing them further in slow the chain reaction?",
           "options": [
             {
               "id": "a",
-              "label": "Fewer of each fission's neutrons go on to split another nucleus"
+              "label": "Fewer neutrons from each fission remain free to split other nuclei"
             },
             {
               "id": "b",
@@ -486,7 +486,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Each fission frees about three neutrons; a reaction holds steady when one of them goes on to cause another fission. Rods that soak up more leave fewer than one, so the chain dies away. Temperature does not change how fast nuclei decay."
+          "explanation": "Each fission frees about three neutrons, and a steady reaction needs one of them to cause the next fission. Absorbing more leaves fewer than one, so the chain dies out."
         },
         {
           "id": "boss-core#b2",
