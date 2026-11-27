@@ -48,7 +48,8 @@ export function buildBwBench(ctx, { kind = 'cylinder', plate = 'BN-01', skin = '
   return buildBayBench(ctx, {
     skin,
     plate,
-    mats: ctxMats(ctx),
+    // The plate a student works on keeps its own procedural steel: the photographed plate lands on `M.steel` only.
+    mats: { ...ctxMats(ctx), top: M.benchTop || M.steel },
     tagStyle: { fg: '#14223a', bg: '#d6e0ee' },
     dormant(dormant, { height }) {
       // THE ONE CLEAN THING. The plant is weathered; the cased instrument is the thing somebody uses, so it

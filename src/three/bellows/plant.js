@@ -10,7 +10,7 @@
  */
 
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 function rng(seed) {
   let a = seed >>> 0;
@@ -52,6 +52,34 @@ function between(ctx, a, b, radius, mat) {
 /* ------------------------------------------------------------ the Compressor */
 
 /**
+ * Lay a round body's uvs in metres (`tile` m per repeat, a whole number of repeats round it, so the seam meets),
+ * so a plate texture is the same size on the Compressor as on the decks rather than stretched round 44 m.
+ * `v` follows height. Works for CylinderGeometry and LatheGeometry (both run u 0..1 round the axis).
+ */
+function metricRoundUV(geo, r, tile = 3) {
+  const k = Math.max(1, Math.round((2 * Math.PI * r) / tile));
+  const uv = geo.attributes.uv, p = geo.attributes.position;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * k, p.getY(i) / tile);
+  uv.needsUpdate = true;
+  return geo;
+}
+
+/**
+ * A turned body from a profile of `[r, y]` points (bottom to top). Each step of the profile is its own band, so a
+ * flange's face, its edge and the body above it keep crisp corners instead of one smoothed bulge.
+ */
+function turned(profile, seg) {
+  const bands = [];
+  for (let i = 0; i < profile.length - 1; i++) {
+    const [a, b] = [profile[i], profile[i + 1]];
+    bands.push(new THREE.LatheGeometry([new THREE.Vector2(a[0], a[1]), new THREE.Vector2(b[0], b[1])], seg));
+  }
+  const g = mergeGeometries(bands, false);
+  for (const b of bands) b.dispose();
+  return g;
+}
+
+/**
  * The machine at the middle of the deck: a plinth, a ribbed block, four cylinder
  * heads, a housing with a crown, a piston rod that strokes, a flywheel that turns
  * and an exhaust stack. It is a landmark here and a boss in `boss-compressor.js`;
@@ -67,7 +95,11 @@ export function buildCompressorTower(ctx) {
   plinthGeo.rotateY(Math.PI / 8);
   const plinth = part(ctx, plinthGeo, ctx.M.darkSteel, 0, 0.55, 0, { cast: true });
   g.add(plinth);
-  const block = part(ctx, new THREE.CylinderGeometry(7.0, 7.6, 14, 28), ctx.M.steel, 0, 8.1, 0, { cast: true });
+  // The block: a cast foot flange, the plated body tapering up, a cornice band at its head, a flat top.
+  const blockGeo = metricRoundUV(turned([
+    [0.01, -7], [7.85, -7], [7.85, -6.62], [7.6, -6.5], [7.0, 6.45], [7.28, 6.55], [7.28, 7], [0.01, 7]
+  ], 40), 7.3);
+  const block = part(ctx, blockGeo, ctx.M.steel, 0, 8.1, 0, { cast: true });
   g.add(block);
   for (const y of [3.5, 7.5, 11.5, 15.0]) {
     put(g, part(ctx, new THREE.TorusGeometry(7.3, 0.28, 6, 36), ctx.M.darkSteel, 0, y + 1.1, 0), Math.PI / 2, 0, 0);
@@ -76,7 +108,7 @@ export function buildCompressorTower(ctx) {
   for (let k = 0; k < 4; k++) {
     const a = Math.PI / 4 + (k * Math.PI) / 2;
     const cx = Math.sin(a), cz = Math.cos(a);
-    const barrel = part(ctx, new THREE.CylinderGeometry(2.1, 2.1, 4.2, 18), ctx.M.steel, cx * 9.2, 8.6, cz * 9.2, { cast: true });
+    const barrel = part(ctx, metricRoundUV(new THREE.CylinderGeometry(2.1, 2.1, 4.2, 24), 2.1), ctx.M.steel, cx * 9.2, 8.6, cz * 9.2, { cast: true });
     barrel.rotation.set(Math.PI / 2, 0, 0);
     barrel.rotation.order = 'YXZ';
     barrel.rotation.y = a;
@@ -94,7 +126,12 @@ export function buildCompressorTower(ctx) {
     }
   }
   // The housing and its crown.
-  const housing = part(ctx, new THREE.CylinderGeometry(3.6, 4.3, 9, 22), ctx.M.steel, 0, 19.6, 0, { cast: true });
+  // The housing: a bolted flange where it sits on the block, a band at mid-height, a lip under the crown.
+  const housingGeo = metricRoundUV(turned([
+    [0.01, -4.5], [4.55, -4.5], [4.55, -4.18], [4.3, -4.1], [3.98, 0], [4.12, 0.05], [4.12, 0.4], [3.94, 0.45],
+    [3.6, 4.3], [3.78, 4.35], [3.78, 4.5], [0.01, 4.5]
+  ], 32), 4);
+  const housing = part(ctx, housingGeo, ctx.M.steel, 0, 19.6, 0, { cast: true });
   g.add(housing);
   g.add(part(ctx, new THREE.SphereGeometry(3.6, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), ctx.M.darkSteel, 0, 24.1, 0));
   // The piston rod: it strokes, so it is held out of any bake.
@@ -177,6 +214,43 @@ export function buildLandingPad(ctx) {
 
 /* ------------------------------------------------------------------ vista */
 
+function h3(ix, iy, iz, seed) {
+  let h = Math.imul(ix, 374761393) ^ Math.imul(iy, 668265263) ^ Math.imul(iz, 2147483647) ^ Math.imul(seed, 2246822519);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+function n3(x, y, z, seed) {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  const fx = x - ix, fy = y - iy, fz = z - iz;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = fz * fz * (3 - 2 * fz);
+  const L = (a, b, t) => a + (b - a) * t;
+  const c = (dx, dy, dz) => h3(ix + dx, iy + dy, iz + dz, seed);
+  return L(L(L(c(0, 0, 0), c(1, 0, 0), u), L(c(0, 1, 0), c(1, 1, 0), u), v),
+    L(L(c(0, 0, 1), c(1, 0, 1), u), L(c(0, 1, 1), c(1, 1, 1), u), v), w);
+}
+
+/**
+ * One puff of cumulus, unit size: a sphere pushed out into rounded billows at two scales, its underside pressed
+ * flat (a cumulus has a flat base at its condensation level), smooth-shaded. `seed` makes each puff its own.
+ */
+export function billowPuff(seed, detail = 4) {
+  let g = new THREE.IcosahedronGeometry(1, detail);
+  g.deleteAttribute('normal');
+  g.deleteAttribute('uv');
+  g = mergeVertices(g);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const d = 1 + (n3(x * 2.1 + 7, y * 2.1, z * 2.1, seed) - 0.5) * 0.36 + (n3(x * 4.7, y * 4.7 + 3, z * 4.7, seed + 9) - 0.5) * 0.16;
+    let Y = y * d;
+    if (Y < -0.3) Y = -0.3 + (Y + 0.3) * 0.18;
+    p.setXYZ(i, x * d, Y, z * d);
+  }
+  g.computeVertexNormals();
+  g.userData.smooth = true;
+  return g;
+}
+
 /**
  * Cumulus heads standing out of the cloud sea beyond the rail: a few dozen
  * clusters of soft white spheres at 130 to 520 m. They give the eye the parallax a
@@ -188,7 +262,6 @@ export function buildCloudHeads(ctx, seaLevel, count = 22) {
   g.name = 'bellows-cloud-heads';
   g.userData.phys = 'ambient';
   const r = rng(0xc10dd);
-  const geo = new THREE.IcosahedronGeometry(1, 2);
   const m4 = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   for (let k = 0; k < count; k++) {
@@ -203,11 +276,11 @@ export function buildCloudHeads(ctx, seaLevel, count = 22) {
       const s = size * (0.45 + r() * 0.6);
       const pos = new THREE.Vector3(cx + (r() - 0.5) * size * 1.5, seaLevel + s * 0.35 + r() * size * 0.5, cz + (r() - 0.5) * size * 1.5);
       const scale = new THREE.Vector3(s, s * (0.55 + r() * 0.3), s);
-      parts.push(geo.clone().applyMatrix4(m4.compose(pos, q, scale)));
+      const puff = billowPuff(k * 17 + i);
+      parts.push(puff.applyMatrix4(m4.compose(pos, q, scale)));
     }
     g.add(new THREE.Mesh(ctx.own(mergeGeometries(parts, false)), ctx.M.cloud));
     for (const p of parts) p.dispose();
   }
-  geo.dispose();
   return g;
 }

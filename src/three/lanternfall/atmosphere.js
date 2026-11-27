@@ -188,7 +188,9 @@ export function createLfLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#4a6fb0'), new THREE.Color('#9dc2d6'), 1.35);
+  // The bounce is the snow giving back the sky, so it is never brighter than the sky (it was, which lit every face
+  // from below as much as from above and flattened them): a dim grey-blue under a brighter dusk overhead.
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#5d7fbf'), new THREE.Color('#5f7684'), 1.4);
   return { key, hemi };
 }
 

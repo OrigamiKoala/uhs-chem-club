@@ -16,8 +16,10 @@ import * as THREE from 'three';
 import emberData from './world-data/ember.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, asColorTexture
+  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, asColorTexture,
+  addWorldBoxUV, addWorldVariation
 } from './materials/pbr-kit.js';
+import { loadTexturePack, dressFromPack, packsAvailable } from './materials/texture-pack.js';
 import {
   sinterCrust, blackGlass, sulphurCrust, ventConcrete, lavaCrust, springRipple
 } from './materials/ember-textures.js';
@@ -40,6 +42,8 @@ import {
 import { yawPoint } from './ember/kit.js';
 import { HOST_BUILDERS } from './ember/stations.js';
 import { createEmberEffects } from './ember/effects.js';
+import { patchEmberGround, setEmberGroundPacks, setEmberContacts } from './ember/ground.js';
+import { WALL_T } from './ember/caldera-plan.js';
 import { LampPool } from './lamp-pool.js';
 import { makeCover } from './lib/cover.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
@@ -87,6 +91,7 @@ export class EmberReachWorld {
     this.initHosts();
     this.initEffects();
     this.initLampPool();
+    this.initContacts();
     this.initCover();
     this.bakeStatics();
     this.buildColliders();
@@ -94,6 +99,7 @@ export class EmberReachWorld {
     this.enableAmbientOcclusion();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/ember.js`).
     this.crew = attachCrew(this, 'ember');
+    this.initPacks();
   }
 
   own(...objs) {
@@ -204,12 +210,143 @@ export class EmberReachWorld {
     M.magma.emissiveIntensity = 1.6;
     M.magma.userData.surfaceMaps.push(M.magma.emissiveMap);
 
+    // THE SHELLS' OWN MATERIALS (realism pass). The room shells, retaining walls and kerbs are stock boxes whose
+    // 0..1 face uvs stretch one tile across a 14 m wall; these clones lay every map in world metres instead
+    // (`addWorldBoxUV`), drift in tone and roughness across a wall and break the repeat (`addWorldVariation`). Plant
+    // props and hosts keep the materials they had. At T4 the photographed packs replace their maps (`initPacks`).
+    const shell = (base, metres, wv) => addWorldVariation(addWorldBoxUV(this.cloneBare(base), { metres }), wv);
+    M.shellConcrete = shell(M.concrete, 2.0, { scale: 6, strength: 0.12, roughShift: 0.08, antiTile: 0.45, streaks: 0.28 });
+    // Gallery floors: a power-floated slab, not board-formed (the photographed lifts read as planks underfoot).
+    M.shellFloor = shell(M.concrete, 2.0, { scale: 5, strength: 0.1, roughShift: 0.1, antiTile: 0.4 });
+    M.shellRock = shell(M.rock, 2.0, { scale: 5, strength: 0.18, roughShift: 0.1, antiTile: 0.55 });
+    // Gallery 3's vault had a flat brick colour and no maps; it takes concrete relief in brick red until the photo lands.
+    M.brickRelief = buildMaterial(ventConcrete({ size: texSize(512), seed: 19 }), { repeat: 2, roughness: 1.0 });
+    M.shellBrick = shell(M.brickRelief, 1.5, { scale: 4, strength: 0.14, roughShift: 0.08, antiTile: 0.3, streaks: 0.3 });
+    M.shellBrick.color.set(0x864a37);
+    M.shellSheet = shell(M.hallWall, 2.7, { scale: 7, strength: 0.12, roughShift: 0.1, antiTile: 0.4, streaks: 0.3 });
+    M.shellRoof = shell(M.roofSheet, 2.7, { scale: 7, strength: 0.15, roughShift: 0.12, antiTile: 0.4, streaks: 0.2 });
+    M.shellSinter = shell(M.sinterWarm, 2.0, { scale: 5, strength: 0.12, roughShift: 0.08, antiTile: 0.4, streaks: 0.2 });
+    M.shellSteel = shell(M.darkSteel, 1.0, { scale: 4, strength: 0.1, roughShift: 0.1, antiTile: 0.3 });
+    M.shellRusted = shell(M.rusted, 1.0, { scale: 4, strength: 0.1, roughShift: 0.1, antiTile: 0.3 });
+
     for (const m of Object.values(M)) {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
     }
     this.M = M;
     this.lanternMat = M.lantern;
+  }
+
+  /** A copy of a material that shares its maps but not its bookkeeping (Material.clone would serialise the maps). */
+  cloneBare(m) {
+    const ud = m.userData;
+    m.userData = {};
+    const c = m.clone();
+    m.userData = ud;
+    c.userData.surfaceMaps = [];
+    return c;
+  }
+
+  /* ======================================================================
+     PHOTOGRAPHED SURFACES AND CONTACT (realism pass, docs/plans/realism-ember.md)
+     ====================================================================== */
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (`materials/texture-pack.js`, `public/textures/ember/`, CC0, see LICENSE.md there).
+   * The world is complete with its procedural maps; at 3D On with a renderer the packs are fetched and put into the
+   * same map slots (the shells) or the ground shader's uniforms as they land, each sent to the GPU at once, during the
+   * flight. Nothing is fetched in Node or below T4; a pack that fails leaves the procedural surface it would replace.
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const base = '/textures/ember';
+    const live = () => !this._disposed;
+    const M = this.M;
+    const aniso = this.renderer.capabilities?.getMaxAnisotropy?.() || 8;
+    const upload = (...ts) => {
+      for (const t of ts) {
+        if (!t) continue;
+        t.anisotropy = aniso;
+        try { this.renderer.initTexture(t); } catch (e) { /* drawn later instead */ }
+      }
+    };
+    // `scale` = 1 / the procedural map's repeat, so one photo tile covers the `metres` the shell's box uvs were laid at.
+    const dress = (name, mats) => loadTexturePack(base, name).then(pack => {
+      if (!live() || !pack) return;
+      for (const [mat, o, after] of mats) {
+        const repeat = mat.map?.repeat.x || 1;
+        this.own(...dressFromPack(mat, pack, { scale: 1 / repeat, renderer: this.renderer, ...o }));
+        after?.(mat);
+      }
+    });
+    this.packsReady = Promise.all([
+      dress('concrete', [[M.shellConcrete, { normalScale: 1.0, aoIntensity: 0.8 }, m => m.color.set(0xffffff)]]),
+      dress('basalt', [[M.shellRock, { normalScale: 1.1, aoIntensity: 0.9 }, m => m.color.set(0xc4b8aa)]]),
+      dress('brick', [[M.shellBrick, { normalScale: 1.0, aoIntensity: 0.9 }, m => m.color.set(0xffffff)]]),
+      dress('sheet', [
+        [M.shellSheet, { normalScale: 1.0, aoIntensity: 0.7 }, m => { m.color.set(0xc9bda6); m.metalness = 0.35; }],
+        [M.shellRoof, { normalScale: 1.0, aoIntensity: 0.7 }, m => { m.color.set(0x9a8572); m.metalness = 0.3; }]
+      ]),
+      Promise.all([loadTexturePack(base, 'cinder'), loadTexturePack(base, 'basalt')]).then(([cinder, basalt]) => {
+        if (!live() || !cinder || !basalt) return;
+        upload(cinder.diff, cinder.nor, cinder.arm, basalt.diff, basalt.nor, basalt.arm);
+        setEmberGroundPacks(this.terrainMesh?.material, { cinder, basalt });
+      })
+    ]);
+  }
+
+  /**
+   * CONTACT SHADOW ON THE GROUND. A wall, a gallery front or a vent mound standing on the cinder darkens the ground at
+   * its foot; without that every structure looks set down on the terrain rather than standing in it. The ground
+   * shader (`ember/ground.js`) takes every gallery's outside footprint, every retaining-wall line and every landmark
+   * as distance fields.
+   */
+  initContacts() {
+    const boxes = [];
+    for (const v of this.plan.volumes) {
+      if (v.kind !== 'room') continue;
+      const r = v.room.rect;
+      boxes.push([(r.minX + r.maxX) / 2, (r.minZ + r.maxZ) / 2, (r.maxX - r.minX) / 2 + WALL_T, (r.maxZ - r.minZ) / 2 + WALL_T]);
+    }
+    // Retaining walls: collinear segments joined (gaps under 8 m, the doorways), one thin box per line.
+    const lines = new Map();
+    for (const v of this.plan.openVols) {
+      for (const seg of this.plan.wallSegments(v)) {
+        const alongX = seg.side === 'minZ' || seg.side === 'maxZ';
+        const at = alongX ? seg.az - seg.dirZ * 0.34 : seg.ax - seg.dirX * 0.34;
+        const a = alongX ? Math.min(seg.ax, seg.bx) : Math.min(seg.az, seg.bz);
+        const b = alongX ? Math.max(seg.ax, seg.bx) : Math.max(seg.az, seg.bz);
+        const key = `${alongX ? 'x' : 'z'}:${at.toFixed(2)}`;
+        if (!lines.has(key)) lines.set(key, []);
+        lines.get(key).push([a, b]);
+      }
+    }
+    for (const [key, spans] of lines) {
+      spans.sort((p, q) => p[0] - q[0]);
+      const merged = [];
+      for (const sp of spans) {
+        const last = merged[merged.length - 1];
+        if (last && sp[0] - last[1] < 8) last[1] = Math.max(last[1], sp[1]);
+        else merged.push([...sp]);
+      }
+      const [axis, atS] = key.split(':');
+      const at = Number(atS);
+      for (const [a, b] of merged) {
+        boxes.push(axis === 'x' ? [(a + b) / 2, at, (b - a) / 2, 0.3] : [at, (a + b) / 2, 0.3, (b - a) / 2]);
+      }
+    }
+    const circles = [];
+    const box = new THREE.Box3();
+    for (const { lm, node } of this.landmarkNodes) {
+      if (lm.asset === 'lamp-post' || lm.asset === 'landing-pad' || lm.asset === 'pylon') continue;
+      node.updateMatrixWorld(true);
+      box.setFromObject(node);
+      if (box.isEmpty()) continue;
+      const sz = box.getSize(new THREE.Vector3());
+      circles.push([lm.pos[0], lm.pos[2], Math.min(4, Math.min(sz.x, sz.z) / 2), 0.8]);
+    }
+    setEmberContacts(this.terrainMesh.material, { boxes, circles });
+    this.contactCounts = { boxes: boxes.length, circles: circles.length };
   }
 
   /* ======================================================================
@@ -230,7 +367,7 @@ export class EmberReachWorld {
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.8;
+      this.scene.environmentIntensity = 0.68;
     }
   }
 
@@ -255,6 +392,9 @@ export class EmberReachWorld {
     crust.envMapIntensity = 0.7;
     for (const t of crust.userData.surfaceMaps || []) { t.anisotropy = aniso; this.own(t); }
     this.own(crust);
+    // The photographed ground (`ember/ground.js`): installed now with stand-ins, switched on when the packs land.
+    patchEmberGround(crust);
+    for (const t of crust.userData.groundStandIns) this.own(t);
 
     const geo = this.own(buildEmberTerrainGeometry(this.plan, this.data));
     this.terrainMesh = new THREE.Mesh(geo, crust);
@@ -590,6 +730,7 @@ export class EmberReachWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.effects?.dispose();

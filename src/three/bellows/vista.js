@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { bucketer, flush } from './decks.js';
 import { SEA } from './works-plan.js';
+import { billowPuff } from './plant.js';
 
 function mast(B, x, z, top, w = 2.4) {
   const h = w / 2;
@@ -26,6 +27,7 @@ function mast(B, x, z, top, w = 2.4) {
 
 function bag(B, x, y, z, a, b, c, rotY = 0) {
   const g = new THREE.SphereGeometry(1, 24, 12);
+  g.userData.smooth = true;
   g.scale(a, b, c);
   g.rotateY(rotY);
   g.translate(x, y, z);
@@ -70,7 +72,7 @@ export function buildVista(ctx) {
     for (let k = 0; k < 18; k++) {
       const t = k / 17;
       const size = 70 - t * 30 + Math.abs(r(k)) * 18;
-      const g = new THREE.IcosahedronGeometry(1, 2);
+      const g = billowPuff(300 + k, 3);
       g.scale(size, size * 0.75, size);
       g.translate(40 + r(k + 3) * 40, SEA + 10 + t * 260, 520 + r(k + 7) * 40);
       B.geo('cloud', g);

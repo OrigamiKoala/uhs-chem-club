@@ -20,6 +20,33 @@
 
 import * as THREE from 'three';
 
+/**
+ * Snow drifted against the foot of something standing on the snow: a low ring from the post or plate outward,
+ * highest where it banks against the thing and feathering into the ground at `r`. Without it a post looks set down
+ * on a white floor rather than standing in snow. It lies inside the thing's own footprint (its collider), and a
+ * little below the ground at its rim so a slope never shows its edge.
+ */
+function snowSkirt(ctx, r0, r, h, seed = 1) {
+  const pts = [];
+  const n = 6;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    pts.push(new THREE.Vector2(r0 + (r - r0) * t, h * Math.pow(1 - t, 1.6) - 0.04 * t));
+  }
+  const geo = new THREE.LatheGeometry(pts, 14);
+  // Drifted more on one side than the other (the wind has a direction).
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const a = Math.atan2(p.getZ(i), p.getX(i));
+    const k = 0.75 + 0.25 * Math.cos(a - seed * 1.7);
+    p.setY(i, p.getY(i) * k);
+  }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(ctx.own(geo), ctx.M.snow);
+  m.receiveShadow = ctx.t4;
+  return m;
+}
+
 function rng(seed) {
   let a = seed >>> 0;
   return function () {
@@ -110,7 +137,7 @@ export function buildPressureRidge(ctx, scale = 1, rotY = 0, seed = 1) {
 export function buildAuroraMast(ctx) {
   const g = new THREE.Group();
   const H = 13.5;
-  const legGeo = ctx.own(new THREE.CylinderGeometry(0.05, 0.09, H, 6));
+  const legGeo = ctx.own(new THREE.CylinderGeometry(0.05, 0.09, H, 8));
   for (const [sx, sz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
     const leg = new THREE.Mesh(legGeo, ctx.M.steel);
     leg.position.set(sx * 0.62, H / 2, sz * 0.62);
@@ -142,6 +169,7 @@ export function buildAuroraMast(ctx) {
   const foot = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(1.7, 0.2, 1.7)), ctx.M.darkSteel);
   foot.position.y = 0.1;
   g.add(foot);
+  g.add(snowSkirt(ctx, 0.9, 1.05, 0.17, 2));
   return g;
 }
 
@@ -171,6 +199,7 @@ export function buildCommsMast(ctx) {
   const base = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(0.6, 0.3, 0.6)), ctx.M.darkSteel);
   base.position.y = 0.15;
   g.add(base);
+  g.add(snowSkirt(ctx, 0.3, 0.5, 0.16, 3));
   return g;
 }
 
@@ -184,13 +213,14 @@ export function buildCommsMast(ctx) {
 export function buildLanternPost(ctx, index = 0) {
   const g = new THREE.Group();
   const H = 3.4;
-  const pole = new THREE.Mesh(ctx.own(new THREE.CylinderGeometry(0.045, 0.065, H, 6)), ctx.M.darkSteel);
+  const pole = new THREE.Mesh(ctx.own(new THREE.CylinderGeometry(0.045, 0.065, H, 10)), ctx.M.darkSteel);
   pole.position.y = H / 2;
   pole.castShadow = ctx.t4;
   g.add(pole);
-  const foot = new THREE.Mesh(ctx.own(new THREE.CylinderGeometry(0.16, 0.2, 0.12, 8)), ctx.M.darkSteel);
+  const foot = new THREE.Mesh(ctx.own(new THREE.CylinderGeometry(0.16, 0.2, 0.12, 12)), ctx.M.darkSteel);
   foot.position.y = 0.06;
   g.add(foot);
+  g.add(snowSkirt(ctx, 0.17, 0.4, 0.1, index));
   const arm = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(0.55, 0.04, 0.04)), ctx.M.darkSteel);
   arm.position.set(0.27, H - 0.15, 0);
   g.add(arm);

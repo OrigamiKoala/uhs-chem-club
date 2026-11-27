@@ -9,10 +9,76 @@
  */
 
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const ZED = new THREE.Vector3(0, 0, 1);
+
+/** Seeded 3D value noise in [0, 1]: smooth, the same at the same point every build. */
+function hash3(x, y, z, s) {
+  let h = Math.imul(x | 0, 0x27d4eb2d) ^ Math.imul(y | 0, 0x165667b1) ^ Math.imul(z | 0, 0x1b873593) ^ Math.imul(s | 0, 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39);
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
+}
+function noise3(x, y, z, s) {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  const fx = x - ix, fy = y - iy, fz = z - iz;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = fz * fz * (3 - 2 * fz);
+  const L = (a, b, t) => a + (b - a) * t;
+  const c = (dx, dy, dz) => hash3(ix + dx, iy + dy, iz + dz, s);
+  return L(
+    L(L(c(0, 0, 0), c(1, 0, 0), u), L(c(0, 1, 0), c(1, 1, 0), u), v),
+    L(L(c(0, 0, 1), c(1, 0, 1), u), L(c(0, 1, 1), c(1, 1, 1), u), v), w);
+}
+
+/**
+ * A slab or block as it lies in nature, not as a box is cut: its edges rounded off, its faces worn uneven, chipped at
+ * the corners, optionally tapering toward its top. Seeded, so every build draws the same piece.
+ *
+ * EVERY VERTEX ONLY EVER MOVES INWARD. The piece is the box `sx, sy, sz` with material taken away and never added, so
+ * swapping a box for a chunk of the same size cannot open a new overlap or reach into a bay.
+ *
+ * @param {{ seed?: number, round?: number, wear?: number, chip?: number, taper?: number, cell?: number }} o
+ *   round: edge radius as a fraction of the half-thickness; wear: how deep (m) the faces are worn at most;
+ *   chip: how deep (m) a corner may be broken; taper: how much narrower the top is (fraction); cell: grid size (m)
+ */
+export function chunkGeometry(sx, sy, sz, { seed = 1, round = 0.45, wear = 0.04, chip = 0, taper = 0, cell = 0.45 } = {}) {
+  const seg = v => Math.max(1, Math.min(24, Math.round(v / cell)));
+  const g = new THREE.BoxGeometry(sx, sy, sz, seg(sx) + 1, seg(sy) + 1, seg(sz) + 1);
+  g.deleteAttribute('normal');
+  g.deleteAttribute('uv');
+  const hx = sx / 2, hy = sy / 2, hz = sz / 2;
+  const rad = Math.max(0.005, Math.min(hx, hy, hz) * round);
+  const pos = g.attributes.position;
+  const f = 1 / Math.max(0.35, Math.min(sx, sy, sz) * 0.9);
+  const cl = (v, h) => Math.max(-h + rad, Math.min(h - rad, v));
+  for (let i = 0; i < pos.count; i++) {
+    let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    // Round: the point on a box shrunk by `rad`, pushed back out by `rad` toward where it was.
+    const ix = cl(x, hx), iy = cl(y, hy), iz = cl(z, hz);
+    let dx = x - ix, dy = y - iy, dz = z - iz;
+    const len = Math.hypot(dx, dy, dz) || 1;
+    dx /= len; dy /= len; dz /= len;
+    x = ix + dx * rad; y = iy + dy * rad; z = iz + dz * rad;
+    // Wear the faces in, two octaves; break the corners deeper.
+    const n = 0.65 * noise3(x * f * 1.7, y * f * 1.7, z * f * 1.7, seed) + 0.35 * noise3(x * f * 4.1, y * f * 4.1, z * f * 4.1, seed + 7);
+    const corner = Math.max(0, (Math.abs(x) / hx + Math.abs(y) / hy + Math.abs(z) / hz - 2.2) / 0.8);
+    const chipD = chip * corner * noise3(x * f * 2.3 + 9, y * f * 2.3, z * f * 2.3, seed + 13);
+    const d = wear * n + chipD;
+    x -= dx * d; y -= dy * d; z -= dz * d;
+    // Taper toward the top (inward only).
+    if (taper > 0) {
+      const t = 1 - taper * (y + hy) / sy;
+      x *= t; z *= t;
+    }
+    pos.setXYZ(i, x, y, z);
+  }
+  const welded = mergeVertices(g, 1e-4);
+  g.dispose();
+  welded.computeVertexNormals();
+  return welded;
+}
 
 /** A seeded random in [0, 1). */
 export function rng(seed) {
@@ -53,6 +119,18 @@ export class Buckets {
   /** A box of size `s` at `p`, turned by Euler `r`. */
   box(key, s, p, r = null) {
     const g = new THREE.BoxGeometry(s[0], s[1], s[2]);
+    if (r) g.rotateX(r[0]).rotateY(r[1]).rotateZ(r[2]);
+    g.translate(p[0], p[1], p[2]);
+    return this.add(key, g);
+  }
+
+  /**
+   * A worn, rounded block in place of a box of size `s` at `p`, turned by Euler `r` (`chunkGeometry`). It lies inside
+   * the box it replaces. Seeded from `o.seed`, or from this bucket's own running count.
+   */
+  chunk(key, s, p, r = null, o = {}) {
+    this.chunks = (this.chunks || 0) + 1;
+    const g = chunkGeometry(s[0], s[1], s[2], { seed: 977 + this.chunks * 31, ...o });
     if (r) g.rotateX(r[0]).rotateY(r[1]).rotateZ(r[2]);
     g.translate(p[0], p[1], p[2]);
     return this.add(key, g);

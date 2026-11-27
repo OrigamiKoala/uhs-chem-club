@@ -147,15 +147,25 @@ export function lakeIce(opts = {}) {
   };
 }
 
-/** Wind-carved ice for the spires and the ridges: layered, bluer and clearer than the ground. */
+/**
+ * Glacier ice as it stands in a face: pale and nearly even (the firn bands and the blue are painted per vertex by the
+ * builders, `ground.js` iceSection and `stations.js` glacierIce), worn into shallow melt scallops a hand or two
+ * across, with a few hairline fractures and clouds of trapped air. Laid in world metres (`addWorldBoxUV`), so it is
+ * never stretched along a face. The 2026-11-27 realism pass replaced the banded version (sine stripes that read as
+ * cloth when a sheet's 0..1 uvs stretched them); the old generator is in `archive/2026-11-27/lanternfall-realism/`.
+ */
 export function carvedIce(opts = {}) {
-  const { size = texSize(256), seed = 3, pale = '#c7e0ec', deep = '#5d8eac' } = opts;
+  const { size = texSize(256), seed = 3, pale = '#dfecf2', deep = '#b3cddc' } = opts;
   const S = size;
   const sd = hashStr(`carve${seed}`);
   const height = heightField(S, (u, v) => {
-    const bands = Math.sin(v * 38 + fbm(u * 5, v * 5, { octaves: 3, period: 5, seed: sd }) * 7) * 0.5 + 0.5;
-    const flute = ridged(u * 14, v * 3, { octaves: 3, period: 14, seed: sd ^ 0x44 });
-    return 0.5 + (bands - 0.5) * 0.22 + (flute - 0.5) * 0.28;
+    // Scallops: the cells of a Worley field, dished (each cell a shallow bowl, its rims standing).
+    const cell = worley(u * 5, v * 5, 5, sd).f1;
+    const scallop = Math.pow(Math.min(1, cell * 1.6), 0.8);
+    const fine = fbm(u * 18, v * 18, { octaves: 3, period: 18, seed: sd ^ 0x21 });
+    const crack = ridged(u * 3 + fine * 0.2, v * 3, { octaves: 2, period: 3, seed: sd ^ 0x44 });
+    const hair = Math.max(0, (crack - 0.9) * 10);
+    return 0.5 + (scallop - 0.5) * 0.3 + (fine - 0.5) * 0.12 - hair * 0.12;
   });
   const hf = readHeight(height);
   const paleC = hexToRgb(pale), deepC = hexToRgb(deep);
@@ -164,18 +174,76 @@ export function carvedIce(opts = {}) {
   const img = actx.createImageData(S, S);
   const rough = new Float32Array(S * S);
   for (let i = 0; i < S * S; i++) {
+    const x = i % S, y = (i / S) | 0;
     const h = hf.data[i];
-    const c = rgbLerp(deepC, paleC, clamp01((h - 0.3) * 1.9));
+    // Air in the ice: soft milky clouds, a little paler; the bowls of the scallops a little deeper in tone.
+    const air = clamp01((fbm(x / S * 6, y / S * 6, { octaves: 3, period: 6, seed: sd ^ 0x77 }) - 0.5) * 2.4);
+    let c = rgbLerp(deepC, paleC, clamp01(0.35 + (h - 0.5) * 1.6));
+    c = rgbLerp(c, [236, 243, 246], air * 0.35);
     img.data[i * 4] = c[0];
     img.data[i * 4 + 1] = c[1];
     img.data[i * 4 + 2] = c[2];
     img.data[i * 4 + 3] = 255;
-    rough[i] = clamp01(0.62 - h * 0.45);
+    // Melted bowls are glazed; the rims and the air-clouded ice are rougher.
+    rough[i] = clamp01(0.45 + (h - 0.5) * 0.6 + air * 0.2);
   }
   actx.putImageData(img, 0, 0);
   return {
     albedo: alb, height, roughness: writeField({ data: rough, w: S, h: S }),
-    ao: heightToAO(height, { radius: Math.max(4, S >> 6), strength: 1.0 }),
-    normalStrength: 2.4
+    ao: heightToAO(height, { radius: Math.max(4, S >> 6), strength: 0.6 }),
+    normalStrength: 1.4
+  };
+}
+
+/**
+ * A neutral grain for a surface whose colour comes from elsewhere (the material colour or the vertex paint): rock,
+ * till, boards, snow. Mid-light grey with a mean of `mean`, so a photographed set graded to the same mean can take
+ * its place without the tone moving (`public/textures/lanternfall/`, `texture-pack.js`); this is also the lower-tier
+ * look. `kind` picks the relief: 'rock' (fractured), 'cobble' (rounded stones in fines), 'boards' (planks with grain,
+ * running along v), 'snow' (soft, wind-packed).
+ */
+export function grainSurface(opts = {}) {
+  const { size = texSize(256), seed = 1, kind = 'rock', mean = 0.62, contrast = 0.18 } = opts;
+  const S = size;
+  const sd = hashStr(`grain-${kind}-${seed}`);
+  const boards = 6;
+  const height = heightField(S, (u, v) => {
+    if (kind === 'cobble') {
+      const c = worley(u * 9, v * 9, 9, sd).f1;
+      return 0.5 + (0.5 - Math.min(1, c * 1.8)) * 0.6 + (fbm(u * 30, v * 30, { octaves: 2, period: 30, seed: sd ^ 3 }) - 0.5) * 0.1;
+    }
+    if (kind === 'boards') {
+      const b = u * boards, k = Math.floor(b), f = b - k;
+      const gap = f < 0.035 || f > 0.965 ? -0.35 : 0;
+      const grain = fbm(u * 60, v * 3 + k * 7.1, { octaves: 3, period: 3, seed: sd ^ k });
+      return 0.55 + gap + (grain - 0.5) * 0.25;
+    }
+    if (kind === 'snow') {
+      return 0.5 + (fbm(u * 6, v * 14, { octaves: 4, period: 14, seed: sd }) - 0.5) * 0.5 + (fbm(u * 40, v * 40, { octaves: 2, period: 40, seed: sd ^ 5 }) - 0.5) * 0.12;
+    }
+    const plates = ridged(u * 4, v * 4, { octaves: 4, period: 4, seed: sd });
+    return 0.5 + (fbm(u * 8, v * 8, { octaves: 4, period: 8, seed: sd ^ 9 }) - 0.5) * 0.4 - Math.max(0, plates - 0.82) * 1.6;
+  });
+  const hf = readHeight(height);
+  const alb = canvas2d(S, S);
+  const actx = alb.getContext('2d');
+  const img = actx.createImageData(S, S);
+  const rough = new Float32Array(S * S);
+  for (let i = 0; i < S * S; i++) {
+    const x = i % S, y = (i / S) | 0;
+    const h = hf.data[i];
+    const mottle = fbm(x / S * 5, y / S * 5, { octaves: 3, period: 5, seed: sd ^ 0x31 });
+    const val = clamp01(mean + (h - 0.5) * contrast * 2 + (mottle - 0.5) * contrast) * 255;
+    img.data[i * 4] = val;
+    img.data[i * 4 + 1] = val;
+    img.data[i * 4 + 2] = val;
+    img.data[i * 4 + 3] = 255;
+    rough[i] = clamp01((kind === 'snow' ? 0.86 : 0.9) - (h - 0.5) * 0.2);
+  }
+  actx.putImageData(img, 0, 0);
+  return {
+    albedo: alb, height, roughness: writeField({ data: rough, w: S, h: S }),
+    ao: heightToAO(height, { radius: Math.max(4, S >> 6), strength: 0.6 }),
+    normalStrength: kind === 'snow' ? 0.9 : 1.6
   };
 }

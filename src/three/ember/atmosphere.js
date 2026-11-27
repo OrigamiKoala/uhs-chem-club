@@ -194,7 +194,9 @@ export function followCamera(dome, eye) {
  * shadow: the lake's glow on the underside of the world.
  */
 export function createErLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#ffd0a0'), 2.15);
+  // Realism pass: more of the light comes from the sun and less from an even dome, so faces turned away from it
+  // read as shade rather than as the same flat tone (sun 2.15 -> 2.5, hemisphere 1.1 -> 0.82).
+  const key = new THREE.DirectionalLight(new THREE.Color('#ffd0a0'), 2.5);
   key.position.copy(EMBER_SUN).multiplyScalar(240);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -206,7 +208,8 @@ export function createErLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#c7aa84'), new THREE.Color('#77624e'), 1.1);
+  // The bounce is the dark cinder's: warm and weak, well under the sky (it was nearly as bright as the sky).
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#cdb08c'), new THREE.Color('#4e3f33'), 0.82);
   const glow = new THREE.DirectionalLight(new THREE.Color('#ff8a4c'), 0.32);
   glow.position.set(-8, 26, -120);
   glow.castShadow = false;
@@ -247,7 +250,7 @@ export function createErEnvironment(renderer) {
   envScene.add(dome);
   const floor = new THREE.Mesh(
     new THREE.CircleGeometry(95, 32),
-    new THREE.MeshBasicMaterial({ color: new THREE.Color('#b9ab94').multiplyScalar(0.5) })
+    new THREE.MeshBasicMaterial({ color: new THREE.Color('#7a6452').multiplyScalar(0.5) })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -2;

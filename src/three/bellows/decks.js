@@ -48,12 +48,37 @@ function fbm2(x, z, seed, oct = 3) {
    BUCKETS: everything built here is merged per material
    ====================================================================== */
 
+/**
+ * A box with every edge chamfered by `r`: a rectangle extruded with a one-step bevel, 28 triangles. Nothing made of
+ * plate or poured concrete has a knife edge; the chamfer catches the light and reads the box as built, not drawn.
+ */
+export function chamferBox(sx, sy, sz, r) {
+  const w = sx - 2 * r, h = sy - 2 * r, d = sz - 2 * r;
+  const shape = new THREE.Shape([
+    new THREE.Vector2(-w / 2, -h / 2), new THREE.Vector2(w / 2, -h / 2),
+    new THREE.Vector2(w / 2, h / 2), new THREE.Vector2(-w / 2, h / 2)
+  ]);
+  const g = new THREE.ExtrudeGeometry(shape, {
+    depth: d, bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelOffset: 0, bevelSegments: 1, curveSegments: 1
+  });
+  g.translate(0, 0, -d / 2);
+  return g;
+}
+
+/** The chamfer a built box takes: only slabs, walls and members big enough to show one (no rail bars, no glass). */
+function chamferFor(sx, sy, sz) {
+  const lo = Math.min(sx, sy, sz), hi = Math.max(sx, sy, sz);
+  if (lo < 0.18 || hi < 1.2) return 0;
+  return Math.min(0.06, lo * 0.18);
+}
+
 export function bucketer() {
   const buckets = new Map();
   const push = (key, g) => { let a = buckets.get(key); if (!a) { a = []; buckets.set(key, a); } a.push(g); };
   const box = (key, sx, sy, sz, x, y, z, rx = 0, ry = 0, rz = 0) => {
     if (sx <= 0.001 || sy <= 0.001 || sz <= 0.001) return;
-    const g = new THREE.BoxGeometry(sx, sy, sz);
+    const r = KEEP_UV.has(key) ? 0 : chamferFor(sx, sy, sz);
+    const g = r > 0 ? chamferBox(sx, sy, sz, r) : new THREE.BoxGeometry(sx, sy, sz);
     if (rx || ry || rz) g.rotateX(rx).rotateY(ry).rotateZ(rz);
     g.translate(x, y, z);
     push(key, g);
@@ -117,12 +142,21 @@ const KEEP_UV = new Set(['glass', 'skin', 'canvas', 'cloud', 'lantern']);
 export function flush(ctx, buckets, group, prefix, { phys = 'ground', shadow = true } = {}) {
   for (const [key, geos] of buckets) {
     if (!geos.length) continue;
-    const merged = mergeGeometries(geos.map(g => (g.index ? g.toNonIndexed() : g)), false);
+    // A built piece is shaded flat (its faces are plates); a curved skin marked `userData.smooth` (a sphere, a
+    // drum, a bladder, a cloud) keeps its own normals, so it is not drawn as facets.
+    // Uvs in metres from each piece's faces (`worldUV`), unless the key's or the piece's own uvs carry meaning
+    // (`userData.ownUV`: a sphere laid out in petals).
+    const flat = geos.map(g => {
+      const n = g.index ? g.toNonIndexed() : g;
+      if (!g.userData.smooth) n.computeVertexNormals();
+      if (!KEEP_UV.has(key) && !g.userData.ownUV) worldUV(n);
+      else if (n.attributes.uv) n.setAttribute('uv1', n.attributes.uv.clone());
+      return n;
+    });
+    const merged = mergeGeometries(flat, false);
     for (const g of geos) g.dispose();
+    for (const g of flat) g.dispose();
     if (!merged) continue;
-    merged.computeVertexNormals();
-    if (!KEEP_UV.has(key)) worldUV(merged);
-    else if (!merged.attributes.uv1 && merged.attributes.uv) merged.setAttribute('uv1', merged.attributes.uv.clone());
     ctx.own(merged);
     const mesh = new THREE.Mesh(merged, ctx.M[key] || ctx.M.steel);
     mesh.name = `${prefix}:${key}`;
@@ -202,9 +236,47 @@ function wornLines(plan, v) {
   return lines;
 }
 
+/**
+ * What stands on the decks and shades them at its foot: every room and passage, the plinth, the skirt, the cold
+ * box, the holder's drum and the Compressor's base. `[kind, ..., yLo, yHi]`: a box `minX, maxX, minZ, maxZ` or a
+ * circle `x, z, r`, and the heights it stands between (a deck at another height passes it unshaded).
+ */
+function contactShapes(plan) {
+  const out = [];
+  for (const v of plan.roofedVols) {
+    const r = v.rect, y0 = v.floor.y0;
+    out.push(['box', r.minX - WALL_HALF, r.maxX + WALL_HALF, r.minZ - WALL_HALF, r.maxZ + WALL_HALF, y0 - 0.6, y0 + 6]);
+  }
+  out.push(['box', PLINTH.minX - 0.45, PLINTH.maxX, PLINTH.minZ - 0.45, PLINTH.maxZ, -6.5, PLINTH.top + 0.2]);
+  const S = SPHERE.skirt;
+  out.push(['box', S.minX, S.maxX, S.minZ, S.maxZ, LEVEL.sphere - 0.6, LEVEL.sphere + 30]);
+  out.push(['box', COLDBOX.minX - 0.25, COLDBOX.maxX + 0.25, COLDBOX.minZ - 0.25, COLDBOX.maxZ + 0.25, LEVEL.cold - 0.6, COLDBOX.top]);
+  out.push(['circle', HOLDER.x, HOLDER.z, HOLDER.r + 0.45, LEVEL.holder - 0.5, HOLDER.top]);
+  out.push(['circle', 0, -10, 11.8, PLINTH.top, PLINTH.top + 40]);
+  return out;
+}
+
+/** How much sky a deck point at (x, y, z) loses to what stands beside it: 0 in the open, up to 0.34 at a wall's foot. */
+function contactShade(shapes, x, y, z) {
+  let shade = 0;
+  for (const s of shapes) {
+    let d, yLo, yHi;
+    if (s[0] === 'box') {
+      const dx = Math.max(s[1] - x, 0, x - s[2]), dz = Math.max(s[3] - z, 0, z - s[4]);
+      d = Math.hypot(dx, dz); yLo = s[5]; yHi = s[6];
+    } else {
+      d = Math.max(0, Math.hypot(x - s[1], z - s[2]) - s[3]); yLo = s[4]; yHi = s[5];
+    }
+    if (y < yLo - 0.5 || y > yHi) continue;
+    shade = Math.max(shade, 0.34 * Math.exp(-d / 0.75));
+  }
+  return shade;
+}
+
 /** The walking surface of every open volume: tread plate in metres, worn bright on the lines walked. */
 export function buildDeckPlate(plan, extra = []) {
   const pos = [], uv = [], col = [], idx = [];
+  const shapes = contactShapes(plan);
   const add = (v, lines) => {
     const r = v.rect;
     const nx = Math.max(2, Math.round((r.maxX - r.minX) / 1)), nz = Math.max(2, Math.round((r.maxZ - r.minZ) / 1));
@@ -225,6 +297,8 @@ export function buildDeckPlate(plan, extra = []) {
         const kerb = Math.max(0, 1 - edge / 0.9) * (v.kind === 'deck' ? 0.2 : 0.12);
         let g = 0.78 + wear * 0.26 - (grime - 0.45) * 0.3 - (blot > 0.68 ? (blot - 0.68) * 0.9 : 0) - kerb;
         g = Math.max(0.42, Math.min(1.08, g));
+        // Darker at the foot of whatever stands on the deck: the sky cannot reach it, and grime collects there.
+        g *= 1 - contactShade(shapes, x, floorOf(v, xi, zi), z);
         col.push(g * 0.99, g * 0.98, g * 0.95);
       }
     }
@@ -270,6 +344,8 @@ export function buildWorks(ctx, plan) {
     else if (v.id === 'holder-door') holderPassage(B, v, lamps);
     else lamps.push({ x: (v.rect.minX + v.rect.maxX) / 2, y: v.floor.y0 + 3.6, z: (v.rect.minZ + v.rect.maxZ) / 2, fixture: 'ceiling' });
   }
+  doorFrames(B, plan);
+  cornerAngles(B, plan);
   sphere(B);
   holder(B);
   coldBox(B, plan);
@@ -346,6 +422,60 @@ function openFrame(B, plan, v) {
     const s = (s0 + s1) / 2;
     const [x, z] = at(s, (t0 + t1) / 2);
     latticeLeg(B, x, z, y(s) - 1.82, Math.min(2.4, wid - 0.4));
+  }
+}
+
+/* ---------------------------------------------- door frames and corner angles */
+
+/** Where a door frame is built: the plated rooms and the plinth's passage, each on its face to the open deck. */
+const FRAMED = { 'room-1': WALL_HALF, 'room-4': WALL_HALF, 'room-6': WALL_HALF, 'tower-door': 0 };
+
+/**
+ * A steel frame round every doorway that opens from a plated room (or the plinth) onto a deck: two channel jambs
+ * and a head on the outer face, standing just outside the opening (the clear width is the plan's), and a chequer
+ * threshold across the wall's thickness. A hole cut in plate always has a frame; without one it reads as a gap
+ * in a drawing. 0.06 m proud of the face, so nothing reaches into the walk.
+ */
+function doorFrames(B, plan) {
+  for (const v of plan.roofedVols) {
+    const face = FRAMED[v.id];
+    if (face === undefined) continue;
+    const y0 = v.floor.y0, head = y0 + (v.kind === 'room' ? 4.4 : 4.2);
+    for (const op of v.openings) {
+      if (op.kind === 'window' || !op.to || !OPEN_KINDS.includes(plan.byId.get(op.to)?.kind)) continue;
+      const out = op.side === 'maxX' || op.side === 'maxZ' ? 1 : -1;
+      const plane = v.rect[op.side];
+      const a = plane + out * face, b = a + out * 0.06;     // the outer face, and the frame's own face
+      const n0 = Math.min(a, b) - 0.01, n1 = Math.max(a, b);
+      const alongZ = op.side === 'minX' || op.side === 'maxX';
+      const put = (t0, t1, ya, yb, n0_, n1_, key = 'darkSteel') => alongZ
+        ? B.span(key, n0_, n1_, ya, yb, t0, t1)
+        : B.span(key, t0, t1, ya, yb, n0_, n1_);
+      const W = 0.24;
+      put(op.lo - W, op.lo, y0, head + W, n0, n1);
+      put(op.hi, op.hi + W, y0, head + W, n0, n1);
+      put(op.lo - W, op.hi + W, head, head + W, n0, n1);
+      // The threshold: a plate across the wall's thickness, flush with the floor.
+      const t0 = plane - (face || 0.3), t1 = plane + (face || 0.3);
+      put(op.lo, op.hi, y0 - 0.02, y0 + 0.015, Math.min(t0, t1), Math.max(t0, t1));
+    }
+  }
+}
+
+/**
+ * Angle flashings down the gondola's outside corners (the skirt's corners are its columns, the casing's are its
+ * stiffeners). Sheet ends are always capped.
+ */
+function cornerAngles(B, plan) {
+  const v = plan.byId.get('room-4');
+  const r = v.rect, y0 = v.floor.y0 - 0.6, top = v.floor.y0 + v.room.top + 0.45;
+  const o = WALL_HALF, L = 0.22, T = 0.05;
+  for (const [x, z, sx, sz] of [[r.minX, r.minZ, -1, -1], [r.maxX, r.minZ, 1, -1], [r.maxX, r.maxZ, 1, 1], [r.minX, r.maxZ, -1, 1]]) {
+    if (sx > 0) continue;                           // the east end is the bow
+    const fx = x + sx * o, fz = z + sz * o;
+    const xs = [fx - sx * L, fx + sx * T], zs = [fz - sz * L, fz + sz * T];
+    B.span('darkSteel', Math.min(...xs), Math.max(...xs), y0, top, Math.min(fz, fz + sz * T), Math.max(fz, fz + sz * T));
+    B.span('darkSteel', Math.min(fx, fx + sx * T), Math.max(fx, fx + sx * T), y0, top, Math.min(...zs), Math.max(...zs));
   }
 }
 
@@ -456,7 +586,7 @@ function plinth(B, plan) {
 /* ---------------------------------------------- the rooms */
 
 const ROOM_MAT = {
-  skirt: { wall: 'steel', roof: 'darkSteel', floor: 'grating' },
+  skirt: { wall: 'cladding', roof: 'darkSteel', floor: 'grating' },
   hall: { wall: 'concrete', roof: 'concrete', floor: 'concrete' },
   meter: { wall: 'steel', roof: 'darkSteel', floor: 'grating' },
   gondola: { wall: 'cladding', roof: 'cladding', floor: 'grating' },
@@ -492,7 +622,9 @@ function room(B, plan, v, lamps) {
       return;
     }
     case 'hall':
-      // The hall is cast into the plinth (`plinth`); only its floor's drain channel is added.
+      // The hall is cast into the plinth (`plinth`). A machine hall's floor is chequer plate laid on the slab
+      // (1 cm, flush to the eye), with a drain channel along its back.
+      B.span('hallFloor', r.minX, r.maxX, y0 - 0.02, y0 + 0.005, r.minZ, r.maxZ);
       B.span('darkSteel', r.minX + 0.6, r.maxX - 0.6, y0, y0 + 0.02, r.minZ + 0.5, r.minZ + 0.8);
       return;
     case 'meter': {
@@ -557,10 +689,10 @@ function skirtBand(B, r, from) {
   const S = SPHERE.skirt;
   const cy = from + SPHERE.r;            // the sphere's centre: it rests on the catch deck at its lowest point
   const mid = cy - Math.sqrt(SPHERE.r ** 2 - ((S.maxX - S.minX) / 2) ** 2);
-  B.span('steel', S.minX, S.maxX, from, mid, S.minZ, S.minZ + 0.6);
-  B.span('steel', S.minX, S.maxX, from, mid, S.maxZ - 0.6, S.maxZ);
-  B.span('steel', S.minX, S.minX + 0.6, from, mid, S.minZ + 0.6, S.maxZ - 0.6);
-  B.span('steel', S.maxX - 0.6, S.maxX, from, mid, S.minZ + 0.6, S.maxZ - 0.6);
+  B.span('cladding', S.minX, S.maxX, from, mid, S.minZ, S.minZ + 0.6);
+  B.span('cladding', S.maxX - 0.6, S.maxX, from, mid, S.minZ + 0.6, S.maxZ - 0.6);
+  B.span('cladding', S.minX, S.maxX, from, mid, S.maxZ - 0.6, S.maxZ);
+  B.span('cladding', S.minX, S.minX + 0.6, from, mid, S.minZ + 0.6, S.maxZ - 0.6);
   B.span('darkSteel', S.minX - 0.04, S.maxX + 0.04, mid, mid + 0.4, S.minZ - 0.04, S.maxZ + 0.04);
   const half = (S.maxX - S.minX) / 2;
   const corner = cy - Math.sqrt(Math.max(0, SPHERE.r ** 2 - 2 * half * half));
@@ -575,8 +707,15 @@ function sphere(B) {
   const r = SPHERE.skirt;
   const roofTop = LEVEL.sphere + 5.2 + 0.45;
   const cy = roofTop + SPHERE.r;
-  const g = new THREE.SphereGeometry(SPHERE.r, 48, 32);
+  const g = new THREE.SphereGeometry(SPHERE.r, 72, 40);
+  // Its plates laid as a Horton sphere's are: courses of 2.5 m plates round it, narrowing to petals at the poles
+  // (the sphere's own uvs in metres), not a box projection that tears at every 45 degrees.
+  const uv = g.attributes.uv;
+  const ku = Math.round((2 * Math.PI * SPHERE.r) / 2.5 / 3) * 3, kv = Math.round((Math.PI * SPHERE.r) / 2.5);
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * ku * (2.5 / 3), uv.getY(i) * kv * (2.5 / 3));
   g.translate(SPHERE.x, cy, SPHERE.z);
+  g.userData.smooth = true;
+  g.userData.ownUV = true;
   B.geo('cladding', g);
   // The equator girder, a ring of meridian seams, the top manway and relief valves.
   const eq = new THREE.TorusGeometry(SPHERE.r + 0.12, 0.22, 6, 64);
@@ -608,7 +747,10 @@ function arc(r, y0, y1, t0, tl, seg, inward = false) {
   if (inward) {
     const idx = g.index.array;
     for (let i = 0; i < idx.length; i += 3) { const t = idx[i]; idx[i] = idx[i + 2]; idx[i + 2] = t; }
+    const n = g.attributes.normal;
+    for (let i = 0; i < n.count; i++) n.setXYZ(i, -n.getX(i), -n.getY(i), -n.getZ(i));
   }
+  g.userData.smooth = true;
   return g;
 }
 
@@ -626,8 +768,9 @@ function holder(B) {
   }
   // The floor of the drum and the dome on top.
   B.cyl('grating', R, R, 0.4, 48, hx, y0 - 0.2, hz);
-  const dome = new THREE.SphereGeometry(R * 1.45, 40, 10, 0, Math.PI * 2, 0, 0.75);
+  const dome = new THREE.SphereGeometry(R * 1.45, 48, 10, 0, Math.PI * 2, 0, 0.75);
   dome.translate(hx, HOLDER.top - R * 1.45 * Math.cos(0.75), hz);
+  dome.userData.smooth = true;
   B.geo('darkSteel', dome);
   // Stanchions round the outside and ring girders, the door's two jambs left clear.
   for (let k = 0; k < 24; k++) {
@@ -823,18 +966,46 @@ function cradle(B, plan, v) {
 
 /* ---------------------------------------------- the two bladders */
 
+/** Load straps round a bag's girth, as fractions of its half-length (`bags` draws them). */
+const STRAPS = [-0.6, -0.3, 0, 0.3, 0.6];
+
+/**
+ * A bladder's envelope: an ellipsoid of rubberised fabric in sixteen gores, each panel drawn a little in along
+ * its seams and pulled in again under every load strap, so the skin reads as cloth under pressure rather than a
+ * solid. Every vertex only ever moves inward (at most 1.3 % of the radius), so whatever is built to the bag's
+ * belly (`bagBelly`) still meets it.
+ */
+function bagSkin(bag) {
+  const g = new THREE.SphereGeometry(1, 96, 40);
+  const p = g.attributes.position;
+  const GORES = 16;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    // The bag lies along x: gores run from end to end, round the x axis.
+    const ang = Math.atan2(y, z);
+    const ring = Math.hypot(y, z);
+    const seam = Math.pow(Math.abs(Math.cos(ang * GORES / 2)), 6);         // 1 on a seam, 0 mid-panel
+    let strap = 0;
+    for (const f of STRAPS) strap = Math.max(strap, Math.exp(-((x - f) ** 2) / 0.0012));
+    const k = 1 - ring * (0.009 * seam + 0.006 * strap);
+    p.setXYZ(i, x, y * k, z * k);
+  }
+  g.scale(bag.a, bag.b, bag.c);
+  g.translate(bag.x, bag.y, bag.z);
+  g.computeVertexNormals();
+  g.userData.smooth = true;
+  return g;
+}
+
 function bags(B, plan) {
   for (const bag of BAGS) {
-    const g = new THREE.SphereGeometry(1, 56, 28);
-    g.scale(bag.a, bag.b, bag.c);
-    g.translate(bag.x, bag.y, bag.z);
-    B.geo('skin', g);
+    B.geo('skin', bagSkin(bag));
     // Load straps round the bag's girth, a valve and its cage on top.
-    for (const f of [-0.6, -0.3, 0, 0.3, 0.6]) {
+    for (const f of STRAPS) {
       const x = bag.x + f * bag.a;
       const k = Math.sqrt(1 - f * f);
       const strap = new THREE.TorusGeometry(1, 0.012, 4, 48);
-      strap.scale(bag.c * k + 0.05, bag.b * k + 0.05, 1);
+      strap.scale(bag.c * k * 0.994 + 0.03, bag.b * k * 0.994 + 0.03, 1);   // drawn into the skin (`bagSkin`)
       strap.rotateY(Math.PI / 2);
       strap.translate(x, bag.y, bag.z);
       B.geo('darkSteel', strap);

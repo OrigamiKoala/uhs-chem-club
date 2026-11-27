@@ -267,7 +267,7 @@ export function buildShoreRidges(ctx, plan) {
       const L = 1.4 + r() * 2.0, W = 1.0 + r() * 1.4, T = 0.25 + r() * 0.2;
       const yaw = Math.atan2(e.out[0], e.out[1]) + (r() - 0.5) * 0.9;
       const tilt = 0.35 + r() * 0.7;
-      b.box('slab', [L, T, W], [px, gy + Math.sin(tilt) * W * 0.32, pz], [tilt * (r() < 0.5 ? 1 : -1), yaw, (r() - 0.5) * 0.4]);
+      b.chunk('slab', [L, T, W], [px, gy + Math.sin(tilt) * W * 0.32, pz], [tilt * (r() < 0.5 ? 1 : -1), yaw, (r() - 0.5) * 0.4], { round: 0.55, wear: 0.05, chip: 0.12 });
       placed.push([px, pz]);
     }
   }
@@ -277,7 +277,7 @@ export function buildShoreRidges(ctx, plan) {
     const px = -20 + t * 46 + (r() - 0.5) * 2.5, pz = -9 + t * 22 + (r() - 0.5) * 2.5;
     if (lakeE(px, pz) > 0.86 || plan.inBuilt(px, pz, 3)) continue;
     const L = 1.6 + r() * 2.4, W = 1.0 + r() * 1.6;
-    b.box('slab', [L, 0.3, W], [px, LAKE.ice + 0.2 + r() * 0.5, pz], [0.4 + r() * 0.8, Math.atan2(46, 22) + (r() - 0.5), (r() - 0.5) * 0.5]);
+    b.chunk('slab', [L, 0.3, W], [px, LAKE.ice + 0.2 + r() * 0.5, pz], [0.4 + r() * 0.8, Math.atan2(46, 22) + (r() - 0.5), (r() - 0.5) * 0.5], { round: 0.55, wear: 0.05, chip: 0.12 });
   }
   return b.build(ctx.M, 'lanternfall-shore-ridges', { shadows: ctx.t4 });
 }
@@ -286,14 +286,20 @@ export function buildShoreRidges(ctx, plan) {
 export function buildSnout(ctx) {
   const b = new Buckets();
   const x0 = GLACIER.west - 2, x1 = GLACIER.east + 2;
-  const nu = Math.round((x1 - x0) / 0.8);
-  b.sheet('faceIce', nu, 22, (u, v) => {
+  const nu = Math.round((x1 - x0) / 0.55);
+  b.sheet('faceIce', nu, 30, (u, v) => {
     const x = x0 + (x1 - x0) * u;
     const edge = smooth(x0, x0 + 6, x) * smooth(x1, x1 - 6, x);
     const top = LAKE.ice + (glacierSurface(x, GLACIER.snout) + 0.4 - LAKE.ice) * edge;
     const serac = (ridge2(x * 0.35, 3.1, 81, 2) - 0.5) * 2.4 * edge;
     const y = LAKE.ice - 0.3 + (top + serac + 0.3) * v;
-    const z = GLACIER.snout + 1.1 + (fbm2(x * 0.25, y * 0.2, 83, 2) - 0.5) * 1.6 * smooth(0, 0.3, v);
+    // Melt flutes: the face is scalloped into vertical runnels where meltwater ran down it in summer, wandering a
+    // little. The ribs between them stand at most FLUTE proud of where the face stood before; the runnels are cut back
+    // from there, never behind the land's own cliff (which would show through).
+    const FLUTE = 0.77;
+    const wander = fbm2(x * 0.08, y * 0.12, 85, 2) * 4;
+    const flute = 0.55 * Math.pow(Math.abs(Math.sin(x * 0.85 + wander)), 0.7) + 0.22 * Math.pow(Math.abs(Math.sin(x * 2.6 + wander * 1.7)), 0.8);
+    const z = GLACIER.snout + 1.1 + (fbm2(x * 0.25, y * 0.2, 83, 2) - 0.5) * 1.6 * smooth(0, 0.3, v) + (FLUTE - flute) * smooth(0, 0.12, v) * edge;
     return [x, y, z];
   }, iceSection);
   return b.build(ctx.M, 'lanternfall-snout', { shadows: false });
@@ -359,7 +365,9 @@ export function buildVista(ctx, plan) {
     const x = -70 + r() * 150, z = -180 - r() * 120;
     const y = plan.landHeight(x, z);
     const s = 3 + r() * 7;
-    b.box('serac', [s, s * (0.8 + r()), s * (0.6 + r() * 0.5)], [x, y + s * 0.3, z], [(r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.4]);
+    // A serac is a block broken off the icefall's step: rounded by sun and wind, its top narrower, its corners gone.
+    b.chunk('serac', [s, s * (0.8 + r()), s * (0.6 + r() * 0.5)], [x, y + s * 0.3, z], [(r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.4],
+      { round: 0.3, wear: s * 0.1, chip: s * 0.3, taper: 0.3, cell: s / 3 });
   }
   // SOUTH: the outwash plain's channels, frozen, braided down to the south.
   for (let k = 0; k < 5; k++) {
@@ -391,4 +399,56 @@ export function buildVista(ctx, plan) {
     b.cyl('steel', 0.04, 0.04, 4, 6, [tx, gy + H + 3, tz]);
   }
   return b.build(ctx.M, 'lanternfall-vista', { phys: 'ambient', shadows: false });
+}
+
+/* ======================================================================
+   CONTACT SHADE (baked per vertex)
+   ====================================================================== */
+
+/**
+ * Darken the ground where something stands on it or a wall rises from it: the sky cannot reach the foot of a cut face,
+ * the snow banked round a room, or the ice round a cave on the lake, so the foot is a little darker, fading out over a
+ * metre or two. Baked into the vertex colour once (the terrain's grid has lines snapped to every wall's foot), so it
+ * costs nothing per frame and needs no extra light.
+ *
+ * @param {THREE.BufferGeometry} geo a ground mesh; given a white colour attribute first if it has none
+ * @param {{ faces?: Array<{a, b, floor, top}>, boxes?: number[][], circles?: number[][], strength?: number }} o
+ *   faces: cut faces (`plan.cutFaces()`), shade at their foot by how tall they stand; boxes [minX, minZ, maxX, maxZ];
+ *   circles [x, z, r]
+ */
+export function bakeContactShade(geo, { faces = [], boxes = [], circles = [], strength = 0.38 } = {}) {
+  const pos = geo.attributes.position;
+  if (!geo.attributes.color) {
+    const c = new Float32Array(pos.count * 3).fill(1);
+    geo.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  }
+  const col = geo.attributes.color;
+  const segs = faces.map(f => {
+    const tall = Math.max(f.top[0] - f.floor[0], f.top[1] - f.floor[1]);
+    return { ax: f.a[0], az: f.a[1], bx: f.b[0], bz: f.b[1], foot: Math.min(f.floor[0], f.floor[1]), w: smooth(0.4, 2.5, tall) };
+  }).filter(s => s.w > 0.02);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    let occ = 0;
+    for (const s of segs) {
+      if (y > s.foot + 0.6) continue;
+      const dx = s.bx - s.ax, dz = s.bz - s.az;
+      const t = Math.max(0, Math.min(1, ((x - s.ax) * dx + (z - s.az) * dz) / (dx * dx + dz * dz || 1)));
+      const d = Math.hypot(x - (s.ax + dx * t), z - (s.az + dz * t));
+      if (d < 4) occ = Math.max(occ, s.w * Math.exp(-d / 1.1));
+    }
+    for (const [x0, z0, x1, z1] of boxes) {
+      const qx = Math.max(x0 - x, 0, x - x1), qz = Math.max(z0 - z, 0, z - z1);
+      const d = Math.hypot(qx, qz);
+      if (d < 5) occ = Math.max(occ, Math.exp(-d / 1.4));
+    }
+    for (const [cx, cz, r] of circles) {
+      const d = Math.max(0, Math.hypot(x - cx, z - cz) - r);
+      if (d < 4) occ = Math.max(occ, Math.exp(-d / (0.5 + 0.3 * r)));
+    }
+    const k = 1 - strength * occ;
+    col.setXYZ(i, col.getX(i) * k, col.getY(i) * k, col.getZ(i) * k);
+  }
+  col.needsUpdate = true;
+  return geo;
 }

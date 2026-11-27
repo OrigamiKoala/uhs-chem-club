@@ -349,6 +349,43 @@ iff a quest has a module). Plans: `docs/archive/2026-11-26/plans/learn-track.md`
   roughness drift, anti-tile second sample, optional run streaks) and `addWorldBoxUV` (box-projected world uvs for
   stock boxes). Tallow's ground shader takes contact occlusion as distance fields (`setTallowContacts`) and a
   photographed grain (`setTallowGrain`); salt drifts at hall feet are `phys: 'ground'` and stay within 0.5 m of the wall.
+- **Lanternfall realism pass (2026-11-27, `docs/plans/realism-lanternfall.md`).** Second user of `texture-pack.js`
+  (six packs in `public/textures/lanternfall/`, 2.8 MB, T4 only, graded by `tools/textures/prep_lanternfall.py`).
+  Lanternfall calls `loadTexturePack` + `dressFromPack` itself (not `dressWorld`) so a pack can be used for its relief
+  only (`{ diff: null, nor, arm: null }`: the ice faces take the rock photo's normal and keep their own colour) and so
+  a metal's paint can move into `color` when its neutral photo lands. Three reusable things, all in Lanternfall's own
+  files: `lanternfall/kit.js` `chunkGeometry` / `Buckets.chunk` (a seeded, rounded, worn, chipped block that only ever
+  loses material inside the box it replaces, so swapping a box for one cannot open an overlap or reach a bay);
+  `lanternfall/ground.js` `bakeContactShade` (contact darkening baked into a ground mesh's vertex colour from cut faces,
+  footprint boxes and circles, no per-frame cost); and the `initSurfaces` pattern: shader patches (`addWorldBoxUV`,
+  `addWorldVariation`) go on AFTER the build, on the material and its kit-made `__vc` twin, because `Material.clone`
+  copies `userData` (the patch flags) but not `onBeforeCompile`. A material that had no maps is given a neutral
+  procedural set (`grainSurface`) graded to the photo's mean, so the slot exists to swap into and the tone holds.
+- **Bellows realism pass (2026-11-27, `docs/plans/realism-bellows.md`).** Third user of `texture-pack.js`, through
+  `dressWorld` (`BellowsWorld.initPacks`): six Poly Haven packs in `public/textures/bellows/` (1.6 MB, T4 only, graded
+  by `tools/textures/prep_bellows.py`; painted packs carry metalness 0). The bench plate is its own clone
+  (`M.benchTop`, passed as `mats.top` in `stations.js`), so no photo or world variation reaches it. Reusable pieces in
+  `bellows/decks.js`: `chamferBox` (a 28-triangle box chamfered on every edge; `bucketer().box` uses it for any slab
+  or member at least 0.18 m thick and 1.2 m long), and two per-geometry flags `flush` reads — `userData.smooth`
+  (keep the piece's own normals instead of flat shading: spheres, drums, bladders, clouds) and `userData.ownUV` (keep
+  its own uvs instead of `worldUV`: the sphere's plates laid in courses). `plant.js` `billowPuff` makes a cumulus
+  puff (displaced, flat-based, smooth); `turned` builds a lathe body band by band so flanges keep crisp edges.
+  Contact shade is baked into the deck plate's vertex colour (`contactShapes` / `contactShade`).
+- **Ember Reach realism pass (2026-11-27, `docs/plans/realism-ember.md`).** Fourth user of `texture-pack.js`, through
+  `loadTexturePack` + `dressFromPack` (`EmberReachWorld.initPacks`): five Poly Haven packs in `public/textures/ember/`
+  (2.7 MB, T4 only, graded by `tools/textures/prep_ember.py`). Reusable pieces, all in Ember's own files:
+  `ember/ground.js` `patchEmberGround` (a terrain material samples photographs in WORLD METRES: one pack projected
+  from above for level ground, one triplanar for steep ground, blended by slope with a frayed edge, anti-tile and far
+  samples, each divided by its own mean so the vertex paint still sets the colour; the patch compiles at build with
+  1×1 stand-ins and `uEGOn` 0, and the packs arrive as uniforms, so nothing recompiles) and `setEmberContacts`
+  (contact darkening as box and circle distance fields, also in the procedural fallback). `caldera-plan.js`
+  `bankGalleries` / `buriedRooms`: the land height is banked round a gallery's sides and back to just over its roof and
+  the terrain runs on over the roof (only the doorway's front cell stays cut), so a gallery reads as cut into the cliff;
+  `height()` never reads it inside a walk volume, so the walk and every check are unchanged. `ember/terrain.js`:
+  `addRockBox` (subdivided box pushed inward by noise, tapered at the edges, never past 45% of the half-thickness),
+  `ROUND` (concrete and brick shells become `RoundedBoxGeometry` within their own bounds), `addTube` (round rail and
+  posts), `axisLines({ growth, bands })` (denser far grid plus an even band over the cone). The shells draw with their
+  own clones (`SHELL_MAT` -> `M.shell*`, world box uvs and world variation), so plant props and hosts keep theirs.
 - **Bellows** (`unit04`, `three/bellows.js` + `bellows/`, `tools/gen-bellows-layout.mjs`, `tools/verify-bellows.mjs`; site rebuilt 2026-11-18, `docs/archive/2026-11-26/plans/bellows-world.md`
   "Site rebuild (2026-11-18)"): A GAS WORKS OVER THE CLOUD, NO GROUND. `bellows/works-plan.js` (pure data on `lib/workings.js`) declares the floor levels (`LEVEL`: stage and
   apron 0, sphere +8, tower hall -4, holder -8, mooring deck +4, cradle -5, cold deck +12), the structures (`PLINTH`, `SPHERE`, `HOLDER`, `COLDBOX`, `BAGS` with `bagBelly`),

@@ -32,8 +32,9 @@ import * as THREE from 'three';
 import bellowsData from './world-data/bellows.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, treadPlate, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic
+  platedMetal, treadPlate, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, addWorldVariation
 } from './materials/pbr-kit.js';
+import { dressWorld, packsAvailable } from './materials/texture-pack.js';
 import { slabConcrete, ribbedSheet } from './materials/kettle-textures.js';
 import {
   createBwSkyDome, createCloudSea, createBwLights, followBwShadow, createBwEnvironment,
@@ -96,6 +97,7 @@ export class BellowsWorld {
     this.buildColliders();
     this.collectMovers();
     this.enableAmbientOcclusion();
+    this.initPacks();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/bellows.js`).
     this.crew = attachCrew(this, 'bellows');
   }
@@ -174,12 +176,77 @@ export class BellowsWorld {
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
+    // The bench's plate: the same procedural steel, its own material, so the photographed plate (`initPacks`) and
+    // the world variation below never reach the surface a student works on.
+    M.benchTop = this.cloneBare(M.steel);
+    // The tower hall's floor: the deck's chequer plate laid indoors, without the deck's walked-line paint.
+    M.hallFloor = this.cloneBare(M.deck);
+    M.hallFloor.vertexColors = false;
+    M.hallFloor.color.setScalar(0.8);
+
+    // WEATHERING THAT FOLLOWS THE WORLD, not the tile: a slow tone and roughness drift over each big surface, a
+    // second rotated sample so a photographed surface never visibly repeats (not on plated panels, whose straight
+    // seams would show the turned copy as crosses), and runs under the laps.
+    // Patched now so the programs compiled in flight are the ones drawn.
+    addWorldVariation(M.cladding, { scale: 11, strength: 0.1, roughShift: 0.12, antiTile: 0, streaks: 0.16 });
+    addWorldVariation(M.steel, { scale: 9, strength: 0.12, roughShift: 0.12, antiTile: 0, streaks: 0.14 });
+    addWorldVariation(M.ribbed, { scale: 10, strength: 0.1, roughShift: 0.1, antiTile: 0, streaks: 0.2 });
+    addWorldVariation(M.concrete, { scale: 8, strength: 0.14, roughShift: 0.08, antiTile: 0.55, streaks: 0.12 });
+    addWorldVariation(M.deck, { scale: 7, strength: 0.1, roughShift: 0.16, antiTile: 0.35 });
+    addWorldVariation(M.grating, { scale: 7, strength: 0.1, roughShift: 0.1, antiTile: 0.4 });
+    addWorldVariation(M.skin, { scale: 14, strength: 0.08, roughShift: 0.1, antiTile: 0, streaks: 0.1 });
+
     for (const m of Object.values(M)) {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
     }
     this.M = M;
     this.lanternMat = M.lantern;
+  }
+
+  /** A copy of a material that shares its maps but not its bookkeeping (Material.clone would copy the map list). */
+  cloneBare(m) {
+    const ud = m.userData;
+    m.userData = {};
+    const c = m.clone();
+    m.userData = ud;
+    return c;
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (`materials/texture-pack.js`, `public/textures/bellows/`, CC0, see LICENSE.md there).
+   * The world is complete with its procedural maps; at 3D On with a renderer the packs are fetched and put into the
+   * same map slots as they land, each sent to the GPU at once, during the flight. Nothing is fetched in Node or
+   * below T4, and a pack that fails leaves the procedural surface it would have replaced.
+   *
+   * Every merged piece of the works has its uvs laid at 3 m (`decks.js` `worldUV`) and the deck at 3 m too, so
+   * `scale` = 3 / the photo's real size (LICENSE.md).
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const M = this.M;
+    const live = () => !this._disposed;
+    this.packsReady = dressWorld([
+      {
+        name: 'tread', mats: [
+          [M.deck, { scale: 3 / 0.5, normalScale: 0.75, aoIntensity: 0.7 }],
+          [M.hallFloor, { scale: 3 / 0.5, normalScale: 0.6, aoIntensity: 0.7 }]
+        ]
+      },
+      { name: 'plate', mats: [[M.cladding, { scale: 3 / 2.5, normalScale: 0.7, aoIntensity: 0.6 }]] },
+      { name: 'rivet', mats: [[M.steel, { scale: 3 / 2.0, normalScale: 0.9, aoIntensity: 0.7 }]] },
+      { name: 'ribbed', mats: [[M.ribbed, { scale: 3 / 3.0, normalScale: 1.0, aoIntensity: 0.8 }]] },
+      { name: 'concrete', mats: [[M.concrete, { scale: 3 / 2.3, normalScale: 1.0, aoIntensity: 0.8 }]] },
+      {
+        name: 'paint', mats: [
+          [M.darkSteel, { scale: 3 / 1.0, normalScale: 0.8, aoIntensity: 0.6 }],
+          [M.grating, { scale: 3 / 1.0, normalScale: 0.8, aoIntensity: 0.6 }]
+        ]
+      }
+    ], {
+      base: '/textures/bellows', renderer: this.renderer, isLive: live,
+      own: (...t) => this.own(...t)
+    });
   }
 
   /* ======================================================================
@@ -472,6 +539,7 @@ export class BellowsWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.effects?.dispose();

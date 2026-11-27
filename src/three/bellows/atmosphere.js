@@ -214,7 +214,7 @@ export function createCloudSea({ radius = 1500, y = -46 } = {}) {
  * at the underside of everything.
  */
 export function createBwLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#fff0d6'), 2.3);
+  const key = new THREE.DirectionalLight(new THREE.Color('#ffefd2'), 2.9);
   key.position.copy(SUN_DIR).multiplyScalar(160);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -226,7 +226,10 @@ export function createBwLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#5d8bd0'), new THREE.Color('#e3eaf5'), 1.5);
+  // The sky's fill is a paler, greyer blue than the zenith (it is the whole dome averaged, sun side included), and
+  // the bounce off the cloud sea below is white but dimmer than it: at 1.5 with a saturated blue the old fill
+  // lit every face alike and blued the whole works. Less fill and more sun lets faces turned from the sun read.
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#8ea9d4'), new THREE.Color('#c7ced8'), 1.05);
   return { key, hemi };
 }
 

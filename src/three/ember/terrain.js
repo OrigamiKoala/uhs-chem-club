@@ -11,6 +11,7 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { fbm2, WALL_T } from './caldera-plan.js';
 
 export { fbm2 };
@@ -34,14 +35,23 @@ function mergeLines(base, extras, eps = 0.08) {
   return out;
 }
 
-function axisLines(core = 104, step = 4, reach = 900, snaps = []) {
+/**
+ * Grid lines along one axis: `step` apart out to `core`, then each `growth` times the last out to `reach`, plus every
+ * snap. `bands` ([min, max, step]) add evenly spaced lines over a far landform that needs the resolution (the cone):
+ * the realism pass lowered the growth from 1.24 and added the cone's band, so the caldera walls and the cone carry
+ * their ledges, flows and gullies instead of reading as smooth sheets at 30–60 m cells.
+ */
+function axisLines(core = 104, step = 4, reach = 900, snaps = [], { growth = 1.24, bands = [] } = {}) {
   const pos = [];
   for (let v = 0; v <= core; v += step) pos.push(v);
   let v = core, s = step;
-  while (v < reach) { s *= 1.24; v = Math.min(reach, v + s); pos.push(v); }
+  while (v < reach) { s *= growth; v = Math.min(reach, v + s); pos.push(v); }
   const base = [...pos.slice(1).reverse().map(p => -p), ...pos];
-  return mergeLines(base, snaps, 0.12);
+  const extra = [];
+  for (const [a, b, st] of bands) for (let x = a; x <= b; x += st) extra.push(x);
+  return mergeLines(mergeLines(base, extra, st0(bands)), snaps, 0.12);
 }
+const st0 = bands => Math.min(2, ...bands.map(b => b[2] * 0.45));
 
 /* ======================================================================
    VERTEX COLOURING — volcanic basalt, banded tuff, cinder road, sulphur
@@ -119,8 +129,9 @@ export function buildEmberTerrainGeometry(plan, data) {
     snapX.push(h.minX, h.maxX);
     snapZ.push(h.minZ, h.maxZ);
   }
-  const xs = axisLines(104, 4, 900, snapX);
-  const zs = axisLines(104, 4, 900, snapZ);
+  const cone = data.cone;
+  const xs = axisLines(104, 4, 900, snapX, { growth: 1.13, bands: [[cone.x - cone.radius - 10, cone.x + cone.radius + 10, 6]] });
+  const zs = axisLines(104, 4, 900, snapZ, { growth: 1.13, bands: [[cone.z - cone.radius - 10, cone.z + cone.radius + 10, 6]] });
   const nx = xs.length, nz = zs.length;
 
   const marks = [];
@@ -130,7 +141,13 @@ export function buildEmberTerrainGeometry(plan, data) {
     }
   }
 
-  const inHole = (x, z) => holes.some(h => x > h.minX && x < h.maxX && z > h.minZ && z < h.maxZ);
+  // A gallery buried in the cliff (`caldera-plan.js` `bankGalleries`) is not cut out: the ground runs on over its roof
+  // at the banked height. Only the cell in front of its facade over the doorway stays open, so the portal shows.
+  const buried = plan.buriedRooms ? plan.buriedRooms() : [];
+  const inBuried = (x, z) => buried.find(g => x >= g.rect.minX - 0.2 && x <= g.rect.maxX + 0.2 &&
+    z >= g.rect.minZ - 0.2 && z <= g.rect.maxZ + 0.2);
+  const inHoleRaw = (x, z) => holes.some(h => x > h.minX && x < h.maxX && z > h.minZ && z < h.maxZ);
+  const inHole = (x, z) => inHoleRaw(x, z) && !inBuried(x, z);
   const onHoleRim = (x, z) => holes.some(h =>
     x >= h.minX - 0.15 && x <= h.maxX + 0.15 && z >= h.minZ - 0.15 && z <= h.maxZ + 0.15 && !inHole(x, z)
   );
@@ -144,7 +161,7 @@ export function buildEmberTerrainGeometry(plan, data) {
     for (let i = 0; i < nx; i++) {
       const x = xs[i];
       // Vertices right on a room cutout rim take landHeight so cliffs seal cleanly over the gallery roof.
-      const y = onHoleRim(x, z) && !plan.volumeAt(x, z) ? plan.landHeight(x, z) : plan.height(x, z);
+      const y = inBuried(x, z) || (onHoleRim(x, z) && !plan.volumeAt(x, z)) ? plan.landHeight(x, z) : plan.height(x, z);
       const k = j * nx + i;
       pos[k * 3] = x;
       pos[k * 3 + 1] = y;
@@ -210,8 +227,21 @@ export function buildLakeGeometry(lake) {
    All tagged `phys: 'ground'` and merged by material for minimal draw calls.
    ====================================================================== */
 
+/**
+ * Arris radius (m) per shell material (realism pass): poured concrete and laid brick have a chamfered or worn edge,
+ * never a knife edge. Rounded inside the box's own bounds, so nothing grows.
+ */
+const ROUND = { concrete: 0.035, brick: 0.02, floorSlab: 0.02 };
+
+function boxGeo(matKey, sx, sy, sz) {
+  const r = ROUND[matKey];
+  if (r && Math.min(sx, sy, sz) > r * 4) return new RoundedBoxGeometry(sx, sy, sz, 2, r);
+  return new THREE.BoxGeometry(sx, sy, sz);
+}
+
 function addBox(buckets, matKey, sx, sy, sz, x, y, z, rx = 0, ry = 0, rz = 0) {
-  const g = new THREE.BoxGeometry(sx, sy, sz);
+  if (matKey === 'rock') return addRockBox(buckets, sx, sy, sz, x, y, z, rx, ry, rz);
+  const g = boxGeo(matKey, sx, sy, sz);
   if (rx || ry || rz) g.rotateX(rx).rotateY(ry).rotateZ(rz);
   g.translate(x, y, z);
   let arr = buckets.get(matKey);
@@ -234,7 +264,7 @@ function addBeam(buckets, matKey, a, b, w, h) {
   const dir = vb.clone().sub(va);
   const len = dir.length();
   if (len < 0.01) return;
-  const g = new THREE.BoxGeometry(w, h, len);
+  const g = boxGeo(matKey, w, h, len);
   const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.normalize());
   g.applyQuaternion(q);
   const mid = va.add(vb).multiplyScalar(0.5);
@@ -243,6 +273,63 @@ function addBeam(buckets, matKey, a, b, w, h) {
   if (!arr) { arr = []; buckets.set(matKey, arr); }
   arr.push(g);
 }
+
+/**
+ * A rock-cut face (realism pass): a box subdivided at ~0.45 m whose every face is pushed INWARD by seeded noise, so a
+ * gallery wall, pier or soffit reads as hewn rock, not a sawn block. The push tapers to nothing at each face's edges
+ * (no cracks open at the corners) and never exceeds 45% of the half-thickness, so the body stays inside its old box.
+ */
+function addRockBox(buckets, sx, sy, sz, x, y, z, rx = 0, ry = 0, rz = 0) {
+  const seg = v => Math.max(1, Math.min(36, Math.ceil(v / 0.45)));
+  const g = new THREE.BoxGeometry(sx, sy, sz, seg(sx), seg(sy), seg(sz));
+  const half = [sx / 2, sy / 2, sz / 2];
+  const pos = g.attributes.position, nor = g.attributes.normal;
+  const p = [0, 0, 0], n = [0, 0, 0];
+  for (let i = 0; i < pos.count; i++) {
+    p[0] = pos.getX(i); p[1] = pos.getY(i); p[2] = pos.getZ(i);
+    n[0] = nor.getX(i); n[1] = nor.getY(i); n[2] = nor.getZ(i);
+    const a = Math.abs(n[0]) > 0.5 ? 0 : Math.abs(n[1]) > 0.5 ? 1 : 2;
+    const b = (a + 1) % 3, c = (a + 2) % 3;
+    const edge = Math.min(half[b] - Math.abs(p[b]), half[c] - Math.abs(p[c]));
+    const taper = smooth(0, 0.4, edge);
+    const wx = x + p[0], wy = y + p[1], wz = z + p[2];
+    const k = fbm2(wx * 0.55 + wz * 0.41, wy * 0.6 - wz * 0.23, 113, 3) * 0.75 + fbm2(wx * 2.1 - wz * 1.3, wy * 2.3, 127, 2) * 0.25;
+    const amt = Math.min(half[a] * 0.45, (0.02 + 0.16 * k * k) * taper);
+    p[a] -= Math.sign(n[a]) * amt;
+    pos.setXYZ(i, p[0], p[1], p[2]);
+  }
+  g.computeVertexNormals();
+  if (rx || ry || rz) g.rotateX(rx).rotateY(ry).rotateZ(rz);
+  g.translate(x, y, z);
+  let arr = buckets.get('rock');
+  if (!arr) { arr = []; buckets.set('rock', arr); }
+  arr.push(g);
+}
+
+/** A round tube between 3D points A and B (rail, post): what safety rail is made of, not square bar. */
+function addTube(buckets, matKey, a, b, radius, seg = 10) {
+  const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+  const dir = vb.clone().sub(va);
+  const len = dir.length();
+  if (len < 0.01) return;
+  const g = new THREE.CylinderGeometry(radius, radius, len, seg, 1, false);
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()));
+  const mid = va.add(vb).multiplyScalar(0.5);
+  g.translate(mid.x, mid.y, mid.z);
+  let arr = buckets.get(matKey);
+  if (!arr) { arr = []; buckets.set(matKey, arr); }
+  arr.push(g);
+}
+
+/**
+ * The shells' own materials (`ember.js` `initMaterials`): the same surfaces laid in world metres, which the
+ * photographed packs replace at T4. A bucket not named here keeps the shared material.
+ */
+const SHELL_MAT = {
+  concrete: 'shellConcrete', rock: 'shellRock', brick: 'shellBrick', hallWall: 'shellSheet', hallRoof: 'shellRoof',
+  roofSheet: 'shellRoof', sinterWarm: 'shellSinter', darkSteel: 'shellSteel', rusted: 'shellRusted',
+  floorSlab: 'shellFloor'
+};
 
 /**
  * Build every room's floor, walls, architectural ceiling/roof, retaining walls along cliff steps,
@@ -256,6 +343,8 @@ export function buildCalderaShells(ctx, plan) {
   group.userData.noWeather = true;
 
   const buckets = new Map();
+  // Galleries the cliff is banked over (`caldera-plan.js` `bankGalleries`): their roof stops flush with the facade.
+  const buriedIds = new Set((plan.buriedRooms ? plan.buriedRooms() : []).map(g => g.id));
 
   /* 1. THE SEVEN ROOMS — each with its own shell architecture */
   for (const v of plan.volumes) {
@@ -268,13 +357,20 @@ export function buildCalderaShells(ctx, plan) {
     const cz = (r.minZ + r.maxZ) / 2;
     const W = r.maxX - r.minX;
     const D = r.maxZ - r.minZ;
+    // The roof slab: 0.7 m proud of the walls all round, except at a buried gallery's front, where the ground over
+    // the roof meets the facade and an eave would stick out of the cliff like a lid.
+    const roofFront = buriedIds.has(v.id) ? r.minZ - WALL_T : r.minZ - 0.7;
+    const roof = (key, wExtra, h, yc) => {
+      const z0 = roofFront, z1 = r.maxZ + 0.7;
+      addBox(buckets, key, W + wExtra, h, z1 - z0, cx, yc, (z0 + z1) / 2);
+    };
 
     // Floor slab (covers the room cutout cleanly, flush with y0).
-    addBox(buckets, 'concrete', W + 0.8, 0.4, D + 0.8, cx, y0 - 0.2, cz);
+    addBox(buckets, 'floorSlab', W + 0.8, 0.4, D + 0.8, cx, y0 - 0.2, cz);
 
     // Doorway threshold floor slab (bridges z from road to room).
     const [d0, d1] = rm.door;
-    addBox(buckets, 'concrete', (d1 - d0) + 0.6, 0.4, WALL_T + 0.6, (d0 + d1) / 2, y0 - 0.2, r.minZ - WALL_T / 2);
+    addBox(buckets, 'floorSlab', (d1 - d0) + 0.6, 0.4, WALL_T + 0.6, (d0 + d1) / 2, y0 - 0.2, r.minZ - WALL_T / 2);
 
     // Choose wall material per room architecture.
     const wallMat = rm.shell === 'brickVault' ? 'brick'
@@ -290,12 +386,16 @@ export function buildCalderaShells(ctx, plan) {
       const mx = (seg.ax + seg.bx) / 2;
       const mz = (seg.az + seg.bz) / 2;
       const thick = WALL_T;
+      // The turbine hall's sheet stands on a 0.6 m poured upstand, as clad halls do (sheet never meets the ground).
+      const base = wallMat === 'hallWall' ? 0.6 : 0;
       if (seg.side === 'minX' || seg.side === 'maxX') {
         const ox = seg.side === 'minX' ? -thick / 2 : thick / 2;
-        addBox(buckets, wallMat, thick, wallH, len + thick, mx + ox, y0 + wallH / 2, mz);
+        if (base) addBox(buckets, 'concrete', thick, base, len + thick, mx + ox, y0 + base / 2, mz);
+        addBox(buckets, wallMat, thick, wallH - base, len + thick, mx + ox, y0 + base + (wallH - base) / 2, mz);
       } else {
         const oz = seg.side === 'minZ' ? -thick / 2 : thick / 2;
-        addBox(buckets, wallMat, len + thick, wallH, thick, mx, y0 + wallH / 2, mz + oz);
+        if (base) addBox(buckets, 'concrete', len + thick, base, thick, mx, y0 + base / 2, mz + oz);
+        addBox(buckets, wallMat, len + thick, wallH - base, thick, mx, y0 + base + (wallH - base) / 2, mz + oz);
       }
     }
 
@@ -311,7 +411,7 @@ export function buildCalderaShells(ctx, plan) {
     // Roof + distinct architectural ceiling per shell type (all structural ribs stay >= top - 0.35 >= 4.8 m).
     if (rm.shell === 'ribs') {
       // Room 1: Rock-cut gallery with rolled steel arch ribs and weathered corrugated roof overhead.
-      addBox(buckets, 'roofSheet', W + 1.4, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
+      roof('roofSheet', 1.4, 0.45, y0 + top + 0.225);
       for (let x = r.minX + 1.4; x <= r.maxX - 1.2; x += 2.8) {
         addBox(buckets, 'darkSteel', 0.28, top, 0.34, x, y0 + top / 2, r.maxZ - 0.18);
         addBox(buckets, 'darkSteel', 0.28, 0.32, D - 0.2, x, y0 + top - 0.16, cz);
@@ -321,7 +421,7 @@ export function buildCalderaShells(ctx, plan) {
       addBox(buckets, 'rock', 0.8, top, 1.0, d1 + 0.4, y0 + top / 2, r.minZ - 0.2);
     } else if (rm.shell === 'sinterArch') {
       // Room 2: Stepped sinter-crusted gallery with transverse concrete arches and open lake bay.
-      addBox(buckets, 'sinterWarm', W + 1.4, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
+      roof('sinterWarm', 1.4, 0.45, y0 + top + 0.225);
       for (let z = r.minZ + 1.5; z <= r.maxZ - 1.2; z += 3.2) {
         addBox(buckets, 'concrete', W - 0.2, 0.32, 0.45, cx, y0 + top - 0.16, z);
       }
@@ -332,7 +432,7 @@ export function buildCalderaShells(ctx, plan) {
       }
     } else if (rm.shell === 'brickVault') {
       // Room 3: Refractory brick barrel vault (faceted 5-chord arch above y0 + top - 0.4).
-      addBox(buckets, 'roofSheet', W + 1.4, 0.8, D + 1.4, cx, y0 + top + 0.8, cz);
+      roof('roofSheet', 1.4, 0.8, y0 + top + 0.8);
       const segs = 5;
       for (let i = 0; i < segs; i++) {
         const a0 = Math.PI * (i / segs), a1 = Math.PI * ((i + 1) / segs);
@@ -349,7 +449,7 @@ export function buildCalderaShells(ctx, plan) {
       addBox(buckets, 'brick', 0.9, top, 0.9, d1 + 0.45, y0 + top / 2, r.minZ - 0.25);
     } else if (rm.shell === 'overhang') {
       // Room 4: Rough-hewn stepped basalt overhang with wide 8 m colonnade facing the caldera.
-      addBox(buckets, 'roofSheet', W + 1.6, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
+      roof('roofSheet', 1.6, 0.45, y0 + top + 0.225);
       // Stepped rock soffit ledges along the back and sides.
       addBox(buckets, 'rock', W - 0.4, 0.45, 2.2, cx, y0 + top - 0.22, r.maxZ - 1.1);
       addBox(buckets, 'rock', 1.6, 0.45, D - 0.4, r.minX + 0.8, y0 + top - 0.22, cz);
@@ -359,7 +459,7 @@ export function buildCalderaShells(ctx, plan) {
       addBox(buckets, 'rusted', 0.34, top, 0.34, d1 - 0.15, y0 + top / 2, r.minZ - WALL_T / 2);
     } else if (rm.shell === 'gantry') {
       // Room 5: Concrete-and-truss pipe gallery with twin overhead steel gantry rails.
-      addBox(buckets, 'concrete', W + 1.4, 0.8, D + 1.4, cx, y0 + top + 0.4, cz);
+      roof('concrete', 1.4, 0.8, y0 + top + 0.4);
       for (const z of [r.minZ + 2.4, cz, r.maxZ - 2.4]) {
         addBox(buckets, 'steel', W - 0.3, 0.36, 0.22, cx, y0 + top - 0.2, z);
       }
@@ -368,7 +468,7 @@ export function buildCalderaShells(ctx, plan) {
       addCyl(buckets, 'clad', 0.26, 0.26, D - 0.4, 12, r.maxX - 0.8, y0 + top - 0.65, cz, Math.PI / 2, 0, 0);
     } else if (rm.shell === 'baffle') {
       // Room 6: Acoustic concrete baffle alcove with deep ceiling baffles and open lake bay.
-      addBox(buckets, 'concrete', W + 1.4, 0.8, D + 1.4, cx, y0 + top + 0.4, cz);
+      roof('concrete', 1.4, 0.8, y0 + top + 0.4);
       for (let x = r.minX + 1.8; x <= r.maxX - 1.4; x += 2.2) {
         addBox(buckets, 'concrete', 0.24, 0.55, D - 0.4, x, y0 + top - 0.28, cz);
       }
@@ -467,17 +567,18 @@ export function buildCalderaShells(ctx, plan) {
     if (len < 0.1) continue;
     // Low concrete toe-kerb lifted cleanly above the road edge so it never z-fights with the cliff drop.
     addBeam(buckets, 'concrete', [rseg.ax, rseg.ya + 0.11, rseg.az], [rseg.bx, rseg.yb + 0.11, rseg.bz], 0.28, 0.20);
-    // Top and middle steel rails (yellow-painted safety steel).
-    addBeam(buckets, 'paintYellow', [rseg.ax, rseg.ya + RAIL_H, rseg.az], [rseg.bx, rseg.yb + RAIL_H, rseg.bz], 0.06, 0.06);
-    addBeam(buckets, 'paintYellow', [rseg.ax, rseg.ya + RAIL_H * 0.52, rseg.az], [rseg.bx, rseg.yb + RAIL_H * 0.52, rseg.bz], 0.045, 0.045);
-    // Steel posts every ~2.4 m.
+    // Top and knee rails: 48 mm painted tube (what safety rail is), the top rail at the same height and reach as before.
+    addTube(buckets, 'paintYellow', [rseg.ax, rseg.ya + RAIL_H, rseg.az], [rseg.bx, rseg.yb + RAIL_H, rseg.bz], 0.026);
+    addTube(buckets, 'paintYellow', [rseg.ax, rseg.ya + RAIL_H * 0.52, rseg.az], [rseg.bx, rseg.yb + RAIL_H * 0.52, rseg.bz], 0.021);
+    // Tube posts every ~2.4 m, each on a base plate bolted to the toe kerb.
     const n = Math.max(2, Math.round(len / 2.4));
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const px = rseg.ax + dx * t;
       const pz = rseg.az + dz * t;
       const py = rseg.ya + (rseg.yb - rseg.ya) * t;
-      addBox(buckets, 'darkSteel', 0.07, RAIL_H, 0.07, px, py + RAIL_H / 2, pz);
+      addTube(buckets, 'darkSteel', [px, py + 0.21, pz], [px, py + RAIL_H, pz], 0.03, 8);
+      addBox(buckets, 'darkSteel', 0.13, 0.012, 0.13, px, py + 0.216, pz);
     }
   }
 
@@ -488,7 +589,7 @@ export function buildCalderaShells(ctx, plan) {
     for (const g of geos) g.dispose();
     if (!merged) continue;
     ctx.own(merged);
-    const mat = ctx.M[matKey] || ctx.M.concrete;
+    const mat = ctx.M[SHELL_MAT[matKey]] || ctx.M[matKey] || ctx.M.concrete;
     const mesh = new THREE.Mesh(merged, mat);
     mesh.name = `shell:${matKey}`;
     mesh.castShadow = ctx.t4 && matKey !== 'paintYellow';
@@ -499,6 +600,32 @@ export function buildCalderaShells(ctx, plan) {
   }
 
   return group;
+}
+
+/**
+ * A far basalt spire (realism pass): a tapered column broken into ledges and buttresses by seeded noise in angle and
+ * height, instead of a seven-sided prism. Far country only (`phys: 'ambient'`).
+ */
+function addSpire(buckets, rTop, rBot, h, x, y, z, rx, ry, rz, seed) {
+  const g = new THREE.CylinderGeometry(rTop, rBot, h, 28, 24, false);
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const px = pos.getX(i), py = pos.getY(i), pz = pos.getZ(i);
+    const r = Math.hypot(px, pz);
+    if (r < 1e-4) continue;
+    const ca = px / r, sa = pz / r;
+    const t = py / h + 0.5;
+    const ledge = Math.floor(t * 7) / 7;
+    const k = 0.72 + 0.5 * fbm2(ca * 2.6 + seed * 7, sa * 2.6 + t * 3.1, 131 + seed, 3) + 0.12 * Math.sin((t - ledge) * Math.PI);
+    const nr = r * k;
+    pos.setXYZ(i, ca * nr, py + (fbm2(ca * 3 + seed, sa * 3, 137, 2) - 0.5) * 2.5 * (t > 0.98 ? 1 : 0), sa * nr);
+  }
+  g.computeVertexNormals();
+  if (rx || ry || rz) g.rotateX(rx).rotateY(ry).rotateZ(rz);
+  g.translate(x, y, z);
+  let arr = buckets.get('rock');
+  if (!arr) { arr = []; buckets.set('rock', arr); }
+  arr.push(g);
 }
 
 /**
@@ -513,10 +640,10 @@ export function buildCalderaVista(ctx, plan) {
 
   const buckets = new Map();
 
-  // 1. North-West: jagged basalt caldera spire rising out of the cooled lava floor
+  // 1. North-West: jagged basalt caldera spires rising out of the cooled lava floor (eroded columns, not prisms).
   const nwY = plan.height(-175, -210);
-  addCyl(buckets, 'rock', 4, 24, 68, 7, -175, nwY + 32, -210);
-  addCyl(buckets, 'rock', 2.5, 14, 44, 6, -158, nwY + 20, -200, 0.12, 0.4, -0.15);
+  addSpire(buckets, 4, 24, 68, -175, nwY + 32, -210, 0, 0, 0, 1);
+  addSpire(buckets, 2.5, 14, 44, -158, nwY + 20, -200, 0.12, 0.4, -0.15, 2);
 
   // 2. East: geothermal ridge derrick & high vent stack on the east caldera wall bench
   const eY = plan.height(185, -90);

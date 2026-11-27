@@ -55,6 +55,8 @@ export const CONE = { x: 68, z: -310, radius: 130, height: 175, crater: 18 };
 
 /** Thickness of gallery front walls (separating each room from its switchback road) and retaining edge. */
 export const WALL_T = 0.6;
+/** How far over `floor + top` each buried gallery's roof tops out (`terrain.js` `buildCalderaShells`). */
+const ROOF_LIFT = { ribs: 0.45, sinterArch: 0.45, overhang: 0.45, brickVault: 1.2, gantry: 0.8, baffle: 0.8 };
 export const EDGE = 0.35;
 
 /** How far in front of a room's back wall the bench plate stands, and how far in front of the plate the player stands. */
@@ -403,6 +405,11 @@ export function makeCalderaPlan() {
 
   const openVols = work.volumes.filter(v => ['road', 'ramp', 'yard'].includes(v.kind));
   const roofedVols = work.volumes.filter(v => v.kind === 'room' || v.kind === 'door');
+  // Galleries buried in the cliff, each with the height its roof tops out at (`terrain.js` builds each shell's roof).
+  const buried = roofedVols.filter(v => v.kind === 'room' && ROOF_LIFT[v.room.shell] !== undefined).map(v => ({
+    id: v.id, rect: v.rect, door: v.room.door,
+    cap: v.room.floor + v.room.top + ROOF_LIFT[v.room.shell] + 0.08
+  }));
 
   /** The natural caldera landform outside the walkable volumes. */
   function landHeight(x, z) {
@@ -446,10 +453,19 @@ export function makeCalderaPlan() {
       // Volcanic cone rising out of the far caldera floor.
       const rc = Math.hypot(x - CONE.x, z - CONE.z);
       if (rc < CONE.radius) {
-        const a = Math.atan2(x - CONE.x, z - CONE.z);
-        const gully = 0.86 + 0.28 * ridge2(a * 3.2, rc * 0.02, 67, 3);
-        let h = CONE.height * Math.pow(1 - rc / CONE.radius, 1.5) * gully;
+        // Realism pass: the angle is taken as (cos, sin), so the gullies have no seam where atan2 wraps; flow lobes
+        // and levees run down the mid-flanks, rills score the upper cone, and old flow fronts step the profile.
+        const ca = (x - CONE.x) / (rc || 1), sa = (z - CONE.z) / (rc || 1);
+        const t = rc / CONE.radius;
+        const gully = 0.84 + 0.32 * ridge2(ca * 4.1 + 11, sa * 4.1 + rc * 0.018, 67, 3);
+        let h = CONE.height * Math.pow(1 - t, 1.5) * gully;
+        h += 9 * (ridge2(ca * 9 + rc * 0.01, sa * 9 - rc * 0.012, 73, 2) - 0.45) * Math.sin(Math.PI * Math.min(1, t * 1.15));
+        h += 3 * (fbm2(x * 0.09, z * 0.09, 79, 3) - 0.5) * (1 - t);
+        const st = 11;
+        const stepped = Math.floor(h / st) * st + smooth(0.6, 1, (h / st) % 1) * st;
+        h = h * 0.8 + stepped * 0.2;
         if (rc < CONE.crater) h -= (1 - (rc / CONE.crater) ** 2) * 34;
+        else h = Math.max(0, h);
         floorY += h;
       }
       y = y * (1 - floorBlend) + floorY * floorBlend;
@@ -481,6 +497,26 @@ export function makeCalderaPlan() {
       y += wall;
     }
 
+    return bankGalleries(x, z, y);
+  }
+
+  /**
+   * GALLERIES CUT INTO THE CLIFF (realism pass, docs/plans/realism-ember.md). Every gallery but the turbine hall is
+   * hollowed into the wall, so the cliff is banked up round its sides and back to just over its roof and only the
+   * portal face shows; the ground runs on over the roof (`buriedRooms`, `terrain.js`). Only raises, only outside the
+   * walk (inside a walk volume `height` never reads this), and never in front of the facade plane.
+   */
+  function bankGalleries(x, z, y) {
+    for (const g of buried) {
+      const r = g.rect;
+      if (z < r.minZ - WALL_T + 0.02) continue;
+      const dx = Math.max(r.minX - WALL_T - x, 0, x - r.maxX - WALL_T);
+      const dz = Math.max(0, z - r.maxZ - WALL_T);
+      const d = Math.hypot(dx, dz);
+      if (d > 5) continue;
+      const w = 1 - smooth(0.5, 5, d + (fbm2(x * 0.4, z * 0.4, 71, 2) - 0.5) * 1.2);
+      if (g.cap > y) y += (g.cap - y) * w;
+    }
     return y;
   }
 
@@ -507,6 +543,11 @@ export function makeCalderaPlan() {
     }
     // 3. Outside the walk: natural caldera wall, floor, lake, cone and outer rim.
     return landHeight(x, z);
+  }
+
+  /** The galleries the cliff is banked over (`bankGalleries`): id, rect, door span and the ground's height over the roof. */
+  function buriedRooms() {
+    return buried.map(g => ({ ...g, rect: { ...g.rect } }));
   }
 
   /** Rectangles cut out of the terrain mesh: every roofed room and its doorway passage. */
@@ -555,6 +596,7 @@ export function makeCalderaPlan() {
     height,
     landHeight,
     roomHoles,
+    buriedRooms,
     coverSpec,
     railSegments,
     PAD_TOP,

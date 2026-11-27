@@ -24,15 +24,17 @@ import * as THREE from 'three';
 import lanternfallData from './world-data/lanternfall.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic
+  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, addWorldBoxUV, addWorldVariation
 } from './materials/pbr-kit.js';
-import { iceCrust, lakeIce, carvedIce } from './materials/lanternfall-textures.js';
+import { iceCrust, lakeIce, carvedIce, grainSurface } from './materials/lanternfall-textures.js';
+import { loadTexturePack, dressFromPack, packsAvailable } from './materials/texture-pack.js';
 import {
   createLfSkyDome, createLfLights, followLfShadow, createLfEnvironment, lfSkyUniforms, followCamera, LFSKY
 } from './lanternfall/atmosphere.js';
 import { makeGlacierPlan, YARD } from './lanternfall/glacier-plan.js';
 import {
-  buildTerrainGeometry, buildLakeGeometry, buildCutFaces, buildShoreRidges, buildSnout, buildCrevasses, buildVista
+  buildTerrainGeometry, buildLakeGeometry, buildCutFaces, buildShoreRidges, buildSnout, buildCrevasses, buildVista,
+  bakeContactShade
 } from './lanternfall/ground.js';
 import { buildAuroraMast, buildCommsMast, buildLanternPost, buildCamp, buildSled, buildLandingPad } from './lanternfall/props.js';
 import { HOST_BUILDERS } from './lanternfall/stations.js';
@@ -79,6 +81,8 @@ export class LanternfallWorld {
     this.initTerrain();
     this.initLandmarks();
     this.initHosts();
+    this.initSurfaces();
+    this.initContacts();
     this.initEffects();
     this.initLampPool();
     this.initCover();
@@ -87,6 +91,7 @@ export class LanternfallWorld {
     this.enableAmbientOcclusion();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/lanternfall.js`).
     this.crew = attachCrew(this, 'lanternfall');
+    this.initPacks();
   }
 
   own(...objs) {
@@ -118,10 +123,15 @@ export class LanternfallWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-    M.carved = buildMaterial(carvedIce({ size: texSize(256), seed: 3 }), { repeat: 2, roughness: 1.0 });
-    M.carved.normalScale.set(1.2, 1.2);
+    // Every procedural set here is the lower-tier look and the fallback; at 3D On the photographed sets in
+    // `public/textures/lanternfall/` take the same slots (`initPacks`). Neutral grains carry the colour in the
+    // material, graded to the same mean as the photo that replaces them, so the tone does not move when it lands.
+    const grain = (kind, seed, mean, contrast = 0.18) => buildMaterial(
+      grainSurface({ kind, seed, mean, contrast, size: texSize(256) }), { repeat: 1, roughness: 1.0, metalness: 0 });
+    M.carved = buildMaterial(carvedIce({ size: texSize(256), seed: 3 }), { repeat: 2, roughness: 0.9 });
     M.carved.envMapIntensity = 1.4;
-    M.snow = std({ color: 0xe2eef3, roughness: 0.92, metalness: 0 });
+    M.snow = grain('snow', 1, 0.86, 0.05);
+    M.snow.color = new THREE.Color(0xf1f6f9);
 
     const metal = (paint, base, rust, seed, weather, panels, size) => buildMaterial(
       platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 }
@@ -135,10 +145,12 @@ export class LanternfallWorld {
     M.glass = std({ color: 0xbfe0ea, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.32, depthWrite: false });
     M.glassDark = std({ color: 0x0b1219, roughness: 0.2, metalness: 0.2 });
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
-    M.timber = std({ color: 0x5a4a38, roughness: 0.96, metalness: 0 });
+    M.timber = grain('boards', 2, 0.62, 0.2);
+    M.timber.color = new THREE.Color(0x917859);
     M.canvas = std({ color: 0x8f9a8a, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
     M.tarp = std({ color: 0x6d7d87, roughness: 0.96, metalness: 0 });
-    M.footing = std({ color: 0x6b7780, roughness: 1.0, metalness: 0 });
+    M.footing = grain('rock', 4, 0.62);
+    M.footing.color = new THREE.Color(0xadbcc6);
     M.rubber = std({ color: 0x1c2127, roughness: 0.95, metalness: 0.1 });
     M.paper = std({ color: 0xcfd3cc, roughness: 0.95, metalness: 0 });
     M.case = std({ color: 0xc4d3da, roughness: 0.48, metalness: 0.55 });
@@ -150,20 +162,31 @@ export class LanternfallWorld {
     // The land in section and the rooms' shells (painted per vertex where the colour says what the material is).
     M.faceIce = buildMaterial(carvedIce({ size: texSize(256), seed: 7 }), { repeat: 1, roughness: 0.9 });
     M.faceIce.envMapIntensity = 1.2;
-    M.faceTill = std({ color: 0xffffff, roughness: 1.0, metalness: 0 });
+    // Till and rock walls are painted per vertex; the grain's mean is lifted back out by the colour.
+    M.faceTill = grain('cobble', 5, 0.6, 0.2);
+    M.faceTill.color = new THREE.Color().setScalar(1 / 0.6);
     M.slab = buildMaterial(carvedIce({ size: texSize(256), seed: 11 }), { repeat: 1, roughness: 0.85 });
     M.slab.color = new THREE.Color(0xc9dde4);
     M.slab.envMapIntensity = 1.3;
-    M.snowBridge = std({ color: 0xbcd0dc, roughness: 0.95, metalness: 0 });
-    M.rockWall = std({ color: 0xffffff, roughness: 0.95, metalness: 0 });
-    M.rockFloor = std({ color: 0x4a4d52, roughness: 0.95, metalness: 0 });
-    M.stone = std({ color: 0x6f6c68, roughness: 0.96, metalness: 0 });
-    M.granite = std({ color: 0x7d7872, roughness: 0.92, metalness: 0 });
+    M.snowBridge = grain('snow', 6, 0.86, 0.05);
+    M.snowBridge.color = new THREE.Color(0xc8d9e3);
+    M.rockWall = grain('rock', 7, 0.62);
+    M.rockWall.color = new THREE.Color().setScalar(1 / 0.62);
+    M.rockFloor = grain('rock', 8, 0.62);
+    M.rockFloor.color = new THREE.Color(0x777c84);
+    M.stone = grain('rock', 9, 0.62);
+    M.stone.color = new THREE.Color(0xb3aea8);
+    M.granite = grain('rock', 10, 0.62);
+    M.granite.color = new THREE.Color(0xc9c1b8);
     M.panel = std({ color: 0xc4ccd0, roughness: 0.7, metalness: 0.2, side: THREE.DoubleSide });
     M.serac = std({ color: 0xbcd6e4, roughness: 0.6, metalness: 0 });
     M.channel = std({ color: 0x8eb0c2, roughness: 0.15, metalness: 0 });
     M.crevasse = std({ color: 0x8fb4cf, roughness: 0.45, metalness: 0, side: THREE.DoubleSide });
     M.crevasseDeep = std({ color: 0x0b1a26, roughness: 0.6, metalness: 0, side: THREE.DoubleSide });
+
+    // The bench's plate keeps the procedural plated steel it has always had: the photographed plate goes on the rest
+    // of the steel (`initPacks`), never on the surface a student works on.
+    M.benchTop = this.cloneBare(M.steel);
 
     for (const m of Object.values(M)) {
       this.own(m);
@@ -171,6 +194,116 @@ export class LanternfallWorld {
     }
     this.M = M;
     this.lanternMat = M.lantern;
+  }
+
+  /** A copy of a material that shares its maps but not its bookkeeping (Material.clone would serialise the maps). */
+  cloneBare(m) {
+    const ud = m.userData;
+    m.userData = {};
+    const c = m.clone();
+    m.userData = ud;
+    return c;
+  }
+
+  /** A material and its vertex-coloured twin (`kit.js` makes the twin the first time a painted piece needs it). */
+  matsOf(key) {
+    return [this.M[key], this.M[`${key}__vc`]].filter(Boolean);
+  }
+
+  /* ======================================================================
+     SURFACES IN METRES
+     ====================================================================== */
+
+  /**
+   * The shells, faces and slabs are built as sheets and boxes whose uvs run 0..1 across each piece, so one tile of
+   * any map was stretched across a whole face (a 50 m cliff, a 3.6 m panel). Laid from the world instead
+   * (`addWorldBoxUV`), every tile is a fixed size everywhere; the large surfaces also drift in tone and roughness
+   * and break their repeat (`addWorldVariation`). Applied once everything is built, so the vertex-coloured twins the
+   * kit cloned are patched too (a clone does not carry a shader patch).
+   */
+  initSurfaces() {
+    // [key, metres per uv unit (one tile = metres / the material's repeat), world variation or null]
+    const SURF = [
+      ['carved', 6, null],
+      ['faceIce', 4, { scale: 6, strength: 0.1, roughShift: 0.08, antiTile: 0.5 }],
+      ['slab', 3, { scale: 4, strength: 0.08, roughShift: 0.08, antiTile: 0.4 }],
+      ['faceTill', 3, { scale: 5, strength: 0.12, roughShift: 0.06, antiTile: 0.6 }],
+      ['rockWall', 3, { scale: 5, strength: 0.1, roughShift: 0.06, antiTile: 0.5 }],
+      ['rockFloor', 3, { scale: 5, strength: 0.08, roughShift: 0.06, antiTile: 0.5 }],
+      ['stone', 3, null], ['granite', 3, null], ['footing', 3, null],
+      ['timber', 1.5, null],
+      ['snow', 5, { scale: 8, strength: 0.05, roughShift: 0.05, antiTile: 0.6 }],
+      ['snowBridge', 5, null],
+      ['clad', 4, { scale: 6, strength: 0.1, roughShift: 0.08, antiTile: 0.4, streaks: 0.16 }],
+      ['steel', 2, null], ['darkSteel', 2, null]
+    ];
+    for (const [key, metres, wv] of SURF) {
+      for (const m of this.matsOf(key)) {
+        addWorldBoxUV(m, { metres });
+        if (wv) addWorldVariation(m, wv);
+      }
+    }
+    // The ground: the crust breaks its eleven-metre tile with a slow drift (the vertex paint carries the rest).
+    addWorldVariation(this.terrainMesh.material, { scale: 14, strength: 0.06, roughShift: 0.08, antiTile: 0.6 });
+  }
+
+  /**
+   * CONTACT SHADE. The foot of every cut face, the snow round every room that stands on the land and the ice round
+   * the caves on the lake are a little darker, as the sky cannot reach them; baked into the vertex colour of the
+   * ground and the lake (`ground.js` bakeContactShade), so it costs nothing per frame.
+   */
+  initContacts() {
+    const boxes = this.plan.holes()
+      .filter(h => (h.maxX - h.minX) * (h.maxZ - h.minZ) > 20)
+      .map(h => [h.minX, h.minZ, h.maxX, h.maxZ]);
+    const circles = [];
+    for (const { lm } of this.landmarkNodes) {
+      if (lm.asset === 'aurora-mast') circles.push([lm.pos[0], lm.pos[2], 0.9]);
+      else if (lm.asset === 'camp') circles.push([lm.pos[0], lm.pos[2], 1.8]);
+      else if (lm.asset === 'sled') circles.push([lm.pos[0], lm.pos[2], 0.7]);
+    }
+    bakeContactShade(this.terrainMesh.geometry, { faces: this.plan.cutFaces(), boxes, circles });
+    bakeContactShade(this.lakeMesh.geometry, { boxes, strength: 0.3 });
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (`materials/texture-pack.js`, `public/textures/lanternfall/`, CC0, see LICENSE.md
+   * there). The world is complete with its procedural maps; at 3D On with a renderer the photo packs are fetched and
+   * put into the same map slots as they land, each sent to the GPU at once, during the flight. Nothing is fetched in
+   * Node or below T4, and a pack that fails leaves the procedural surface it would have replaced.
+   *
+   * `scale` = metres one procedural tile covers / metres one photo tile covers (LICENSE.md lists the photo sizes).
+   * The ice faces take only the rock's relief: no photograph reads as glacier ice in section, so the ice keeps its
+   * own procedural colour, gloss and air.
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const base = '/textures/lanternfall';
+    const live = () => !this._disposed;
+    const crust = this.terrainMesh.material;
+    const each = (keys, o) => keys.flatMap(k => this.matsOf(k).map(m => [m, o]));
+    // Metal tones: the procedural plated steel had its paint in the map; a graded photo is neutral, so the paint
+    // moves into the colour (sRGB paint / photo mean) when the photo lands.
+    const tint = (keys, rgb) => () => { for (const k of keys) for (const m of this.matsOf(k)) m.color.setRGB(...rgb, THREE.SRGBColorSpace); };
+    const plan = [
+      { name: 'snow', mats: [[crust, { scale: (1 / 0.09) / 2.5, normalScale: 0.7 }], ...each(['snow', 'snowBridge'], { scale: 5 / 2.5, normalScale: 0.7 })] },
+      { name: 'rock', mats: each(['rockWall', 'rockFloor', 'stone', 'granite', 'footing'], { scale: 3 / 2.7, normalScale: 1.0 }) },
+      { name: 'rock', relief: true, mats: [...each(['faceIce'], { scale: 4 / 2.7, normalScale: 0.4 }), ...each(['slab'], { scale: 3 / 2.7, normalScale: 0.22 }), ...each(['carved'], { scale: 3 / 2.7, normalScale: 0.3 })] },
+      { name: 'till', mats: each(['faceTill'], { scale: 3 / 1.8, normalScale: 1.0 }) },
+      { name: 'timber', mats: each(['timber'], { scale: 1.5 / 1.5, normalScale: 0.8 }) },
+      { name: 'sheet', mats: each(['clad'], { scale: 2 / 2, normalScale: 1.0, aoIntensity: 0.6 }), after: tint(['clad'], [1.0, 0.89, 0.62]) },
+      {
+        name: 'plate', mats: each(['steel', 'darkSteel'], { scale: 1, normalScale: 0.8, aoIntensity: 0.6 }),
+        after: () => { tint(['steel'], [0.94, 1.0, 1.0])(); tint(['darkSteel'], [0.34, 0.41, 0.47])(); }
+      }
+    ];
+    this.packsReady = Promise.all(plan.map(entry => loadTexturePack(base, entry.name).then(pack => {
+      if (!live() || !pack) return;
+      // Relief only: the photo's normal, none of its colour, gloss or occlusion.
+      const use = entry.relief ? { diff: null, nor: pack.nor, arm: null } : pack;
+      for (const [mat, o] of entry.mats) this.own(...dressFromPack(mat, use, { ...o, renderer: this.renderer, albedo: !entry.relief }));
+      entry.after?.();
+    })));
   }
 
   /** Materials made after `initMaterials` (the kit's vertex-coloured twins) are owned once building is done. */
@@ -195,7 +328,7 @@ export class LanternfallWorld {
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.75;
+      this.scene.environmentIntensity = 0.85;
     }
   }
 
@@ -216,6 +349,7 @@ export class LanternfallWorld {
   initTerrain() {
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
     const crust = buildMaterial(iceCrust({ size: texSize(512), seed: 5 }), { repeat: 1, roughness: 1.0 });
+    // The ground is laid with its uvs at 0.09 per metre: one tile is 11.1 m (`initPacks` scales the photo from it).
     crust.vertexColors = true;
     crust.normalScale.set(1.3, 1.3);
     crust.envMapIntensity = 0.9;
@@ -232,6 +366,7 @@ export class LanternfallWorld {
 
     // The frozen lake: dark clear ice, nearly a mirror, so the aurora is in it.
     const lakeMat = buildMaterial(lakeIce({ size: texSize(512), seed: 9 }), { repeat: 1, roughness: 1.0 });
+    lakeMat.vertexColors = true;   // the contact shade round the caves on the ice (`initContacts`)
     lakeMat.envMapIntensity = 2.0;
     lakeMat.normalScale.set(0.7, 0.7);
     for (const t of lakeMat.userData.surfaceMaps || []) { t.anisotropy = aniso; this.own(t); }
@@ -467,6 +602,7 @@ export class LanternfallWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.effects?.dispose();

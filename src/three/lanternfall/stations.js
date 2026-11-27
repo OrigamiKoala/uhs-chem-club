@@ -25,7 +25,7 @@ import * as THREE from 'three';
 import { buildBayBench, ctxMats } from '../bench-bay.js';
 import { HOST_PLAN } from './host-plan.js';
 import { ROOMS, DOME, WALL_T, sitePlacement, doorRect, fbm2, ridge2, smooth } from './glacier-plan.js';
-import { Buckets, rng } from './kit.js';
+import { Buckets, rng, chunkGeometry } from './kit.js';
 
 const LANTERN = 0xd99423;
 const UP = new THREE.Vector3(0, 1, 0);
@@ -46,7 +46,9 @@ export function buildLfBench(ctx, { kind = 'light', plate = 'BN-01', skin = 'she
   return buildBayBench(ctx, {
     skin,
     plate,
-    mats: ctxMats(ctx),
+    // The plate keeps its own copy of the plated steel (`lanternfall.js` initMaterials): the world's steel takes a
+    // photographed plate at 3D On, the surface a student works on does not.
+    mats: { ...ctxMats(ctx), top: M.benchTop || ctxMats(ctx).top },
     tagStyle: { fg: '#1d2a33', bg: '#cfe0e8' },
     dormant(dormant, { height }) {
       const housing = mesh(new THREE.BoxGeometry(1.15, 0.78, 0.52), kind === 'rack' ? M.caseDark : M.case, 0, height + 0.43, -0.16);
@@ -387,7 +389,7 @@ function buildFlumeCave(w) {
     lay(low.list, () => 1.3 + r() * 1.1, (s0, s1) => {
       const mid = (s0 + s1) / 2;
       const H = F.T + 0.5 + r() * 0.8;
-      const geo = new THREE.BoxGeometry(s1 - s0 + 0.12, H, 0.7);
+      const geo = chunkGeometry(s1 - s0 + 0.12, H, 0.7, { seed: 101 + Math.round(mid * 37), round: 0.3, wear: 0.035, chip: 0.14 });
       geo.translate(0, H / 2, -0.35);
       geo.rotateX(0.05 + r() * 0.05);
       geo.rotateY(theta);
@@ -400,17 +402,20 @@ function buildFlumeCave(w) {
       const along = side === 'front' || side === 'back';
       const c = along ? [mid, side === 'front' ? F.z1 + 0.35 : F.z0 - 0.35] : [side === 'left' ? F.x0 - 0.35 : F.x1 + 0.35, mid];
       const L = d.hi - d.lo + 1.0;
-      b.box('slab', along ? [L, 0.5, 0.75] : [0.75, 0.5, L], [c[0], d.top + 0.25, c[1]]);
+      b.chunk('slab', along ? [L, 0.5, 0.75] : [0.75, 0.5, L], [c[0], d.top + 0.25, c[1]], null, { round: 0.25, wear: 0.03, chip: 0.08 });
       const hh = F.T + 0.6 - (d.top + 0.5);
-      b.box('slab', along ? [L - 0.2, hh, 0.7] : [0.7, hh, L - 0.2], [c[0], d.top + 0.5 + hh / 2, c[1]]);
+      b.chunk('slab', along ? [L - 0.2, hh, 0.7] : [0.7, hh, L - 0.2], [c[0], d.top + 0.5 + hh / 2, c[1]], null, { round: 0.3, wear: 0.035, chip: 0.1 });
     }
   }
   // The roof: slabs rafted across from the back to the front, each lapping the next.
   for (let i = 0; i < 9; i++) {
     const z = F.z0 - 0.6 + i * ((F.z1 - F.z0 + 1.2) / 8.5);
     const tilt = (i % 2 ? 1 : -1) * (0.08 + r() * 0.06);
-    b.box('slab', [F.x1 - F.x0 + 2.4, 0.55, 2.1], [(F.x0 + F.x1) / 2, F.T + 0.4 + Math.abs(tilt) * 1.1, z], [tilt, (r() - 0.5) * 0.08, (r() - 0.5) * 0.06]);
+    b.chunk('slab', [F.x1 - F.x0 + 2.4, 0.55, 2.1], [(F.x0 + F.x1) / 2, F.T + 0.4 + Math.abs(tilt) * 1.1, z], [tilt, (r() - 0.5) * 0.08, (r() - 0.5) * 0.06], { round: 0.4, wear: 0.05, chip: 0.16, cell: 0.7 });
   }
+  // Snow drifted over the rafted roof, thin enough that the slabs' edges still break through it.
+  b.chunk('snow', [F.x1 - F.x0 + 1.4, 0.3, F.z1 - F.z0 + 0.6], [(F.x0 + F.x1) / 2, F.T + 0.82, (F.z0 + F.z1) / 2], null,
+    { round: 0.95, wear: 0.14, cell: 0.9, seed: 4021 });
   // The ridge heaped round it: more slabs piled against the outside, and the snow drifted on them.
   for (let i = 0; i < 26; i++) {
     const side = SIDES[i % 4];
@@ -419,7 +424,7 @@ function buildFlumeCave(w) {
     const t = r();
     const x = a[0] + (e[0] - a[0]) * t - n[0] * (1.6 + r() * 1.4), z = a[1] + (e[1] - a[1]) * t - n[1] * (1.6 + r() * 1.4);
     if (side === F.door.side) continue;
-    b.box('slab', [1.8 + r() * 1.6, 0.4, 1.2 + r()], [x, 0.5 + r() * 1.8, z], [0.6 + r() * 0.6, r() * 3, (r() - 0.5) * 0.6]);
+    b.chunk('slab', [1.8 + r() * 1.6, 0.4, 1.2 + r()], [x, 0.5 + r() * 1.8, z], [0.6 + r() * 0.6, r() * 3, (r() - 0.5) * 0.6], { round: 0.5, wear: 0.05, chip: 0.14 });
   }
 
   // THE FLUME along the back wall: trestles, a trough of glass and steel, the water in it.
@@ -963,19 +968,19 @@ function buildHoleCave(w) {
       lay(sp.list, () => 1.2 + r() * 0.8, (s0, s1) => {
         const mid = (s0 + s1) / 2;
         const x = sp.a[0] + sp.ux * mid + n[0] * (step - WALL_T / 2), z = sp.a[1] + sp.uz * mid + n[1] * (step - WALL_T / 2);
-        b.box('slab', along ? [s1 - s0 + 0.05, COURSE - 0.03, WALL_T] : [WALL_T, COURSE - 0.03, s1 - s0 + 0.05], [x, y + COURSE / 2, z], [(r() - 0.5) * 0.04, 0, (r() - 0.5) * 0.04]);
+        b.chunk('slab', along ? [s1 - s0 + 0.05, COURSE - 0.03, WALL_T] : [WALL_T, COURSE - 0.03, s1 - s0 + 0.05], [x, y + COURSE / 2, z], [(r() - 0.5) * 0.04, 0, (r() - 0.5) * 0.04], { round: 0.16, wear: 0.02, chip: 0.06, cell: 0.24 });
       }, (row % 2) * 0.5);
       y += COURSE;
     }
     for (const d of doorsOn(F, side)) {
       const mid = (d.lo + d.hi) / 2;
       const [x, z] = side === 'left' ? [F.x0 - WALL_T / 2, mid] : side === 'right' ? [F.x1 + WALL_T / 2, mid] : [mid, side === 'front' ? F.z1 + WALL_T / 2 : F.z0 - WALL_T / 2];
-      b.box('slab', side === 'left' || side === 'right' ? [WALL_T + 0.2, 0.6, d.hi - d.lo + 1.4] : [d.hi - d.lo + 1.4, 0.6, WALL_T + 0.2], [x, d.top + 0.3, z]);
+      b.chunk('slab', side === 'left' || side === 'right' ? [WALL_T + 0.2, 0.6, d.hi - d.lo + 1.4] : [d.hi - d.lo + 1.4, 0.6, WALL_T + 0.2], [x, d.top + 0.3, z], null, { round: 0.25, wear: 0.03, chip: 0.08 });
     }
   }
   // The cap: slabs laid over what the courses leave open.
   for (let i = 0; i < 6; i++) {
-    b.box('slab', [F.x1 - F.x0 - 1.4, 0.5, 2.2], [(F.x0 + F.x1) / 2, F.T + 0.25, F.z0 + 1.4 + i * ((F.z1 - F.z0 - 2.8) / 5)], [(r() - 0.5) * 0.08, (r() - 0.5) * 0.1, 0]);
+    b.chunk('slab', [F.x1 - F.x0 - 1.4, 0.5, 2.2], [(F.x0 + F.x1) / 2, F.T + 0.25, F.z0 + 1.4 + i * ((F.z1 - F.z0 - 2.8) / 5)], [(r() - 0.5) * 0.08, (r() - 0.5) * 0.1, 0], { round: 0.4, wear: 0.05, chip: 0.14, cell: 0.7 });
   }
   // The ridge heaped over it, and snow drifted on the slabs.
   for (let i = 0; i < 22; i++) {
@@ -983,7 +988,7 @@ function buildHoleCave(w) {
     if (side === F.door.side) continue;
     const { a, b: e, n } = sideLine(F, side);
     const t = r();
-    b.box('slab', [1.6 + r() * 1.6, 0.4, 1.2 + r()], [a[0] + (e[0] - a[0]) * t - n[0] * (1.7 + r()), 0.4 + r() * 2.0, a[1] + (e[1] - a[1]) * t - n[1] * (1.7 + r())], [0.5 + r() * 0.7, r() * 3, (r() - 0.5) * 0.5]);
+    b.chunk('slab', [1.6 + r() * 1.6, 0.4, 1.2 + r()], [a[0] + (e[0] - a[0]) * t - n[0] * (1.7 + r()), 0.4 + r() * 2.0, a[1] + (e[1] - a[1]) * t - n[1] * (1.7 + r())], [0.5 + r() * 0.7, r() * 3, (r() - 0.5) * 0.5], { round: 0.5, wear: 0.05, chip: 0.14 });
   }
   // THE HOLE through the floor's ice to the water, its broken rim, the tripod over it and its winch.
   const hx = -4.4, hz = 2.4;
