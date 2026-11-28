@@ -59,7 +59,7 @@ export const UNIT_07 = {
     },
     {
       id: 'q6-stoich',
-      title: 'How Much Is Made',
+      title: 'Stoichiometry',
       line: 'Forty tons of ore: how much iron can it give?',
       arena: 'bench',
       stageCount: 9,
@@ -77,7 +77,7 @@ export const UNIT_07 = {
     },
     {
       id: 'q8-kinds',
-      title: 'Kinds of Reaction',
+      title: 'Reaction Types',
       line: "Identify what each reaction on the furnace log is doing.",
       arena: 'bench',
       stageCount: 8,
@@ -86,7 +86,7 @@ export const UNIT_07 = {
     },
     {
       id: 'q9-hsab',
-      title: 'Hard and Soft',
+      title: 'Hard–Soft Ions',
       line: 'Predict precipitation and reactions by hard and soft ions.',
       arena: 'bench',
       stageCount: 6,

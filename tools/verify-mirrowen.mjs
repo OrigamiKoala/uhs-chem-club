@@ -143,7 +143,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*["']([
 /* ---------------------------------------------------------------- the words */
 
 {
-  const WITHHELD = ['intermolecular', 'dispersion', 'dipole', 'hydrogen bond', 'vapor pressure', 'vapour pressure', 'molarity', 'dilution', 'chromatography', 'miscible', 'heating curve', 'vaporization', 'fusion', 'polarizab'];
+  const WITHHELD = ['dispersion', 'dipole', 'hydrogen bond', 'molarity', 'dilution', 'chromatography', 'miscible', 'heating curve', 'vaporization', 'fusion', 'polarizab'];
   const strings = [world.name, world.place, world.oneLine, ...world.sites.map(s => s.label)];
   const bad = [];
   for (const str of strings) for (const word of WITHHELD) if (new RegExp(word, 'i').test(str)) bad.push(`"${str}" contains "${word}"`);

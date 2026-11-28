@@ -157,7 +157,7 @@ export function buildReedBeds(w) {
     if (blocked(jx, jz)) continue;
     const base = Math.min(plan.land(jx, jz), WATER);
     const sk = `${Math.floor(jx / SQ)},${Math.floor(jz / SQ)}`;
-    if (!squares.has(sk)) squares.set(sk, { green: [], dry: [] });
+    if (!squares.has(sk)) squares.set(sk, { green: [], dry: [], greenC: [], dryC: [] });
     const bucket = squares.get(sk);
     const n = 10 + Math.floor(r() * 10);
     for (let i = 0; i < n; i++) {
@@ -167,16 +167,21 @@ export function buildReedBeds(w) {
       const lean = (r() - 0.5) * 0.5, la = r() * Math.PI * 2;
       const tx = bx + Math.cos(la) * lean, tz = bz + Math.sin(la) * lean;
       const ca = Math.cos(a + 1.3) * wd, sa = Math.sin(a + 1.3) * wd;
-      (r() < 0.3 ? bucket.dry : bucket.green).push(bx - ca, base, bz - sa, bx + ca, base, bz + sa, tx, base + h, tz);
+      const dry = r() < 0.3;
+      (dry ? bucket.dry : bucket.green).push(bx - ca, base, bz - sa, bx + ca, base, bz + sa, tx, base + h, tz);
+      // Each blade its own shade; dark and wet at its foot, pale at its tip.
+      const k = 0.85 + r() * 0.3, foot = 0.42 * k, tip = 1.12 * k;
+      (dry ? bucket.dryC : bucket.greenC).push(foot, foot, foot * 0.92, foot, foot, foot * 0.92, tip, tip, tip * 0.95);
     }
   }
   const g = new THREE.Group();
   g.name = 'reed-beds';
-  for (const [sk, { green, dry }] of squares) {
-    for (const [list, mat] of [[green, M.reed], [dry, M.reedDry]]) {
+  for (const [sk, { green, dry, greenC, dryC }] of squares) {
+    for (const [list, cols, mat] of [[green, greenC, M.reed], [dry, dryC, M.reedDry]]) {
       if (!list.length) continue;
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute(list, 3));
+      geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
       geo.computeVertexNormals();
       const m = new THREE.Mesh(w.own(geo), mat);
       m.name = `reeds@${sk}`;

@@ -15,7 +15,6 @@ import { WORLDS } from '../learn/curriculum.js';
 import { worldStatus, worldProgress, isQuestComplete, nextQuest, currentWorld, trackProgress } from '../learn/progress.js';
 import { practiceKey, bindPracticeKeys } from './learn-world.js';
 import { openCampaignStoryModal } from '../story/story-modal.js';
-import { getEpisode } from '../story/saga.js';
 
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
@@ -29,7 +28,6 @@ export function renderLearn(container) {
     stage.cameraRig.moveTo('starmap');
   }
 
-  const track = trackProgress();
   const resume = currentWorld();
   const resumeStatus = resume ? worldStatus(resume) : 'charted';
   const resumeQuest = resumeStatus === 'open' ? nextQuest(resume) : null;
@@ -56,10 +54,7 @@ export function renderLearn(container) {
           const tag = STATUS_TAG[st] || STATUS_TAG.charted;
           const prog = worldProgress(w);
           const enterable = st === 'open' || st === 'complete';
-          // Only the world the player is on gets the painted key; the rest are
-          // bare switches, so the eye lands on where they left off.
           const isResume = enterable && resume && resume.id === w.id;
-          const arrival = getEpisode(w.id)?.arrival;
           return `
             <article class="plate learn-world-row learn-${st}${isResume ? ' is-resume' : ''}">
               <div class="learn-world-code">
@@ -70,14 +65,14 @@ export function renderLearn(container) {
               <div class="learn-world-body">
                 <div class="learn-world-head">
                   <h2 class="learn-world-name">${esc(w.world)}</h2>
-                  ${w.beyondAp || st !== 'open' ? `
+                  <span class="learn-world-topic">${esc(w.title)}</span>
+                  ${w.beyondAp || st === 'complete' ? `
                     <div class="learn-world-tags">
                       ${w.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ''}
-                      ${st !== 'open' ? `<span class="tag ${tag.cls}">${tag.label}</span>` : ''}
+                      ${st === 'complete' ? `<span class="tag ${tag.cls}">${tag.label}</span>` : ''}
                     </div>` : ''}
                 </div>
                 <p class="learn-world-line">${esc(w.line)}</p>
-                ${arrival ? `<p class="learn-world-story">${esc(arrival)}</p>` : ''}
               </div>
 
               <div class="learn-world-meta">
@@ -89,7 +84,7 @@ export function renderLearn(container) {
                   }).join('')}
                 </div>
                 <div class="eyebrow learn-world-count">
-                  ${prog.liveTotal ? `${prog.questsComplete} / ${prog.liveTotal} quests done` : `${w.questCount} quests`}
+                  ${prog.liveTotal ? `${prog.questsComplete} / ${prog.liveTotal}` : `${w.questCount}`}
                 </div>
                 <div class="learn-world-keys">
                   ${enterable

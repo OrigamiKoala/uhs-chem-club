@@ -35,8 +35,10 @@
 import * as THREE from 'three';
 import quicklightData from './world-data/quicklight.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
-import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d } from './materials/pbr-kit.js';
-import { stormBasalt, pourConcrete } from './materials/quicklight-textures.js';
+import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d, addWorldVariation } from './materials/pbr-kit.js';
+import { loadTexturePack, dressFromPack, packsAvailable } from './materials/texture-pack.js';
+import { footGrimed, addSawnJoints } from './quicklight/grime.js';
+import { stormBasalt, pourConcrete, hardstanding } from './materials/quicklight-textures.js';
 import {
   createQlSkyDome, createQlLights, followQlShadow, createQlEnvironment, qlSkyUniforms, followCamera, QLSKY, QUICKLIGHT_SUN,
   buildLightning
@@ -106,6 +108,9 @@ export class QuicklightWorld {
     // The lava field runs to the horizon on its own; the voyage must not lay a ring over it.
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
+    // BUILT SHAPES (the realism pass, `docs/plans/realism-quicklight.md`): the kit's boxes chamfered and its cylinders
+    // bevelled, uvs in metres (`kettle/kit.js`). The process units far from the walk use the plain metric kit (`plant.js`).
+    this.builtKit = true;
 
     // THE REFINERY, AS A PLAN. The height field, the walk, the colliders, the light mask and the guide all stand on it.
     this.plan = makeRefineryPlan();
@@ -125,6 +130,7 @@ export class QuicklightWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.initCover();
+    this.initPacks();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/quicklight.js`).
     this.crew = attachCrew(this, 'quicklight');
   }
@@ -136,7 +142,7 @@ export class QuicklightWorld {
 
   /** What the builders are handed: materials, `own`, the lamp list, the tier, the field and the plan. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan, builtKit: this.builtKit };
   }
 
   /** `aoMap` samples the SECOND uv set, which a primitive geometry does not have: reuse the first. */
@@ -156,43 +162,54 @@ export class QuicklightWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => {
-      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 });
+    // TILES IN METRES. The kit, the refinery's bodies, the paving and the ground all lay their uvs in metres, so a
+    // material's repeat is 1 / its tile in metres: one texel density on every object that wears it. (Before the realism
+    // pass the kit's parts wore one tile stretched over each face, the refinery 2.4 m tiles and the ground 7 m.)
+    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256, tile = 2) => {
+      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 1 / tile, roughness: 1.0 });
       m.normalScale.set(1.2, 1.2);
       m.aoMapIntensity = 0.85;
       return m;
     };
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
     // THE GROUND: young basalt for grain; the vertex colours say what it is (flow top, the front in section, hardstanding, earth).
-    M.ground = buildMaterial(stormBasalt({ size: texSize(512), seed: 41 }), { repeat: 1, roughness: 1.0 });
+    M.ground = buildMaterial(stormBasalt({ size: texSize(512), seed: 41 }), { repeat: 1 / 7, roughness: 1.0 });
     M.ground.vertexColors = true;
     M.ground.normalScale.set(1.25, 1.25);
     M.ground.envMapIntensity = 0.45;
-    // CONCRETE, poured and weathered; a shade apart for each use.
-    const concrete = (color, seed, repeat = 1) => {
-      const m = buildMaterial(pourConcrete({ size: texSize(512), seed }), { repeat, roughness: 1.0 });
+    // The plant's yard and the flare yard: crushed basalt rolled flat, the ground's own rock at a finer grain.
+    M.gravel = buildMaterial(stormBasalt({ size: texSize(512), seed: 43 }), { repeat: 1 / 3, roughness: 1.0 });
+    M.gravel.vertexColors = true;
+    M.gravel.envMapIntensity = 0.45;
+    // CONCRETE, cast and weathered; a shade apart for each use. Laid at a 2 m tile (the photographed wall's).
+    const concrete = (color, seed, tile = 2) => {
+      const m = buildMaterial(pourConcrete({ size: texSize(512), seed }), { repeat: 1 / tile, roughness: 1.0 });
       m.color = new THREE.Color(color);
       return m;
     };
     M.concrete = concrete(0xa9a7a2, 7);
     M.face = concrete(0x8e8b86, 11);
     M.coping = concrete(0xb7b4ad, 13);
-    M.floor = concrete(0x8d8a84, 17);
     M.block = concrete(0x9c978e, 19);
     M.skirt = concrete(0xb3aea4, 23);
-    M.paving = concrete(0xffffff, 29);
+    // FLOORS: broom-finished hardstanding (the rooms' slabs and every open walk), not shuttered panels.
+    M.floor = buildMaterial(hardstanding({ size: texSize(512), seed: 17 }), { repeat: 1 / 2.5, roughness: 1.0 });
+    M.floor.color = new THREE.Color(0x8d8a84);
+    M.paving = buildMaterial(hardstanding({ size: texSize(512), seed: 29 }), { repeat: 1 / 2.5, roughness: 1.0 });
     M.paving.vertexColors = true;
-    for (const m of [M.ground, M.paving]) for (const t of m.userData.surfaceMaps || []) t.anisotropy = aniso;
+    for (const m of [M.ground, M.gravel, M.paving]) for (const t of m.userData.surfaceMaps || []) t.anisotropy = aniso;
     // STEEL from sections, painted long ago; galvanised where it is a rail; the vessels' aluminium jacket over insulation.
     M.steel = metal('#5f666d', '#4f565d', '#6e5440', 101, 0.5, 2, 512);
     M.darkSteel = metal('#30353b', '#40464d', '#4a3d33', 103, 0.5, 4);
     M.rusted = metal('#6c4b38', '#58483e', '#86482b', 107, 0.8, 3);
     M.rail = metal('#8e959a', '#7f878c', '#6b5a48', 111, 0.4, 2);
-    M.cladding = metal('#a4a7a8', '#9a9d9e', '#7e6c58', 113, 0.35, 6, 512);
-    M.corrugated = metal('#7d8184', '#6e7275', '#7b5136', 115, 0.7, 8);
-    M.roof = metal('#6f7478', '#62676b', '#6e5038', 117, 0.6, 5);
+    M.cladding = metal('#a4a7a8', '#9a9d9e', '#7e6c58', 113, 0.35, 6, 512, 4);
+    M.corrugated = metal('#7d8184', '#6e7275', '#7b5136', 115, 0.7, 8, 256, 3);
+    M.roof = metal('#6f7478', '#62676b', '#6e5038', 117, 0.6, 5, 256, 3);
     M.paintRed = metal('#7a2e24', '#5b5049', '#6e3a24', 119, 0.6, 2);
-    M.benchTop = metal('#7c8c94', '#657680', '#485a64', 109, 0.35, 3);
+    // THE BENCH keeps its look: its parts are stock boxes (`bench-bay.js`, one tile per face), so it keeps the old repeat.
+    M.benchTop = metal('#7c8c94', '#657680', '#485a64', 109, 0.35, 3, 256, 0.5);
+    M.benchDark = metal('#30353b', '#40464d', '#4a3d33', 103, 0.5, 4, 256, 0.5);
     M.copper = std({ color: 0xa8673f, roughness: 0.45, metalness: 0.9 });
     M.brass = std({ color: 0xa88a4f, roughness: 0.42, metalness: 0.9 });
     // Fuel in a sight glass or a sample bottle: dark straw. A liquid, not a light.
@@ -208,6 +225,8 @@ export class QuicklightWorld {
     M.fence = std({ color: 0x8c9296, map: link, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.6, metalness: 0.6 });
     const grate = this.own(openMesh(texSize(128), 'bars'));
     M.grating = std({ color: 0x6c7176, map: grate, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.7, metalness: 0.6 });
+    // The bench's tray: the same grating at the repeat its stock boxes were drawn with.
+    M.benchTray = std({ color: 0x6c7176, map: grate, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.7, metalness: 0.6 });
     M.glass = std({ color: 0xd5dfe8, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.32, depthWrite: false });
     M.glassDark = std({ color: 0x0f1216, roughness: 0.18, metalness: 0.2 });
     // THE ONE CLEAN THING in a weathered works: the cased instrument keeps its own paint.
@@ -216,12 +235,85 @@ export class QuicklightWorld {
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5c4a34, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
+    // THE CONCRETE'S FOOT GRIME (`quicklight/grime.js`): the refinery's cast bodies wear clones that draw a damp band at
+    // each wall's foot. Made before the variation below, which each copy then gets for itself.
+    for (const k of ['concrete', 'face', 'coping', 'block', 'skirt']) M[`${k}G`] = footGrimed(M[k], { damp: k === 'coping' ? 0.3 : 0.4 });
+    // EVERY BIG SURFACE DRIFTS in tone and roughness across the plant, with a coarser second sample against visible
+    // repeats (pbr-kit `addWorldVariation`); the walls also carry streaks where rain has run down from the copings.
+    // The corrugated sheet takes no anti-tile: its rotated second sample would draw the corrugations crossed.
+    for (const k of ['concrete', 'face', 'block', 'skirt']) {
+      for (const m of [M[k], M[`${k}G`]]) addWorldVariation(m, { scale: 8, strength: 0.14, roughShift: 0.08, antiTile: 0.35, streaks: 0.12 });
+    }
+    for (const m of [M.coping, M.copingG, M.floor]) addWorldVariation(m, { scale: 6, strength: 0.12, roughShift: 0.1, antiTile: 0.4 });
+    for (const m of [M.ground, M.gravel]) addWorldVariation(m, { scale: 13, strength: 0.14, roughShift: 0.1, antiTile: 0.6 });
+    addWorldVariation(M.paving, { scale: 9, strength: 0.12, roughShift: 0.12, antiTile: 0.5 });
+    for (const m of [M.steel, M.darkSteel, M.rusted, M.rail, M.paintRed]) addWorldVariation(m, { scale: 5, strength: 0.1, roughShift: 0.1, antiTile: 0.3 });
+    addWorldVariation(M.cladding, { scale: 7, strength: 0.08, roughShift: 0.08, antiTile: 0.3, streaks: 0.08 });
+    for (const m of [M.corrugated, M.roof]) addWorldVariation(m, { scale: 6, strength: 0.1, roughShift: 0.08, antiTile: 0 });
+    // The hardstanding's sawn joints: 6 m bays, drawn in world space (`grime.js`).
+    addSawnJoints(M.paving, { pitch: 6, offset: [1.5, 2.5], dark: 0.5 });
+
     for (const m of Object.values(M)) {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
     }
     this.M = M;
     this.lanternMat = M.lantern;
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (CC0, `public/textures/quicklight/LICENSE.md`). At 3D On with a renderer, each pack is
+   * fetched after the world is built and put into the slots its materials' procedural maps already hold
+   * (`texture-pack.js`), so no program changes and each map is uploaded as it lands; until then, and below 3D On, the
+   * procedural maps stay. `scale` = (1 / the photo's tile in metres) / the material's own repeat, so every photo lies at
+   * its real size. `grey` is the material's colour once it wears the photo (each pack is graded near-neutral).
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const M = this.M;
+    const rep = m => m.map?.repeat?.x || 1;
+    const at = (m, photo, o = {}, grey) => [m, { scale: (1 / photo) / rep(m), ...o }, grey];
+    const both = (k, photo, o, grey) => [at(M[k], photo, o, grey), at(M[`${k}G`], photo, o, grey)];
+    const plan = {
+      lava: [at(M.ground, 1.5, { normalScale: 1.1, aoIntensity: 0.7 }, 0xffffff)],
+      gravel: [at(M.gravel, 2.0, { normalScale: 1.0, aoIntensity: 0.7 }, 0xffffff)],
+      slab: [
+        at(M.paving, 2.5, { normalScale: 0.9, aoIntensity: 0.6 }, 0xffffff),
+        at(M.floor, 2.5, { normalScale: 0.9, aoIntensity: 0.6 }, 0x9a9a98)
+      ],
+      wall: [
+        ...both('concrete', 2.0, { normalScale: 1.0, aoIntensity: 0.8 }, 0xbcbcba),
+        ...both('face', 2.0, { normalScale: 1.0, aoIntensity: 0.8 }, 0x9d9c99),
+        ...both('coping', 2.0, { normalScale: 0.9, aoIntensity: 0.7 }, 0xc8c6c0),
+        ...both('block', 2.0, { normalScale: 1.0, aoIntensity: 0.8 }, 0xadaaa3),
+        ...both('skirt', 2.0, { normalScale: 1.0, aoIntensity: 0.8 }, 0xc2bfb8)
+      ],
+      steel: [
+        at(M.steel, 2.0, { normalScale: 1.0 }, 0xa9b0b6),
+        at(M.darkSteel, 2.0, { normalScale: 1.0 }, 0x5f6369),
+        at(M.rusted, 2.0, { normalScale: 1.0 }, 0xb08468),
+        at(M.rail, 2.0, { normalScale: 0.8 }, 0xd4d9dc)
+      ],
+      paint: [
+        at(M.paintRed, 1.0, { normalScale: 1.0 }, 0x9c4638),
+        at(M.cladding, 1.0, { normalScale: 0.8 }, 0xe4e6e6)
+      ],
+      sheet: [
+        at(M.corrugated, 2.7, { normalScale: 1.0 }, 0xc4c8ca),
+        at(M.roof, 2.7, { normalScale: 1.0 }, 0xa8acae)
+      ]
+    };
+    const aniso = this.renderer.capabilities?.getMaxAnisotropy?.() || 8;
+    this.packsReady = Promise.all(Object.entries(plan).map(([name, mats]) => loadTexturePack('/textures/quicklight', name).then(pack => {
+      if (this._disposed || !pack) return;
+      for (const [mat, opts, grey] of mats) {
+        if (!mat) continue;
+        const made = dressFromPack(mat, pack, { ...opts, renderer: this.renderer });
+        for (const t of made) t.anisotropy = aniso;
+        this.own(...made);
+        if (grey !== undefined) mat.color.setHex(grey);
+      }
+    })));
   }
 
   /* ------------------------------------------------------------ light and sky */
@@ -233,13 +325,15 @@ export class QuicklightWorld {
     this.scene.add(key, key.target, hemi);
     holdShadowUntilAsked(this.scene, key);
     const amb = this.data.ambience;
-    this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
+    // The haze gives depth without burying the far country: it starts and closes further out than the layout's ambience
+    // (the realism pass; the layout keeps its numbers, which `world-data/quicklight.json` is checked against).
+    this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear * 1.4, amb.fogFar * 1.6);
     this.scene.background = QLSKY.horizon.clone();
     const env = createQlEnvironment(this.renderer);
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.7;
+      this.scene.environmentIntensity = 0.6;
     }
   }
 
@@ -251,14 +345,22 @@ export class QuicklightWorld {
 
   /** The ground mesh, the paving, and every built body. The ground, the paving and the built bodies are GROUND. */
   initTerrain() {
-    const ground = this.own(buildGroundGeometry(this.field, this.plan));
-    this.terrainMesh = new THREE.Mesh(ground, this.M.ground);
+    const ground = buildGroundGeometry(this.field, this.plan);
+    this.terrainMesh = new THREE.Mesh(this.own(ground.lava), this.M.ground);
     this.terrainMesh.name = 'quicklight-ground';
     this.terrainMesh.frustumCulled = false;
     this.terrainMesh.userData.phys = 'ground';
     this.terrainMesh.userData.noWeather = true;
     this.terrainMesh.receiveShadow = this.t4;
     this.scene.add(this.terrainMesh);
+    // Inside the plant's fence the ground is the yard's crushed basalt, not the flow's own rock (the realism pass).
+    const yard = new THREE.Mesh(this.own(ground.yard), this.M.gravel);
+    yard.name = 'quicklight-yard';
+    yard.frustumCulled = false;
+    yard.userData.phys = 'ground';
+    yard.userData.noWeather = true;
+    yard.receiveShadow = this.t4;
+    this.scene.add(yard);
 
     // THE REFINERY'S BUILT BODIES, merged by material over 40 m squares.
     const lists = buildRefinery(this.plan);
@@ -278,17 +380,25 @@ export class QuicklightWorld {
       for (const [sk, gs] of squares) {
         const geo = mergeList(gs);
         if (!geo) continue;
-        const m = new THREE.Mesh(this.own(geo), this.M[key]);
+        // The cast concrete wears its grimed clone (its geometry carries `ttFoot`).
+        const m = new THREE.Mesh(this.own(geo), this.M[`${key}G`] || this.M[key]);
         m.name = `refinery:${key}@${sk}`;
         m.castShadow = this.t4 && !['floor', 'fence', 'grating', 'rail'].includes(key);
         m.receiveShadow = this.t4;
         built.add(m);
       }
     }
-    const paving = new THREE.Mesh(this.own(buildPaving(this.plan)), this.M.paving);
+    const surfaces = buildPaving(this.plan);
+    const paving = new THREE.Mesh(this.own(surfaces.paving), this.M.paving);
     paving.name = 'refinery:paving';
     paving.receiveShadow = this.t4;
     built.add(paving);
+    if (surfaces.gravel) {
+      const gravel = new THREE.Mesh(this.own(surfaces.gravel), this.M.gravel);
+      gravel.name = 'refinery:gravel';
+      gravel.receiveShadow = this.t4;
+      built.add(gravel);
+    }
     this.scene.add(built);
     this.built = built;
   }
@@ -489,6 +599,7 @@ export class QuicklightWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.envTarget?.dispose();

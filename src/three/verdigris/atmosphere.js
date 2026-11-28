@@ -103,9 +103,13 @@ export function createVdSkyDome(radius = 900) {
   return dome;
 }
 
-/** The sun (the only shadow) and a hemisphere fill: damp sky above, the mud's dull bounce below. */
+/**
+ * The sun (the only shadow) and a hemisphere fill: damp sky above, the dark water's olive bounce below. (The realism
+ * pass took the fill down from 1.25 and the sun up from 1.9, so faces turned from the sun read darker than faces
+ * turned to it, and the bounce from the black water is dim and green, not grey.)
+ */
 export function createVdLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#f1ead2'), 1.9);
+  const key = new THREE.DirectionalLight(new THREE.Color('#f3ead0'), 2.35);
   key.position.copy(VERDIGRIS_SUN).multiplyScalar(240);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -116,7 +120,7 @@ export function createVdLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#aebdb2'), new THREE.Color('#6f7a66'), 1.25);
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#b3c1b7'), new THREE.Color('#545a45'), 0.95);
   return { key, hemi };
 }
 
@@ -126,7 +130,7 @@ export function createVdEnvironment(renderer) {
   const envScene = new THREE.Scene();
   const dome = createVdSkyDome(100);
   envScene.add(dome);
-  const floor = new THREE.Mesh(new THREE.CircleGeometry(95, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color('#8b9886').multiplyScalar(0.6) }));
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(95, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color('#6c7259').multiplyScalar(0.5) }));
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -2;
   envScene.add(floor);

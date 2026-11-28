@@ -98,7 +98,9 @@
   max-width: calc(100vw - 32px);
 }
 
-.voyage-guide[hidden] { display: none; }
+.voyage-guide[hidden],
+body:has(.learn-sites-popup-scrim:not(.hidden)) .voyage-guide,
+body:has(#modal-container:not(.hidden)) .voyage-guide { display: none; }
 
 /* Leaned in over a table, the prompt strip stands where the plate does: the plate drops under it, to the left, so it never covers the
    words of the question. */

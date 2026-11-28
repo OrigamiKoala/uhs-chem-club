@@ -64,7 +64,7 @@
         2.8,
         8.2
       ],
-      "label": "Bench 1 - Three States",
+      "label": "Bench 1 - States of Matter",
       "structure": "deckhouse",
       "built": true
     },
@@ -83,7 +83,7 @@
         -2.8,
         -39.8
       ],
-      "label": "Bench 2 - The Grip Between",
+      "label": "Bench 2 - Intermolecular Forces",
       "structure": "pump-room",
       "built": true
     },
@@ -102,7 +102,7 @@
         -5.4,
         -85
       ],
-      "label": "Bench 3 - Liquids and Vapour",
+      "label": "Bench 3 - Vapor Pressure",
       "structure": "pump-well",
       "built": true
     },
@@ -121,7 +121,7 @@
         -2,
         -50
       ],
-      "label": "Bench 4 - Kinds of Solid",
+      "label": "Bench 4 - Types of Solids",
       "structure": "hold",
       "built": true
     },
@@ -140,7 +140,7 @@
         0.8,
         -31.8
       ],
-      "label": "Bench 5 - The Crossing",
+      "label": "Bench 5 - Phase Changes",
       "structure": "thaw-shed",
       "built": true
     },
@@ -159,7 +159,7 @@
         2.2,
         -13
       ],
-      "label": "Bench 6 - Taken Into Solution",
+      "label": "Bench 6 - Solutions and Solubility",
       "structure": "salt-store",
       "built": true
     },
@@ -178,7 +178,7 @@
         -0.8,
         7
       ],
-      "label": "Bench 7 - Pulling Apart",
+      "label": "Bench 7 - Separating Mixtures",
       "structure": "evaporator-flat",
       "built": true
     }

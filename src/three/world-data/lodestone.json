@@ -298,7 +298,7 @@
         -2.4,
         31.6
       ],
-      "label": "Bench 2 - Many Charges",
+      "label": "Bench 2 - Oxidation States",
       "structure": "manganese-face",
       "built": true,
       "alcove": "manganese-face"
@@ -336,7 +336,7 @@
         -6.9,
         4.5
       ],
-      "label": "Bench 4 - Shapes and Isomers",
+      "label": "Bench 4 - Coordination Isomers",
       "structure": "drum-gallery",
       "built": true,
       "alcove": "drum-gallery"
@@ -355,7 +355,7 @@
         -9.9,
         -3
       ],
-      "label": "Bench 5 - Colour Booth",
+      "label": "Bench 5 - Crystal Field Color",
       "structure": "chimney",
       "built": true,
       "alcove": "chimney"

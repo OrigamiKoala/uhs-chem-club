@@ -105,7 +105,8 @@ export function createBwSkyDome(radius = 900) {
 
 /** The sun (the only shadow) and a hemisphere fill: dusty sky above, the dry mud's bounce below. */
 export function createBwLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#f4e3bd'), 1.9);
+  // Realism pass: more of the light from the sun and less from an even fill, so faces turned from it read as shade.
+  const key = new THREE.DirectionalLight(new THREE.Color('#f4e3bd'), 2.25);
   key.position.copy(BRINEWIRE_SUN).multiplyScalar(240);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -116,7 +117,9 @@ export function createBwLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#bfc6c4'), new THREE.Color('#80775f'), 1.25);
+  // The sky's fill is cooler and brighter than the bounce off the grey-brown concrete and mud below it, so an underside
+  // or a wall's foot is darker than its top (it was one even grey).
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#c4cdd1'), new THREE.Color('#6a6150'), 1.0);
   return { key, hemi };
 }
 

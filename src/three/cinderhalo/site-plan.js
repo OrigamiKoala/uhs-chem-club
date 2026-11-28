@@ -156,12 +156,12 @@ const snap = ([x, z]) => (Math.abs(x) >= Math.abs(z) ? [Math.sign(x), 0] : [0, M
 export const ORDER = Object.freeze(['L', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'G']);
 
 const HOSTS = [
-  ['site-1', 'q1-still-warm', 'Bench 1 - Still Warm', 'drum-store', 'C1', 'CHO-01', 'shelf'],
-  ['site-2', 'q2-what-comes-off', 'Bench 2 - What Comes Off', 'shield-cell', 'C2', 'CHO-02', 'deck'],
-  ['site-3', 'q3-equations', 'Bench 3 - Balancing the Nucleus', 'target-hall', 'C3', 'CHO-03', 'desk'],
-  ['site-4', 'q4-stability', 'Bench 4 - Which Nuclei Last', 'separation-hall', 'C4', 'CHO-04', 'shelf'],
-  ['site-5', 'q5-half-gone', 'Bench 5 - Half Gone, Then Half Again', 'cask-vault', 'C5', 'CHO-05', 'deck'],
-  ['site-6', 'q6-shortfall', 'Bench 6 - The Missing Weight', 'pool-hall', 'C6', 'CHO-06', 'desk']
+  ['site-1', 'q1-still-warm', 'Bench 1 - Radioactive Decay', 'drum-store', 'C1', 'CHO-01', 'shelf'],
+  ['site-2', 'q2-what-comes-off', 'Bench 2 - Types of Radiation', 'shield-cell', 'C2', 'CHO-02', 'deck'],
+  ['site-3', 'q3-equations', 'Bench 3 - Nuclear Equations', 'target-hall', 'C3', 'CHO-03', 'desk'],
+  ['site-4', 'q4-stability', 'Bench 4 - Nuclear Stability', 'separation-hall', 'C4', 'CHO-04', 'shelf'],
+  ['site-5', 'q5-half-gone', 'Bench 5 - Half-Life', 'cask-vault', 'C5', 'CHO-05', 'deck'],
+  ['site-6', 'q6-shortfall', 'Bench 6 - Binding Energy', 'pool-hall', 'C6', 'CHO-06', 'desk']
 ];
 
 export const HOST_PLAN = Object.freeze(Object.fromEntries(HOSTS.map(([id, questId, label, structure, crater, plate, skin], i) => {

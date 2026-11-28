@@ -128,6 +128,7 @@ body:has(.app-viewport .m-starmap:not([style*="display: none"])) #fps-interact-p
 body:has(.app-viewport .m-casefile:not([style*="display: none"])) #fps-interact-prompt,
 body:has(.app-viewport .m-settings:not([style*="display: none"])) #fps-interact-prompt,
 body:has(.app-viewport .m-info) #fps-interact-prompt,
+body:has(.learn-sites-popup-scrim:not(.hidden)) #fps-interact-prompt,
 body:has(#modal-container:not(.hidden)) #fps-interact-prompt {
   display: none !important;
 }

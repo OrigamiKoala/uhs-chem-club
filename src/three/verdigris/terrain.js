@@ -20,7 +20,10 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ROOMS, DECK, WATER, WW, EDGE, DOOR, FORT, CURTAIN_T, CURTAIN_TOP, VAULT_T, fbm, reediness, fortDistance } from './fort-plan.js';
+import { chamferBoxGeometry, turnedGeometry } from '../kettle/kit.js';
+import { makeRng, hashStr } from '../materials/pbr-kit.js';
 
+const UP = new THREE.Vector3(0, 1, 0);
 const smooth = (a, b, t) => { const x = Math.max(0, Math.min(1, (t - a) / (b - a))); return x * x * (3 - 2 * x); };
 
 /* ================================================================== the field */
@@ -41,20 +44,139 @@ export function makeVerdigrisField(plan, pad) {
 
 /* ================================================================== geometry helpers */
 
-/** A box geometry at (cx, cy, cz) of size (sx, sy, sz), its texture laid in metres. */
-export function block(sx, sy, sz, cx, cy, cz, tile = 2.4) {
-  const g = new THREE.BoxGeometry(sx, sy, sz);
-  const uv = g.attributes.uv, n = g.attributes.normal;
-  for (let i = 0; i < uv.count; i++) {
-    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i));
-    const [a, b] = ax > 0.5 ? [sz, sy] : ay > 0.5 ? [sx, sz] : [sx, sy];
-    uv.setXY(i, uv.getX(i) * a / tile, uv.getY(i) * b / tile);
-  }
+/*
+ * BUILT STONE AND TIMBER (the realism pass, `docs/plans/realism-verdigris.md`). Every block is a box with its arrises
+ * chamfered (kettle/kit.js `chamferBoxGeometry`): a few centimetres on a wall, a centimetre on a rail. When a block is
+ * put in its list (`finish`), its uvs are laid from its FINAL world position in metres on each face's own plane, so
+ * every wall, floor and deck shows one texel density and the courses run on from block to block; the materials'
+ * repeat is 1 / the photo's tile in metres (`verdigris.js`). Each vertex also carries `vdOut`: 1 on a face that looks
+ * out over the water, 0 on a face that looks into a room, a door, a stair or the gate passage. The waterline grime
+ * (`verdigris/grime.js`) is drawn only where `vdOut` is 1.
+ */
+
+/** How hard a block's arrises are broken: 3 cm on a wall, a centimetre or so on thin stuff. */
+const chamferOf = (sx, sy, sz) => { const m = Math.min(sx, sy, sz); return m < 0.03 ? 0 : Math.min(0.035, m * 0.12); };
+
+/** A box geometry at (cx, cy, cz) of size (sx, sy, sz), its arrises chamfered by `c` (default by its size). */
+export function block(sx, sy, sz, cx, cy, cz, c = null) {
+  const g = chamferBoxGeometry(sx, sy, sz, typeof c === 'number' && c < 0.2 ? c : chamferOf(sx, sy, sz));
   g.translate(cx, cy, cz);
   return g;
 }
-/** A box from (x0, y0, z0) to (x1, y1, z1). */
-export const span = (x0, x1, y0, y1, z0, z1, tile) => block(x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, tile);
+/** A box from (x0, y0, z0) to (x1, y1, z1). (A seventh argument was a texture tile; it is ignored, the uvs are metric.) */
+export const span = (x0, x1, y0, y1, z0, z1) => block(x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+
+/**
+ * A footing whose faces lean in as they rise (a batter): a chamfered box from (x0, y0, z0) to (x1, y1, z1) with its
+ * top drawn in by `inset` on every side. Stays inside the box it replaces.
+ */
+function battered(x0, x1, y0, y1, z0, z1, inset) {
+  const g = chamferBoxGeometry(x1 - x0, y1 - y0, z1 - z0, 0.03);
+  const p = g.attributes.position, hx = (x1 - x0) / 2, hz = (z1 - z0) / 2;
+  const kx = Math.max(0.1, (hx - inset) / hx), kz = Math.max(0.1, (hz - inset) / hz);
+  for (let i = 0; i < p.count; i++) if (p.getY(i) > 0) p.setXYZ(i, p.getX(i) * kx, p.getY(i), p.getZ(i) * kz);
+  g.computeVertexNormals();
+  g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  return g;
+}
+
+/** The rectangles whose faces look INTO the fort's rooms (no waterline grime), set by `buildMasonry` for `finish`. */
+let INSIDE = [];
+const inside = (x, z) => INSIDE.some(r => x > r.minX && x < r.maxX && z > r.minZ && z < r.maxZ);
+
+/**
+ * Lay a finished geometry's uvs in world metres on each face's plane, and give it `vdOut`. `keepUp` keeps the uvs a
+ * builder laid on the upward faces (a deck's boards run across the walk, whichever way it runs).
+ */
+function finish(g, { keepUp = false, keepUV = false, out = null } = {}) {
+  const p = g.attributes.position, n = g.attributes.normal;
+  const old = g.attributes.uv;
+  if (keepUV) {
+    g.setAttribute('vdOut', new THREE.BufferAttribute(new Float32Array(p.count).fill(out ?? 1), 1));
+    return g;
+  }
+  const uv = new Float32Array(p.count * 2);
+  const vo = new Float32Array(p.count);
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    if (keepUp && old && n.getY(i) > 0.5) { uv[i * 2] = old.getX(i); uv[i * 2 + 1] = old.getY(i); }
+    else if (ay >= ax && ay >= az) { uv[i * 2] = x; uv[i * 2 + 1] = z; }
+    else if (ax >= az) { uv[i * 2] = z; uv[i * 2 + 1] = y; }
+    else { uv[i * 2] = x; uv[i * 2 + 1] = y; }
+    // A face looks into a room when the point a hand in front of it is in the room (tested from each vertex along its
+    // own face's normal, so a big face is wholly in or out).
+    vo[i] = out ?? (inside(x + n.getX(i) * 0.15, z + n.getZ(i) * 0.15) ? 0 : 1);
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.setAttribute('vdOut', new THREE.BufferAttribute(vo, 1));
+  return g;
+}
+
+/**
+ * A run of separate stones along `axis` from a to b (a coping, a string course): each 0.8 to 1.6 m long, a few
+ * millimetres apart and a few off their neighbours in height and line. `box(u0, u1, dy, dp)` builds one stone.
+ */
+function stoneRun(put, key, a, b, box, { seed = 1, min = 0.8, max = 1.6, jitter = 0.012 } = {}) {
+  const rnd = makeRng(hashStr(`vd-run:${seed}:${a.toFixed(2)}:${b.toFixed(2)}`));
+  const cuts = [a];
+  let u = a;
+  while (b - u > max) { u += min + rnd() * (max - min); if (b - u < min * 0.6) break; cuts.push(u); }
+  cuts.push(b);
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const u0 = cuts[i] + (i ? 0.005 : 0), u1 = cuts[i + 1] - (i < cuts.length - 2 ? 0.005 : 0);
+    put(key, box(u0, u1, (rnd() - 0.5) * jitter, (rnd() - 0.5) * jitter * 0.6));
+  }
+}
+
+/**
+ * The middle of each board in the plank texture, in metres up its 2 m tile (`planks_diff.jpg`, boards along u; read off
+ * the photo's gap rows). A post, a rail or a pile is cut from ONE board: its uv runs along its length on u and stays
+ * inside one board's width on v, so no board gap runs across it.
+ */
+const BOARD_MID = [1.793, 1.572, 1.348, 1.123, 0.9, 0.676, 0.449, 0.23];
+
+/** Lay a long timber's uvs along `axis` (unit, world) inside board `k`, with its length offset by `off` metres. */
+function grainAlong(g, axis, k, off = 0) {
+  const p = g.attributes.position, n = g.attributes.normal;
+  const uv = new Float32Array(p.count * 2);
+  const P = new THREE.Vector3(), N = new THREE.Vector3(), C = new THREE.Vector3();
+  const mid = BOARD_MID[((k % BOARD_MID.length) + BOARD_MID.length) % BOARD_MID.length];
+  g.computeBoundingBox();
+  const centre = g.boundingBox.getCenter(new THREE.Vector3());
+  for (let i = 0; i < p.count; i++) {
+    P.fromBufferAttribute(p, i).sub(centre);
+    N.fromBufferAttribute(n, i);
+    C.crossVectors(axis, N);
+    if (C.lengthSq() < 0.04) C.set(axis.y, axis.z, axis.x).cross(axis);
+    C.normalize();
+    uv[i * 2] = P.dot(axis) + off;
+    uv[i * 2 + 1] = mid + P.dot(C) * 0.35;
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return g;
+}
+
+/** A rough stone fallen in the water: an irregular, flat-shaded lump of about `r` m, seeded. */
+function rubbleStone(x, y, z, r, seed) {
+  const rnd = makeRng(seed);
+  const g = new THREE.IcosahedronGeometry(r, 0);   // non-indexed: each face its own three vertices
+  const p = g.attributes.position;
+  const key = v => `${v.x.toFixed(3)},${v.y.toFixed(3)},${v.z.toFixed(3)}`;
+  const moved = new Map();
+  const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    const k = key(v);
+    if (!moved.has(k)) moved.set(k, [0.75 + rnd() * 0.5, 0.55 + rnd() * 0.3, 0.75 + rnd() * 0.5]);
+    const [sx, sy, sz] = moved.get(k);
+    p.setXYZ(i, v.x * sx, v.y * sy, v.z * sz);
+  }
+  g.computeVertexNormals();
+  g.rotateY(rnd() * Math.PI);
+  g.translate(x, y, z);
+  return g;
+}
 
 /** Split [a, b] into pieces no longer than `len`, skipping the gaps. */
 function pieces(a, b, gaps = [], len = 24) {
@@ -97,7 +219,9 @@ function wall(put, key, axis, a, b, p0, p1, y0, y1, gaps = [], lintel = 'coping'
 export function mergeList(list) {
   if (!list.length) return null;
   const nonIndexed = list.map(g => (g.index ? g.toNonIndexed() : g));
-  for (const g of nonIndexed) for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+  for (const g of nonIndexed) for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'vdOut'].includes(k)) g.deleteAttribute(k);
+  // Every part of one list carries the same attributes (a part built without `finish` faces out).
+  if (nonIndexed.some(g => g.attributes.vdOut)) for (const g of nonIndexed) if (!g.attributes.vdOut) g.setAttribute('vdOut', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count).fill(1), 1));
   const m = mergeGeometries(nonIndexed);
   for (const g of list) g.dispose();
   for (const g of nonIndexed) if (!list.includes(g)) g.dispose();
@@ -139,7 +263,8 @@ export function buildGroundGeometry(plan) {
   const inHole = (x, z) => holes.some(r => x > r.minX && x < r.maxX && z > r.minZ && z < r.maxZ);
   const pos = new Float32Array(nx * nz * 3), nor = new Float32Array(nx * nz * 3), col = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2);
   const e = 0.05;
-  const L = (x, z) => plan.land(x, z);
+  // The drawn land is the plan's plus the far rises' relief (no one walks there; the game reads the plan).
+  const L = (x, z) => plan.land(x, z) + relief(x, z);
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const x = xs[i], z = zs[j], k = j * nx + i;
     const y = L(x, z);
@@ -153,6 +278,9 @@ export function buildGroundGeometry(plan) {
     c = c.map((v, q) => v + ([0.42, 0.44, 0.30][q] - v) * reed);
     if (d <= 0) c = c.map((v, q) => v + ([0.46, 0.48, 0.44][q] - v) * 0.55);
     c = c.map((v, q) => v + ([0.27, 0.31, 0.24][q] - v) * far);
+    // On the rises: hollows and gullies hold the dark of the wood, the spurs between them are paler and greyer.
+    const rl = relief(x, z), fade = reliefFade(x, z);
+    if (fade > 0) { const t = Math.max(-1, Math.min(1, rl / 7)); c = c.map((v, q) => v * (1 + 0.22 * t * fade) + [0.012, 0.01, 0.014][q] * Math.max(0, t) * fade); }
     const m = 0.9 + 0.2 * fbm(x * 0.21 + 11, z * 0.21 - 5, 3);
     for (let q = 0; q < 3; q++) col[k * 3 + q] = c[q] * m;
     uv[k * 2] = x / 6; uv[k * 2 + 1] = z / 6;
@@ -172,6 +300,27 @@ export function buildGroundGeometry(plan) {
   g.setIndex(idx);
   g.computeBoundingSphere();
   return g;
+}
+
+/** How much of the far rises' relief a point gets: none within 330 m of the fort's centre, all of it from 470 m. */
+function reliefFade(x, z) { return smooth(330, 470, Math.hypot(x, z)); }
+
+/**
+ * THE FAR RISES' RELIEF, drawn only (the realism pass). Spurs and gullies running down the rises' fall line (toward
+ * the swamp), broad swells, and a fine lumpiness where the woods stand. Ridged noise: the spurs are sharp, the
+ * gullies rounded. Metres, up to about ±9.
+ */
+export function relief(x, z) {
+  const f = reliefFade(x, z);
+  if (f <= 0) return 0;
+  const r = Math.hypot(x, z), a = Math.atan2(z, x);
+  // Gullies run radially: noise sampled round a circle (no seam) and only slowly along the radius, so its ridges run
+  // down the slope, about 17 m apart at 500 m out.
+  const v = r * 0.004;
+  const ridge = 1 - Math.abs(fbm(Math.cos(a) * 30 + v, Math.sin(a) * 30 - v * 0.7, 4) * 2 - 1);
+  const swell = fbm(x * 0.004 + 3, z * 0.004 - 8, 3) - 0.5;
+  const lump = fbm(x * 0.05, z * 0.05, 2) - 0.5;
+  return f * (ridge * ridge * 9 - 3.5 + swell * 10 + lump * 1.6);
 }
 
 /* ================================================================== the water */
@@ -242,20 +391,23 @@ const RAIL = { h: 1.02, mid: 0.55, post: 0.12 };
  */
 export function buildDecks(plan) {
   const G = { plank: [], timber: [], pile: [], rail: [] };
-  const put = (k, g) => G[k].push(g);
+  // Every part faces out over the water (the gate passage's deck too: its piles stand in the channel's water).
+  const put = (k, g, o = {}) => G[k].push(finish(g, { out: 1, ...o }));
+  const rnd = makeRng(hashStr('vd-decks'));
   const decks = [...plan.openVols, plan.byId.get('gate')];
   for (const v of decks) {
     const r = v.rect, f = v.floor;
     const graded = f.y1 !== undefined && f.y1 !== f.y0;
     const sx = r.maxX - r.minX, sz = r.maxZ - r.minZ;
     const alongX = f.axis ? f.axis === 'x' : sx >= sz;
-    // The plank top: a box laid flat, or tilted along a ramp's axis. Planks across travel: uv u across, v along.
+    // The plank top: a box laid flat, or tilted along a ramp's axis, its long edges eased. The boards run along the
+    // texture's u (the procedural set's and the photo's), so on the top face u runs ACROSS the walk and v along it, in
+    // metres: the boards lie across travel.
     const top = (len, wid, cx, cz, y, tilt) => {
-      const geo = new THREE.BoxGeometry(alongX ? len : wid, PLANK, alongX ? wid : len);
+      const geo = chamferBoxGeometry(alongX ? len : wid, PLANK, alongX ? wid : len, 0.02);
       const uv = geo.attributes.uv, n = geo.attributes.normal, p = geo.attributes.position;
       for (let i = 0; i < uv.count; i++) {
-        if (Math.abs(n.getY(i)) > 0.5) uv.setXY(i, (alongX ? p.getZ(i) + cz : p.getX(i) + cx) / 4, (alongX ? p.getX(i) + cx : p.getZ(i) + cz) / 4);
-        else uv.setXY(i, uv.getX(i) * 2, uv.getY(i) * 0.1);
+        if (n.getY(i) > 0.5) uv.setXY(i, alongX ? p.getZ(i) + cz : p.getX(i) + cx, alongX ? p.getX(i) + cx : p.getZ(i) + cz);
       }
       if (tilt) { if (alongX) geo.rotateZ(tilt); else geo.rotateX(-tilt); }
       geo.translate(cx, y - PLANK / 2, cz);
@@ -264,12 +416,12 @@ export function buildDecks(plan) {
     if (graded) {
       const len = alongX ? sx : sz, rise = f.y1 - f.y0;
       const ang = Math.atan2(rise, len), slope = Math.hypot(len, rise);
-      put('plank', top(slope, alongX ? sz : sx, (r.minX + r.maxX) / 2, (r.minZ + r.maxZ) / 2, (f.y0 + f.y1) / 2, ang));
+      put('plank', top(slope, alongX ? sz : sx, (r.minX + r.maxX) / 2, (r.minZ + r.maxZ) / 2, (f.y0 + f.y1) / 2, ang), { keepUp: true });
     } else {
       // A big deck is laid in pieces so frustum culling has something to cull.
       for (const [a, b] of pieces(alongX ? r.minX : r.minZ, alongX ? r.maxX : r.maxZ, [], 12)) {
         const len = b - a, c = (a + b) / 2;
-        put('plank', alongX ? top(len, sz, c, (r.minZ + r.maxZ) / 2, f.y0, 0) : top(len, sx, (r.minX + r.maxX) / 2, c, f.y0, 0));
+        put('plank', alongX ? top(len, sz, c, (r.minZ + r.maxZ) / 2, f.y0, 0) : top(len, sx, (r.minX + r.maxX) / 2, c, f.y0, 0), { keepUp: true });
       }
     }
   }
@@ -294,27 +446,35 @@ export function buildDecks(plan) {
       if (alongX) put('timber', span(s0, s1, Math.min(y0, y1) - PLANK - FASCIA, y + 0.02, p0, p1, 1.2));
       else put('timber', span(p0, p1, Math.min(y0, y1) - PLANK - FASCIA, y + 0.02, s0, s1, 1.2));
     }
-    // Posts and rails: a post every ~2 m, two rails along.
+    // Posts and rails: a post every ~2 m, its arrises eased, each standing a hair off true;
+    // a flat handrail board on top and a narrower mid rail.
     const np = Math.max(1, Math.round(L / 2.2));
     const pp = w.plane + out * 0.06;
     for (let i = 0; i <= np; i++) {
       const s = w.from + L * i / np;
       const [x, z] = at(s);
       const y = yAt(v, Math.min(Math.max(x, v.rect.minX), v.rect.maxX - 1e-6), Math.min(Math.max(z, v.rect.minZ), v.rect.maxZ - 1e-6));
-      if (alongX) put('rail', span(s - RAIL.post / 2, s + RAIL.post / 2, y, y + RAIL.h + 0.06, pp - RAIL.post / 2, pp + RAIL.post / 2, 1));
-      else put('rail', span(pp - RAIL.post / 2, pp + RAIL.post / 2, y, y + RAIL.h + 0.06, s - RAIL.post / 2, s + RAIL.post / 2, 1));
+      const ph = RAIL.h + 0.06;
+      const geo = chamferBoxGeometry(RAIL.post, ph, RAIL.post, 0.018);
+      geo.translate(0, ph / 2, 0);
+      geo.rotateX((rnd() - 0.5) * 0.02);
+      geo.rotateZ((rnd() - 0.5) * 0.02);
+      geo.translate(alongX ? s : pp, y, alongX ? pp : s);
+      put('rail', grainAlong(geo, UP, Math.floor(rnd() * 8), rnd() * 2), { keepUV: true });
     }
-    for (const h of [RAIL.mid, RAIL.h]) {
+    for (const [h, rh, rw] of [[RAIL.mid, 0.06, 0.05], [RAIL.h + 0.01, 0.05, 0.13]]) {
       const [xa, za] = at(w.from), [xb, zb] = at(w.to);
       const ya = yAt(v, Math.min(Math.max(xa, v.rect.minX), v.rect.maxX - 1e-6), Math.min(Math.max(za, v.rect.minZ), v.rect.maxZ - 1e-6));
       const yb = yAt(v, Math.min(Math.max(xb, v.rect.minX), v.rect.maxX - 1e-6), Math.min(Math.max(zb, v.rect.minZ), v.rect.maxZ - 1e-6));
       const len = Math.hypot(L, yb - ya), ang = Math.atan2(yb - ya, L);
-      const geo = alongX ? new THREE.BoxGeometry(len, 0.07, 0.07) : new THREE.BoxGeometry(0.07, 0.07, len);
+      const geo = alongX ? chamferBoxGeometry(len, rh, rw, 0.01) : chamferBoxGeometry(rw, rh, len, 0.01);
       if (alongX) geo.rotateZ(ang); else geo.rotateX(-ang);
       geo.translate(alongX ? (w.from + w.to) / 2 : pp, (ya + yb) / 2 + h, alongX ? pp : (w.from + w.to) / 2);
-      put('rail', geo);
+      const dir = alongX ? new THREE.Vector3(Math.cos(ang), Math.sin(ang), 0) : new THREE.Vector3(0, Math.sin(ang), Math.cos(ang));
+      put('rail', grainAlong(geo, dir, Math.floor(rnd() * 8)), { keepUV: true });
     }
-    // Piles: down from under the fascia into the bed, every PILE_STEP.
+    // Piles: down from under the fascia into the bed, every PILE_STEP; driven by hand, so each leans a little and no
+    // two are the same girth.
     const nk = Math.max(1, Math.round(L / PILE_STEP));
     for (let i = 0; i <= nk; i++) {
       const s = w.from + L * i / nk;
@@ -324,9 +484,7 @@ export function buildDecks(plan) {
       const bed = plan.land(px, pz) - 0.4;
       const h = y - PLANK - 0.05 - bed;
       if (h < 0.3) continue;
-      const geo = new THREE.CylinderGeometry(0.13, 0.15, h, 7);
-      geo.translate(px, bed + h / 2, pz);
-      put('pile', geo);
+      put('pile', pile(px, pz, bed, h, rnd), { keepUV: true });
     }
   }
   // The piles under the middle of a broad deck (the stage, the pump stage, the junctions), in a grid.
@@ -352,26 +510,50 @@ export function buildDecks(plan) {
     for (let x = r.minX + 2.4; x < r.maxX - 1.2; x += 3.2) for (let z = r.minZ + 2.4; z < r.maxZ - 1.2; z += 3.2) {
       const bed = plan.land(x, z) - 0.4, h = v.floor.y0 - PLANK - 0.05 - bed;
       if (h < 0.3) continue;
-      const geo = new THREE.CylinderGeometry(0.15, 0.17, h, 7);
-      geo.translate(x, bed + h / 2, z);
-      put('pile', geo);
+      put('pile', pile(x, z, bed, h, rnd, 0.16), { keepUV: true });
     }
   }
   return G;
+}
+
+/** A round timber pile from the bed up `h`: tapering, of its own girth, leaning by up to a degree and a half. */
+function pile(x, z, bed, h, rnd, r = 0.14) {
+  const rr = r * (0.85 + rnd() * 0.3);
+  const geo = turnedGeometry(rr * 0.92, rr, h, 8, { open: true });
+  geo.translate(0, h / 2, 0);
+  geo.rotateX((rnd() - 0.5) * 0.05);
+  geo.rotateZ((rnd() - 0.5) * 0.05);
+  geo.rotateY(rnd() * Math.PI);
+  // Round timber: the grain runs up the pile (it is laid before the pile is moved into place, so it follows its lean).
+  grainAlong(geo, UP, Math.floor(rnd() * 8), rnd() * 2);
+  geo.translate(x, bed, z);
+  return geo;
 }
 
 /* ================================================================== the masonry */
 
 const MERLON = { w: 1.2, gap: 0.9, h: 0.9 };
 
-/** Crenellations along the top of a wall: merlons on a parapet `t` thick, from `a` to `b` along `axis` at `p0..p1`. */
+/**
+ * Crenellations along the top of a wall: merlons on a parapet `t` thick, from `a` to `b` along `axis` at `p0..p1`.
+ * Each merlon is its own block, a few centimetres off its neighbours in height and width, and one in six has lost a
+ * corner course to the weather.
+ */
 function battlements(put, axis, a, b, p0, p1, y) {
   const step = MERLON.w + MERLON.gap;
   const n = Math.floor((b - a) / step);
   const off = a + (b - a - n * step + MERLON.gap) / 2;
+  const rnd = makeRng(hashStr(`vd-merlon:${axis}:${a.toFixed(2)}:${p0.toFixed(2)}:${y.toFixed(2)}`));
+  const put1 = (u0, u1, y0, y1, q0 = p0, q1 = p1) => put('coping', axis === 'x' ? span(u0, u1, y0, y1, q0, q1) : span(q0, q1, y0, y1, u0, u1));
   for (let i = 0; i < n; i++) {
-    const u0 = off + i * step, u1 = u0 + MERLON.w;
-    put('coping', axis === 'x' ? span(u0, u1, y, y + MERLON.h, p0, p1, 1.2) : span(p0, p1, y, y + MERLON.h, u0, u1, 1.2));
+    const shrink = rnd() * 0.05, top = y + MERLON.h + (rnd() - 0.5) * 0.08;
+    const u0 = off + i * step + shrink, u1 = off + i * step + MERLON.w - shrink * (0.5 + rnd());
+    if (rnd() < 0.17) {
+      // Weathered: the top course gone from one end.
+      const cut = 0.35 + rnd() * 0.3, keepLeft = rnd() < 0.5;
+      put1(u0, u1, y, top - 0.32);
+      put1(keepLeft ? u0 : u0 + cut, keepLeft ? u1 - cut : u1, top - 0.32, top - 0.02);
+    } else put1(u0, u1, y, top);
   }
 }
 
@@ -389,7 +571,18 @@ function pyramidRoof(put, x0, x1, z0, z1, eave, ridge) {
   const c = [[cx - hx, eave, cz - hz], [cx + hx, eave, cz - hz], [cx + hx, eave, cz + hz], [cx - hx, eave, cz + hz]];
   for (let i = 0; i < 4; i++) put('roof', tri(c[(i + 1) % 4], c[i], apex));
   put('roof', span(cx - hx, cx + hx, eave - 0.25, eave, cz - hz, cz + hz, 2));
-  put('coping', span(cx - 0.12, cx + 0.12, ridge - 0.2, ridge + 1.1, cz - 0.12, cz + 0.12, 1));
+  // A rolled copper capping down each hip, and a turned finial at the apex.
+  for (const q of c) {
+    const A = new THREE.Vector3(...q), B = new THREE.Vector3(...apex);
+    const len = A.distanceTo(B);
+    const geo = new THREE.CylinderGeometry(0.075, 0.075, len, 6, 1, true);
+    geo.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()));
+    geo.translate((A.x + B.x) / 2, (A.y + B.y) / 2 + 0.03, (A.z + B.z) / 2);
+    put('roof', geo);
+  }
+  const fin = turnedGeometry(0.05, 0.16, 1.3, 10, { bevel: 0.03 });
+  fin.translate(cx, ridge + 0.45, cz);
+  put('roof', fin);
 }
 
 /** A segmental barrel vault over a span, built of voussoir courses: `alongX` runs its axis along x. */
@@ -431,11 +624,15 @@ function openingOf(plan, r) {
  * sheet, gone green), slit (the dark of an arrow slit or a window).
  */
 export function buildMasonry(plan) {
-  const G = { stone: [], coping: [], brick: [], flags: [], earth: [], timber: [], roof: [], slit: [] };
-  const put = (k, g) => G[k].push(g);
+  const G = { stone: [], coping: [], brick: [], flags: [], earth: [], timber: [], roof: [], slit: [], rubble: [] };
+  INSIDE = [...plan.roofed.map(v => v.rect)];
+  const put = (k, g) => G[k].push(finish(g));
   const S = plan.structures();
+  for (const s of S) if (s.twin) INSIDE.push({ minX: s.twin[0], maxX: s.twin[1], minZ: s.twin[2], maxZ: s.twin[3] });
   const room = id => plan.roomById.get(id);
   const BASE = -2.8;
+  // Nothing fallen may lie where a boardwalk or a room is.
+  const clearOfWalk = (x, z, r) => !plan.volumes.some(v => x > v.rect.minX - r - 0.6 && x < v.rect.maxX + r + 0.6 && z > v.rect.minZ - r - 0.6 && z < v.rect.maxZ + r + 0.6);
 
   /* ---- the curtain: four walls with battlements, each broken down to the water in one length. */
   for (const s of S.filter(x => x.kind === 'curtain')) {
@@ -447,22 +644,46 @@ export function buildMasonry(plan) {
       .filter(o => (alongX ? o.rect[2] <= z0 && o.rect[3] >= z1 && o.rect[0] < x1 && o.rect[1] > x0 : o.rect[0] <= x0 && o.rect[1] >= x1 && o.rect[2] < z1 && o.rect[3] > z0))
       .map(o => (alongX ? [o.rect[0], o.rect[1]] : [o.rect[2], o.rect[3]]));
     const gaps = [...own, ...s.breach];
-    const box = (u0, u1, y0, y1) => (alongX ? span(u0, u1, y0, y1, z0, z1) : span(x0, x1, y0, y1, u0, u1));
+    // A box across the wall's thickness (`d` out from both faces), and one across part of it.
+    const box = (u0, u1, y0, y1, d = 0) => (alongX ? span(u0, u1, y0, y1, z0 - d, z1 + d) : span(x0 - d, x1 + d, y0, y1, u0, u1));
+    const [p0, p1] = alongX ? [z0, z1] : [x0, x1];
     for (const [u0, u1] of pieces(a, b, gaps)) {
-      put('stone', box(u0, u1, BASE, CURTAIN_TOP - 0.15));
-      put('coping', box(u0, u1, CURTAIN_TOP - 0.15, CURTAIN_TOP));
+      put('stone', box(u0, u1, BASE, CURTAIN_TOP - 0.22));
+      // The coping: separate dressed stones, each oversailing both faces by a few centimetres (a drip).
+      stoneRun(put, 'coping', u0, u1, (s0, s1, dy, dp) => box(s0, s1, CURTAIN_TOP - 0.22, CURTAIN_TOP + dy, 0.06 + dp), { seed: 11, min: 0.9, max: 1.7 });
+      // The plinth at the water: a footing course stepping out from both faces, its top a hand over the water.
+      put('coping', box(u0 + 0.02, u1 - 0.02, BASE, WATER - 0.15, 0.32));
+      put('coping', box(u0 + 0.02, u1 - 0.02, WATER - 0.15, WATER + 0.38, 0.16));
       // The battlements stand on the outer half of the wall's top.
       const outerP = alongX ? (z0 < FORT.minZ + 1 ? [z0, z0 + 0.7] : [z1 - 0.7, z1]) : (x0 < FORT.minX + 1 ? [x0, x0 + 0.7] : [x1 - 0.7, x1]);
       battlements(put, alongX ? 'x' : 'z', u0, u1, outerP[0], outerP[1], CURTAIN_TOP);
     }
-    // A breach: the wall's stump a little out of the water, its broken ends stepped down in courses.
+    // A breach: the wall's stump a little out of the water, its broken ends stepped down in ragged courses, the fallen
+    // stone lying in the water either side of it.
     for (const [b0, b1] of s.breach) {
+      const rnd = makeRng(hashStr(`vd-breach:${b0.toFixed(1)}:${p0.toFixed(1)}`));
       put('stone', box(b0, b1, BASE, WATER + 0.35));
       for (let k = 0; k < 4; k++) {
-        const y = WATER + 0.35 + (CURTAIN_TOP - WATER - 0.35) * (k + 1) / 5;
-        const w = 0.9 * (4 - k);
-        put('stone', box(b0, b0 + w, WATER + 0.35 + (CURTAIN_TOP - WATER - 0.35) * k / 5, y));
-        put('stone', box(b1 - w, b1, WATER + 0.35 + (CURTAIN_TOP - WATER - 0.35) * k / 5, y));
+        const ya = WATER + 0.35 + (CURTAIN_TOP - WATER - 0.35) * k / 5;
+        const y = WATER + 0.35 + (CURTAIN_TOP - WATER - 0.35) * (k + 1) / 5 + (rnd() - 0.5) * 0.12;
+        const wa = 0.9 * (4 - k) + (rnd() - 0.5) * 0.5, wb = 0.9 * (4 - k) + (rnd() - 0.5) * 0.5;
+        put('stone', box(b0, b0 + Math.max(0.4, wa), ya, y));
+        put('stone', box(b1 - Math.max(0.4, wb), b1, ya, y));
+        // A block or two of the course half pulled out of the face.
+        if (rnd() < 0.6) {
+          const u = rnd() < 0.5 ? b0 + Math.max(0.4, wa) - 0.6 : b1 - Math.max(0.4, wb);
+          const out = (rnd() < 0.5 ? -1 : 1) * 0.12;
+          put('stone', alongX ? span(u, u + 0.6, y - 0.02, y + 0.34, p0 + out, p1 + out) : span(p0 + out, p1 + out, y - 0.02, y + 0.34, u, u + 0.6));
+        }
+      }
+      for (let i = 0; i < 9; i++) {
+        const u = b0 + 0.4 + rnd() * (b1 - b0 - 0.8), side = rnd() < 0.5 ? -1 : 1;
+        const d = 0.5 + rnd() * 2.6, r = 0.32 + rnd() * 0.4;
+        const pq = side < 0 ? p0 - d : p1 + d;
+        const [x, z] = alongX ? [u, pq] : [pq, u];
+        const bed = plan.land(x, z);
+        if (!clearOfWalk(x, z, r) || bed < WATER - 0.9) continue;
+        put('rubble', rubbleStone(x, Math.max(bed + r * 0.4, WATER - r * 0.3), z, r, hashStr(`vd-rubble:${x.toFixed(2)}:${z.toFixed(2)}`)));
       }
     }
   }
@@ -508,7 +729,7 @@ function buildTower(plan, put, s, r, BASE) {
   put('stone', span(v.minX, v.maxX, BASE, L - 0.2, v.minZ, v.maxZ));
   put('flags', span(v.minX, v.maxX, L - 0.2, L, v.minZ, v.maxZ, 1.8));
   // A batter at the foot where the tower meets the water, and a string course at the room's ceiling.
-  put('coping', span(x0 - 0.35, x1 + 0.35, BASE, WATER + 0.6, z0 - 0.35, z1 + 0.35, 2));
+  put('coping', battered(x0 - 0.45, x1 + 0.45, BASE, WATER + 0.7, z0 - 0.45, z1 + 0.45, 0.38));
   put('coping', span(x0 - 0.12, x1 + 0.12, L + r.top + 0.9, L + r.top + 1.2, z0 - 0.12, z1 + 0.12, 1.2));
   roomRoof(put, r);
   // The storeys above: a floor slab over the room's roof, another halfway up, the parapet and the roof.
@@ -528,7 +749,7 @@ function buildPlinth(plan, put, s, BASE) {
   const [x0, x1, z0, z1] = s.rect, top = s.top;
   // In three courses, each stepped in, so the faces batter.
   const steps = [[BASE, WATER + 0.8, 0.9], [WATER + 0.8, top - 1.8, 0.45], [top - 1.8, top, 0]];
-  for (const [y0, y1, d] of steps) put('stone', span(x0 - d, x1 + d, y0, y1, z0 - d, z1 + d));
+  for (const [y0, y1, d] of steps) put('stone', d > 0.5 ? battered(x0 - d, x1 + d, y0, y1, z0 - d, z1 + d, 0.35) : span(x0 - d, x1 + d, y0, y1, z0 - d, z1 + d));
   put('flags', span(x0, x1, top - 0.02, top + 0.0, z0, z1, 1.8));
 }
 
@@ -690,7 +911,7 @@ function buildGatehouse(plan, put, s, r, BASE) {
   battlements(put, 'x', x0 - 0.3, x1 + 0.3, z0 - 0.3, z0 + 0.4, top);
   battlements(put, 'z', z0 + 0.4, z1 - 0.4, x0 - 0.3, x0 + 0.4, top);
   battlements(put, 'z', z0 + 0.4, z1 - 0.4, x1 - 0.4, x1 + 0.3, top);
-  put('coping', span(x0 - 0.4, x1 + 0.4, BASE, WATER + 0.6, z0 - 0.4, z1 + 0.4, 2));
+  put('coping', battered(x0 - 0.5, x1 + 0.5, BASE, WATER + 0.7, z0 - 0.5, z1 + 0.5, 0.42));
   slits(put, x0, P.minX, z0, z1, [5.0, 8.0]);
   slits(put, v.minX, x1, z0, z1, [6.2, 8.6]);
   void gate;

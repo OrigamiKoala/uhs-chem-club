@@ -100,21 +100,67 @@ export function boardwalk(opts = {}) {
   }, { aoRadius: S >> 7, aoStrength: 1.4, normalStrength: 2.6 });
 }
 
-/** A pool's surface: a slow low swell with a finer skin, tiled; the world slides it across the pools. */
+/**
+ * A pool's surface (the realism pass): still swamp water under a light breeze. The sheet this tiles over is laid at
+ * 9 m to the tile (`terrain.js`). The surface is a sum of short wind ripples, 15 to 60 cm long, travelling within
+ * forty degrees of the wind, over two long swells; each wave's wavenumber is a whole number of cycles per tile in
+ * both directions, so the tile repeats seamlessly. A slow patchiness (the breeze touching the water in cat's-paws)
+ * scales the ripples. The body is the dark tea-brown green of peat water; what the eye sees is mostly the sky.
+ */
 export function marshWater(opts = {}) {
   const { size = texSize(256), seed = 9 } = opts;
   const S = size;
   const sd = hashStr(`marsh${seed}`);
+  let st = sd >>> 0;
+  const rnd = () => { st = (st * 1664525 + 1013904223) >>> 0; return st / 4294967296; };
+  const waves = [];
+  for (let i = 0; i < 14; i++) {
+    const len = 0.15 + rnd() * 0.45;                     // metres
+    const ang = 0.4 + (rnd() - 0.5) * 1.4;               // wind from about 23 degrees
+    const k = 9 / len;                                   // cycles per tile
+    waves.push({ kx: Math.round(Math.cos(ang) * k), ky: Math.round(Math.sin(ang) * k), a: len * 0.35, ph: rnd() * Math.PI * 2 });
+  }
+  waves.push({ kx: 2, ky: 1, a: 0.3, ph: rnd() * 6.28 }, { kx: -1, ky: 3, a: 0.22, ph: rnd() * 6.28 });
+  const TAU = Math.PI * 2;
   const height = heightField(S, (u, v) => {
-    const swell = fbm(u * 5, v * 5, { octaves: 3, period: 5, seed: sd });
-    const skin = fbm(u * 18, v * 18, { octaves: 2, period: 18, seed: sd ^ 0x33 });
-    return 0.5 + (swell - 0.5) * 0.5 + (skin - 0.5) * 0.25;
+    const gust = 0.45 + fbm(u * 4, v * 4, { octaves: 2, period: 4, seed: sd ^ 0x21 }) * 0.9;
+    let h = 0;
+    for (const w of waves) h += Math.sin(TAU * (w.kx * u + w.ky * v) + w.ph) * w.a * (w.a > 0.21 ? 1 : gust);
+    return 0.5 + h * 0.3;
   });
-  const [deep, shallow] = [hex('#26382f'), hex('#56715e')];
-  return surface(S, height, (h, u, v, rough) => {
-    rough(0.1 + (1 - h) * 0.06);
-    return mix(deep, shallow, clamp01((h - 0.3) * 1.8));
-  }, { aoRadius: 3, aoStrength: 0.2, normalStrength: 1.6 });
+  const [deep, body] = [hex('#1c2219'), hex('#2a3123')];
+  const set = surface(S, height, (h, u, v, rough) => {
+    rough(0.07 + (1 - h) * 0.04);
+    return mix(deep, body, clamp01((h - 0.3) * 1.2));
+  }, { aoRadius: 3, aoStrength: 0.05, normalStrength: 1.1 });
+  // THE NORMALS ARE WORKED FROM THE WAVES THEMSELVES, not from the 8-bit height: a quantised height draws its contour
+  // lines as bright rims on water. Slopes per metre of the 9 m tile, at a steepness of a light breeze.
+  const STEEP = 0.07;
+  const nc = canvas2d(S, S);
+  const ctx = nc.getContext('2d');
+  if (ctx) {
+    const img = ctx.createImageData(S, S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const u = x / S, v = y / S;
+      const gust = 0.45 + fbm(u * 4, v * 4, { octaves: 2, period: 4, seed: sd ^ 0x21 }) * 0.9;
+      let du = 0, dv = 0;
+      for (const w of waves) {
+        const c = Math.cos(TAU * (w.kx * u + w.ky * v) + w.ph) * w.a * (w.a > 0.21 ? 1 : gust) * TAU;
+        du += c * w.kx; dv += c * w.ky;
+      }
+      // Image rows run down while the texture's v runs up (flipY): the green channel takes +dh/d(row).
+      let nx = -du / 9 * STEEP, ny = dv / 9 * STEEP, nz = 1;
+      const l = Math.hypot(nx, ny, nz);
+      const i = (y * S + x) * 4;
+      img.data[i] = (nx / l * 0.5 + 0.5) * 255;
+      img.data[i + 1] = (ny / l * 0.5 + 0.5) * 255;
+      img.data[i + 2] = (nz / l * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    set.normalCanvas = nc;
+  }
+  return set;
 }
 
 /** Fortress masonry: coursed blocks with joints, weathered grey-green, stained dark where the water wicks up. */

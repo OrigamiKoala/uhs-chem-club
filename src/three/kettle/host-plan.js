@@ -44,7 +44,7 @@ export const HOST_PLAN = {
     room: 'sump', pos: [-34, -19], face: [1, 0]
   },
   'site-6': {
-    questId: 'q6-stoich', label: 'Bench 5 - What Is Made', title: 'How Much Is Made', structure: 'charge-floor', kind: 'pot', skin: 'shelf', plate: 'KET-05',
+    questId: 'q6-stoich', label: 'Bench 5 - Stoichiometry', title: 'Stoichiometry', structure: 'charge-floor', kind: 'pot', skin: 'shelf', plate: 'KET-05',
     room: 'charge', pos: [22, -20], face: [0, 1]
   },
   'site-7': {
@@ -52,11 +52,11 @@ export const HOST_PLAN = {
     room: 'pickling', pos: [28.6, 15], face: [-1, 0]
   },
   'site-8': {
-    questId: 'q8-kinds', label: 'Bench 7 - Kinds of Reaction', title: 'Kinds of Reaction', structure: 'tapping-floor', kind: 'tests', skin: 'deck', plate: 'KET-07',
+    questId: 'q8-kinds', label: 'Bench 7 - Reaction Types', title: 'Reaction Types', structure: 'tapping-floor', kind: 'tests', skin: 'deck', plate: 'KET-07',
     room: 'pit', pos: [21, -57.4], face: [0, 1]
   },
   'site-9': {
-    questId: 'q9-hsab', label: 'Bench 8 - Hard and Soft', title: 'Hard and Soft', structure: 'refining-vat', kind: 'ionic', skin: 'deck', plate: 'KET-08',
+    questId: 'q9-hsab', label: 'Bench 8 - Hard–Soft Ions', title: 'Hard–Soft Ions', structure: 'refining-vat', kind: 'ionic', skin: 'deck', plate: 'KET-08',
     room: 'refining', pos: [-25, -46], face: [0, -1]
   }
 };

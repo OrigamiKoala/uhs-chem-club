@@ -31,11 +31,11 @@ export const APPROACH = 4.6;
 export const WALL_IN = 0.3;
 
 const PLAN = {
-  'site-1': { questId: 'q1-watch', label: 'Bench 1 - Watching the Speed', title: 'Watching the Speed', structure: 'analyser-bunker', kind: 'vessel', skin: 'deck', plate: 'QKL-01' },
-  'site-2': { questId: 'q2-law', label: 'Bench 2 - Feed Manifold', title: 'Feed Manifold', structure: 'control-room', kind: 'board', skin: 'desk', plate: 'QKL-02' },
-  'site-3': { questId: 'q3-time', label: 'Bench 3 - Concentration Over Time', title: 'Concentration Over Time', structure: 'pump-cellar', kind: 'plotter', skin: 'shelf', plate: 'QKL-03' },
-  'site-4': { questId: 'q4-collide', label: 'Bench 4 - Collisions and the Hill', title: 'Collisions and the Hill', structure: 'reactor-skirt', kind: 'profile', skin: 'desk', plate: 'QKL-04' },
-  'site-5': { questId: 'q5-steps', label: 'Bench 5 - Steps', title: 'Steps', structure: 'reactor-table', kind: 'stack', skin: 'shelf', plate: 'QKL-05' },
+  'site-1': { questId: 'q1-watch', label: 'Bench 1 - Reaction Rates', title: 'Reaction Rates', structure: 'analyser-bunker', kind: 'vessel', skin: 'deck', plate: 'QKL-01' },
+  'site-2': { questId: 'q2-law', label: 'Bench 2 - The Rate Law', title: 'The Rate Law', structure: 'control-room', kind: 'board', skin: 'desk', plate: 'QKL-02' },
+  'site-3': { questId: 'q3-time', label: 'Bench 3 - Integrated Rate Laws', title: 'Integrated Rate Laws', structure: 'pump-cellar', kind: 'plotter', skin: 'shelf', plate: 'QKL-03' },
+  'site-4': { questId: 'q4-collide', label: 'Bench 4 - Activation Energy', title: 'Activation Energy', structure: 'reactor-skirt', kind: 'profile', skin: 'desk', plate: 'QKL-04' },
+  'site-5': { questId: 'q5-steps', label: 'Bench 5 - Reaction Mechanisms', title: 'Reaction Mechanisms', structure: 'reactor-table', kind: 'stack', skin: 'shelf', plate: 'QKL-05' },
   'site-6': { questId: 'q6-shortcut', label: 'Bench 6 - Catalysts', title: 'Catalysts', structure: 'catalyst-bunker', kind: 'catalyst', skin: 'deck', plate: 'QKL-06' }
 };
 

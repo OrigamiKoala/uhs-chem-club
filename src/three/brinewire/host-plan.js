@@ -31,10 +31,10 @@ export const WALL_IN = 0.3;
 
 const PLAN = {
   'site-1': { questId: 'q1-halves', label: 'Bench 1 - Half-Reactions', title: 'Half-Reactions', structure: 'hoist-house', kind: 'beaker', skin: 'deck', plate: 'BRW-01' },
-  'site-2': { questId: 'q2-activity', label: 'Bench 2 - Which Metal Gives', title: 'Which Metal Gives', structure: 'anode-store', kind: 'rack', skin: 'desk', plate: 'BRW-02' },
+  'site-2': { questId: 'q2-activity', label: 'Bench 2 - Activity Series', title: 'Activity Series', structure: 'anode-store', kind: 'rack', skin: 'desk', plate: 'BRW-02' },
   'site-3': { questId: 'q3-galvanic', label: 'Bench 3 - Galvanic Cells', title: 'Galvanic Cells', structure: 'bridge-chamber', kind: 'rig', skin: 'shelf', plate: 'BRW-03' },
   'site-4': { questId: 'q4-potential', label: 'Bench 4 - Cell Potential', title: 'Cell Potential', structure: 'meter-room', kind: 'meter', skin: 'desk', plate: 'BRW-04' },
-  'site-5': { questId: 'q5-load', label: 'Bench 5 - Under Load', title: 'Under Load', structure: 'battery-hall', kind: 'load', skin: 'shelf', plate: 'BRW-05' },
+  'site-5': { questId: 'q5-load', label: 'Bench 5 - Nernst Equation', title: 'Nernst Equation', structure: 'battery-hall', kind: 'load', skin: 'shelf', plate: 'BRW-05' },
   'site-6': { questId: 'q6-electrolysis', label: 'Bench 6 - Electrolysis', title: 'Electrolysis', structure: 'rectifier-cage', kind: 'supply', skin: 'deck', plate: 'BRW-06' }
 };
 

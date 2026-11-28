@@ -28,7 +28,7 @@ export const UNIT_03 = {
   quests: [
     {
       id: 'q1-joins',
-      title: 'What Holds',
+      title: 'Chemical Bonds',
       line: 'Distinguish ionic, covalent, and metallic bonding.',
       arena: 'bench',
       stageCount: 6,
@@ -37,7 +37,7 @@ export const UNIT_03 = {
     },
     {
       id: 'q2-lattice',
-      title: 'Stone and Wire',
+      title: 'Lattices and Alloys',
       line: 'Relate macroscopic properties to crystal lattices and networks.',
       arena: 'bench',
       stageCount: 8,

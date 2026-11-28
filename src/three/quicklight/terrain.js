@@ -21,6 +21,8 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { floorOf } from '../lib/workings.js';
+import { chamferBoxGeometry } from '../kettle/kit.js';
+import { NO_FOOT, tagFoot, footFor } from './grime.js';
 import {
   GRADE, PLOT, PIT, CELLAR, WALL_T, KERB, RAIL, DOOR, BUND, SKIRT, ROOF_T, land, fbm, frontZ, inPlant
 } from './refinery-plan.js';
@@ -100,9 +102,32 @@ const COLOURS = [
   [0.26, 0.25, 0.25]    // the far flanks
 ];
 
+/** How the far land is cut, at (x, z): `cut` 0..1 in a gully, `ridge` 0..1 on a ridge, `fade` 0 inside 260 m to 1 by 420 m. */
+function farGully(x, z) {
+  const r = Math.hypot(x, z);
+  const fade = smooth(260, 420, r);
+  if (fade <= 0) return { cut: 0, ridge: 0, fade: 0 };
+  const th = Math.atan2(z, x);
+  const wander = (fbm(r * 0.006, th * 3) - 0.5) * 1.4;
+  const cut = Math.pow(1 - Math.abs(Math.sin(th * 38 + wander * 3)), 10) * (0.4 + 0.9 * fbm(th * 9, r * 0.004));
+  const ridge = Math.pow(1 - Math.abs(fbm(x * 0.006, z * 0.006) * 2 - 1), 3);
+  return { cut: Math.min(1, cut), ridge, fade };
+}
+
+/** The far land's drawn relief (m) on top of the plan's height: ridges, gullies, the steps of old flows. */
+function farRelief(x, z) {
+  const g = farGully(x, z);
+  if (g.fade <= 0) return 0;
+  const r = Math.hypot(x, z);
+  const rise = smooth(260, 900, r);                    // the gullies deepen as the land climbs
+  const step = (fbm(x * 0.003 + 9, z * 0.003) * 60) % 9;
+  const terrace = (Math.max(0, step - 6.5) - 0.6) * 1.6;   // a riser every few metres, where a flow's front lies
+  return g.fade * (g.ridge * 14 * (0.4 + rise) - g.cut * 16 * (0.3 + rise) + terrace * rise);
+}
+
 /**
  * The ground mesh. A vertex in a roofed volume under earth takes the land's height (the heap over it); every other walk volume's
- * cells are left out.
+ * cells are left out. Returns `{ lava, yard }`: two index sets over one grid of vertices.
  */
 export function buildGroundGeometry(field, plan) {
   const br = plan.breaks();
@@ -110,7 +135,11 @@ export function buildGroundGeometry(field, plan) {
   const zs = ladder(-900, 900, -98, 96, -170, 170, 2, 3.5, br.zs);
   const nx = xs.length, nz = zs.length;
   const roofedAt = (x, z) => plan.roofed.find(v => x >= v.rect.minX - 1e-6 && x <= v.rect.maxX + 1e-6 && z >= v.rect.minZ - 1e-6 && z <= v.rect.maxZ + 1e-6);
-  const V = (x, z) => (roofedAt(x, z) ? plan.land(x, z) : field.height(x, z));
+  const V0 = (x, z) => (roofedAt(x, z) ? plan.land(x, z) : field.height(x, z));
+  // The far land, as DRAWN (nobody walks there; the game and the checks read the plan's height): the rise to the far
+  // cones and the shield's flanks is cut by gullies down its fall line and broken by ridges and the steps of old flows,
+  // so the horizon is eroded land and not smooth domes. Faded to nothing inside 260 m.
+  const V = (x, z) => V0(x, z) + farRelief(x, z);
   const pos = new Float32Array(nx * nz * 3), nor = new Float32Array(nx * nz * 3), col = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2);
   const e = 0.01;
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
@@ -125,6 +154,7 @@ export function buildGroundGeometry(field, plan) {
     nor[k * 3] = n[0] / l; nor[k * 3 + 1] = n[1] / l; nor[k * 3 + 2] = n[2] / l;
     const s = surfaceAt(plan, x, z, y, steep);
     let c = COLOURS[s];
+    const gl = farGully(x, z);
     const m = 0.92 + 0.08 * Math.sin(x * 0.37 + Math.sin(z * 0.21) * 2) * Math.sin(z * 0.29 + x * 0.05);
     if (s === 1) {
       // THE FRONT IN SECTION: a flow is a rubbly base of clinker, a dense grey core jointed in slabs, a vesicular crust on top.
@@ -152,24 +182,34 @@ export function buildGroundGeometry(field, plan) {
       const grow = smooth(0.5, 0.7, fbm(x * 0.4, z * 0.4)) * 0.4;
       c = c.map((v, q) => v + ([0.27, 0.29, 0.22][q] - v) * grow);
     }
+    // Far off: gullies darker, ridges and flow tops a little greyer with ash.
+    if (gl.fade > 0) c = c.map((v, q) => (v + ([0.3, 0.29, 0.28][q] - v) * gl.ridge * 0.35 * gl.fade) * (1 - gl.cut * 0.5 * gl.fade));
     for (let q = 0; q < 3; q++) col[k * 3 + q] = c[q] * m;
-    uv[k * 2] = x / 7; uv[k * 2 + 1] = z / 7;
+    uv[k * 2] = x; uv[k * 2 + 1] = z;
   }
-  const idx = [];
+  // Two meshes over the one grid: the LAVA (flow tops, the front in section, the far flanks) and the YARD inside the
+  // plant's fence (hardstanding of crushed basalt, the bund's floor, the earth over the bunkers), which wears a gravel.
+  const idx = [], yardIdx = [];
   for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) {
     const cx = (xs[i] + xs[i + 1]) / 2, cz = (zs[j] + zs[j + 1]) / 2;
     if (builtAt(plan, cx, cz)) continue;
     const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1;
-    idx.push(a, c, b, b, c, d);
+    const cy = (pos[a * 3 + 1] + pos[b * 3 + 1] + pos[c * 3 + 1] + pos[d * 3 + 1]) / 4;
+    const steep = Math.hypot(pos[b * 3 + 1] - pos[a * 3 + 1], pos[c * 3 + 1] - pos[a * 3 + 1]) / Math.max(0.1, Math.min(xs[i + 1] - xs[i], zs[j + 1] - zs[j]));
+    const s = surfaceAt(plan, cx, cz, cy, steep);
+    (s >= 2 && s <= 4 ? yardIdx : idx).push(a, c, b, b, c, d);
   }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
-  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-  g.setIndex(idx);
-  g.computeBoundingSphere();
-  return g;
+  const make = (index) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(index);
+    g.computeBoundingSphere();
+    return g;
+  };
+  return { lava: make(idx), yard: make(yardIdx) };
 }
 
 /* ================================================================== the walks' surfaces */
@@ -191,24 +231,43 @@ function trodden(plan, v, x, z) {
 }
 
 /**
- * The surface of every open walk: a grid of quads at the floor's height (a ramp's slope included), coloured: concrete with its
- * joints every 6 m, a drain gully down one side of an alley, a darker line where feet and trolleys wear it, oil under the racks;
- * the flare yard is crushed basalt, not concrete.
+ * The surface of every open walk: a grid of quads at the floor's height (a ramp's slope included), coloured: a drain gully down
+ * one side of an alley, a darker line where feet and trolleys wear it, oil under the racks, and the floor darkening into the foot
+ * of every wall and kerb (CONTACT: extra rows of vertices 0.15, 0.45 and 1.0 m from each closed side carry it). The joints are
+ * sawn lines drawn by the paving's material (`grime.js` `addSawnJoints`), not vertex colour. Uvs in metres.
+ * Returns `{ paving, gravel }`: the concrete, and the flare yard's crushed basalt as its own geometry.
  */
 export function buildPaving(plan) {
-  const parts = [];
+  const parts = [], gravelParts = [];
+  const CONTACT = [0.15, 0.45, 1.0];
   for (const v of plan.openVols) {
     const r = v.rect;
-    const xs = [], zs = [];
-    for (let x = r.minX; x < r.maxX - 1e-6; x += 1.0) xs.push(x);
-    xs.push(r.maxX);
-    for (let z = r.minZ; z < r.maxZ - 1e-6; z += 1.0) zs.push(z);
-    zs.push(r.maxZ);
+    const gravel = v.id === 'flare';
+    const alongX = r.maxX - r.minX > r.maxZ - r.minZ;
+    const axis = (lo, hi, extra) => {
+      const s = new Set();
+      for (let t = lo; t < hi - 1e-6; t += 1.0) s.add(r2(t));
+      s.add(r2(hi));
+      for (const e of extra) if (e > lo + 0.02 && e < hi - 0.02) s.add(r2(e));
+      return [...s].sort((a, b) => a - b);
+    };
+    const near = (lo, hi) => CONTACT.flatMap(d => [lo + d, hi - d]);
+    const gullyRows = (lo) => (v.kind === 'alley' ? [lo + 0.4, lo + 0.75] : []);
+    const xs = axis(r.minX, r.maxX, [...near(r.minX, r.maxX), ...(!alongX ? gullyRows(r.minX) : [])]);
+    const zs = axis(r.minZ, r.maxZ, [...near(r.minZ, r.maxZ), ...(alongX ? gullyRows(r.minZ) : [])]);
     const nx = xs.length, nz = zs.length;
     const pos = new Float32Array(nx * nz * 3), col = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2), nor = new Float32Array(nx * nz * 3);
-    const gravel = v.id === 'flare';
-    const tone = gravel ? [0.30, 0.29, 0.28] : v.kind === 'ramp' ? [0.52, 0.51, 0.49] : v.kind === 'court' ? [0.47, 0.46, 0.44] : [0.55, 0.54, 0.52];
-    const alongX = r.maxX - r.minX > r.maxZ - r.minZ;
+    const tone = gravel ? [0.42, 0.41, 0.40] : v.kind === 'ramp' ? [0.52, 0.51, 0.49] : v.kind === 'court' ? [0.47, 0.46, 0.44] : [0.55, 0.54, 0.52];
+    /** How far (m) the point is from each CLOSED side (an opening onto another walk is no wall). */
+    const closed = (side, a) => !v.openings.some(o => o.side === side && a > o.lo - 0.05 && a < o.hi + 0.05);
+    const contact = (x, z) => {
+      let c = 0;
+      for (const [side, d, a] of [['minX', x - r.minX, z], ['maxX', r.maxX - x, z], ['minZ', z - r.minZ, x], ['maxZ', r.maxZ - z, x]]) {
+        if (!closed(side, a)) continue;
+        c = Math.max(c, Math.exp(-d / 0.16) * 0.42 + Math.exp(-d / 0.7) * 0.16);
+      }
+      return Math.min(0.55, c);
+    };
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
       const x = xs[i], z = zs[j], k = j * nx + i;
       const y = floorOf(v, Math.min(x, r.maxX - 1e-6), Math.min(z, r.maxZ - 1e-6));
@@ -216,18 +275,10 @@ export function buildPaving(plan) {
       nor[k * 3 + 1] = 1;
       let f = 1;
       if (!gravel) {
-        // The joints: across the line of travel every 6 m.
-        const s = alongX ? x : z;
-        f *= Math.abs(((s % 6) + 6) % 6 - 3) > 2.8 ? 0.8 : 1;
         // The gully: a dark line half a metre in from one side of an alley.
         if (v.kind === 'alley') {
           const g = alongX ? z - r.minZ : x - r.minX;
-          if (g > 0.4 && g < 0.75) f *= 0.62;
-        }
-        // A ramp's grooves across it every half metre.
-        if (v.kind === 'ramp') {
-          const t = v.floor.axis === 'x' ? x : z;
-          f *= Math.abs(((t * 2) % 1 + 1) % 1 - 0.5) > 0.42 ? 0.82 : 1;
+          if (g > 0.39 && g < 0.76) f *= 0.62;
         }
         // Oil and condensate dripped from the racks, soaked in under the pipes.
         const drip = v.kind === 'alley' ? smooth(0.56, 0.72, fbm(x * 0.35, z * 0.35)) * 0.3 : 0;
@@ -235,8 +286,9 @@ export function buildPaving(plan) {
       } else f *= 0.8 + 0.4 * fbm(x * 1.7, z * 1.7);
       const wear = 1 - 0.16 * trodden(plan, v, x, z);
       const mott = 0.95 + 0.05 * Math.sin(x * 0.53 + Math.sin(z * 0.31) * 2) * Math.sin(z * 0.47 - x * 0.11);
-      for (let q = 0; q < 3; q++) col[k * 3 + q] = tone[q] * f * wear * mott;
-      uv[k * 2] = x / 3; uv[k * 2 + 1] = z / 3;
+      const shade = 1 - contact(x, z);
+      for (let q = 0; q < 3; q++) col[k * 3 + q] = tone[q] * f * wear * mott * shade;
+      uv[k * 2] = x; uv[k * 2 + 1] = z;
     }
     const idx = [];
     for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) {
@@ -250,45 +302,83 @@ export function buildPaving(plan) {
     g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
     g.setIndex(idx);
     if (v.floor.y1 !== undefined) g.computeVertexNormals();
-    parts.push(g.toNonIndexed());
+    (gravel ? gravelParts : parts).push(g.toNonIndexed());
     g.dispose();
   }
-  const g = mergeGeometries(parts);
-  for (const p of parts) p.dispose();
-  return g;
+  const merge = list => { const m = list.length ? mergeGeometries(list) : null; for (const p of list) p.dispose(); return m; };
+  return { paving: merge(parts), gravel: merge(gravelParts) };
 }
 
 /* ================================================================== the built bodies */
 
-/** A box geometry at (cx, cy, cz) of size (sx, sy, sz), its texture laid in metres. */
-export function block(sx, sy, sz, cx, cy, cz, tile = 2.4) {
-  const g = new THREE.BoxGeometry(sx, sy, sz);
-  const uv = g.attributes.uv, n = g.attributes.normal;
+/**
+ * Planar uv in WORLD metres for a point on a face with normal n: the face's two in-plane axes. Every concrete body is
+ * laid this way, so the photographed wall's panel joints and tie holes run on from one block to the next.
+ */
+function worldUV(g) {
+  const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv;
   for (let i = 0; i < uv.count; i++) {
-    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i));
-    const [a, b] = ax > 0.5 ? [sz, sy] : ay > 0.5 ? [sx, sz] : [sx, sy];
-    uv.setXY(i, uv.getX(i) * a / tile, uv.getY(i) * b / tile);
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    if (ay >= ax && ay >= az) uv.setXY(i, p.getX(i), p.getZ(i));
+    else if (ax >= az) uv.setXY(i, p.getZ(i), p.getY(i));
+    else uv.setXY(i, p.getX(i), p.getY(i));
   }
-  g.translate(cx, cy, cz);
+  uv.needsUpdate = true;
   return g;
+}
+
+/** How hard a cast edge is broken: 3 cm on a wall or a slab, less on a thin member, none on a plate. */
+const castChamfer = (sx, sy, sz) => {
+  const m = Math.min(sx, sy, sz);
+  return m < 0.05 ? 0 : Math.min(0.03, m * 0.1);
+};
+
+/**
+ * A box geometry at (cx, cy, cz) of size (sx, sy, sz): its edges chamfered (`chamferBoxGeometry`, the kit's) and its
+ * texture laid in world metres (1 uv = 1 m; each material's repeat is 1 / its tile). `tile` is no longer read: it
+ * was the old per-call tile, from before every surface was laid in metres.
+ */
+export function block(sx, sy, sz, cx, cy, cz, tile = null) {   // eslint-disable-line no-unused-vars
+  const g = chamferBoxGeometry(sx, sy, sz, castChamfer(sx, sy, sz));
+  g.translate(cx, cy, cz);
+  return worldUV(g);
 }
 /** A box from (x0, y0, z0) to (x1, y1, z1). */
 export const span = (x0, x1, y0, y1, z0, z1, tile) => block(x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, tile);
 
-/** A square bar of side `t` from point p to point q (a rail, a brace). */
-export function bar(p, q, t) {
+/** A round tube of radius r from p to q (a handrail, a post, an insulated line), closed or open, uvs in metres. */
+export function tube(p, q, r, seg = 8, open = false) {
   const d = new THREE.Vector3(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
-  const g = new THREE.BoxGeometry(t, d.length(), t);
+  const len = d.length();
+  const g = new THREE.CylinderGeometry(r, r, len, seg, 1, open);
+  const uv = g.attributes.uv, n = g.attributes.normal, pos = g.attributes.position;
+  const s = (p[0] * 0.37 + p[2] * 0.61) % 7;
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(n.getY(i)) > 0.999) uv.setXY(i, pos.getX(i) + s, pos.getZ(i));
+    else uv.setXY(i, uv.getX(i) * 2 * Math.PI * r + s, uv.getY(i) * len);
+  }
   g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()));
   g.translate((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2);
   return g;
 }
 
+/** A rail from p to q: a 48 mm tube (its old square bar was `t` across). */
+export const bar = (p, q, t) => tube(p, q, Math.min(t, 0.06) * 0.53, 6, true);
+
+/** An insulated line or a duct from p to q, `t` across: a round tube, closed at its ends. */
+export const duct = (p, q, t) => tube(p, q, t / 2, 18);
+
+/** A post from (x, y0, z) to y1: a round tube, closed at the top. */
+export const postTube = (x, z, y0, y1, r) => tube([x, y0, z], [x, y1, z], r, 6);
+
 /** A vertical cylinder (closed) with its texture laid in metres round it. */
 export function drum(r, h, x, y0, z, seg = 24, rTop = r) {
   const g = new THREE.CylinderGeometry(rTop, r, h, seg);
-  const uv = g.attributes.uv;
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2 * Math.PI * r / 2.4, uv.getY(i) * h / 2.4);
+  const uv = g.attributes.uv, n = g.attributes.normal, p = g.attributes.position;
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(n.getY(i)) > 0.999) uv.setXY(i, p.getX(i) + x, p.getZ(i) + z);
+    else uv.setXY(i, uv.getX(i) * 2 * Math.PI * r, uv.getY(i) * h + y0);
+  }
   g.translate(x, y0 + h / 2, z);
   return g;
 }
@@ -311,6 +401,9 @@ function pieces(a, b, gaps, len = 24) {
   return out;
 }
 
+/** The keys whose bodies wear the foot grime (cast concrete standing on a floor). */
+const GRIMED_KEYS = new Set(['concrete', 'face', 'coping', 'block', 'skirt']);
+
 /** The material keys the refinery is built in. */
 export const BUILT_KEYS = ['concrete', 'face', 'coping', 'floor', 'block', 'steel', 'rail', 'fence', 'corrugated', 'cladding', 'skirt', 'roof', 'grating'];
 
@@ -326,7 +419,10 @@ const fenced = (v, px, pz) => v.kind === 'yard' || !inPlant(px, pz);
  */
 export function buildRefinery(plan) {
   const G = Object.fromEntries(BUILT_KEYS.map(k => [k, []]));
-  const put = (key, geo) => G[key].push(geo);
+  // The cast concrete carries the height of the floor in front of it (`ttFoot`, read by the foot grime): set while a walk's
+  // walls are built, otherwise found from the block's own base (`footFor`).
+  let foot = null;
+  const put = (key, geo) => { if (GRIMED_KEYS.has(key)) tagFoot(geo, foot ?? footFor(geo)); G[key].push(geo); };
   const T = WALL_T;
 
   /* ---- the walls round every open walk: a kerb and a handrail along a unit, a fence along a yard or the plant's edge, a
@@ -366,6 +462,7 @@ export function buildRefinery(plan) {
         lo = Math.min(lo, y); hi = Math.max(hi, y);
       }
       const floorHi = Math.max(fl(a), fl(b)), floorLo = Math.min(fl(a), fl(b));
+      foot = floorLo;
       const drop = lo < floorLo - 0.5;
       const rise = hi > floorHi + 0.5;
       const mid = (a + b) / 2;
@@ -398,7 +495,7 @@ export function buildRefinery(plan) {
         const n = Math.max(1, Math.round((b - a) / 3));
         for (let i = 0; i <= n; i++) {
           const s = a + (b - a) * i / n, p = at(s, 0.17, 0);
-          put('steel', span(p[0] - 0.04, p[0] + 0.04, floorHi + KERB, floorHi + 2.5, p[2] - 0.04, p[2] + 0.04, 1));
+          put('steel', postTube(p[0], p[2], floorHi + KERB, floorHi + 2.5, 0.038));
         }
         put('steel', bar(at(a, 0.17, floorHi + 2.45), at(b, 0.17, floorHi + 2.45), 0.05));
       } else {
@@ -407,12 +504,14 @@ export function buildRefinery(plan) {
         for (let i = 0; i <= n; i++) {
           const s = a + (b - a) * i / n, p = at(s, 0.17, 0);
           const y = fl(Math.min(Math.max(s, full[0]), full[1]));
-          put('rail', span(p[0] - 0.03, p[0] + 0.03, floorHi + KERB, y + RAIL, p[2] - 0.03, p[2] + 0.03, 1));
+          put('rail', postTube(p[0], p[2], floorHi + KERB, y + RAIL, 0.024));
         }
         for (const h of [0.55, RAIL]) put('rail', bar(at(a, 0.17, fl(Math.max(a, full[0])) + h), at(b, 0.17, fl(Math.min(b, full[1])) + h), 0.045));
       }
     }
   }
+
+  foot = null;
 
   /* ---- the tank bund: a wall round it from its floor to 0.6 m over grade, broken where the ramp and the cellar come through. */
   {
@@ -566,6 +665,15 @@ function buildShell(plan, v, put) {
       const g = block(chord, y1 - lo, S.t, 0, 0, 0, 2.4);
       g.rotateY(am);
       g.translate(cx, (lo + y1) / 2, cz);
+      // Laid round the ring by arc length, so the panels run on from one chord to the next.
+      const P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv;
+      for (let q = 0; q < U.count; q++) {
+        const px = P.getX(q), py = P.getY(q), pz = P.getZ(q);
+        if (Math.abs(N.getY(q)) > 0.7) { U.setXY(q, px, pz); continue; }
+        let d = Math.atan2(px - S.x, pz - S.z) - am;
+        d -= Math.PI * 2 * Math.round(d / (Math.PI * 2));
+        U.setXY(q, (am + d) * (S.r + S.t), py);
+      }
       put('skirt', g);
     }
     // The bottom head: a shallow dish from the ring's top down to its middle, 1.2 m lower; under it, the reactor.
@@ -663,10 +771,10 @@ function buildReactor(put) {
   const rx = S.x - R - 1.6;
   put('cladding', drum(1.0, base + H - 4 - PLOT, rx, PLOT + 0.2, S.z, 20));
   put('steel', drum(1.4, 0.5, rx, PLOT, S.z, 20));
-  put('cladding', bar([rx, base + H - 3.2, S.z], [S.x - R + 0.5, base + H - 3.2, S.z], 1.6));
+  put('cladding', duct([rx, base + H - 3.2, S.z], [S.x - R + 0.5, base + H - 3.2, S.z], 1.6));
   // The cyclone outlets and the overhead line leaving east.
   for (const [dx, dz] of [[-4, -3], [4, -3], [0, 4]]) put('cladding', drum(0.7, 4.5, S.x + dx, base + H + 1.5, S.z + dz, 16));
-  put('cladding', bar([S.x + 4, base + H + 5.6, S.z - 3], [S.x + 4, base + H + 5.6, S.z + 4], 0.9));
+  put('cladding', duct([S.x + 4, base + H + 5.6, S.z - 3], [S.x + 4, base + H + 5.6, S.z + 4], 0.9));
 }
 
 /**
@@ -692,24 +800,31 @@ function buildReactorTrain(plan, put) {
   // Transfer lines: from the top of each reactor over and down into the side of the next.
   for (let i = 0; i < 2; i++) {
     const a = xs[i], b = xs[i + 1], ya = deck + 1.8 + hs[i] + 1.1, yb = deck + 4.5;
-    put('cladding', bar([a, deck + 1.8 + hs[i], cz], [a, ya, cz], 0.55));
-    put('cladding', bar([a, ya, cz], [(a + b) / 2, ya, cz], 0.55));
-    put('cladding', bar([(a + b) / 2, ya, cz], [(a + b) / 2, yb, cz], 0.55));
-    put('cladding', bar([(a + b) / 2, yb, cz], [b - 2.2, yb, cz], 0.55));
+    put('cladding', duct([a, deck + 1.8 + hs[i], cz], [a, ya, cz], 0.55));
+    put('cladding', duct([a, ya, cz], [(a + b) / 2, ya, cz], 0.55));
+    put('cladding', duct([(a + b) / 2, ya, cz], [(a + b) / 2, yb, cz], 0.55));
+    put('cladding', duct([(a + b) / 2, yb, cz], [b - 2.2, yb, cz], 0.55));
   }
   // The table's edge platform and its handrail.
   put('grating', span(r.minX - T - 0.45, r.maxX + T + 0.45, deck - 0.05, deck, r.minZ - T - 1.6, r.minZ - T - 0.45, 1));
   for (const z of [r.minZ - T - 1.55]) {
     put('rail', bar([r.minX - T, deck + 1.1, z], [r.maxX + T, deck + 1.1, z], 0.05));
-    for (let x = r.minX - T; x <= r.maxX + T + 1e-6; x += 2) put('rail', span(x - 0.03, x + 0.03, deck, deck + 1.1, z - 0.03, z + 0.03, 1));
+    for (let x = r.minX - T; x <= r.maxX + T + 1e-6; x += 2) put('rail', postTube(x, z, deck, deck + 1.1, 0.024));
   }
 }
 
-/** Merge a list of geometries into one (or null for none). */
+/**
+ * Merge a list of geometries into one (or null for none). `ttFoot` (the floor in front of a wall, `quicklight/grime.js`)
+ * is kept when any part carries it; a part without it gets NO_FOOT, and stays clean.
+ */
 export function mergeList(list) {
   if (!list.length) return null;
   const nonIndexed = list.map(g => (g.index ? g.toNonIndexed() : g));
-  for (const g of nonIndexed) for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+  const keep = nonIndexed.some(g => g.attributes.ttFoot) ? ['position', 'normal', 'uv', 'ttFoot'] : ['position', 'normal', 'uv'];
+  for (const g of nonIndexed) {
+    for (const k of Object.keys(g.attributes)) if (!keep.includes(k)) g.deleteAttribute(k);
+    if (keep.length === 4 && !g.attributes.ttFoot) tagFoot(g, NO_FOOT);
+  }
   const m = mergeGeometries(nonIndexed);
   for (const g of list) g.dispose();
   for (const g of nonIndexed) if (!list.includes(g)) g.dispose();

@@ -28,7 +28,7 @@ export const UNIT_08 = {
   quests: [
     {
       id: 'q1-both',
-      title: 'Running Both Ways',
+      title: 'Dynamic Equilibrium',
       line: 'A vessel stops changing; find out whether its particles do.',
       arena: 'bench',
       stageCount: 6,
@@ -37,7 +37,7 @@ export const UNIT_08 = {
     },
     {
       id: 'q2-k',
-      title: 'The Number That Holds',
+      title: 'Equilibrium Constant',
       line: 'Vessels that start differently settle at different amounts—find what they share.',
       arena: 'bench',
       stageCount: 7,
@@ -46,7 +46,7 @@ export const UNIT_08 = {
     },
     {
       id: 'q3-q',
-      title: 'Which Way It Goes',
+      title: 'Reaction Quotient',
       line: 'Given a starting mixture, predict which way it will react.',
       arena: 'bench',
       stageCount: 6,
@@ -55,7 +55,7 @@ export const UNIT_08 = {
     },
     {
       id: 'q4-properties',
-      title: 'Combining K',
+      title: 'Manipulating K',
       line: 'Rewrite a reaction and K changes by a clear rule—find how.',
       arena: 'bench',
       stageCount: 4,

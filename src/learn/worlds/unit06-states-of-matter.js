@@ -28,7 +28,7 @@ export const UNIT_06 = {
   quests: [
     {
       id: 'q1-states',
-      title: 'Three States',
+      title: 'States of Matter',
       line: 'Solid, liquid or gas: what the molecules are doing, and what they are not.',
       arena: 'bench',
       stageCount: 7,
@@ -37,7 +37,7 @@ export const UNIT_06 = {
     },
     {
       id: 'q2-grip',
-      title: 'The Grip Between',
+      title: 'Intermolecular Forces',
       line: 'What one molecule does to the molecule beside it.',
       arena: 'bench',
       stageCount: 9,
@@ -46,7 +46,7 @@ export const UNIT_06 = {
     },
     {
       id: 'q3-boil',
-      title: 'Liquids and Vapour',
+      title: 'Vapor Pressure',
       line: 'A sealed flask rises to a pressure and stops. Find out why, and when it boils.',
       arena: 'bench',
       stageCount: 8,
@@ -55,7 +55,7 @@ export const UNIT_06 = {
     },
     {
       id: 'q4-solids',
-      title: 'Kinds of Solid',
+      title: 'Types of Solids',
       line: 'Glass shatters and quartz does not. Same silicon, different order.',
       arena: 'bench',
       stageCount: 6,
@@ -64,7 +64,7 @@ export const UNIT_06 = {
     },
     {
       id: 'q5-crossing',
-      title: 'The Crossing',
+      title: 'Phase Changes',
       line: 'Pour heat in and the temperature stops moving. Find out where it went.',
       arena: 'bench',
       stageCount: 7,
@@ -73,7 +73,7 @@ export const UNIT_06 = {
     },
     {
       id: 'q6-solution',
-      title: 'Taken Into Solution',
+      title: 'Solutions and Solubility',
       line: 'A solid goes missing and is still in the jar.',
       arena: 'bench',
       stageCount: 7,
@@ -82,7 +82,7 @@ export const UNIT_06 = {
     },
     {
       id: 'q7-separate',
-      title: 'Pulling Apart',
+      title: 'Separating Mixtures',
       line: 'Get one thing out of another without changing either.',
       arena: 'bench',
       stageCount: 7,

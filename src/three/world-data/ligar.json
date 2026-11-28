@@ -539,9 +539,9 @@
     {
       "asset": "colonnade",
       "pos": [
-        15.3,
+        14.34,
         0,
-        42.68
+        43.14
       ],
       "rotY": 0.55,
       "scale": 1.06,
@@ -1192,7 +1192,7 @@
         1.62,
         6
       ],
-      "label": "Bench 1 - What Holds",
+      "label": "Bench 1 - Chemical Bonds",
       "structure": "slab-yard",
       "built": true
     },
@@ -1210,7 +1210,7 @@
         2.42,
         0
       ],
-      "label": "Bench 2 - Stone and Wire",
+      "label": "Bench 2 - Lattices and Alloys",
       "structure": "ore-drift",
       "built": true
     },

@@ -16,7 +16,7 @@ export const UNIT_11 = {
   quests: [
     {
       id: 'q1-watch',
-      title: 'How Fast',
+      title: 'Reaction Rates',
       line: 'Two feed lines make the same fuel, yet one tower is already overheating.',
       arena: 'bench',
       stageCount: 7,
@@ -34,7 +34,7 @@ export const UNIT_11 = {
     },
     {
       id: 'q3-time',
-      title: 'Concentration Over Time',
+      title: 'Integrated Rate Laws',
       line: 'Half the fuel broke down in twenty seconds. How long until half of what is left is gone?',
       arena: 'bench',
       stageCount: 7,
@@ -43,7 +43,7 @@ export const UNIT_11 = {
     },
     {
       id: 'q4-collide',
-      title: 'Collisions and the Hill',
+      title: 'Activation Energy',
       line: 'Fuel vapour sits in the cold tank without burning, even though burning releases energy.',
       arena: 'bench',
       stageCount: 9,
@@ -52,7 +52,7 @@ export const UNIT_11 = {
     },
     {
       id: 'q5-steps',
-      title: 'Steps',
+      title: 'Reaction Mechanisms',
       line: 'The additive runs in two steps, and only one of them controls how fast the tank burns.',
       arena: 'bench',
       stageCount: 7,

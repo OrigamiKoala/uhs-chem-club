@@ -159,6 +159,24 @@ export function turnedGeometry(rt, rb, h, seg = 16, { open = false, bevel = 0, o
   return g;
 }
 
+/**
+ * A stock cylinder with its uvs laid in metres (round the side by arc length, over a cap by position) and offset by a
+ * seed: the `'metric'` kit's cylinder, the same triangles as `THREE.CylinderGeometry`.
+ */
+function metricCylinder(rt, rb, h, seg, open, s) {
+  const g = new THREE.CylinderGeometry(rt, rb, h, seg, 1, open);
+  const uv = g.attributes.uv, p = g.attributes.position, n = g.attributes.normal;
+  const rm = Math.max(0.01, (rt + rb) / 2);
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(n.getY(i)) > 0.999) {          // a cap (a side's normal is never straight up, even a cone's)
+      uv.setXY(i, p.getX(i) + s * 5.7, p.getZ(i) + s * 2.3);
+    } else {
+      uv.setXY(i, uv.getX(i) * 2 * Math.PI * rm + s * 5.7, uv.getY(i) * h + s * 2.3);
+    }
+  }
+  return g;
+}
+
 /** How hard a built part's edge is broken: a few centimetres on a crate, a millimetre or two on a thin bar. */
 const chamferFor = (sx, sy, sz) => {
   const m = Math.min(sx, sy, sz);
@@ -168,16 +186,22 @@ const chamferFor = (sx, sy, sz) => {
 export function kitFor(w) {
   const own = (...o) => w.own(...o);
   const { M, t4 } = w;
-  const built = w.builtKit === true;
+  // `builtKit: 'metric'` (opt-in, Quicklight's far units): uvs in metres with a seeded offset, as built, but no chamfer
+  // or bevel and the stock triangle count, for parts too far from the walk to show a broken edge.
+  // `'edges'` (opt-in, Quicklight's units by the walk): boxes chamfered as built, cylinders plain metric.
+  const metricOnly = w.builtKit === 'metric';
+  const plainCyl = metricOnly || w.builtKit === 'edges';
+  const built = w.builtKit === true || metricOnly || w.builtKit === 'edges';
   /** The geometry of a box: the old stock box, or (built) a chamfered one laid in metres. */
   const boxGeo = (sx, sy, sz, p, tile = null) => {
     if (!built) return tile === null ? new THREE.BoxGeometry(sx, sy, sz) : slabGeometry(sx, sy, sz, tile);
     const s = uvSeed(p);
-    return chamferBoxGeometry(sx, sy, sz, tile === null ? chamferFor(sx, sy, sz) : 0, [s * 7.3, s * 3.1]);
+    return chamferBoxGeometry(sx, sy, sz, tile === null && !metricOnly ? chamferFor(sx, sy, sz) : 0, [s * 7.3, s * 3.1]);
   };
   /** The geometry of a cylinder or a cone: stock, or (built) turned with bevelled rims and metric uvs. */
   const cylGeo = (rt, rb, h, seg, p, open = false) => {
     if (!built) return new THREE.CylinderGeometry(rt, rb, h, seg, 1, open);
+    if (plainCyl) return metricCylinder(rt, rb, h, seg, open, uvSeed(p));
     const s = uvSeed(p);
     const bevel = Math.max(rt, rb) < 0.06 || h < 0.03 ? 0 : Math.min(0.035, Math.max(rt, rb) * 0.08, h * 0.2);
     return turnedGeometry(rt, rb, h, seg, { open, bevel, off: [s * 5.7, s * 2.3] });

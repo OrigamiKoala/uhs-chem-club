@@ -109,9 +109,9 @@ const B_R9 = round(B_R7 - FALL * 12);                  // and another 1.2 m to t
 const ground = (x, z) => round(plain(x, z));
 
 const SITE_DEFS = [
-  { id: 'site-1', questId: 'q1-joins', stage: 1, label: 'Bench 1 - What Holds', structure: 'slab-yard',
+  { id: 'site-1', questId: 'q1-joins', stage: 1, label: 'Bench 1 - Chemical Bonds', structure: 'slab-yard',
     pos: [-36, ground(-36, 1), 1], f: [0, 1] },
-  { id: 'site-2', questId: 'q2-lattice', stage: 2, label: 'Bench 2 - Stone and Wire', structure: 'ore-drift',
+  { id: 'site-2', questId: 'q2-lattice', stage: 2, label: 'Bench 2 - Lattices and Alloys', structure: 'ore-drift',
     pos: [79.9, FLOOR_A, 0], f: [-1, 0] },
   { id: 'site-3', questId: 'q3-distance', stage: 3, label: 'Bench 3 - Bond Energy', structure: 'crusher-house',
     pos: [26, round(ground(26, -4) + DECK.rise), -4], f: [-1, 0] },

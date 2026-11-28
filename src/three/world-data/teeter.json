@@ -600,7 +600,7 @@
         18.1,
         23.9
       ],
-      "label": "Bench 1 - Running Both Ways",
+      "label": "Bench 1 - Dynamic Equilibrium",
       "structure": "sluice-chamber",
       "built": true,
       "room": "room-1"
@@ -619,7 +619,7 @@
         18.1,
         1
       ],
-      "label": "Bench 2 - The Number K",
+      "label": "Bench 2 - Equilibrium Constant",
       "structure": "weigh-house",
       "built": true,
       "room": "room-2"
@@ -638,7 +638,7 @@
         12.6,
         16.4
       ],
-      "label": "Bench 3 - Which Way",
+      "label": "Bench 3 - Reaction Quotient",
       "structure": "gauge-chamber",
       "built": true,
       "room": "room-3"
@@ -657,7 +657,7 @@
         12.6,
         -11.5
       ],
-      "label": "Bench 4 - Combining K",
+      "label": "Bench 4 - Manipulating K",
       "structure": "tally-room",
       "built": true,
       "room": "room-4"

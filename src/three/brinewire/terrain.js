@@ -20,6 +20,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { floorOf } from '../lib/workings.js';
+import { chamferBoxGeometry } from '../kettle/kit.js';
 import {
   CREST, GALLERY, FOOT, DECK, DECK_SLAB, LAGOON, BASIN, WALL, PARAPET, WALL_T, EDGE, YARD_N, YARD_S, RAMP, APRON, ADIT,
   DOOR, land, fbm
@@ -177,6 +178,29 @@ export function buildPaving(plan) {
     xs.push(r.maxX);
     for (let z = r.minZ; z < r.maxZ - 1e-6; z += step) zs.push(z);
     zs.push(r.maxZ);
+    // Extra rows a hand and a forearm in from each side, so the contact shade at a wall's foot has vertices to live on.
+    const rows = (list, lo, hi) => {
+      for (const d of [0.15, 0.45]) if (hi - lo > 2 * d + 0.2) list.push(lo + d, hi - d);
+      const out = [...new Set(list.map(q => Math.round(q * 1000) / 1000))].sort((p, q) => p - q);
+      list.length = 0;
+      list.push(...out);
+    };
+    rows(xs, r.minX, r.maxX);
+    rows(zs, r.minZ, r.maxZ);
+    // CONTACT: where a wall stands on a side of this walk (a parapet, a retaining wall, a room's wall), the paving darkens
+    // over its last half metre, the way a floor does in the corner a wall throws.
+    const sides = plan.work.walls.filter(w => w.volume === v.id);
+    const contact = (x, z) => {
+      let k = 1;
+      for (const w of sides) {
+        const alongZ = w.side === 'minX' || w.side === 'maxX';
+        const s2 = alongZ ? z : x;
+        if (s2 < Math.min(w.from, w.to) - 0.3 || s2 > Math.max(w.from, w.to) + 0.3) continue;
+        const d = Math.abs((alongZ ? x : z) - w.plane);
+        k = Math.min(k, 1 - 0.3 * Math.exp(-d / 0.32));
+      }
+      return k;
+    };
     const nx = xs.length, nz = zs.length;
     const pos = new Float32Array(nx * nz * 3), col = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2), nor = new Float32Array(nx * nz * 3);
     const tone = v.kind === 'ramp' || v.kind === 'landing' ? [0.66, 0.65, 0.61] : v.kind === 'apron' ? [0.60, 0.59, 0.56] : [0.70, 0.69, 0.65];
@@ -194,7 +218,8 @@ export function buildPaving(plan) {
       const mott = 0.95 + 0.05 * Math.sin(x * 0.53 + Math.sin(z * 0.31) * 2) * Math.sin(z * 0.47 - x * 0.11);
       // Salt dried white along the parapet nearest the lagoon, where the spray lands.
       const salt = v.kind === 'road' || v.kind === 'yard' ? Math.exp(-Math.max(0, x - (v.id === 'yard-n' ? YARD_N.minX : WALL.roadW)) / 1.6) * 0.5 * (0.6 + 0.4 * fbm(x * 0.4, z * 0.4)) : 0;
-      for (let q = 0; q < 3; q++) col[k * 3 + q] = (tone[q] * jz * jx * groove * wear * mott) * (1 - salt) + 0.88 * salt;
+      const shade = contact(x, z);
+      for (let q = 0; q < 3; q++) col[k * 3 + q] = ((tone[q] * jz * jx * groove * wear * mott) * (1 - salt) + 0.88 * salt) * shade;
       uv[k * 2] = x / 3; uv[k * 2 + 1] = z / 3;
     }
     const idx = [];
@@ -219,17 +244,82 @@ export function buildPaving(plan) {
 
 /* ================================================================== the barrage */
 
-/** A box geometry at (cx, cy, cz) of size (sx, sy, sz), its texture laid in metres. */
-function block(sx, sy, sz, cx, cy, cz, tile = 2.4) {
-  const g = new THREE.BoxGeometry(sx, sy, sz);
-  const uv = g.attributes.uv, n = g.attributes.normal;
-  for (let i = 0; i < uv.count; i++) {
-    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i));
-    const [a, b] = ax > 0.5 ? [sz, sy] : ay > 0.5 ? [sx, sz] : [sx, sy];
-    uv.setXY(i, uv.getX(i) * a / tile, uv.getY(i) * b / tile);
-  }
+/**
+ * A box geometry at (cx, cy, cz) of size (sx, sy, sz): CAST, not cut. Every edge is chamfered (`chamferBoxGeometry`,
+ * Kettle's built kit) by a few centimetres on a wall and not at all on anything under 6 cm thick, so it only ever loses
+ * material inside the box it stands for. Its uvs are laid in METRES from its final position on each face's own plane
+ * (1 uv = 1 m; a material's repeat is 1 / its tile), so the concrete runs on from one piece to the next. `tile` is kept
+ * for the callers and no longer read. `swap` turns the uvs a quarter (a lean-to's sheet, whose fall runs along x).
+ */
+function block(sx, sy, sz, cx, cy, cz, tile = 2.4, { swap = false } = {}) {
+  void tile;
+  const m = Math.min(sx, sy, sz);
+  const c = m < 0.06 ? 0 : Math.min(0.035, m * 0.12);
+  const g = chamferBoxGeometry(sx, sy, sz, c);
   g.translate(cx, cy, cz);
+  metricUV(g, swap);
   return g;
+}
+
+/** Planar uvs in metres from each vertex's position on its face's own plane (top: x, z; an x face: z, y; a z face: x, y). */
+function metricUV(g, swap = false) {
+  const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    let u, v;
+    if (ay >= ax && ay >= az) [u, v] = [x, z];
+    else if (ax >= az) [u, v] = [z, y];
+    else [u, v] = [x, y];
+    if (swap) [u, v] = [v, u];
+    uv.setXY(i, u, v);
+  }
+  uv.needsUpdate = true;
+  return g;
+}
+
+/** The height of one LIFT of the mass concrete: the faces were cast a metre and a half at a time. */
+const LIFT = 1.5;
+
+/**
+ * A face of mass concrete from (x0, y0, z0) to (x1, y1, z1), cast in lifts: one chamfered box per lift, its joints on the
+ * same levels the whole barrage over, so each lift line runs on from one monolith to the next as a shallow V groove.
+ */
+function liftSpan(x0, x1, y0, y1, z0, z1) {
+  const out = [];
+  const k0 = Math.ceil((y0 + 0.4) / LIFT), k1 = Math.floor((y1 - 0.4) / LIFT);
+  let a = y0;
+  for (let k = k0; k <= k1; k++) {
+    out.push(span(x0, x1, a, k * LIFT, z0, z1));
+    a = k * LIFT;
+  }
+  out.push(span(x0, x1, a, y1, z0, z1));
+  return out;
+}
+
+/**
+ * A precast COPING from (x0, y0, z0) to (x1, y1, z1), laid in units 1.2 to 1.8 m long along its length, each chamfered
+ * so the joints read, each a few millimetres lower than the next at most (seeded by position): never above the old top.
+ */
+function copingUnits(x0, x1, y0, y1, z0, z1) {
+  const alongX = (x1 - x0) >= (z1 - z0);
+  const [a, b] = alongX ? [x0, x1] : [z0, z1];
+  const len = b - a;
+  if (len < 2.4) return [span(x0, x1, y0, y1, z0, z1)];
+  const n = Math.max(2, Math.round(len / 1.5));
+  const cuts = [a];
+  for (let i = 1; i < n; i++) {
+    const h = Math.sin((a + i * 7.31) * 12.9898 + y0 * 3.7) * 43758.5453;
+    cuts.push(a + (len * i) / n + ((h - Math.floor(h)) - 0.5) * 0.4 * (len / n));
+  }
+  cuts.push(b);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const h = Math.sin((cuts[i] + 3.3) * 78.233 + y1 * 1.3) * 24634.6345;
+    const dip = (h - Math.floor(h)) * 0.005;
+    out.push(alongX ? span(cuts[i], cuts[i + 1], y0, y1 - dip, z0, z1) : span(x0, x1, y0, y1 - dip, cuts[i], cuts[i + 1]));
+  }
+  return out;
 }
 /** A box from (x0, y0, z0) to (x1, y1, z1). */
 export const span = (x0, x1, y0, y1, z0, z1, tile) => block(x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, tile);
@@ -273,7 +363,7 @@ export const BARRAGE_KEYS = ['concrete', 'face', 'coping', 'deck', 'block', 'vau
  */
 export function buildBarrage(plan) {
   const G = Object.fromEntries(BARRAGE_KEYS.map(k => [k, []]));
-  const put = (key, geo) => G[key].push(geo);
+  const put = (key, geo) => (Array.isArray(geo) ? G[key].push(...geo) : G[key].push(geo));
   const rooms = plan.rooms;
   const T = WALL_T;
   const cage = rooms.find(r => r.shell === 'cage');
@@ -288,14 +378,14 @@ export function buildBarrage(plan) {
     const x0 = WALL.east - T, x1 = WALL.east, top = DECK + 0.15;
     for (const [z0, z1] of pieces(YARD_N.maxZ, WALL.south, [[ADIT.minZ, ADIT.maxZ]], 16)) {
       const low = z0 >= APRON.maxZ - 0.01 ? BASIN.bed - 0.3 : FOOT - 0.4;
-      put('face', span(x0, x1, low, top - 0.12, z0, z1, 3));
-      put('coping', span(x0 - 0.05, x1 + 0.05, top - 0.12, top, z0, z1, 1.2));
+      put('face', liftSpan(x0, x1, low, top - 0.12, z0, z1, 3));
+      put('coping', copingUnits(x0 - 0.05, x1 + 0.05, top - 0.12, top, z0, z1, 1.2));
     }
     // Over the adit's mouth: the face from the lintel up; under it, the face down to the ramp's fill.
-    put('face', span(x0, x1, GALLERY + 3.6, top - 0.12, ADIT.minZ, ADIT.maxZ, 3));
-    put('coping', span(x0 - 0.05, x1 + 0.05, top - 0.12, top, ADIT.minZ, ADIT.maxZ, 1.2));
-    put('face', span(x0, x1, BASIN.bed - 0.3, GALLERY - 0.4, ADIT.minZ, ADIT.maxZ, 3));
-    put('coping', span(x1 - 0.02, x1 + 0.16, GALLERY + 3.6, GALLERY + 3.95, ADIT.minZ - 0.4, ADIT.maxZ + 0.4, 1.2));
+    put('face', liftSpan(x0, x1, GALLERY + 3.6, top - 0.12, ADIT.minZ, ADIT.maxZ, 3));
+    put('coping', copingUnits(x0 - 0.05, x1 + 0.05, top - 0.12, top, ADIT.minZ, ADIT.maxZ, 1.2));
+    put('face', liftSpan(x0, x1, BASIN.bed - 0.3, GALLERY - 0.4, ADIT.minZ, ADIT.maxZ, 3));
+    put('coping', copingUnits(x1 - 0.02, x1 + 0.16, GALLERY + 3.6, GALLERY + 3.95, ADIT.minZ - 0.4, ADIT.maxZ + 0.4, 1.2));
     // The railing: a post every 2 m, a mid rail and a top rail.
     const xr = (x0 + x1) / 2, z0 = YARD_N.maxZ + 0.6, z1 = WALL.south - T - 0.1;
     const n = Math.round((z1 - z0) / 2);
@@ -359,13 +449,15 @@ export function buildBarrage(plan) {
       const [x0, x1, z0, z1] = along === 'z'
         ? (dir < 0 ? [w.plane - thick, w.plane, a, b] : [w.plane, w.plane + thick, a, b])
         : (dir < 0 ? [a, b, w.plane - thick, w.plane] : [a, b, w.plane, w.plane + thick]);
-      put(drop && (v.kind === 'road' || v.kind === 'yard') ? 'face' : 'concrete', span(x0, x1, bottom, top - 0.12, z0, z1, drop ? 3 : 2.4));
+      // Over a drop it is mass concrete like the great faces (board-marked, cast in lifts); elsewhere a cast wall.
+      if (drop) put('face', liftSpan(x0, x1, bottom, top - 0.12, z0, z1));
+      else put('concrete', span(x0, x1, bottom, top - 0.12, z0, z1, drop ? 3 : 2.4));
       // Where the wall stands in brine: the water's line on its outer face, a dark wet band and the salt dried white over it.
       if (drop) {
         const W = px < WALL.west ? LAGOON.water : BASIN.water;
         if (bottom < W - 0.3) waterline(put, along, dir, along === 'z' ? (dir < 0 ? x0 : x1) : (dir < 0 ? z0 : z1), a, b, W);
       }
-      put('coping', span(x0 - (along === 'z' ? 0.05 : 0), x1 + (along === 'z' ? 0.05 : 0), top - 0.12, top, z0 - (along === 'x' ? 0.05 : 0), z1 + (along === 'x' ? 0.05 : 0), 1.2));
+      put('coping', copingUnits(x0 - (along === 'z' ? 0.05 : 0), x1 + (along === 'z' ? 0.05 : 0), top - 0.12, top, z0 - (along === 'x' ? 0.05 : 0), z1 + (along === 'x' ? 0.05 : 0), 1.2));
       if (railed) {
         // Posts at each end and the middle of the length, a top rail and a mid rail following the floor's slope.
         const c = along === 'z' ? (x0 + x1) / 2 : (z0 + z1) / 2;
@@ -390,12 +482,46 @@ export function buildBarrage(plan) {
  * (the tide works up and down it), and over that 0.3 m of salt dried white. `at` is the face's plane, `out` which way it looks.
  */
 function waterline(put, along, out, at, a, b, W) {
-  const t = 0.02, o = out * 0.012;
-  const band = (key, y0, y1) => along === 'z'
-    ? put(key, span(at + o - t / 2, at + o + t / 2, y0, y1, a, b, 1.6))
-    : put(key, span(a, b, y0, y1, at + o - t / 2, at + o + t / 2, 1.6));
-  band('wet', W - 0.1, W + 0.55);
-  band('salt', W + 0.55, W + 0.85);
+  // The skin stands where the old box's outer face stood: 2.2 cm off the face, inside the same thin slab.
+  const plane = at + out * 0.022;
+  // The tide's reach wanders: the wet band's top a hand up or down along the face, the salt dried over it thicker where
+  // the spray lands. Seeded by position, so the same face always has the same line.
+  const wetTop = s => W + 0.55 + (fbm(s * 0.35, at * 0.1) - 0.5) * 0.36 + (fbm(s * 2.1, at * 0.3 + 5) - 0.5) * 0.08;
+  const saltTop = s => wetTop(s) + 0.1 + Math.max(0, fbm(s * 0.5 + 9, at * 0.2) - 0.32) * 0.5 + (fbm(s * 3.3, at + 2) - 0.5) * 0.05;
+  put('wet', tideStrip(along, out, plane, a, b, () => W - 0.1, wetTop));
+  put('salt', tideStrip(along, out, plane, a, b, wetTop, saltTop));
+}
+
+/**
+ * One band of the water's line as a single sheet on a face's plane (at `plane`, looking `out` along x or z), from `a` to
+ * `b` along it in 0.35 m steps, between `lo(s)` and `hi(s)`. Its uvs are in metres, as the barrage's.
+ */
+function tideStrip(along, out, plane, a, b, lo, hi) {
+  const n = Math.max(1, Math.ceil((b - a) / 0.35));
+  const pos = [], nor = [], uv = [], idx = [];
+  const nx = along === 'z' ? out : 0, nz = along === 'z' ? 0 : out;
+  for (let i = 0; i <= n; i++) {
+    const s = a + (b - a) * i / n;
+    const y0 = lo(s), y1 = Math.max(y0 + 0.03, hi(s));
+    for (const y of [y0, y1]) {
+      if (along === 'z') pos.push(plane, y, s); else pos.push(s, y, plane);
+      nor.push(nx, 0, nz);
+      uv.push(s, y);
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    const p = i * 2;
+    // Counter-clockwise seen from outside: (along, up) is right-handed about the normal for one side and not the other.
+    const ccw = along === 'z' ? out < 0 : out > 0;
+    if (ccw) idx.push(p, p + 2, p + 1, p + 1, p + 2, p + 3);
+    else idx.push(p, p + 1, p + 2, p + 1, p + 3, p + 2);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  return g;
 }
 
 /** The walls of a roofed volume on its four sides, outside its rectangle, from under its floor to `top`, cut for its openings. */
@@ -429,13 +555,13 @@ function buildShell(plan, v, put) {
     const room = plan.rooms.find(m => m.door === v);
     if (room.level === CREST) {
       // Through the gate house's front wall, which stands on the road's parapet line: a concrete lintel over the door.
-      put('coping', span(r.minX - 0.04, r.maxX + 0.08, L + DOOR.top, L + DOOR.top + 0.32, r.minZ - 0.3, r.maxZ + 0.3, 1.2));
+      put('coping', copingUnits(r.minX - 0.04, r.maxX + 0.08, L + DOOR.top, L + DOOR.top + 0.32, r.minZ - 0.3, r.maxZ + 0.3, 1.2));
     } else if (room.shell === 'cage') {
       // The cage's door: a steel frame; the mesh above it is the cage's own.
       for (const z of [r.minZ - 0.08, r.maxZ + 0.08]) put('steel', span(r.minX, r.maxX, L, L + DOOR.top, z - 0.08, z + 0.08, 1));
       put('steel', span(r.minX, r.maxX, L + DOOR.top, L + DOOR.top + 0.16, r.minZ - 0.16, r.maxZ + 0.16, 1));
     } else {
-      put('coping', span(r.minX, r.maxX, L + DOOR.top, L + DOOR.top + 0.3, r.minZ - 0.2, r.maxZ + 0.2, 1.2));
+      put('coping', copingUnits(r.minX, r.maxX, L + DOOR.top, L + DOOR.top + 0.3, r.minZ - 0.2, r.maxZ + 0.2, 1.2));
       put('vault', span(r.minX, r.maxX, L + DOOR.top + 0.3, under, r.minZ - 0.3, r.maxZ + 0.3, 2.4));
       for (const [z0, z1] of [[r.minZ - T, r.minZ], [r.maxZ, r.maxZ + T]]) put('vault', span(r.minX, r.maxX, L - 0.4, L + DOOR.top, z0, z1, 2.4));
     }
@@ -519,7 +645,7 @@ function buildGateHouse(plan, room, put) {
   const midZ = (r.minZ + r.maxZ) / 2;
   // The pier: from the lagoon's bed to under the floor, a little wider than the house, with a cutwater facing the lagoon.
   put('concrete', span(r.minX - T - 0.6, r.maxX, LAGOON.bed - 2.2, L - 0.3, r.minZ - T - 0.6, r.maxZ + T + 0.6, 3));
-  put('coping', span(r.minX - T - 0.7, r.maxX, L - 0.3, L - 0.18, r.minZ - T - 0.7, r.maxZ + T + 0.7, 1.2));
+  put('coping', copingUnits(r.minX - T - 0.7, r.maxX, L - 0.3, L - 0.18, r.minZ - T - 0.7, r.maxZ + T + 0.7, 1.2));
   waterline(put, 'z', -1, r.minX - T - 0.6, r.minZ - T - 0.6, r.maxZ + T + 0.6, LAGOON.water);
   waterline(put, 'x', -1, r.minZ - T - 0.6, r.minX - T - 0.6, r.maxX, LAGOON.water);
   waterline(put, 'x', 1, r.maxZ + T + 0.6, r.minX - T - 0.6, r.maxX, LAGOON.water);
@@ -537,8 +663,8 @@ function buildGateHouse(plan, room, put) {
   put('block', span(r.minX, r.maxX, wh, eave, z0, z1, 2.4));
   put('block', span(r.minX, win.x[0], wl, wh, z0, z1, 2.4));
   put('block', span(win.x[1], r.maxX, wl, wh, z0, z1, 2.4));
-  put('coping', span(win.x[0] - 0.1, win.x[1] + 0.1, wl - 0.12, wl, z0, z1 + 0.12, 1.2));
-  put('coping', span(win.x[0] - 0.1, win.x[1] + 0.1, wh, wh + 0.16, z0, z1 + 0.05, 1.2));
+  put('coping', copingUnits(win.x[0] - 0.1, win.x[1] + 0.1, wl - 0.12, wl, z0, z1 + 0.12, 1.2));
+  put('coping', copingUnits(win.x[0] - 0.1, win.x[1] + 0.1, wh, wh + 0.16, z0, z1 + 0.05, 1.2));
   const nm = Math.round((win.x[1] - win.x[0]) / 1.1);
   for (let i = 1; i < nm; i++) {
     const x = win.x[0] + (win.x[1] - win.x[0]) * i / nm;
@@ -581,7 +707,7 @@ function buildGateHouse(plan, room, put) {
   } else {
     // A lean-to rising west to the lagoon: the sheet on purlins on two steel rafters; the side walls rise with it in courses.
     const run = X1 - X0, rise = ridge - eave, ang = Math.atan2(rise, run), len = Math.hypot(run, rise);
-    const geo = block(len + 0.1, 0.1, Z1 - Z0, 0, 0, 0, 1.8);
+    const geo = block(len + 0.1, 0.1, Z1 - Z0, 0, 0, 0, 1.8, { swap: true });
     geo.rotateZ(-ang);
     geo.translate((X0 + X1) / 2, (eave + ridge) / 2 + 0.12, midZ);
     put('roof', geo);
@@ -657,7 +783,7 @@ function buildCage(room, put) {
     put('steel', geo);
   }
   const len = Math.hypot(run + 0.6, rise), ang = Math.atan2(rise, run);
-  const geo = block(len, 0.08, r.maxZ - r.minZ + 2 * T + 0.5, 0, 0, 0, 1.8);
+  const geo = block(len, 0.08, r.maxZ - r.minZ + 2 * T + 0.5, 0, 0, 0, 1.8, { swap: true });
   geo.rotateZ(-ang);
   geo.translate((r.minX - T + r.maxX + T) / 2 + 0.3, (eave + ridge) / 2 + 0.04, (r.minZ + r.maxZ) / 2);
   put('roof', geo);

@@ -977,7 +977,7 @@
         4.8,
         -15.4
       ],
-      "label": "Bench 5 - What Is Made",
+      "label": "Bench 5 - Stoichiometry",
       "structure": "charge-floor",
       "built": true,
       "room": "charge"
@@ -1015,7 +1015,7 @@
         -0.6,
         -52.8
       ],
-      "label": "Bench 7 - Kinds of Reaction",
+      "label": "Bench 7 - Reaction Types",
       "structure": "tapping-floor",
       "built": true,
       "room": "pit"
@@ -1034,7 +1034,7 @@
         1.6,
         -50.6
       ],
-      "label": "Bench 8 - Hard and Soft",
+      "label": "Bench 8 - Hard–Soft Ions",
       "structure": "refining-vat",
       "built": true,
       "room": "refining"

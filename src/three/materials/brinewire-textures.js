@@ -118,16 +118,18 @@ export function brineWater(opts = {}) {
 
 /** Poured concrete: shuttering panels with joints and tie-holes, stained rust-brown below every joint. */
 export function pourConcrete(opts = {}) {
-  const { size = texSize(512), seed = 7 } = opts;
+  // `panels` shutter panels to the tile, `joint` how deep their joints stand, `tie` the tie hole's depth (0: none).
+  // The defaults are the first look; the realism pass asks for fewer, fainter joints (`docs/plans/realism-brinewire.md`).
+  const { size = texSize(512), seed = 7, panels = 4, joint: jointDepth = 0.3, tie: tieDepth = 0.25 } = opts;
   const S = size;
   const sd = hashStr(`pour${seed}`);
-  const PANELS = 4;
+  const PANELS = panels;
   const height = heightField(S, (u, v) => {
     const fu = (u * PANELS) % 1, fv = (v * PANELS) % 1;
     const joint = Math.min(fu, 1 - fu, fv, 1 - fv);
     const edge = clamp01(joint * 30);
-    const tie = Math.hypot((fu - 0.5) * 2, (fv - 0.5) * 2) < 0.08 ? -0.25 : 0;
-    return 0.42 + 0.3 * edge + tie + (fbm(u * 30, v * 30, { octaves: 4, period: 30, seed: sd }) - 0.5) * 0.18;
+    const tie = Math.hypot((fu - 0.5) * 2, (fv - 0.5) * 2) < 0.08 ? -tieDepth : 0;
+    return 0.42 + jointDepth * edge + tie + (fbm(u * 30, v * 30, { octaves: 4, period: 30, seed: sd }) - 0.5) * 0.18;
   });
   const [lo, hi, rust] = [hex('#6e6c66'), hex('#a8a59a'), hex('#8a5230')];
   return surface(S, height, (h, u, v, rough) => {

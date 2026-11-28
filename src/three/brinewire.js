@@ -34,7 +34,8 @@
 import * as THREE from 'three';
 import brinewireData from './world-data/brinewire.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
-import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d } from './materials/pbr-kit.js';
+import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d, addWorldVariation } from './materials/pbr-kit.js';
+import { loadTexturePack, dressFromPack, packsAvailable } from './materials/texture-pack.js';
 import { saltMud, brineWater, pourConcrete } from './materials/brinewire-textures.js';
 import {
   createBwSkyDome, createBwLights, followBwShadow, createBwEnvironment, bwSkyUniforms, followCamera, BWSKY, BRINEWIRE_SUN
@@ -82,6 +83,58 @@ function expandedMetal(S = 128) {
   return t;
 }
 
+/**
+ * THE GROUND'S CLIFFS. The ground mesh is laid out from above (uv x / 7, z / 7) and its normals are held upright where it
+ * steps, so on a headland's cut face the texture smears down the face in stripes. This patch takes the face's true slope
+ * from the screen-space derivatives of the world position and, where it is steep, samples the colour map from the side
+ * (z or x against height, in the same metres); the shading normal is left as it was.
+ */
+function steepGround(material) {
+  if (material.userData.bwSteep) return material;
+  material.userData.bwSteep = true;
+  const prev = material.onBeforeCompile;
+  const prevKey = material.customProgramCacheKey ? material.customProgramCacheKey() : '';
+  material.onBeforeCompile = (shader, renderer) => {
+    prev?.call(material, shader, renderer);
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+        varying vec3 vBwSteepP;`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+        vBwSteepP = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+        varying vec3 vBwSteepP;
+        float bwSteepK = 0.0;
+        #ifdef USE_MAP
+          uniform mat3 mapTransform;
+        #endif`)
+      .replace('#include <map_fragment>', `
+        #ifdef USE_MAP
+        {
+          vec3 gn = normalize(cross(dFdx(vBwSteepP), dFdy(vBwSteepP)));
+          float steep = smoothstep(0.45, 0.8, 1.0 - abs(gn.y));
+          bwSteepK = steep;
+          vec2 side = (abs(gn.x) > abs(gn.z) ? vBwSteepP.zy : vBwSteepP.xy) / 7.0;
+          vec2 sideUv = (mapTransform * vec3(side, 1.0)).xy;
+          vec4 top = texture2D(map, vMapUv);
+          vec4 cliff = steep > 0.001 ? texture2D(map, sideUv) : top;
+          diffuseColor *= mix(top, cliff, steep);
+        }
+        #endif`)
+      // On a cliff the photo's relief and the anti-tile sample would still read the smeared top-down uv: drop both there.
+      .replace('float w = smoothstep(0.35, 0.65, wvN(vWVPos * 0.31 + 5.0)) * uWVTile;',
+        'float w = smoothstep(0.35, 0.65, wvN(vWVPos * 0.31 + 5.0)) * uWVTile * (1.0 - bwSteepK);')
+      .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
+        vec3 bwFlatN = normal;`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        normal = normalize(mix(normal, bwFlatN, bwSteepK));`);
+  };
+  const key = `${prevKey}|bwSteep`;
+  material.customProgramCacheKey = () => key;
+  material.needsUpdate = true;
+  return material;
+}
+
 export class BrinewireWorld {
   constructor(renderer = null) {
     this.renderer = renderer;
@@ -101,6 +154,9 @@ export class BrinewireWorld {
     // The lagoon, the flats and the headlands run to the horizon on their own; the voyage must not lay a ring over them.
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
+    // BUILT SHAPES (the realism pass, `docs/plans/realism-brinewire.md`): Kettle's kit chamfers and bevels every host and
+    // plant part and lays its uvs in metres, so every material below is tiled in metres (repeat = 1 / its tile).
+    this.builtKit = true;
 
     // THE BARRAGE, AS A PLAN. The height field, the walk, the colliders, the light mask and the guide all stand on it.
     this.plan = makeBarragePlan();
@@ -120,6 +176,7 @@ export class BrinewireWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.initCover();
+    this.initPacks();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/brinewire.js`).
     this.crew = attachCrew(this, 'brinewire');
   }
@@ -131,7 +188,7 @@ export class BrinewireWorld {
 
   /** What the builders are handed: materials, `own`, the lamp list, the tier, the field and the plan. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan, builtKit: this.builtKit };
   }
 
   /** `aoMap` samples the SECOND uv set, which a primitive geometry does not have: reuse the first. */
@@ -151,8 +208,11 @@ export class BrinewireWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => {
-      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 });
+    // TILES IN METRES. The barrage and the built kit lay uvs in metres, so a material's repeat is 1 / its tile: plated steel
+    // at 1.5 m, concrete at 3 m. The bench's parts are stock boxes (0..1 a face) and keep their own materials at the old repeat.
+    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256, repeat = 1 / 1.5) => {
+      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat, roughness: 1.0 });
+      m.userData.paint = paint;
       m.normalScale.set(1.2, 1.2);
       m.aoMapIntensity = 0.85;
       return m;
@@ -165,8 +225,11 @@ export class BrinewireWorld {
     M.ground.envMapIntensity = 0.55;
     for (const t of M.ground.userData.surfaceMaps || []) t.anisotropy = aniso;
     // THE BARRAGE'S CONCRETE: poured in lifts, board-marked, rust run from every bolt. Faces a shade darker where the water was.
-    const concrete = (color, seed, repeat = 1) => {
-      const m = buildMaterial(pourConcrete({ size: texSize(512), seed }), { repeat, roughness: 1.0 });
+    const concrete = (color, seed, repeat = 1 / 3) => {
+      // Two shutter panels to the 3 m tile (1.5 m each), their joints and tie holes faint: the fallback below T4 and the
+      // slots the photographs fill at T4.
+      const m = buildMaterial(pourConcrete({ size: texSize(512), seed, panels: 2, joint: 0.1, tie: 0.12 }), { repeat, roughness: 1.0 });
+      m.userData.paint = color;
       m.color = new THREE.Color(color);
       return m;
     };
@@ -183,7 +246,7 @@ export class BrinewireWorld {
     M.wetFace.roughness = 0.55;
     M.saltCrust = std({ color: 0xdcd8cc, roughness: 0.95, metalness: 0 });
     // The walks' paving: the same concrete, coloured per vertex (joints, wear, salt).
-    M.paving = concrete(0xffffff, 41);
+    M.paving = concrete(0xffffff, 41, 1);
     M.paving.vertexColors = true;
     for (const m of [M.ground, M.paving]) for (const t of m.userData.surfaceMaps || []) t.anisotropy = aniso;
     M.brick = std({ color: 0x8e5a40, roughness: 0.9, metalness: 0 });
@@ -194,11 +257,15 @@ export class BrinewireWorld {
     M.patinaDark = metal('#3d6657', '#4a7564', '#2f4a3d', 83, 0.5, 4);
     M.copperClad = metal('#a5865a', '#b0794a', '#5d8870', 85, 0.5, 3, 512);
     M.steel = metal('#8a9892', '#6f7d77', '#7f6a52', 87, 0.4, 2, 512);
+    // The meter room's instrument board behind the plate: the steel's paint on flat plate, kept out of the photographs.
+    M.panel = metal('#8a9892', '#6f7d77', '#7f6a52', 88, 0.25, 2, 512);
     M.darkSteel = metal('#3b4440', '#4b5651', '#5e5444', 89, 0.5, 4);
     M.rusted = metal('#7a5a40', '#5e5348', '#84512f', 91, 0.8, 3);
     M.gateLeaf = metal('#53646a', '#4b5651', '#8a4a26', 95, 0.75, 3, 512);
     M.roofSheet = metal('#8e9593', '#7c8381', '#8a6444', 97, 0.55, 5);
-    M.benchTop = metal('#8aa093', '#738a7e', '#566e5f', 93, 0.4, 3);
+    M.benchTop = metal('#8aa093', '#738a7e', '#566e5f', 93, 0.4, 3, 256, 2);
+    // The bench's own dark steel, at the old repeat on its stock boxes (`bench-bay.js`), untouched by the photographs.
+    M.benchDark = metal('#3b4440', '#4b5651', '#5e5444', 89, 0.5, 4, 256, 2);
     M.paintYellow = metal('#b8913f', '#8c8a80', '#7a5a3a', 99, 0.45, 2);
     M.timber = std({ color: 0x7a6a4e, roughness: 0.95, metalness: 0 });
     M.timberDark = std({ color: 0x3e3b2f, roughness: 0.95, metalness: 0 });
@@ -242,6 +309,22 @@ export class BrinewireWorld {
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
+    // WEATHERING IS NEVER EVEN. Every big surface drifts in tone and roughness over metres in the world's frame, and the
+    // great faces carry the dark leaching runs that come down from every lift joint. Anti-tile (a second, rotated sample)
+    // only on maps with no direction: on board marks, blockwork and sheet it would draw them crossed.
+    const vary = (m, o) => addWorldVariation(m, { scale: 11, strength: 0.13, roughShift: 0.08, ...o });
+    vary(M.face, { antiTile: 0, streaks: 0.1, strength: 0.16 });
+    vary(M.concrete, { antiTile: 0.45, streaks: 0.12 });
+    vary(M.coping, { antiTile: 0.4, strength: 0.1 });
+    vary(M.deck, { antiTile: 0.45 });
+    vary(M.paving, { antiTile: 0.45, strength: 0.1 });
+    vary(M.vault, { antiTile: 0.4, streaks: 0.1 });
+    vary(M.floor, { antiTile: 0.4 });
+    vary(M.block, { antiTile: 0, streaks: 0.12 });
+    vary(M.roofSheet, { antiTile: 0, strength: 0.1, scale: 6 });
+    vary(M.ground, { antiTile: 0.5, scale: 26, strength: 0.1, roughShift: 0.05 });
+    steepGround(M.ground);
+
     for (const m of Object.values(M)) {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
@@ -264,7 +347,7 @@ export class BrinewireWorld {
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.75;
+      this.scene.environmentIntensity = 0.62;
     }
   }
 
@@ -510,6 +593,72 @@ export class BrinewireWorld {
    * gallery; the low western sun still comes into the gate houses through their west windows. A deployed instrument arrives
    * later with materials of its own; `update` covers it.
    */
+  /**
+   * PHOTOGRAPHED SURFACES (T4 only; `docs/plans/realism-brinewire.md`). Eight CC0 packs in `public/textures/brinewire/`
+   * are fetched after the world is built and put into the map slots the procedural materials already hold
+   * (`texture-pack.js`: same program, no recompile), each sent to the GPU as it decodes, during the flight. Each material
+   * is tinted so the photograph lands on its own colour (the target over the pack's linear mean). A file that fails leaves
+   * the procedural map, which is also the look below T4.
+   */
+  initPacks() {
+    if (!this.t4 || !this.builtKit || !packsAvailable(this.renderer)) return;
+    const base = '/textures/brinewire';
+    const M = this.M;
+    // Linear means of the graded albedos (`tools/textures/prep_brinewire.py` prints them).
+    const MEAN = {
+      board: [0.3052, 0.2792, 0.2445], wall: [0.2999, 0.2627, 0.2272], pave: [0.276, 0.2772, 0.2714],
+      block: [0.287, 0.2659, 0.2368], rock: [0.3992, 0.322, 0.2712], steel: [0.2213, 0.2177, 0.2167],
+      patina: [0.1464, 0.1793, 0.1222], roof: [0.2034, 0.2019, 0.1995]
+    };
+    // A material's colour so that colour x the pack's mean is `hex` (sRGB), or a linear `rgb` given directly.
+    const tint = (mat, target, mean) => {
+      const c = typeof target === 'number' || typeof target === 'string' ? new THREE.Color(target) : new THREE.Color().setRGB(...target);
+      mat.color.setRGB(Math.min(2.4, c.r / mean[0]), Math.min(2.4, c.g / mean[1]), Math.min(2.4, c.b / mean[2]));
+    };
+    // `scale` = (1 / the photo's tile in metres) / the material's own repeat, so the photo lies at its real size.
+    const C = 1 / 3, ST = 1 / 1.5;
+    const plan = {
+      board: [[M.face, { scale: (1 / 1.8) / C, normalScale: 1.0, aoIntensity: 0.7 }, '#858075', true]],
+      wall: [
+        [M.concrete, { scale: (1 / 2) / C, normalScale: 1.0, aoIntensity: 0.7 }, '#827d73'],
+        [M.coping, { scale: (1 / 2) / C, normalScale: 0.9, aoIntensity: 0.6 }, '#938e83'],
+        [M.vault, { scale: (1 / 2) / C, normalScale: 1.0, aoIntensity: 0.8 }, '#77726a'],
+        [M.concreteDark, { scale: (1 / 2) / C, normalScale: 1.0 }, '#67635a'],
+        [M.wetFace, { scale: (1 / 2) / C, normalScale: 0.8 }, '#454b43']
+      ],
+      pave: [
+        [M.deck, { scale: (1 / 3) / C, normalScale: 0.8, aoIntensity: 0.6 }, '#8b867c'],
+        [M.floor, { scale: (1 / 3) / C, normalScale: 0.8, aoIntensity: 0.6 }, '#6f6b64'],
+        // The paving's tone is in its vertex colour (about 0.68): the material carries the rest.
+        [M.paving, { scale: 1, normalScale: 0.8, aoIntensity: 0.6 }, [0.37, 0.35, 0.31]]
+      ],
+      block: [[M.block, { scale: (1 / 2) / C, normalScale: 0.7, aoIntensity: 0.7 }, '#8e887c']],
+      // The ground's tone is its vertex paint; the old cracked-mud map's mean is the target. Laid at 4 m (its uv is x / 7).
+      rock: [[M.ground, { scale: 7 / 4, normalScale: 1.0, aoIntensity: 0.5 }, [0.235, 0.205, 0.155]]],
+      steel: [M.steel, M.darkSteel, M.rusted, M.gateLeaf, M.paintYellow, M.copperClad]
+        .map(m => [m, { scale: (1 / 2.2) / ST, normalScale: 0.55, aoIntensity: 0.8 }, m.userData.paint]),
+      patina: [M.patina, M.patinaDark].map(m => [m, { scale: 1 / ST, normalScale: 0.8, aoIntensity: 0.8 }, m.userData.paint]),
+      roof: [[M.roofSheet, { scale: (1 / 1.8) / ST, normalScale: 1.2, aoIntensity: 0.8 }, '#7e8482']]
+    };
+    const aniso = this.renderer.capabilities?.getMaxAnisotropy?.() || 8;
+    for (const [name, mats] of Object.entries(plan)) {
+      loadTexturePack(base, name).then(pack => {
+        if (this._disposed || !pack) return;
+        for (const [mat, opts, target, turn] of mats) {
+          if (!mat) continue;
+          const made = dressFromPack(mat, pack, { ...opts, renderer: this.renderer });
+          this.own(...made);
+          for (const t of made) {
+            t.anisotropy = aniso;
+            // The great faces' shuttering boards were laid level: turn the (vertical) photograph a quarter.
+            if (turn) { t.rotation = Math.PI / 2; t.needsUpdate = true; }
+          }
+          if (made.length && target !== undefined) tint(mat, target, MEAN[name]);
+        }
+      });
+    }
+  }
+
   initCover() {
     this.cover = makeCover({ sun: BRINEWIRE_SUN, ...this.plan.coverSpec() });
     this.cover.applyTo(this.scene);
@@ -538,6 +687,7 @@ export class BrinewireWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.envTarget?.dispose();

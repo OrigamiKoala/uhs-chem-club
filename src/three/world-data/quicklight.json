@@ -597,7 +597,7 @@
         -1.9,
         -40.2
       ],
-      "label": "Bench 1 - Watching the Speed",
+      "label": "Bench 1 - Reaction Rates",
       "structure": "analyser-bunker",
       "built": true,
       "room": "room-1"
@@ -616,7 +616,7 @@
         1.6,
         -46.5
       ],
-      "label": "Bench 2 - Feed Manifold",
+      "label": "Bench 2 - The Rate Law",
       "structure": "control-room",
       "built": true,
       "room": "room-2"
@@ -635,7 +635,7 @@
         -2.4,
         -6.4
       ],
-      "label": "Bench 3 - Concentration Over Time",
+      "label": "Bench 3 - Integrated Rate Laws",
       "structure": "pump-cellar",
       "built": true,
       "room": "room-3"
@@ -654,7 +654,7 @@
         6.6,
         28.8
       ],
-      "label": "Bench 4 - Collisions and the Hill",
+      "label": "Bench 4 - Activation Energy",
       "structure": "reactor-skirt",
       "built": true,
       "room": "room-4"
@@ -673,7 +673,7 @@
         6.6,
         32.6
       ],
-      "label": "Bench 5 - Steps",
+      "label": "Bench 5 - Reaction Mechanisms",
       "structure": "reactor-table",
       "built": true,
       "room": "room-5"

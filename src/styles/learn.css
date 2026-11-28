@@ -12,20 +12,25 @@
 .learn-quest-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
 }
+
+[data-learn-panel][hidden] { display: none !important; }
 
 .learn-world-row,
 .learn-quest-row {
   display: grid;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1.1rem 1.35rem;
+  gap: 1.15rem;
+  padding: 0.95rem 1.2rem;
 }
 
-.learn-world-row { grid-template-columns: 76px minmax(0, 1fr) 236px; }
-.learn-quest-row { grid-template-columns: 54px minmax(0, 1fr) minmax(150px, auto); }
+.learn-world-row { grid-template-columns: 76px minmax(0, 1fr) 220px; }
+.learn-quest-row { grid-template-columns: 48px minmax(0, 1fr) auto; }
+.learn-quest-row.is-next { border-color: var(--border-strong); }
 
 /* A world that is not yet built, or not yet reachable, is dimmed rather than
    hidden: the whole road should be visible from the first day. */
@@ -122,6 +127,36 @@
   text-shadow: var(--engrave);
   margin: 0;
 }
+
+.learn-world-topic {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.learn-quest-prog {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent-amber);
+}
+
+.learn-row-locked {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.learn-tag-quiet {
+  font-size: 0.58rem;
+  padding: 1px 5px;
+}
+
+.learn-quest-row.is-next { border-color: var(--border-strong); }
+.learn-quest-row.learn-complete .learn-quest-index { color: var(--text-muted); }
 
 .learn-world-place { margin-bottom: 0.55rem; }
 
@@ -1540,12 +1575,12 @@
 .learn-walk-card {
   pointer-events: auto;
   position: relative;
-  background: rgba(14, 12, 10, 0.85);
+  background: rgba(14, 12, 10, 0.88);
   border: 1px solid var(--border-durasteel);
   border-left: 2px solid var(--accent-amber);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-  padding: 0.75rem 1rem;
-  width: min(340px, calc(100vw - 3rem));
+  padding: 0.65rem 0.85rem;
+  width: min(260px, calc(100vw - 3rem));
   box-sizing: border-box;
 }
 
@@ -1568,15 +1603,23 @@
 
 .learn-walk-header {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-items: center;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
+.learn-walk-unit {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .learn-walk-back {
-  font-size: 0.7rem;
-  padding: 4px 8px;
-  min-height: 28px;
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  min-height: 26px;
 }
 
 .learn-walk-toggle {
@@ -1599,54 +1642,57 @@
   color: var(--text-bright);
 }
 
+.learn-walk-identity {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .learn-walk-name {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-bright);
-  margin-top: 0.2rem;
 }
 
-.learn-walk-line {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  line-height: 1.35;
-  margin: 0.2rem 0 0.3rem;
-}
-
-.learn-walk-prog {
+.learn-walk-count {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--accent-gold);
-  margin-top: 0.2rem;
+}
+
+.learn-walk-topic {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
 
 .learn-walk-hint {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
   color: var(--text-muted);
-  margin-top: 0.35rem;
+  margin-top: 0.45rem;
 }
 
 .learn-walk-keys {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
   align-items: center;
   flex-wrap: wrap;
 }
 
-/* Sites popup modal */
+/* Quests & Worked Problems modal (no backdrop-filter over live WebGL canvas) */
 .learn-sites-popup-scrim {
   pointer-events: auto;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 60;
+  background: rgba(6, 5, 4, 0.78);
+  z-index: 80;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1662,15 +1708,62 @@
   right: auto !important;
   top: auto !important;
   bottom: auto !important;
-  width: min(620px, calc(100vw - 2rem)) !important;
-  max-height: min(680px, calc(100vh - 4rem)) !important;
+  width: min(600px, calc(100vw - 2rem)) !important;
+  max-height: min(660px, calc(100vh - 3rem)) !important;
   overflow-y: auto;
   margin: 0;
 }
 
+.learn-sites-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.learn-sites-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.learn-sites-heading {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.learn-sites-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.learn-sites-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: none;
+}
+
+.learn-sites-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.learn-sites-terminal .learn-tabs {
+  margin-top: 0;
+  margin-bottom: 0.65rem;
+}
+
 .learn-site-list {
   list-style: none;
-  margin: 0.5rem 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -1679,33 +1772,61 @@
 
 .learn-site-row {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 2.3rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.65rem;
+  gap: 0.65rem;
+  padding: 0.55rem 0.7rem;
   background: var(--plate-100);
   border: 1px solid var(--border-durasteel);
 }
+
+.learn-site-row.is-next { border-color: var(--border-strong); }
+.learn-site-row.learn-complete .learn-site-index { color: var(--text-muted); }
 
 .learn-site-row.learn-locked,
 .learn-site-row.learn-charted { opacity: 0.55; }
 
 .learn-site-index {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   color: var(--accent-gold);
+  text-align: center;
 }
+
+.learn-site-row.is-next .learn-site-index { color: var(--accent-amber); }
 
 .learn-site-body { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 
 .learn-site-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  letter-spacing: 0.06em;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
   color: var(--text-bright);
 }
 
-.learn-site-meta { font-size: 0.68rem; }
+.learn-site-line {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.learn-quest-prog {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-amber);
+}
+
+.learn-sites-foot {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border-durasteel);
+  display: flex;
+  justify-content: flex-end;
+}
 
 /* ===================================================================
    LEARN QUEST 2D — Full-screen edge-to-edge layout for 3D Off

@@ -31,10 +31,10 @@ export const APPROACH = 4.6;
 export const WALL_IN = 0.3;
 
 const PLAN = {
-  'site-1': { questId: 'q1-both', label: 'Bench 1 - Running Both Ways', title: 'Running Both Ways', structure: 'sluice-chamber', kind: 'pan', skin: 'deck', plate: 'TTR-01' },
-  'site-2': { questId: 'q2-k', label: 'Bench 2 - The Number K', title: 'The Number That Holds', structure: 'weigh-house', kind: 'scale', skin: 'desk', plate: 'TTR-02' },
-  'site-3': { questId: 'q3-q', label: 'Bench 3 - Which Way', title: 'Which Way It Goes', structure: 'gauge-chamber', kind: 'gauge', skin: 'shelf', plate: 'TTR-03' },
-  'site-4': { questId: 'q4-properties', label: 'Bench 4 - Combining K', title: 'Combining K', structure: 'tally-room', kind: 'cards', skin: 'desk', plate: 'TTR-04' },
+  'site-1': { questId: 'q1-both', label: 'Bench 1 - Dynamic Equilibrium', title: 'Dynamic Equilibrium', structure: 'sluice-chamber', kind: 'pan', skin: 'deck', plate: 'TTR-01' },
+  'site-2': { questId: 'q2-k', label: 'Bench 2 - Equilibrium Constant', title: 'Equilibrium Constant', structure: 'weigh-house', kind: 'scale', skin: 'desk', plate: 'TTR-02' },
+  'site-3': { questId: 'q3-q', label: 'Bench 3 - Reaction Quotient', title: 'Reaction Quotient', structure: 'gauge-chamber', kind: 'gauge', skin: 'shelf', plate: 'TTR-03' },
+  'site-4': { questId: 'q4-properties', label: 'Bench 4 - Manipulating K', title: 'Manipulating K', structure: 'tally-room', kind: 'cards', skin: 'desk', plate: 'TTR-04' },
   'site-5': { questId: 'q5-ice', label: 'Bench 5 - Equilibrium Concentrations', title: 'Equilibrium Concentrations', structure: 'ledger-house', kind: 'ledger', skin: 'shelf', plate: 'TTR-05' },
   'site-6': { questId: 'q6-lean', label: 'Bench 6 - Le Chatelier', title: "Le Chatelier's Principle", structure: 'pump-chamber', kind: 'beam', skin: 'deck', plate: 'TTR-06' },
   'site-7': { questId: 'q7-dissolve', label: 'Bench 7 - Solubility Equilibria', title: 'Solubility Equilibria', structure: 'settling-cistern', kind: 'dish', skin: 'deck', plate: 'TTR-07' },

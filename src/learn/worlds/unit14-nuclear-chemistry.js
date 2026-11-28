@@ -19,12 +19,12 @@ export const UNIT_14 = {
   brief: 'Measure radiation and test what stops it, balance nuclear equations, see which nuclei are stable, time decay with half-lives, and measure the energy binding a nucleus together.',
 
   quests: [
-    { id: 'q1-still-warm', title: 'Still Warm', line: 'Warm ore drums with no fire nearby.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit14/q1-still-warm.js') },
-    { id: 'q2-what-comes-off', title: 'What Comes Off', line: 'Three types of radiation, and paper stops only one.', arena: 'bench', stageCount: 6, status: 'live', module: () => import('../quests/unit14/q2-what-comes-off.js') },
-    { id: 'q3-equations', title: 'Balancing the Nucleus', line: 'The reactor slag holds elements nobody loaded in.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q3-equations.js') },
-    { id: 'q4-stability', title: 'Which Nuclei Last', line: 'Some nuclei in the Fifth\'s store keep decaying.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q4-stability.js') },
-    { id: 'q5-half-gone', title: 'Half Gone, Then Half Again', line: 'A steady halving that acts like a clock.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q5-half-gone.js') },
-    { id: 'q6-shortfall', title: 'The Missing Weight', line: 'A nucleus has less mass than its separate parts.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q6-shortfall.js') },
+    { id: 'q1-still-warm', title: 'Radioactive Decay', line: 'Warm ore drums with no fire nearby.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit14/q1-still-warm.js') },
+    { id: 'q2-what-comes-off', title: 'Types of Radiation', line: 'Three types of radiation, and paper stops only one.', arena: 'bench', stageCount: 6, status: 'live', module: () => import('../quests/unit14/q2-what-comes-off.js') },
+    { id: 'q3-equations', title: 'Nuclear Equations', line: 'The reactor slag holds elements nobody loaded in.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q3-equations.js') },
+    { id: 'q4-stability', title: 'Nuclear Stability', line: 'Some nuclei in the Fifth\'s store keep decaying.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q4-stability.js') },
+    { id: 'q5-half-gone', title: 'Half-Life', line: 'A steady halving that acts like a clock.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q5-half-gone.js') },
+    { id: 'q6-shortfall', title: 'Binding Energy', line: 'A nucleus has less mass than its separate parts.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit14/q6-shortfall.js') },
     { id: 'boss-core', title: 'The Transmutation Core', line: 'Shut down the Fifth\'s reactor.', arena: 'boss', stageCount: 5, status: 'live', module: () => import('../quests/unit14/boss-core.js') }
   ]
 };

@@ -52,7 +52,7 @@ export function buildBwBench(ctx, { kind = 'beaker', plate = 'BRW-01', skin = 'd
   };
   return buildBayBench(ctx, {
     skin, plate,
-    mats: { top: M.benchTop, dark: M.darkSteel, tray: M.timberDark },
+    mats: { top: M.benchTop, dark: M.benchDark, tray: M.timberDark },
     tagStyle: { fg: '#1c211c', bg: '#cfc9b8' },
     dormant(dormant, { height }) {
       const y0 = height + 0.045;
@@ -368,7 +368,8 @@ function meterRoom(w) {
   const h = start(w, 'site-4', 'host-meter-room');
   const { k, g, M, room } = h;
   // The panel: a steel board on the back wall, 12 dials in two rows over the plate's head, a switch row under them.
-  k.box(g, [6.4, 3.2, 0.12], M.steel, [0, 1.8, -2.55]);
+  // Flat painted plate (`M.panel`), not the ribbed sheet: it is the wall the student reads the bench against.
+  k.box(g, [6.4, 3.2, 0.12], M.panel, [0, 1.8, -2.55]);
   for (let row = 0; row < 2; row++) for (let i = 0; i < 6; i++) {
     const x = -2.5 + i * 1.0, y = 2.7 + row * 0.55;
     k.cyl(g, [0.2, 0.2, 0.06, 20], M.caseDark, [x, y, -2.47], [Math.PI / 2, 0, 0], false);

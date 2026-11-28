@@ -99,3 +99,27 @@ export function pourConcrete(opts = {}) {
     return c;
   }, { aoRadius: S >> 6, normalStrength: 2.0 });
 }
+
+/**
+ * Broom-finished hardstanding: fine parallel brush lines, a few blowholes, a slow mottle. No panels and no tie holes
+ * (that is a wall's finish, `pourConcrete`). The paving's and the rooms' floors' surface below 3D On, and the slots the
+ * photographed slab fills at 3D On (the realism pass).
+ */
+export function hardstanding(opts = {}) {
+  const { size = texSize(512), seed = 29 } = opts;
+  const S = size;
+  const sd = hashStr(`qlhard${seed}`);
+  const height = heightField(S, (u, v) => {
+    const brush = fbm(u * 3, v * 90, { octaves: 2, period: 3, seed: sd ^ 9 });          // streaks along u
+    const grain = fbm(u * 40, v * 40, { octaves: 3, period: 40, seed: sd });
+    const pit = worley(u * 14, v * 14, 14, sd ^ 0x33).f1;
+    return 0.5 + (brush - 0.5) * 0.18 + (grain - 0.5) * 0.12 - (pit < 0.06 ? 0.25 : 0);
+  });
+  const [lo, hi] = [hex('#6f7176'), hex('#9a9b9d')];
+  return surface(S, height, (h, u, v, rough) => {
+    const mott = fbm(u * 4, v * 4, { octaves: 3, period: 4, seed: sd ^ 0x51 });
+    const c = mix(lo, hi, clamp01((h - 0.3) * 1.6) * 0.6 + mott * 0.4);
+    rough(0.86 - (mott - 0.5) * 0.1);
+    return c;
+  }, { aoRadius: S >> 7, normalStrength: 1.4 });
+}

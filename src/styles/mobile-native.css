@@ -259,8 +259,13 @@ body.touch-primary:not(.touch-walking) #fps-interact-prompt { display: none !imp
   .learn-walk-hud .learn-walk-card-collapsed { display: none !important; }
   .learn-walk-header { display: contents; }
   .learn-walk-header .eyebrow,
+  .learn-walk-unit,
+  .learn-walk-count,
+  .learn-walk-topic,
+  .learn-walk-hint,
   .learn-walk-hud .learn-walk-toggle,
   .learn-walk-prog { display: none; }
+  .learn-walk-identity { display: contents; }
   .learn-walk-name { margin: 0 0.15rem; font-size: 0.74rem; white-space: nowrap; }
   .learn-walk-keys { margin: 0; flex-wrap: nowrap; }
   .learn-walk-hud .quest-btn-sm,

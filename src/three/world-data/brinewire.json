@@ -2,7 +2,7 @@
   "id": "brinewire",
   "name": "Brinewire",
   "place": "Copper marsh",
-  "oneLine": "Why metals rot and how a battery makes electricity.",
+  "oneLine": "Redox reactions, galvanic cells, cell potentials and electrolysis.",
   "sky": "brinewire-sky",
   "ambience": {
     "keyLight": 16049085,
@@ -620,7 +620,7 @@
         13.6,
         -7.8
       ],
-      "label": "Bench 2 - Which Metal Gives",
+      "label": "Bench 2 - Activity Series",
       "structure": "anode-store",
       "built": true,
       "room": "room-2"
@@ -677,7 +677,7 @@
         7.6,
         -25.5
       ],
-      "label": "Bench 5 - Under Load",
+      "label": "Bench 5 - Nernst Equation",
       "structure": "battery-hall",
       "built": true,
       "room": "room-5"

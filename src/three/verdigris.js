@@ -35,8 +35,10 @@
 import * as THREE from 'three';
 import verdigrisData from './world-data/verdigris.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
-import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic } from './materials/pbr-kit.js';
+import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, addWorldVariation } from './materials/pbr-kit.js';
 import { peatMud, boardwalk, marshWater, fortStone } from './materials/verdigris-textures.js';
+import { packsAvailable, loadTexturePack, dressFromPack } from './materials/texture-pack.js';
+import { grimed } from './verdigris/grime.js';
 import {
   createVdSkyDome, createVdLights, followVdShadow, createVdEnvironment, vdSkyUniforms, followCamera, VDSKY, VERDIGRIS_SUN
 } from './verdigris/atmosphere.js';
@@ -75,6 +77,8 @@ export class VerdigrisWorld {
     // The swamp runs to the horizon on its own; the voyage must not lay a ring over it.
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
+    // Kettle's built kit (kettle/kit.js): the hosts' and the plant's boxes chamfered, cylinders bevelled, uvs in metres.
+    this.builtKit = true;
 
     // THE FORT, AS A PLAN. The height field, the walk, the colliders, the light mask and the guide all stand on it.
     this.plan = makeFortPlan();
@@ -82,6 +86,7 @@ export class VerdigrisWorld {
     this.field = makeVerdigrisField(this.plan, pad ? [pad.pos[0], pad.pos[2]] : null);
 
     this.initMaterials();
+    this.initPacks();
     this.initLighting();
     this.sky = createVdSkyDome(900);
     this.scene.add(this.sky);
@@ -105,7 +110,7 @@ export class VerdigrisWorld {
 
   /** What the builders are handed: materials, `own`, the lamp list, the tier, the field and the plan. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan, builtKit: this.builtKit };
   }
 
   /** `aoMap` samples the SECOND uv set, which a primitive geometry does not have: reuse the first. */
@@ -125,8 +130,12 @@ export class VerdigrisWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => {
-      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 });
+    // A copy of a material sharing its maps (`clone` would push the canvas maps listed in userData through JSON).
+    const variant = (m, color) => { const ud = m.userData; m.userData = {}; const c = m.clone(); m.userData = ud; c.userData = { ...ud }; c.color = new THREE.Color(color); return c; };
+    // EVERY REPEAT IS METRIC (the realism pass): the masonry, the decks and the built kit lay their uvs in metres, so a
+    // material's repeat is 1 / the size of its tile in metres, and one texel density holds across the world.
+    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256, tile = 1.6) => {
+      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 1 / tile, roughness: 1.0 });
       m.normalScale.set(1.2, 1.2);
       m.aoMapIntensity = 0.85;
       return m;
@@ -137,25 +146,32 @@ export class VerdigrisWorld {
     M.ground.vertexColors = true;
     M.ground.envMapIntensity = 0.5;
     for (const t of M.ground.userData.surfaceMaps || []) t.anisotropy = aniso;
-    // THE FORT'S MASONRY: coursed grey-green stone, stained dark where the water wicks up. Courses, floors and vaults by shade.
+    // THE FORT'S MASONRY: coursed grey stone (a 2.5 m tile), dressed stone for copings, courses and floors (2.1 m), brick
+    // in the vaults (1.5 m). The procedural set is every one's lower-tier look and the slots the photographs fill.
     const stoneSet = fortStone({ size: texSize(512), seed: 7 });
-    const stone = (color, set = stoneSet) => { const m = buildMaterial(set, { repeat: 1, roughness: 1.0 }); m.color = new THREE.Color(color); return m; };
-    M.stone = stone(0xffffff);
-    M.coping = stone(0xc9ccbf);
-    M.flags = stone(0xa9ab9e);
-    M.brick = std({ color: 0x7d6150, roughness: 0.92, metalness: 0 });
+    M.stone = buildMaterial(stoneSet, { repeat: 1 / 2.5, roughness: 1.0 });
+    M.coping = buildMaterial(stoneSet, { repeat: 1 / 2.1, roughness: 1.0 });
+    M.coping.color = new THREE.Color(0xc9ccbf);
+    M.flags = variant(M.coping, 0xa9ab9e);
+    M.brick = buildMaterial(fortStone({ size: texSize(256), seed: 13 }), { repeat: 1 / 1.5, roughness: 1.0 });
+    M.brick.color = new THREE.Color(0x9a7a66);
     M.earth = std({ color: 0x55603f, roughness: 1.0, metalness: 0 });
     M.slit = std({ color: 0x141714, roughness: 1.0, metalness: 0 });
     M.concrete = M.stone;
-    // THE BOARDWALKS: planks laid across the line of travel, furred with algae; dark piles and rails.
-    M.plank = buildMaterial(boardwalk({ size: texSize(512), seed: 5 }), { repeat: 1, roughness: 1.0 });
+    // THE BOARDWALKS: boards laid across the line of travel (a 4 m procedural tile of twenty boards; the photograph is
+    // 2 m); the fascia, posts, rails, trestles and piles are the same oak, darker as they get wetter.
+    M.plank = buildMaterial(boardwalk({ size: texSize(512), seed: 5 }), { repeat: 1 / 4, roughness: 1.0 });
     for (const t of M.plank.userData.surfaceMaps || []) t.anisotropy = aniso;
+    // The boardwalks' and the rooms' own timber wears the boards' maps; each long timber is cut from one board
+    // (`terrain.js` `grainAlong`). What the kit builds (the hosts, the lamp posts, the far country) is plain oak.
+    M.deckTimber = variant(M.plank, 0x9c8f78);
+    M.rail = variant(M.plank, 0x6a6252);
+    M.pile = variant(M.plank, 0x4a463a);
     M.timber = std({ color: 0x6f6148, roughness: 0.95, metalness: 0 });
     M.timberDark = std({ color: 0x3a372c, roughness: 0.95, metalness: 0 });
-    M.pile = std({ color: 0x2f2e25, roughness: 0.97, metalness: 0 });
-    M.rail = M.timberDark;
-    // Copper that has gone green: the towers' roofs, the fittings; the old metal shows through the wear.
-    M.roof = metal('#6f9c88', '#5d8d78', '#476b58', 81, 0.35, 3, 512);
+    // Copper that has gone green: the towers' roofs (a standing seam every half metre), the fittings; the old metal
+    // shows through the wear.
+    M.roof = metal('#6f9c88', '#5d8d78', '#476b58', 81, 0.35, 3, 512, 1.6);
     M.roof.side = THREE.DoubleSide;
     M.patina = metal('#6f9c88', '#5d8d78', '#476b58', 82, 0.35, 3, 512);
     M.patinaDark = metal('#3d6657', '#4a7564', '#2f4a3d', 83, 0.5, 4);
@@ -164,9 +180,12 @@ export class VerdigrisWorld {
     M.darkSteel = metal('#3b4440', '#4b5651', '#5e5444', 89, 0.5, 4);
     M.castIron = metal('#3a3d3a', '#34372f', '#5e4a34', 115, 0.55, 3);
     M.rusted = metal('#7a5a40', '#5e5348', '#84512f', 91, 0.8, 3);
-    M.benchTop = metal('#8aa093', '#738a7e', '#566e5f', 93, 0.4, 3);
-    M.reed = std({ color: 0x8c9250, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
-    M.reedDry = std({ color: 0xa79c6a, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
+    // The bench's top is built of stock boxes (`bench-bay.js`, uvs 0..1 per face): it keeps the old repeat.
+    M.benchTop = buildMaterial(platedMetal({ paint: '#8aa093', metal: '#738a7e', rust: '#566e5f', panels: 3, seed: 93, weather: 0.4, size: texSize(256) }), { repeat: 2, roughness: 1.0 });
+    M.benchTop.normalScale.set(1.2, 1.2);
+    M.benchTop.aoMapIntensity = 0.85;
+    M.reed = std({ color: 0x828a4c, roughness: 0.9, metalness: 0, side: THREE.DoubleSide, vertexColors: true });
+    M.reedDry = std({ color: 0xa39769, roughness: 0.9, metalness: 0, side: THREE.DoubleSide, vertexColors: true });
     M.deadwood = std({ color: 0x4c4a40, roughness: 1.0, metalness: 0 });
     M.bloom = std({ color: 0xc8d8c9, roughness: 0.95, metalness: 0 });
     M.salt = std({ color: 0xe4e6dc, roughness: 0.95, metalness: 0 });
@@ -184,13 +203,19 @@ export class VerdigrisWorld {
     M.rope = std({ color: 0x8a7a58, roughness: 0.95, metalness: 0 });
     M.rubber = std({ color: 0x1c1a1a, roughness: 0.9, metalness: 0 });
     // Marsh water is black-green and glossy: opaque in a host's vat, translucent over the swamp's bed.
-    const ripple = seed => buildMaterial(marshWater({ size: texSize(256), seed }), { repeat: 1, roughness: 0.14 });
+    const ripple = (seed, size = 256) => {
+      const set = marshWater({ size: texSize(size), seed });
+      const m = buildMaterial(set, { repeat: 1, roughness: 0.1 });
+      // The waves' own normals (verdigris-textures.js), in place of the ones read off the 8-bit height.
+      if (set.normalCanvas && m.normalMap) { m.normalMap.image = set.normalCanvas; m.normalMap.needsUpdate = true; m.normalScale.set(0.35, 0.35); }
+      return m;
+    };
     M.water = ripple(9);
     M.water.envMapIntensity = 1.2;
-    M.swamp = ripple(19);
-    M.swamp.envMapIntensity = 1.2;
+    M.swamp = ripple(19, 512);
+    M.swamp.envMapIntensity = 1.1;
     M.swamp.transparent = true;
-    M.swamp.opacity = 0.84;
+    M.swamp.opacity = 0.9;
     M.swamp.depthWrite = false;
     M.glass = std({ color: 0xd5dfe2, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false });
     M.glassDark = std({ color: 0x0f1214, roughness: 0.18, metalness: 0.2 });
@@ -200,12 +225,75 @@ export class VerdigrisWorld {
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
+    // THE WATERLINE (verdigris/grime.js): the masonry and the decks wear clones that draw the algae band, the damp and
+    // the old high-water line on every face that looks out over the water. Made before the variation below, which each
+    // copy then gets for itself.
+    M.stoneG = grimed(M.stone);
+    M.copingG = grimed(M.coping, { algae: 0.7, damp: 0.38, line: 0.45 });
+    M.timberG = grimed(M.deckTimber, { algae: 0.6, damp: 0.35, line: 0.12 });
+    M.pileG = grimed(M.pile, { algae: 0.55, damp: 0.3, line: 0.0 });
+    // EVERY BIG SURFACE DRIFTS in tone and roughness across the fort (pbr-kit `addWorldVariation`); the walls also carry
+    // streaks where rain has run down from the coping. Coursed stone, boards and brick take no anti-tile (its rotated
+    // second sample draws their joints crossed); the tone drift breaks their repeat instead.
+    for (const m of [M.stoneG, M.stone]) addWorldVariation(m, { scale: 7, strength: 0.16, roughShift: 0.08, antiTile: 0, streaks: 0.16 });
+    for (const m of [M.copingG, M.coping, M.flags]) addWorldVariation(m, { scale: 6, strength: 0.13, roughShift: 0.1, antiTile: 0, streaks: 0.06 });
+    for (const m of [M.brick]) addWorldVariation(m, { scale: 5, strength: 0.12, roughShift: 0.08, antiTile: 0 });
+    for (const m of [M.plank, M.deckTimber, M.timberG, M.rail, M.pile, M.pileG]) addWorldVariation(m, { scale: 5, strength: 0.12, roughShift: 0.1, antiTile: 0 });
+    addWorldVariation(M.roof, { scale: 6, strength: 0.14, roughShift: 0.1, antiTile: 0, streaks: 0.1 });
+
     for (const m of new Set(Object.values(M))) {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
     }
     this.M = M;
     this.lanternMat = M.lantern;
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (CC0, `public/textures/verdigris/LICENSE.md`). At 3D On with a renderer, each pack is
+   * fetched after the world is built and put into the slots its materials' procedural maps already hold
+   * (texture-pack.js), so no program changes and each map is uploaded as it lands; until then, and below 3D On, the
+   * procedural maps stay. `scale` = (1 / the photo's tile in metres) / the material's own repeat, so every photo lies at
+   * its real size. `grey` is the material's colour once it wears the photo (the photos are graded close to what each
+   * surface wants).
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const M = this.M;
+    const sc = (photo, repeat) => (1 / photo) / repeat;
+    const plan = {
+      wall: [
+        [M.stone, { scale: sc(2.5, 1 / 2.5), normalScale: 0.85, aoIntensity: 0.7 }, 0xeef0e8],
+        [M.stoneG, { scale: sc(2.5, 1 / 2.5), normalScale: 0.85, aoIntensity: 0.7 }, 0xeef0e8]
+      ],
+      dressed: [
+        [M.coping, { scale: sc(2.1, 1 / 2.1), normalScale: 0.9, aoIntensity: 0.7 }, 0xdfe3da],
+        [M.copingG, { scale: sc(2.1, 1 / 2.1), normalScale: 0.9, aoIntensity: 0.7 }, 0xdfe3da],
+        [M.flags, { scale: sc(2.1, 1 / 2.1), normalScale: 1.0, aoIntensity: 0.8 }, 0xc4c6bc]
+      ],
+      planks: [
+        [M.plank, { scale: sc(2, 1 / 4), normalScale: 1.0, aoIntensity: 0.7 }, 0xf2eee4],
+        [M.deckTimber, { scale: sc(2, 1 / 4), normalScale: 1.0 }, 0xd0c8b8],
+        [M.timberG, { scale: sc(2, 1 / 4), normalScale: 1.0 }, 0xd0c8b8],
+        [M.rail, { scale: sc(2, 1 / 4), normalScale: 1.0 }, 0xa49c8c],
+        [M.pile, { scale: sc(2, 1 / 4), normalScale: 1.0 }, 0x6a6558],
+        [M.pileG, { scale: sc(2, 1 / 4), normalScale: 1.0 }, 0x6a6558]
+      ],
+      brick: [[M.brick, { scale: sc(1.5, 1 / 1.5), normalScale: 1.0 }, 0xd2cac0]]
+    };
+    const aniso = this.renderer.capabilities?.getMaxAnisotropy?.() || 8;
+    for (const [name, mats] of Object.entries(plan)) {
+      loadTexturePack('/textures/verdigris', name).then(pack => {
+        if (this._disposed || !pack) return;
+        for (const [mat, opts, grey] of mats) {
+          if (!mat) continue;
+          const made = dressFromPack(mat, pack, { ...opts, renderer: this.renderer });
+          for (const t of made) t.anisotropy = aniso;
+          this.own(...made);
+          if (grey !== undefined) mat.color.setHex(grey);
+        }
+      });
+    }
   }
 
   /* ------------------------------------------------------------ light and sky */
@@ -215,15 +303,16 @@ export class VerdigrisWorld {
     this.keyLight = key;
     this.scene.add(key, key.target, hemi);
     holdShadowUntilAsked(this.scene, key);
-    // Thick fog: the haze is the horizon's own colour.
+    // Thick fog: the haze is the horizon's own colour. It starts a little further from the eye than the layout's
+    // ambience says (the realism pass), so the near fort keeps its colour; the layout keeps its numbers.
     const amb = this.data.ambience;
-    this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
+    this.scene.fog = new THREE.Fog(amb.fogColor, Math.max(amb.fogNear, 12), amb.fogFar * 1.15);
     this.scene.background = VDSKY.horizon.clone();
     const env = createVdEnvironment(this.renderer);
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.75;
+      this.scene.environmentIntensity = 0.62;
     }
   }
 
@@ -274,9 +363,9 @@ export class VerdigrisWorld {
     this.scene.add(this.terrainMesh);
 
     const M = this.M;
-    this.decks = this.mergedGroup('boardwalks', buildDecks(this.plan), { plank: M.plank, timber: M.timber, pile: M.pile, rail: M.rail }, { noShadow: ['pile'] });
+    this.decks = this.mergedGroup('boardwalks', buildDecks(this.plan), { plank: M.plank, timber: M.timberG, pile: M.pileG, rail: M.rail }, { noShadow: ['pile'] });
     this.masonry = this.mergedGroup('fort', buildMasonry(this.plan),
-      { stone: M.stone, coping: M.coping, brick: M.brick, flags: M.flags, earth: M.earth, timber: M.timber, roof: M.roof, slit: M.slit }, { noShadow: ['flags', 'slit'] });
+      { stone: M.stoneG, coping: M.copingG, brick: M.brick, flags: M.flags, earth: M.earth, timber: M.deckTimber, roof: M.roof, slit: M.slit, rubble: M.stoneG }, { noShadow: ['flags', 'slit'] });
 
     // The water over the swamp, the moat and the ward: one sheet, ambience (nothing stands on it).
     const water = new THREE.Mesh(this.own(buildWaterGeometry(this.plan)), M.swamp);
@@ -475,6 +564,7 @@ export class VerdigrisWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.envTarget?.dispose();

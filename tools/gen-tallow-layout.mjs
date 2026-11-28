@@ -82,7 +82,7 @@ const SUB = {
 const SITE_DEFS = [
   { id: 'site-1', questId: 'q1-grain', stage: 1, label: 'Bench 1 - Atoms', structure: 'sample-point',
     pos: [17.0, 0, 4.0], f: [1, 0] },
-  { id: 'site-2', questId: 'q2-core', stage: 2, label: 'Bench 2 - Inside an Atom', structure: 'instrument-room',
+  { id: 'site-2', questId: 'q2-core', stage: 2, label: 'Bench 2 - Atomic Structure', structure: 'instrument-room',
     pos: [-4.0, FLOOR_Y, -43.0], f: [0, 1] },
   { id: 'site-3', questId: 'q3-catalogue', stage: 3, label: 'Bench 3 - The Periodic Table', structure: 'control-house',
     pos: [36.0, 0, -18.0], f: [0, 1] },
@@ -91,7 +91,7 @@ const SITE_DEFS = [
   // The weigh hopper hangs under the conveyor's discharge chute; its bench stands 5 m in front of the bin.
   { id: 'site-5', questId: 'q5-assay', stage: 5, label: 'Bench 5 - Atomic Mass', structure: 'weigh-hopper',
     pos: [0, 0, 0], f: [0, 1] },
-  { id: 'site-6', questId: 'q6-weigh', stage: 6, label: 'Bench 6 - Counting By Weight', structure: 'bagging-line',
+  { id: 'site-6', questId: 'q6-weigh', stage: 6, label: 'Bench 6 - Molar Mass', structure: 'bagging-line',
     pos: [0, 0, 0], f: [0, 1] }
 ];
 

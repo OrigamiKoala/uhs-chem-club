@@ -516,7 +516,7 @@
         -4,
         -38
       ],
-      "label": "Bench 2 - Inside an Atom",
+      "label": "Bench 2 - Atomic Structure",
       "structure": "instrument-room",
       "built": true
     },
@@ -588,7 +588,7 @@
         1.6,
         14
       ],
-      "label": "Bench 6 - Counting By Weight",
+      "label": "Bench 6 - Molar Mass",
       "structure": "bagging-line",
       "built": true
     }

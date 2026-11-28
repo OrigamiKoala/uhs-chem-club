@@ -39,7 +39,7 @@ export const UNIT_01 = {
     },
     {
       id: 'q2-core',
-      title: 'Inside an Atom',
+      title: 'Atomic Structure',
       line: 'Probe the nucleus, protons, neutrons, and electron shells.',
       arena: 'bench',
       stageCount: 7,
@@ -75,7 +75,7 @@ export const UNIT_01 = {
     },
     {
       id: 'q6-weigh',
-      title: 'Counting By Weight',
+      title: 'Molar Mass',
       line: 'Use molar mass to count atoms and molecules by weight.',
       arena: 'bench',
       stageCount: 8,

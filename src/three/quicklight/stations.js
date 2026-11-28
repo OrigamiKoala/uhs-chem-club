@@ -52,7 +52,7 @@ export function buildQlBench(ctx, { kind = 'vessel', plate = 'QKL-01', skin = 'd
   };
   return buildBayBench(ctx, {
     skin, plate,
-    mats: { top: M.benchTop, dark: M.darkSteel, tray: M.grating },
+    mats: { top: M.benchTop, dark: M.benchDark, tray: M.benchTray },
     tagStyle: { fg: '#1a1e24', bg: '#cfd4dc' },
     dormant(dormant, { height }) {
       const y0 = height + 0.045;

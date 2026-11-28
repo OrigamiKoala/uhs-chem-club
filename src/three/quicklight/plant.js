@@ -25,6 +25,36 @@ import { BLOCK_FOOT, drum as drumGeo } from './terrain.js';
 
 export { buildLampPost, buildLandingPad } from '../ember/plant.js';
 
+/**
+ * A stock sphere or cone with its uvs laid in metres (u round it by arc length at radius r, v down it), so the kit's
+ * metric materials lie on a vessel's head at the same size as on its shell (the realism pass).
+ */
+function metricUV(geo, r, along = r * Math.PI) {
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2 * Math.PI * r, uv.getY(i) * along);
+  return geo;
+}
+const sphereM = (r, ...a) => metricUV(new THREE.SphereGeometry(r, ...a), r);
+const coneM = (r, h, seg) => metricUV(new THREE.ConeGeometry(r, h, seg), r, Math.hypot(r, h));
+
+/** The walk's nearest edge to a rectangle (m). */
+const walkGap = (plan, r) => {
+  let d = Infinity;
+  for (const v of plan.openVols) {
+    const q = v.rect;
+    const dx = Math.max(q.minX - r.maxX, 0, r.minX - q.maxX), dz = Math.max(q.minZ - r.maxZ, 0, r.minZ - q.maxZ);
+    d = Math.min(d, Math.hypot(dx, dz));
+  }
+  return d;
+};
+/** How near the walk (m) a process unit must stand to be built with broken edges; further back it is the plain metric kit. */
+const NEAR_WALK = 6;
+/**
+ * Which units get those edges: the low ones a player passes at hand height. A column's or a fin-fan's edges are metres
+ * overhead, where a 3 cm bevel cannot be seen.
+ */
+const NEAR_KINDS = new Set(['skid', 'pot', 'station', 'pumps', 'hdrum', 'exchangers']);
+
 /* ================================================================== where things may stand */
 
 /**
@@ -75,6 +105,8 @@ const hit = (list, r, gap = 0) => list.some(k => r.minX < k.maxX + gap && r.maxX
  */
 function buildRacks(w) {
   const k = kitFor(w), M = w.M, plan = w.plan;
+  // The pipes are long and their ends are flanged: a bevel on them would cost triangles nobody sees. Metric kit for them.
+  const kp = kitFor(Object.create(w, { builtKit: { value: 'metric' } }));
   const g = new THREE.Group();
   g.name = 'pipe-racks';
   // What a stanchion may not stand in: the structures (not the walk, which is tested on its own), the bund only to its wall.
@@ -171,7 +203,16 @@ function buildRacks(w) {
         const mat = rr >= 0.3 ? M.cladding : i % 3 === 1 ? M.rusted : M.steel;
         const pos = alongX ? [mid, y + t - 0.05 + rr, c] : [c, y + t - 0.05 + rr, mid];
         const rot = alongX ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0];
-        k.cyl(g, [rr, rr, len, rr > 0.2 ? 16 : 10], mat, pos, rot, rr > 0.2);
+        kp.cyl(g, [rr, rr, len, rr > 0.2 ? 16 : 10], mat, pos, rot, rr > 0.2);
+        // Each end: a blind flange on a bare line (bolted), the jacket's end cap on an insulated one.
+        // Each stands 12 mm proud of the pipe's own end, so the two faces never share a plane.
+        const th = rr >= 0.3 ? 0.06 : 0.05;
+        for (const [e, sg] of [[from, 1], [to, -1]]) {
+          const c0 = e + sg * (th / 2 - 0.012);
+          const fp = alongX ? [c0, pos[1], pos[2]] : [pos[0], pos[1], c0];
+          if (rr >= 0.3) kp.cyl(g, [rr + 0.02, rr + 0.02, th, 16], M.darkSteel, fp, rot, false);
+          else kp.cyl(g, [rr + 0.055, rr + 0.055, th, 12], M.darkSteel, fp, rot, false);
+        }
         s = c + rr + 0.16;
       }
     });
@@ -227,7 +268,11 @@ function buildWalkLamps(w) {
  * units; a plot that would touch the walk, a room, a heap, a structure or another unit is skipped.
  */
 function buildUnits(w) {
-  const k = kitFor(w), M = w.M, plan = w.plan;
+  const M = w.M, plan = w.plan;
+  // Broken edges where a player walks past (the kit's `'edges'`: boxes chamfered, cylinders plain), the plain metric kit
+  // further back, where a broken edge cannot be seen and would only cost triangles. `k` is switched per unit in `tryUnit`.
+  const kNear = kitFor(Object.create(w, { builtKit: { value: 'edges' } })), kFar = kitFor(Object.create(w, { builtKit: { value: 'metric' } }));
+  let k = kNear;
   const g = new THREE.Group();
   g.name = 'units';
   const R = rng(0x9a11);
@@ -247,7 +292,7 @@ function buildUnits(w) {
     plinth(cx, cz, y, 2 * r + 1.2, 2 * r + 1.2);
     k.cyl(g, [r + 0.1, r + 0.1, 3.0, 20], M.skirt, [cx, y + 0.3 + 1.5, cz]);
     k.cyl(g, [r, r, h, 20], M.cladding, [cx, y + 3.3 + h / 2, cz]);
-    const head = part(w.ctx, new THREE.SphereGeometry(r, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.cladding, cx, y + 3.3 + h, cz, { cast: true });
+    const head = part(w.ctx, sphereM(r, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.cladding, cx, y + 3.3 + h, cz, { cast: true });
     head.scale.y = 0.5;
     g.add(head);
     // Platforms round it every 6 m, a caged ladder up its side, the overhead line down to its reflux drum.
@@ -266,7 +311,7 @@ function buildUnits(w) {
     }
     k.cyl(g, [1.1, 1.1, len - 1.0, 20], M.steel, [cx, y + 2.6, cz], alongX ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0]);
     for (const s of [-1, 1]) {
-      const cap = part(w.ctx, new THREE.SphereGeometry(1.1, 18, 8, 0, Math.PI), M.steel, alongX ? cx + s * (len - 1.0) / 2 : cx, y + 2.6, alongX ? cz : cz + s * (len - 1.0) / 2, { cast: true });
+      const cap = part(w.ctx, sphereM(1.1, 18, 8, 0, Math.PI), M.steel, alongX ? cx + s * (len - 1.0) / 2 : cx, y + 2.6, alongX ? cz : cz + s * (len - 1.0) / 2, { cast: true });
       cap.scale.set(1, 1, 0.4);
       cap.rotation.y = alongX ? s * Math.PI / 2 : (s < 0 ? Math.PI : 0);
       g.add(cap);
@@ -327,7 +372,7 @@ function buildUnits(w) {
   const tank = (cx, cz, y, r, h) => {
     k.cyl(g, [r + 0.4, r + 0.4, 0.4, 28], M.concrete, [cx, y + 0.2, cz], null, false);
     k.cyl(g, [r, r, h, 28], M.cladding, [cx, y + 0.4 + h / 2, cz]);
-    const roof = part(w.ctx, new THREE.ConeGeometry(r + 0.05, r * 0.2, 28), M.cladding, cx, y + 0.4 + h + r * 0.1, cz, { cast: true });
+    const roof = part(w.ctx, coneM(r + 0.05, r * 0.2, 28), M.cladding, cx, y + 0.4 + h + r * 0.1, cz, { cast: true });
     g.add(roof);
     for (let yy = y + 2.4; yy < y + h; yy += 2.4) k.cyl(g, [r + 0.05, r + 0.05, 0.08, 28], M.steel, [cx, yy, cz], null, false);
     // The spiral stair: treads round the shell, a stringer up it.
@@ -349,7 +394,7 @@ function buildUnits(w) {
     // A knock-out pot on four legs: a vertical drum, its inlet and its level glass.
     for (const [dx, dz] of [[-0.7, -0.7], [0.7, -0.7], [-0.7, 0.7], [0.7, 0.7]]) k.box(g, [0.14, 1.6, 0.14], M.darkSteel, [cx + dx, y + 0.8, cz + dz]);
     k.cyl(g, [1.0, 1.0, 4.6, 18], M.steel, [cx, y + 1.6 + 2.3, cz]);
-    const top = part(w.ctx, new THREE.SphereGeometry(1.0, 18, 6, 0, Math.PI * 2, 0, Math.PI / 2), M.steel, cx, y + 6.2, cz, { cast: true });
+    const top = part(w.ctx, sphereM(1.0, 18, 6, 0, Math.PI * 2, 0, Math.PI / 2), M.steel, cx, y + 6.2, cz, { cast: true });
     top.scale.y = 0.5;
     g.add(top);
     k.cyl(g, [0.15, 0.15, 1.8, 10], M.steel, [cx + 1.6, y + 5.0, cz], [0, 0, Math.PI / 2], false);
@@ -388,6 +433,7 @@ function buildUnits(w) {
     if (!fits(r)) return false;
     const y = flatUnder(r);
     if (y === null) return false;
+    k = NEAR_KINDS.has(u.name) && walkGap(plan, r) < NEAR_WALK ? kNear : kFar;
     u.build(x, z, y, s, ax);
     placed.push(r);
     return true;
@@ -453,7 +499,7 @@ function buildBund(w) {
   for (const [x, z, r, h] of tanks) {
     k.cyl(g, [r + 0.35, r + 0.35, 0.35, 28], M.concrete, [x, y + 0.175, z], null, false);
     k.cyl(g, [r, r, h, 28], M.cladding, [x, y + 0.35 + h / 2, z]);
-    const roof = part(w.ctx, new THREE.ConeGeometry(r + 0.05, r * 0.22, 28), M.cladding, x, y + 0.35 + h + r * 0.11, z, { cast: true });
+    const roof = part(w.ctx, coneM(r + 0.05, r * 0.22, 28), M.cladding, x, y + 0.35 + h + r * 0.11, z, { cast: true });
     g.add(roof);
     for (let yy = y + 2.0; yy < y + h; yy += 2.0) k.cyl(g, [r + 0.05, r + 0.05, 0.07, 28], M.steel, [x, yy, z], null, false);
     // The outlet at the foot and its line along the bund floor toward the cellar.
@@ -569,6 +615,62 @@ function buildFlare(w) {
 /* ================================================================== the far country */
 
 /**
+ * The shield volcano east of the plant, centred at its own origin: 520 m to its foot (at y -45), its summit about 130 m.
+ * Height falls off as a shield's does (steep near the top, long and low at the foot); overlapping flow lobes swell the
+ * flanks; gullies are cut down the fall line, deepest mid-slope; a crater sits in the summit with a notched rim.
+ */
+function shieldGeometry() {
+  const R = 520, RINGS = 26, SEG = 112;
+  const hash = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+  const vn = (x, y) => {
+    const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+    return (hash(i, j) * (1 - u) + hash(i + 1, j) * u) * (1 - v) + (hash(i, j + 1) * (1 - u) + hash(i + 1, j + 1) * u) * v;
+  };
+  const fbm2 = (x, y) => vn(x, y) * 0.5 + vn(x * 2.1, y * 2.1) * 0.3 + vn(x * 4.3, y * 4.3) * 0.2;
+  const pos = [], col = [], idx = [];
+  for (let i = 0; i <= RINGS; i++) {
+    const t = i / RINGS;                      // 0 at the summit, 1 at the foot
+    const rho = R * Math.pow(t, 1.15);
+    for (let j = 0; j <= SEG; j++) {
+      const th = (j / SEG) * Math.PI * 2;
+      const x = Math.cos(th) * rho, z = Math.sin(th) * rho;
+      const ca = Math.cos(th), sa = Math.sin(th);
+      // The shield's profile, then the summit crater (a dish 9 m deep inside 34 m, the rim notched).
+      // A shield is a broad dome: flat over the summit, its flanks a few degrees, easing out at its foot.
+      let y = -45 + 175 * Math.pow(1 - Math.min(1, rho / R) ** 2, 1.7);
+      const rim = 34 + (vn(th * 3, 1.7) - 0.5) * 10;
+      if (rho < rim) y -= 9 * (1 - (rho / rim) ** 2) + (vn(th * 6, 3.1) < 0.3 ? 3 : 0);
+      // Flow lobes: broad swells that run downhill, a few metres high, most on the mid and lower flanks.
+      const lobe = (fbm2(ca * 2.2 + sa * 0.7 + 5, rho / 140) - 0.5) * 14 * Math.sin(Math.PI * Math.min(1, t * 1.2));
+      // Gullies: narrow cuts down the fall line, deepest mid-slope, wandering a little as they go.
+      const wander = (vn(rho / 90, th * 2) - 0.5) * 0.25;
+      const g1 = Math.pow(1 - Math.abs(Math.sin((th + wander) * 23 + vn(th * 4, 0.5) * 3)), 8);
+      const gDepth = g1 * 7 * Math.sin(Math.PI * Math.min(1, t * 1.15)) * (0.5 + vn(th * 9, 2.2));
+      y += lobe - gDepth;
+      pos.push(x, y, z);
+      // Paint: dark basalt; gullies darker; lobe tops and the upper slopes greyer with ash; the foot browner.
+      let c = [0.085, 0.084, 0.088];
+      const ash = Math.max(0, lobe / 14) * 0.35 + (1 - t) * 0.25;
+      c = c.map((v, q) => v + ([0.2, 0.195, 0.19][q] - v) * ash);
+      c = c.map(v => v * (1 - g1 * 0.45));
+      c = c.map((v, q) => v + ([0.13, 0.11, 0.095][q] - v) * Math.max(0, t - 0.8) * 1.5);
+      col.push(...c);
+    }
+  }
+  for (let i = 0; i < RINGS; i++) for (let j = 0; j < SEG; j++) {
+    const a = i * (SEG + 1) + j, b = a + 1, c = a + SEG + 1, d = c + 1;
+    idx.push(a, b, c, b, d, c);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+/**
  * Beyond the fence, to the horizon: the rod pylons out on the lava (north, east, south, west), the shield volcano the flows
  * came from in the east, the export tank farm in the south, three pressure spheres in the west, the storm's own line of pylons
  * marching north. `phys: 'ambient'`.
@@ -579,19 +681,13 @@ function buildFarCountry(w) {
   g.name = 'far-country';
   g.userData.phys = 'ambient';
   for (const [x, z, kind] of ROD_SITES) if (kind === 'far') lattice(w, g, x, land(x, z), z, ROD_H.far, 2.6);
-  // East: the shield the flows came from, low and broad, its summit crater's rim notched.
-  {
-    const geo = new THREE.ConeGeometry(520, 210, 48, 6, true);
-    const p = geo.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const vy = p.getY(i);
-      if (vy > 100) p.setY(i, 100 + (vy - 100) * 0.15 + Math.sin(Math.atan2(p.getZ(i), p.getX(i)) * 5) * 3);
-    }
-    geo.computeVertexNormals();
-    const rock = w.own(new THREE.MeshStandardMaterial({ color: 0x2a2829, roughness: 0.95, metalness: 0 }));
-    const m = part(ctx, geo, rock, 900, 60, -120);
-    g.add(m);
-  }
+  // East: the shield the flows came from, low and broad. Not a cone: a shield's profile is convex near the summit and
+  // flattens to its foot; its flanks are lobes of overlapping flows, cut by gullies down the fall line, with a summit
+  // crater whose rim is notched. Gullies are darker, flow lobes and the upper slopes greyer with ash (vertex paint).
+  const shield = part(ctx, shieldGeometry(), w.own(new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.95, metalness: 0 })), 900, 0, -120);
+  shield.name = 'shield-volcano';
+  shield.userData.noMerge = true;            // its vertex paint would not survive the bake
+  g.add(shield);
   // South: the export tank farm, six floating-roof tanks on the lower lava.
   for (let i = 0; i < 6; i++) {
     const x = -120 + (i % 3) * 58, z = 250 + Math.floor(i / 3) * 56;
@@ -603,7 +699,7 @@ function buildFarCountry(w) {
   // West: three pressure spheres on their legs, and the pipe to them on sleepers.
   for (let i = 0; i < 3; i++) {
     const x = -230, z = -70 + i * 34, y = land(x, z);
-    g.add(part(ctx, new THREE.SphereGeometry(12, 28, 18), M.cladding, x, y + 16, z));
+    g.add(part(ctx, sphereM(12, 28, 18), M.cladding, x, y + 16, z));
     for (let j = 0; j < 8; j++) {
       const a = j * Math.PI / 4;
       g.add(between(ctx, [x + Math.cos(a) * 11.5, y, z + Math.sin(a) * 11.5], [x + Math.cos(a) * 11.5, y + 16, z + Math.sin(a) * 11.5], 0.45, M.darkSteel, 8));

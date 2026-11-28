@@ -32,10 +32,10 @@ export const ROCK_IN = 0.3;
 
 const PLAN = {
   'site-1': { questId: 'q1-dblock', label: 'Bench 1 - The d-Block Assay', title: 'The d-Block', structure: 'core-store', kind: 'assay', skin: 'desk', plate: 'LDS-01' },
-  'site-2': { questId: 'q2-charges', label: 'Bench 2 - Many Charges', title: 'Many Charges', structure: 'manganese-face', kind: 'crusher', skin: 'deck', plate: 'LDS-02' },
+  'site-2': { questId: 'q2-charges', label: 'Bench 2 - Oxidation States', title: 'Oxidation States', structure: 'manganese-face', kind: 'crusher', skin: 'deck', plate: 'LDS-02' },
   'site-3': { questId: 'q3-complex', label: 'Bench 3 - Complex Ions', title: 'Complex Ions', structure: 'seep', kind: 'vats', skin: 'shelf', plate: 'LDS-03' },
-  'site-4': { questId: 'q4-shapes', label: 'Bench 4 - Shapes and Isomers', title: 'Shapes and Isomers', structure: 'drum-gallery', kind: 'gantry', skin: 'desk', plate: 'LDS-04' },
-  'site-5': { questId: 'q5-colour', label: 'Bench 5 - Colour Booth', title: 'Colour', structure: 'chimney', kind: 'booth', skin: 'shelf', plate: 'LDS-05' },
+  'site-4': { questId: 'q4-shapes', label: 'Bench 4 - Coordination Isomers', title: 'Coordination Isomers', structure: 'drum-gallery', kind: 'gantry', skin: 'desk', plate: 'LDS-04' },
+  'site-5': { questId: 'q5-colour', label: 'Bench 5 - Crystal Field Color', title: 'Crystal Field Color', structure: 'chimney', kind: 'booth', skin: 'shelf', plate: 'LDS-05' },
   'site-6': { questId: 'q6-spin', label: 'Bench 6 - Magnetism', title: 'Magnetism', structure: 'magnetite-pocket', kind: 'coil', skin: 'deck', plate: 'LDS-06' }
 };
 

@@ -24,7 +24,7 @@ const LABELS = {
   'site-2': 'Bench 2 - The Gas Laws',
   'site-3': 'Bench 3 - Ideal Gas Law',
   'site-4': 'Bench 4 - Partial Pressures',
-  'site-5': 'Bench 5 - Speed and Escape',
+  'site-5': 'Bench 5 - Effusion and Diffusion',
   'site-6': 'Bench 6 - Real Gases'
 };
 

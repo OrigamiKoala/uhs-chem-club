@@ -23,13 +23,13 @@ const plan = makeHarbourPlan();
 
 /** The labels as they stood before the rebuild: a site's words never change with its ground. */
 const LABELS = {
-  'site-1': 'Bench 1 - Three States',
-  'site-2': 'Bench 2 - The Grip Between',
-  'site-3': 'Bench 3 - Liquids and Vapour',
-  'site-4': 'Bench 4 - Kinds of Solid',
-  'site-5': 'Bench 5 - The Crossing',
-  'site-6': 'Bench 6 - Taken Into Solution',
-  'site-7': 'Bench 7 - Pulling Apart'
+  'site-1': 'Bench 1 - States of Matter',
+  'site-2': 'Bench 2 - Intermolecular Forces',
+  'site-3': 'Bench 3 - Vapor Pressure',
+  'site-4': 'Bench 4 - Types of Solids',
+  'site-5': 'Bench 5 - Phase Changes',
+  'site-6': 'Bench 6 - Solutions and Solubility',
+  'site-7': 'Bench 7 - Separating Mixtures'
 };
 
 const sites = ROOMS.map((rm, i) => {

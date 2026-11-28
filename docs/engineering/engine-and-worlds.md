@@ -424,6 +424,41 @@ iff a quest has a module). Plans: `docs/archive/2026-11-26/plans/learn-track.md`
   (`teeter/grime.js` `grimed`: damp band plus salt tide line; lift `userData` before `clone()`, which JSON-serialises
   it and every canvas map listed there); the ramps split off the ground mesh as their own mesh sharing its vertices;
   far-land erosion in the drawn mesh only (`relief`), faded round anything built out there, the walked height untouched.
+- **Brinewire realism pass (2026-11-27, `docs/plans/realism-brinewire.md`).** A user of `texture-pack.js`
+  (`BrinewireWorld.initPacks`, eight Poly Haven packs in `public/textures/brinewire/`, 3.0 MB, T4 only, graded by
+  `tools/textures/prep_brinewire.py`) and of Kettle's opt-in built kit (`builtKit = true`). Every material's repeat is
+  1 / its tile in metres; the bench keeps stock-box materials at the old repeat (`M.benchTop`, `M.benchDark`). In
+  `brinewire/terrain.js`: `block` is a chamfered box with uvs laid in metres from its FINAL world position on each face's
+  plane (`metricUV`), so the barrage's concrete runs on from piece to piece; `liftSpan` casts a face in 1.5 m lifts on
+  levels shared by the whole wall (each lift joint a V groove); `copingUnits` lays a coping in seeded precast units that
+  only ever dip below the old top; `tideStrip` draws the water's line as a ragged sheet in the old band's skin; the
+  paving darkens over the last half metre before every wall (`contact`, from `plan.work.walls`). A pack's maps can be
+  turned (`texture.rotation`) after `dressFromPack` when the photograph's direction is wrong for the world (the board
+  marks are laid level).
+- **Quicklight realism pass (2026-11-27, `docs/plans/realism-quicklight.md`).** A user of `texture-pack.js`
+  (`QuicklightWorld.initPacks`, seven Poly Haven packs in `public/textures/quicklight/`, 3.3 MB, T4 only, graded by
+  `tools/textures/prep_quicklight.py`) and of Kettle's built kit (`builtKit = true`). Two more OPT-IN kit values in
+  `kettle/kit.js`, for a world near the triangle budget: `builtKit: 'metric'` (uvs in metres with a seeded offset, no
+  chamfer or bevel, the stock triangle count) and `'edges'` (boxes chamfered, cylinders plain metric); a world passes
+  them per part with `kitFor(Object.create(w, { builtKit: { value: 'metric' } }))` (Quicklight: chamfered units only
+  within 6 m of a walk, the racks' pipes metric). `true` and unset are unchanged. In `quicklight/`: `terrain.js` `block`
+  is the kit's chamfered box laid in WORLD metres (`worldUV`), rails and posts are round tubes (`tube`), insulated lines
+  `duct`s; the ground is two meshes over one grid (`quicklight-ground` lava, `quicklight-yard` crushed basalt inside the
+  fence); far-land erosion in the drawn mesh only (`farRelief`). `grime.js`: foot grime on cloned concrete materials
+  from a `ttFoot` attribute (as Teeter's, vertical faces only, the foot found from each body's base when not set) and
+  `addSawnJoints`, world-space joints in the paving drawn crisp and faded before they shimmer.
+- **Verdigris realism pass (2026-11-27, `docs/plans/realism-verdigris.md`).** A user of `texture-pack.js`
+  (`VerdigrisWorld.initPacks`, four Poly Haven packs in `public/textures/verdigris/`, 1.9 MB, T4 only, graded by
+  `tools/textures/prep_verdigris.py`, which can also turn a photo a quarter turn with its normals turned to match) and
+  of Kettle's built kit (`builtKit = true`). In `verdigris/terrain.js`: every masonry and deck block is the kit's
+  chamfered box, `finish`ed with uvs in world metres and a `vdOut` vertex attribute (1 on a face whose point 15 cm in
+  front is outside every roofed volume); `stoneRun` copings, seeded `battlements`, `battered` footings, ragged breaches
+  with `rubbleStone`s; `grainAlong` cuts a post, rail or pile from one board of the plank photo (`BOARD_MID`, read off
+  the photo's gap rows) so no board gap crosses it; far-land erosion in the drawn mesh only (`relief`). `grime.js`
+  `grimed`: a waterline patch measured from the one water height (`WATER`): algae band, damp, an old high-water line,
+  on cloned materials, only where `vdOut` is 1. Water trap: a normal map derived from an 8-bit height draws the
+  height's contour lines as bright rims under a sharp sky reflection; `marshWater` returns `normalCanvas`, normals
+  worked from its tiling sine ripples, and the world swaps it in at a low `normalScale`.
 - **Bellows** (`unit04`, `three/bellows.js` + `bellows/`, `tools/gen-bellows-layout.mjs`, `tools/verify-bellows.mjs`; site rebuilt 2026-11-18, `docs/archive/2026-11-26/plans/bellows-world.md`
   "Site rebuild (2026-11-18)"): A GAS WORKS OVER THE CLOUD, NO GROUND. `bellows/works-plan.js` (pure data on `lib/workings.js`) declares the floor levels (`LEVEL`: stage and
   apron 0, sphere +8, tower hall -4, holder -8, mooring deck +4, cradle -5, cold deck +12), the structures (`PLINTH`, `SPHERE`, `HOLDER`, `COLDBOX`, `BAGS` with `bagBelly`),

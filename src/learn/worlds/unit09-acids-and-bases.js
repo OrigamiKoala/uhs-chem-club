@@ -28,7 +28,7 @@ export const UNIT_09 = {
   quests: [
     {
       id: 'q1-handover',
-      title: 'The Handover',
+      title: 'Proton Transfer',
       line: 'The Fifth calls the marsh water acid; find what an acid does to water.',
       arena: 'bench',
       stageCount: 7,
@@ -37,7 +37,7 @@ export const UNIT_09 = {
     },
     {
       id: 'q2-scale',
-      title: 'Reading the Scale',
+      title: 'pH and pOH',
       line: 'The Fifth reports one number for the marsh; find what pH actually measures.',
       arena: 'bench',
       stageCount: 9,
@@ -91,7 +91,7 @@ export const UNIT_09 = {
     },
     {
       id: 'q8-capacity',
-      title: 'pKa, Protonation and Capacity',
+      title: 'Buffer Capacity',
       line: 'The sluice held, then failed; find how much it could take.',
       arena: 'bench',
       stageCount: 8,

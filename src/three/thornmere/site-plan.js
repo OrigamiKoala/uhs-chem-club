@@ -112,12 +112,12 @@ const toward = (from, to) => { const dx = to.x - from.x; const dz = to.z - from.
  * the room's centre is the mound's centre, and the plate stands `ROOM.cz` behind it.
  */
 const HOSTS = [
-  ['site-1', 'q1-chains', 'Bench 1 - Carbon Chains', 'tapped-stump', 'M1', 'M0', 'THM-01', 'shelf'],
-  ['site-2', 'q2-unsat', 'Bench 2 - Double Bonds', 'tar-still', 'M2', 'M1', 'THM-02', 'deck'],
+  ['site-1', 'q1-chains', 'Bench 1 - Alkanes', 'tapped-stump', 'M1', 'M0', 'THM-01', 'shelf'],
+  ['site-2', 'q2-unsat', 'Bench 2 - Alkenes and Alkynes', 'tar-still', 'M2', 'M1', 'THM-02', 'deck'],
   ['site-3', 'q3-isomers', 'Bench 3 - Isomers', 'mirror-vault', 'M3', 'M2', 'THM-03', 'desk'],
   ['site-4', 'q4-groups', 'Bench 4 - Functional Groups', 'wood-acid-pit', 'M4', 'M2', 'THM-04', 'shelf'],
-  ['site-5', 'q5-reactions', 'Bench 5 - Making and Breaking', 'fallen-trunk', 'M5', 'M4', 'THM-05', 'deck'],
-  ['site-6', 'q6-polymers', 'Bench 6 - Long Chains', 'plate-works', 'M6', 'M5', 'THM-06', 'desk']
+  ['site-5', 'q5-reactions', 'Bench 5 - Organic Reactions', 'fallen-trunk', 'M5', 'M4', 'THM-05', 'deck'],
+  ['site-6', 'q6-polymers', 'Bench 6 - Polymers', 'plate-works', 'M6', 'M5', 'THM-06', 'desk']
 ];
 export const HOST_PLAN = Object.freeze(Object.fromEntries(HOSTS.map(([id, questId, label, structure, mound, from, plate, skin], i) => {
   const m = MOUNDS[mound];

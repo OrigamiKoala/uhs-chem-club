@@ -27,7 +27,7 @@ export const UNIT_04 = {
   quests: [
     {
       id: 'q1-knocks',
-      title: 'What Pressure Is',
+      title: 'Pressure and Temperature',
       line: 'Learn what a pressure meter measures and what temperature does.',
       arena: 'bench',
       stageCount: 7,
@@ -63,7 +63,7 @@ export const UNIT_04 = {
     },
     {
       id: 'q5-speed',
-      title: 'Speed and Escape',
+      title: 'Effusion and Diffusion',
       line: 'Compare how fast light and heavy gases escape and spread.',
       arena: 'bench',
       stageCount: 8,

@@ -33,14 +33,14 @@ export const APPROACH = 4.6;
 export const WALL_IN = 0.3;
 
 const PLAN = {
-  'site-1': { questId: 'q1-handover', label: 'Bench 1 - The Handover', title: 'The Handover', structure: 'winch-chamber', kind: 'flask', skin: 'deck', plate: 'VDG-01' },
-  'site-2': { questId: 'q2-scale', label: 'Bench 2 - Reading the Scale', title: 'Reading the Scale', structure: 'tide-tower', kind: 'meter', skin: 'desk', plate: 'VDG-02' },
+  'site-1': { questId: 'q1-handover', label: 'Bench 1 - Proton Transfer', title: 'Proton Transfer', structure: 'winch-chamber', kind: 'flask', skin: 'deck', plate: 'VDG-01' },
+  'site-2': { questId: 'q2-scale', label: 'Bench 2 - pH and pOH', title: 'pH and pOH', structure: 'tide-tower', kind: 'meter', skin: 'desk', plate: 'VDG-02' },
   'site-3': { questId: 'q3-weak', label: 'Bench 3 - Weak Acids', title: 'Weak Acids and Bases', structure: 'twin-cistern', kind: 'flask', skin: 'shelf', plate: 'VDG-03' },
   'site-4': { questId: 'q4-structure', label: 'Bench 4 - Acid Structure', title: 'Acid Strength and Structure', structure: 'acid-store', kind: 'race', skin: 'desk', plate: 'VDG-04' },
   'site-5': { questId: 'q5-salts', label: 'Bench 5 - Salts', title: 'Neutralization and Salts', structure: 'salt-cistern', kind: 'dish', skin: 'shelf', plate: 'VDG-05' },
   'site-6': { questId: 'q6-titrate', label: 'Bench 6 - Titration Curves', title: 'Titration Curves', structure: 'dosing-hall', kind: 'burette', skin: 'deck', plate: 'VDG-06' },
   'site-7': { questId: 'q7-buffer', label: 'Bench 7 - Buffers', title: 'Buffers', structure: 'water-gate', kind: 'flask', skin: 'deck', plate: 'VDG-07' },
-  'site-8': { questId: 'q8-capacity', label: 'Bench 8 - pKa and Capacity', title: 'pKa, Protonation and Capacity', structure: 'great-cistern', kind: 'plot', skin: 'desk', plate: 'VDG-08' }
+  'site-8': { questId: 'q8-capacity', label: 'Bench 8 - Buffer Capacity', title: 'Buffer Capacity', structure: 'great-cistern', kind: 'plot', skin: 'desk', plate: 'VDG-08' }
 };
 
 /** The way a plate looks, as a unit vector, for each `face`. */

@@ -107,7 +107,9 @@ export function createQlSkyDome(radius = 900) {
 }
 
 export function createQlLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#f3d4a4'), 1.9);
+  // The realism pass: a stronger sun and a lower, darker fill, so shade has depth. The bounce is the colour of what it
+  // bounces off (black basalt and grey concrete: dark and cool-neutral), well under the sky's.
+  const key = new THREE.DirectionalLight(new THREE.Color('#f3d4a4'), 2.35);
   key.position.copy(QUICKLIGHT_SUN).multiplyScalar(240);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -118,7 +120,7 @@ export function createQlLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#8da0b8'), new THREE.Color('#5a5144'), 1.3);
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#8b9cb3'), new THREE.Color('#3d3c3b'), 1.0);
   return { key, hemi };
 }
 

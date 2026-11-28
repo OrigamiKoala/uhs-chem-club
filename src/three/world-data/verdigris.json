@@ -108,7 +108,7 @@
         "rect": {
           "minX": 10.4,
           "maxX": 13.6,
-          "minZ": 22,
+          "minZ": 24,
           "maxZ": 40
         }
       },
@@ -128,8 +128,8 @@
         "rect": {
           "minX": 8.8,
           "maxX": 15.2,
-          "minZ": 15.6,
-          "maxZ": 22
+          "minZ": 17.6,
+          "maxZ": 24
         }
       },
       {
@@ -179,7 +179,7 @@
           "minX": 10.4,
           "maxX": 13.6,
           "minZ": -2,
-          "maxZ": 15.6
+          "maxZ": 17.6
         }
       },
       {
@@ -771,7 +771,7 @@
         1.6,
         31.8
       ],
-      "label": "Bench 1 - The Handover",
+      "label": "Bench 1 - Proton Transfer",
       "structure": "winch-chamber",
       "built": true,
       "room": "room-1"
@@ -790,7 +790,7 @@
         3.6,
         20
       ],
-      "label": "Bench 2 - Reading the Scale",
+      "label": "Bench 2 - pH and pOH",
       "structure": "tide-tower",
       "built": true,
       "room": "room-2"
@@ -904,7 +904,7 @@
         -2,
         -56
       ],
-      "label": "Bench 8 - pKa and Capacity",
+      "label": "Bench 8 - Buffer Capacity",
       "structure": "great-cistern",
       "built": true,
       "room": "room-8"

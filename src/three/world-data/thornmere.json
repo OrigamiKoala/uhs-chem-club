@@ -143,7 +143,7 @@
         1.6,
         32.55
       ],
-      "label": "Bench 1 - Carbon Chains",
+      "label": "Bench 1 - Alkanes",
       "structure": "tapped-stump",
       "mound": "M1",
       "built": true,
@@ -189,7 +189,7 @@
         1.6,
         7.92
       ],
-      "label": "Bench 2 - Double Bonds",
+      "label": "Bench 2 - Alkenes and Alkynes",
       "structure": "tar-still",
       "mound": "M2",
       "built": true,
@@ -459,7 +459,7 @@
         1.6,
         -42.2
       ],
-      "label": "Bench 5 - Making and Breaking",
+      "label": "Bench 5 - Organic Reactions",
       "structure": "fallen-trunk",
       "mound": "M5",
       "built": true,
@@ -577,7 +577,7 @@
         1.6,
         -60.69
       ],
-      "label": "Bench 6 - Long Chains",
+      "label": "Bench 6 - Polymers",
       "structure": "plate-works",
       "mound": "M6",
       "built": true,
