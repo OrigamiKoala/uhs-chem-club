@@ -27,9 +27,9 @@
         "kind": "deck",
         "rect": {
           "minX": 58,
-          "maxX": 88,
-          "minZ": 38,
-          "maxZ": 72
+          "maxX": 92,
+          "minZ": 34,
+          "maxZ": 76
         }
       },
       {
@@ -747,9 +747,9 @@
     {
       "asset": "landing-pad",
       "pos": [
-        74,
+        77,
         0,
-        57
+        55
       ],
       "rotY": 0,
       "radius": 10,

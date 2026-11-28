@@ -24,6 +24,7 @@ const firstWorld = CREW_WORLDS[0];
 await import(`../../src/three/${firstWorld.module}.js`);
 const { bayBoxes } = await import('../../src/three/bench-bay.js');
 const { WalkGrid, bayRects } = await import('../../src/npc/crew-sim.js');
+const X = await import('../../src/three/ship-exterior.js');
 
 const only = process.argv.slice(2);
 const kit = makeKit();
@@ -45,6 +46,11 @@ for (const iw of INTRO_WORLDS) {
   const sp = world.data.spawn.pos || world.data.spawn;
   const spawn = [sp[0], sp[2]];
   const marks = (world.data.landmarks || []).map(l => ({ kind: l.asset || l.id, p: l.pos || l.position })).filter(m => m.p).map(m => ({ kind: m.kind, x: m.p[0], z: m.p.length > 2 ? m.p[2] : m.p[1] }));
+  // Keep every prop clear of where the Avalon lands (hull, ramp and ramp foot), so a prop never pushes the ship off its pad.
+  const landing = X.solveLanding(world, X.landingPrefsFor(world));
+  const standClear = { minX: X.RAMP_FOOT.x - 1.4, maxX: X.RAMP_FOOT.x + 4.5, minZ: X.RAMP_FOOT.z - 2.2, maxZ: X.RAMP_FOOT.z + 2.2 };
+  const shipRects = [X.SHIP_FOOTPRINT.body, X.SHIP_FOOTPRINT.ramp, standClear].map(r => X.localRectToWorld(landing, r));
+  const offShip = (x, z, r) => shipRects.every(b => Math.hypot(Math.max(b.minX, Math.min(x, b.maxX)) - x, Math.max(b.minZ, Math.min(z, b.maxZ)) - z) > r + 0.8);
   const taken = [];   // { x, z, r }
 
   /** Cells reachable from `from`, with walking distance, by a flood on the grid. */
@@ -65,7 +71,7 @@ for (const iw of INTRO_WORLDS) {
     }
     return q.map(([i, j]) => ({ c: grid.center(i, j), d: dist[i * grid.NJ + j] }));
   };
-  const freeOf = (x, z, r) => posts.every(p => Math.hypot(p[0] - x, p[1] - z) > 3) && items.every(p => Math.hypot(p[0] - x, p[1] - z) > 3) &&
+  const freeOf = (x, z, r) => offShip(x, z, r) && posts.every(p => Math.hypot(p[0] - x, p[1] - z) > 3) && items.every(p => Math.hypot(p[0] - x, p[1] - z) > 3) &&
     taken.every(t => Math.hypot(t.x - x, t.z - z) > t.r + r + 3);
   const farFromBenches = (x, z, keep = null) => sites.every(s => s.q === keep || Math.hypot(s.a[0] - x, s.a[1] - z) > 6);
   const clear = (x, z, r) => !grid.blockedAt(x, z, r);

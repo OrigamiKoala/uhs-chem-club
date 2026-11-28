@@ -44,6 +44,7 @@ const { LodestoneWorld } = await import('../src/three/lodestone.js');
 const { ThornmereWorld } = await import('../src/three/thornmere.js');
 const { CinderHaloWorld } = await import('../src/three/cinderhalo.js');
 const { WorldScene } = await import('../src/three/world.js');
+const { MysterySite } = await import('../src/three/mystery/site.js');
 
 let failed = false;
 function check(cond, msg, detail = '') {
@@ -84,8 +85,12 @@ const boxMeets = (a, c) => {
   }
   return c.minX !== undefined && a.minX < c.maxX && a.maxX > c.minX && a.minZ < c.maxZ && a.maxZ > c.minZ;
 };
-for (const [name, W, bound] of [['Tallow', TallowWorld, 100], ['Lanternfall', LanternfallWorld, 100], ['Ligar', LigarWorld, 100], ['Bellows', BellowsWorld, 100], ['Ember Reach', EmberReachWorld, 100], ['Mirrowen', MirrowenWorld, 100], ['Kettle', KettleWorld, 100], ['Teeter', TeeterWorld, 100], ['Verdigris', VerdigrisWorld, 100], ['Brinewire', BrinewireWorld, 100], ['Quicklight', QuicklightWorld, 100], ['Lodestone', LodestoneWorld, 100], ['Thornmere', ThornmereWorld, 100], ['Cinder Halo', CinderHaloWorld, 100], ['Erebus', WorldScene, 85]]) {
+for (const [name, key, W, bound] of [['Tallow', 'tallow', TallowWorld, 100], ['Lanternfall', 'lanternfall', LanternfallWorld, 100], ['Ligar', 'ligar', LigarWorld, 100], ['Bellows', 'bellows', BellowsWorld, 100], ['Ember Reach', 'ember', EmberReachWorld, 100], ['Mirrowen', 'mirrowen', MirrowenWorld, 100], ['Kettle', 'kettle', KettleWorld, 100], ['Teeter', 'teeter', TeeterWorld, 100], ['Verdigris', 'verdigris', VerdigrisWorld, 100], ['Brinewire', 'brinewire', BrinewireWorld, 100], ['Quicklight', 'quicklight', QuicklightWorld, 100], ['Lodestone', 'lodestone', LodestoneWorld, 100], ['Thornmere', 'thornmere', ThornmereWorld, 100], ['Cinder Halo', 'cinderhalo', CinderHaloWorld, 100], ['Erebus', null, WorldScene, 85]]) {
   const world = new W(null);
+  if (key) {
+    const ms = new MysterySite(world, key);
+    for (const c of ms.colliders) world.colliders.push(c);
+  }
   const L = X.solveLanding(world, X.landingPrefsFor(world));
   const boxes = X.shipWorldColliders(L);
   const clashes = [];
@@ -98,6 +103,15 @@ for (const [name, W, bound] of [['Tallow', TallowWorld, 100], ['Lanternfall', La
     : inside(c, foot, 0.25));
   check(footFree && !boxes.some(b => inside(b, foot, 0.25)), `${name}: the ramp's foot is open ground`);
   check(Math.abs(foot.x) < bound - 1 && Math.abs(foot.z) < bound - 1, `${name}: the ramp's foot is inside the walk`);
+  const pad = world.data?.landmarks?.find(l => l.asset === 'landing-pad');
+  const padVol = pad && world.plan?.volumeAt?.(pad.pos[0], pad.pos[2]);
+  if (padVol) {
+    const shipVol = world.plan.volumeAt(L.x, L.z);
+    const footVol = world.plan.volumeAt(foot.x, foot.z);
+    check(shipVol?.id === padVol.id && footVol?.id === padVol.id,
+      `${name}: ship and ramp foot land inside ${padVol.id}`,
+      `ship in ${shipVol?.id || 'outside'}, foot in ${footVol?.id || 'outside'}`);
+  }
   const sill = L.deckY + X.HATCH_SILL.y;
   const drop = sill - world.getTerrainHeight(foot.x, foot.z);
   check(drop > 0 && drop < 4.3, `${name}: the sill is a ramp's reach above the ground (${drop.toFixed(2)} m)`);

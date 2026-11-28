@@ -59,12 +59,12 @@ for (let i = 0; i < sites.length; i++) for (let j = i + 1; j < sites.length; j++
 // The alleys are lit from the pipe racks over them (`quicklight/plant.js`); posts stand only on the two open yards.
 const landmarks = [{ asset: 'landing-pad', pos: [PAD[0], GRADE, PAD[1]], rotY: 0, radius: 10, minTier: 'T3' }];
 const post = (x, z) => landmarks.push({ asset: 'lamp-post', pos: [round(x), round(plan.height(x, z)), round(z)], rotY: 0, radius: 0.6, minTier: 'T3' });
-// The laydown yard: along its east edge by the two alleys' mouths, and its south edge.
-post(-61.2, -60);
-post(-61.2, -76);
-post(-74, -63.2);
-post(-90.6, -63.2);
-post(-90.6, -90.6);
+// The laydown yard: along its east edge by the two alleys' mouths, and its south/west perimeter clear of the pad.
+post(-61.2, -56);
+post(-61.2, -74);
+post(-74, -55.4);
+post(-93.6, -55.4);
+post(-93.6, -93.6);
 // The flare yard: inside its fence, round the Flare's ground.
 for (const [x, z] of [[41.4, 60], [41.4, 74], [41.4, 88.6], [56, 88.6], [56, 53.4], [72, 53.4], [84.6, 60], [55, 67]]) post(x, z);
 for (const l of landmarks) {

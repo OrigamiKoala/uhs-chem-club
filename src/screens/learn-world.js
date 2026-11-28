@@ -326,24 +326,22 @@ function renderWalkHud(container, world) {
   container.innerHTML = `
     <div class="learn-walk-hud${isCollapsed ? ' collapsed' : ''}" data-world="${esc(world.id)}">
       <div class="learn-walk-card learn-walk-card-expanded">
-        <div class="learn-walk-header">
-          <a href="#/learn" class="btn-secondary quest-btn-sm learn-walk-back" style="text-decoration: none;">All Worlds</a>
-          <span class="eyebrow lit">${esc(world.unit.toUpperCase())}</span>
-          <button type="button" class="btn-secondary quest-btn-sm learn-walk-toggle" aria-label="Collapse HUD" title="Collapse HUD">−</button>
+        <div class="learn-walk-top">
+          <div class="learn-walk-id">
+            <span class="learn-walk-name">${esc(world.world)}</span>
+            <span class="learn-walk-topic">${esc(world.unit)} · ${esc(world.title)}</span>
+          </div>
+          <div class="learn-walk-top-right">
+            <span class="learn-walk-count">${prog.questsComplete}/${total}</span>
+            <button type="button" class="btn-secondary quest-btn-sm learn-walk-toggle" aria-label="Collapse HUD" title="Collapse HUD">−</button>
+          </div>
         </div>
-
-        <div class="learn-walk-identity">
-          <span class="learn-walk-name">${esc(world.world)}</span>
-          <span class="learn-walk-count">${prog.questsComplete}/${total}</span>
-        </div>
-        <div class="learn-walk-topic">${esc(world.title)}</div>
 
         <div class="learn-walk-keys">
           <button type="button" class="btn-secondary quest-btn-sm learn-sites-trigger m-tap" id="learn-sites-trigger">Quests</button>
           ${practiceKey(world)}
+          <a href="#/learn" class="btn-secondary quest-btn-sm learn-walk-back" style="text-decoration: none;">All Worlds</a>
         </div>
-
-        <div class="learn-walk-hint">WASD · Drag · E</div>
       </div>
 
       <div class="learn-walk-card learn-walk-card-collapsed">

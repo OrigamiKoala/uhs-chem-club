@@ -54,7 +54,7 @@ export const MOAT_W = 16;
 
 export const SPAWN = [63, DECK + 1.6, 42];
 export const SPAWN_LOOK = [54, DECK + 1.2, 45];
-export const PAD = [74, 57];
+export const PAD = [77, 55];
 /** The Leach's ground on the pump stage in the ward's north-east corner; the sump lies under the stage's north edge. */
 export const ARENA = { boss: [32, 0, -50], player: [32, 1.6, -34] };
 
@@ -103,7 +103,7 @@ function declare() {
   const link = (...ids) => { for (let i = 0; i < ids.length - 1; i++) L.push([ids[i], ids[i + 1]]); };
 
   /* ---- outside the fort: the landing stage in the reeds, the boardwalk to the gate, the bridge over the moat. */
-  flat('stage', 'deck', [58, 88, 38, 72], DECK);
+  flat('stage', 'deck', [58, 92, 34, 76], DECK);
   flat('w1', 'deck', [36.8, 58, 43.4, 46.6], DECK);
   flat('j1', 'deck', [33.6, 36.8, 43.4, 46.6], DECK);
   flat('w2', 'deck', [33.6, 36.8, 46.6, 54.4], DECK);

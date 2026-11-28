@@ -53,7 +53,7 @@ export const PLANT = { minX: -78, maxX: 98, minZ: -100, maxZ: 104 };
 /** The sunk tank bund on the lower flow, south of b2. */
 export const BUND = { minX: -60, maxX: -14, minZ: -17, maxZ: 5.5, wall: 0.5 };
 
-export const PAD = [-78, -78];
+export const PAD = [-79, -74.5];
 export const SPAWN = [-63, GRADE + 1.6, -68.5];
 export const SPAWN_LOOK = [-40, GRADE + 1.4, -68.5];
 /** The Flare's ground in the flare yard, the stack to its east. */
@@ -190,7 +190,7 @@ function openVolumes() {
   const add = (id, kind, rc, floor) => { const v = { id, kind, rect: rc, floor, openings: [] }; V.push(v); return v; };
   const flat = y => ({ y0: y });
   // The lower grid.
-  add('yard', 'yard', rect(-92, -60, -92, -56), flat(GRADE));
+  add('yard', 'yard', rect(-95, -60, -95, -54), flat(GRADE));
   add('b1', 'alley', rect(-60, 60, -72, -65), flat(GRADE));
   add('a1', 'alley', rect(-60, -53, -65, -26), flat(GRADE));
   add('a2', 'alley', rect(-10, -3, -65, -26), flat(GRADE));

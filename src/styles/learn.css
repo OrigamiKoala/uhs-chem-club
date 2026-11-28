@@ -150,10 +150,69 @@
   color: var(--text-muted);
 }
 
-.learn-tag-quiet {
+.learn-tag-quiet,
+.learn-tag-xs {
   font-size: 0.58rem;
   padding: 1px 5px;
 }
+
+.learn-row-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex: none;
+}
+
+/* Segmented tabs: Quests | Worked Problems */
+.learn-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-top: 1rem;
+  border-bottom: 1px solid var(--border-durasteel);
+}
+
+.learn-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  margin-bottom: -1px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.learn-tab:hover { color: var(--text-primary); }
+
+.learn-tab.is-active {
+  color: var(--text-bright);
+  border-bottom-color: var(--accent-amber);
+}
+
+.learn-tab:focus-visible {
+  outline: 1px solid var(--accent-amber);
+  outline-offset: -2px;
+}
+
+.learn-tab-count {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.learn-tab.is-active .learn-tab-count { color: var(--accent-gold); }
 
 .learn-quest-row.is-next { border-color: var(--border-strong); }
 .learn-quest-row.learn-complete .learn-quest-index { color: var(--text-muted); }
@@ -1575,12 +1634,11 @@
 .learn-walk-card {
   pointer-events: auto;
   position: relative;
-  background: rgba(14, 12, 10, 0.88);
+  background: rgba(14, 13, 17, 0.9);
   border: 1px solid var(--border-durasteel);
-  border-left: 2px solid var(--accent-amber);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-  padding: 0.65rem 0.85rem;
-  width: min(260px, calc(100vw - 3rem));
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 10px 26px rgba(0, 0, 0, 0.65);
+  padding: 0.75rem 0.85rem 0.65rem;
+  width: min(280px, calc(100vw - 3rem));
   box-sizing: border-box;
 }
 
@@ -1601,33 +1659,55 @@
   display: flex;
 }
 
-.learn-walk-header {
+.learn-walk-top {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.45rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
 
-.learn-walk-unit {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
+.learn-walk-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.learn-walk-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-bright);
+  line-height: 1.15;
 }
 
-.learn-walk-back {
-  font-size: 0.68rem;
-  padding: 3px 8px;
-  min-height: 26px;
+.learn-walk-topic {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  color: var(--accent-gold);
+}
+
+.learn-walk-top-right {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: none;
+}
+
+.learn-walk-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
 }
 
 .learn-walk-toggle {
-  margin-left: auto;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 2px 8px;
-  min-height: 26px;
+  padding: 2px 7px;
+  min-height: 24px;
   line-height: 1;
 }
 
@@ -1635,55 +1715,32 @@
   font-size: 0.72rem;
   padding: 6px 12px;
   min-height: 32px;
-  background: rgba(14, 12, 10, 0.88);
+  background: rgba(14, 13, 17, 0.9);
   border: 1px solid var(--border-durasteel);
-  border-left: 2px solid var(--accent-amber);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 8px 24px rgba(0, 0, 0, 0.65);
   color: var(--text-bright);
-}
-
-.learn-walk-identity {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.learn-walk-name {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-bright);
-}
-
-.learn-walk-count {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--accent-gold);
-}
-
-.learn-walk-topic {
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.learn-walk-hint {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin-top: 0.45rem;
 }
 
 .learn-walk-keys {
   display: flex;
-  gap: 0.45rem;
-  margin-top: 0.55rem;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border-durasteel);
+  align-items: stretch;
+}
+
+.learn-walk-keys > .learn-sites-trigger,
+.learn-walk-keys > .learn-walk-back,
+.learn-walk-keys > [data-practice-world] {
+  flex: 1 1 0;
+  display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.68rem;
+  padding: 5px 8px;
+  min-height: 30px;
 }
 
 /* Quests & Worked Problems modal (no backdrop-filter over live WebGL canvas) */
