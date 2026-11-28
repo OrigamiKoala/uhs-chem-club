@@ -109,8 +109,24 @@ export function buildTrack(w) {
   for (const dx of [-0.72, 0.72]) k.box(g, [0.07, 0.1, Z1 - Z0], M.steel, [X + dx, 0.05, (Z0 + Z1) / 2], null, false);
   for (let z = Z0 + 0.4; z < Z1; z += 0.75) k.box(g, [2.3, 0.04, 0.22], M.timber, [X, 0.02, z], null, false);
   for (const z of [Z0 - 0.3, Z1 + 0.3]) {                              // a buffer stop at each end
-    k.box(g, [2.0, 0.9, 0.3], M.timber, [X, 0.75, z]);
-    for (const dx of [-0.72, 0.72]) k.bar(g, [X + dx, 0.05, z + (z < 30 ? 1.2 : -1.2)], [X + dx, 1.1, z], 0.12, M.rusted);
+    if (!w.builtKit) {
+      k.box(g, [2.0, 0.9, 0.3], M.timber, [X, 0.75, z]);
+      for (const dx of [-0.72, 0.72]) k.bar(g, [X + dx, 0.05, z + (z < 30 ? 1.2 : -1.2)], [X + dx, 1.1, z], 0.12, M.rusted);
+      continue;
+    }
+    // Built: a stop made of rail. Two posts on the line, raked struts behind them, a timber headstock across at buffer
+    // height, and the two sprung buffers the wagons meet, facing down the line.
+    const toward = z < 30 ? 1 : -1;
+    for (const dx of [-0.72, 0.72]) {
+      k.box(g, [0.14, 1.05, 0.12], M.rusted, [X + dx, 0.525, z]);
+      k.bar(g, [X + dx, 0.05, z - toward * 1.2], [X + dx, 0.98, z - toward * 0.05], 0.1, M.rusted);
+      k.box(g, [0.3, 0.05, 0.3], M.darkSteel, [X + dx, 0.025, z - toward * 1.2], null, false);
+    }
+    k.box(g, [2.0, 0.34, 0.24], M.timber, [X, 0.86, z + toward * 0.18]);
+    for (const dx of [-0.85, 0.85]) {
+      k.cyl(g, [0.1, 0.12, 0.3, 12], M.darkSteel, [X + dx, 0.86, z + toward * 0.45], [Math.PI / 2, 0, 0]);
+      k.cyl(g, [0.19, 0.19, 0.05, 16], M.darkSteel, [X + dx, 0.86, z + toward * 0.62], [Math.PI / 2, 0, 0]);
+    }
   }
   g.userData.colliders = [{ x: X, z: Z0 - 0.3, r: 1.1 }, { x: X, z: Z1 + 0.3, r: 1.1 }];
   return g;

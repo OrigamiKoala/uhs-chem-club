@@ -9,6 +9,7 @@
 
 import * as THREE from 'three';
 import { rng, noise3, part, put, between, strut, rockGeometry, roughLathe, yawPoint } from '../ember/kit.js';
+import { chunkGeometry } from '../lanternfall/kit.js';
 
 export { rng, noise3, part, put, between, strut, rockGeometry, roughLathe, yawPoint };
 
@@ -46,4 +47,27 @@ export function crystalGeometry(r, h, { point = 0.22, seed = 1 } = {}) {
   out.setIndex(idx);
   out.rotateY(seed * 0.7);
   return out;
+}
+
+/**
+ * Box-projected uvs from position, `metres` per uv unit, for a geometry that has none (a chunk); the materials that
+ * take world uvs (`mirrowen.js` initSurfaces) ignore them, the rest read them.
+ */
+export function boxUv(g, metres = 2) {
+  const p = g.attributes.position;
+  if (!g.attributes.normal) g.computeVertexNormals();
+  const n = g.attributes.normal;
+  const uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i));
+    const [a, b] = ay > 0.7 ? [p.getX(i), p.getZ(i)] : ax > 0.7 ? [p.getZ(i), p.getY(i)] : [p.getX(i), p.getY(i)];
+    uv[i * 2] = a / metres; uv[i * 2 + 1] = b / metres;
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return g;
+}
+
+/** A worn, chamfered block (`chunkGeometry`, inside the box `sx, sy, sz`) with box-projected uvs, centred on the origin. */
+export function blockGeometry(sx, sy, sz, { seed = 1, round = 0.25, wear = 0.006, chip = 0.015, cell = 0.3, uvMetres = 1 } = {}) {
+  return boxUv(chunkGeometry(sx, sy, sz, { seed, round, wear, chip, cell }), uvMetres);
 }

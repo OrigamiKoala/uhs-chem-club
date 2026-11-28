@@ -66,7 +66,7 @@ const EMBER_EXPOSURE = 0.98;
 // and ice that throws light back, so it takes a little less exposure than Ember Reach.
 const MIRROWEN_EXPOSURE = 0.9;
 // Kettle is white crust under an amber haze: bright ground, so the exposure sits a little under Ember Reach's.
-const KETTLE_EXPOSURE = 0.94;
+const KETTLE_EXPOSURE = 1.02;   // realism pass: the photographed floors and brick are darker than the procedural ones
 // Teeter is white crust and pale brine under a near-white haze: the brightest ground of the Learn worlds, so it takes the least exposure.
 const TEETER_EXPOSURE = 0.88;
 // Verdigris is dark green water and olive peat under a low grey-green haze: mid-bright ground, so it sits between Teeter and Mirrowen.

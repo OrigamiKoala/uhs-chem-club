@@ -103,3 +103,34 @@ export function saltSlab(opts = {}) {
     return c;
   }, { aoRadius: S >> 6, normalStrength: 2.0 });
 }
+
+/**
+ * Weathered boards (the realism pass): grey-brown planks of uneven width standing along v, open grain, a dark gap
+ * between each. The timber's lower-tier surface and the fallback until the photographed planks land; one tile is
+ * 2 m of boarding.
+ */
+export function weatheredBoards(opts = {}) {
+  const { size = texSize(512), seed = 5 } = opts;
+  const S = size;
+  const sd = hashStr(`boards${seed}`);
+  // Board edges across u: eleven boards of 0.7x to 1.3x the mean width.
+  const edges = [0];
+  for (let i = 0; i < 11; i++) edges.push(edges[i] + 0.7 + (((Math.imul(i + 3, 2654435761) ^ sd) >>> 0) / 4294967296) * 0.6);
+  const total = edges[edges.length - 1];
+  const boardAt = u => { const t = u * total; let i = 0; while (i < edges.length - 2 && edges[i + 1] <= t) i++; return { i, f: (t - edges[i]) / (edges[i + 1] - edges[i]) }; };
+  const height = heightField(S, (u, v) => {
+    const { i, f } = boardAt(u);
+    const gap = Math.min(f, 1 - f) < 0.035 ? -0.35 : 0;
+    const grain = fbm(u * 40 + i * 3.1, v * 3, { octaves: 3, period: 40, seed: sd ^ i }) - 0.5;
+    return 0.6 + gap + grain * 0.18;
+  });
+  const [lo, hi, grey] = [hex('#4b4136'), hex('#7d705f'), hex('#8e8a80')];
+  return surface(S, height, (h, u, v, rough) => {
+    const { i } = boardAt(u);
+    const tone = (((Math.imul(i + 11, 40503) ^ sd) >>> 0) / 4294967296);
+    let c = mix(lo, hi, clamp01((h - 0.3) * 1.6));
+    c = mix(c, grey, 0.25 + tone * 0.35);
+    rough(0.92 - h * 0.08);
+    return c;
+  }, { aoRadius: S >> 7, aoStrength: 1.1, normalStrength: 2.2 });
+}

@@ -17,6 +17,9 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { chamferBoxGeometry } from '../kettle/kit.js';
+import { makeRng, hashStr, fbm, ridged } from '../materials/pbr-kit.js';
+import { NO_FOOT } from './grime.js';
 import {
   LEVEL, FACE, WALLS, WALL_T, DIKE_W, KERB_T, PAN, EDGE, STAIR, RAMP_L, TERRACE_Z, SHELF, FLOOR4, DOOR, ROOF_T,
   bandAt, dikeStart, shaftOf, shaftPier
@@ -102,12 +105,16 @@ const COLOURS = [
  */
 export function buildGroundGeometry(field, plan) {
   const br = plan.breaks();
-  const xs = ladder(-900, 900, -70, 100, -160, 150, 2, 3.5, br.xs);
+  // Extra rows where the dikes meet the walls' feet, so the ground can darken over the last metre (`footShade`).
+  const footXs = [];
+  for (const F of [...[1, 2, 3, 4].map(k => FACE[k]), SHELF.maxX]) for (const d of [0.12, 0.45, 1.1, 2.2]) footXs.push(Math.round((F - d) * 100) / 100);
+  const xs = ladder(-900, 900, -70, 100, -160, 150, 2, 3.5, [...br.xs, ...footXs]);
   const zs = ladder(-900, 900, -40, 48, -150, 150, 2, 3.5, br.zs);
   const nx = xs.length, nz = zs.length;
   // A vertex on or in a roofed volume takes the land's height (its cells are holes; its edges meet the land round it).
   const roofedAt = (x, z) => plan.roofed.find(v => x >= v.rect.minX - 1e-6 && x <= v.rect.maxX + 1e-6 && z >= v.rect.minZ - 1e-6 && z <= v.rect.maxZ + 1e-6);
-  const V = (x, z) => (roofedAt(x, z) ? plan.land(x, z) : field.height(x, z));
+  // The far land is drawn eroded (`relief`); the height the game walks on is the plan's, and no one walks out there.
+  const V = (x, z) => (roofedAt(x, z) ? plan.land(x, z) : field.height(x, z)) + relief(x, z);
   const pos = new Float32Array(nx * nz * 3), nor = new Float32Array(nx * nz * 3), col = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2);
   const e = 0.01;
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
@@ -126,45 +133,146 @@ export function buildGroundGeometry(field, plan) {
     let m = 0.94 + 0.06 * Math.sin(x * 0.37 + Math.sin(z * 0.21) * 2) * Math.sin(z * 0.29 + x * 0.05);
     // THE TRODDEN WAY: down the middle of the stair and along each dike's line, the clay is worn darker and the salt dust gone.
     m *= 1 - 0.13 * trodden(plan, x, z);
+    // WHERE THE GROUND MEETS A WALL it is damp and darker: brine creeps out at the foot and dust never dries there.
+    if (s === 0) m *= footShade(x);
     // The hill pales into a white salt scar down the gully above the spring, where the brine seeps out of the rock.
     if (s === 3) c = c.map((v, q) => v + (0.95 - v) * scar(x, z));
+    // Down a gully the rock is darker (shadowed, damp, its salt washed out); along a ridge it is paler.
+    if (s === 3 || s === 5) m *= reliefAt(x, z).shade;
     for (let q = 0; q < 3; q++) col[k * 3 + q] = c[q] * m;
-    uv[k * 2] = x / 7; uv[k * 2 + 1] = z / 7;
+    // Uvs in metres: the material's repeat is 1 / its tile (`teeter.js`).
+    uv[k * 2] = x; uv[k * 2 + 1] = z;
   }
-  const idx = [];
+  // THE STAIR'S RAMPS are their own mesh (`userData.stair`, the same vertices): they are laid in setts, not clay.
+  const idx = [], stairIdx = [];
   for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) {
     const cx = (xs[i] + xs[i + 1]) / 2, cz = (zs[j] + zs[j + 1]) / 2;
     if (plan.inRoofed(cx, cz)) continue;
     const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1;
-    idx.push(a, c, b, b, c, d);
+    (plan.volumeAt(cx, cz)?.kind === 'ramp' ? stairIdx : idx).push(a, c, b, b, c, d);
   }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
-  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-  g.setIndex(idx);
+  const make = (index) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(index);
+    return g;
+  };
+  const g = make(idx);
   g.computeBoundingSphere();
+  // The stair keeps only the vertices it uses.
+  const stair = make(stairIdx).toNonIndexed();
+  stair.computeBoundingSphere();
+  g.userData.stair = stair;
   return g;
+}
+
+/** How much darker the dike is at `x` for the wall foot in front of it (1 open ground; the plinth's face is 0.1 m out). */
+function footShade(x) {
+  const k = bandAt(x);
+  const F = k >= 1 && k <= 4 ? FACE[k] - 0.1 : k === 0 ? SHELF.maxX : null;
+  if (F === null) return 1;
+  const d = Math.max(0, F - x);
+  if (d > 5) return 1;
+  return 1 - 0.3 * Math.exp(-d / 0.32) - 0.12 * Math.exp(-d / 1.4);
+}
+
+/**
+ * THE FAR LAND, ERODED. The plan's hill and spurs are smooth (they are the walk's frame and the height the checks
+ * read); drawn, they are cut by gullies down the fall line and broken by ridges, as bare salt-bloomed rock is. Zero on
+ * the terraces and everywhere near them; faded out round the far works (the graduation tower, the cistern house, the
+ * brine main) and off the valley floor, so nothing built out there floats or sinks.
+ */
+export function relief(x, z) {
+  return reliefAt(x, z).h;
+}
+
+/** The relief at (x, z): `h` its height, `shade` how open it is (below 1 down a gully, over 1 along a ridge). */
+function reliefAt(x, z) {
+  const NONE = { h: 0, shade: 1 };
+  const dE = x - (SHELF.maxX + 8), dN = Math.abs(z) - (TERRACE_Z + 8);
+  let w = Math.max(smooth(0, 45, dE), smooth(0, 45, dN));
+  if (w <= 0) return NONE;
+  w *= smooth(-175, -135, x);
+  // The far works stand on the plan's ground: the relief fades to nothing round them.
+  const tx = Math.max(-30, Math.min(40, x));
+  w *= smooth(8, 30, Math.hypot(x - tx, z + 196));
+  w *= smooth(12, 34, Math.hypot(x - 205, z - 6));
+  if (x > -280 && x < 120) w *= smooth(6, 24, Math.abs(z - (150 + Math.sin(((110 - x) / 380) * 3) * 14)));
+  if (w <= 1e-3) return NONE;
+  // Gullies run down the fall line: across x on the hill, across z on the spurs.
+  const spur = smooth(-12, 12, dN - dE);
+  const gH = ridged(x * 0.011 + 31.7, z * 0.034 + 7.3, { octaves: 4, period: 4096, seed: 7 });
+  const gS = ridged(x * 0.034 + 3.1, z * 0.011 + 17.9, { octaves: 4, period: 4096, seed: 9 });
+  const g = gH + (gS - gH) * spur;
+  const broad = fbm(x * 0.0045 + 5.5, z * 0.0045 + 1.25, { octaves: 3, period: 4096, seed: 13 }) - 0.5;
+  const amp = 13 * (0.55 + 0.45 * smooth(40, 320, Math.max(dE, dN)));
+  // A gully is cut, not waved: the low side of the ridged field is sharpened.
+  const cut = g < 0.62 ? -Math.pow((0.62 - g) / 0.62, 0.7) * 0.62 : g - 0.62;
+  return { h: w * (amp * cut + broad * 16), shade: 1 + w * (cut * 0.55) };
 }
 
 /* ================================================================== masonry */
 
-/** A box geometry at (cx, cy, cz) of size (sx, sy, sz), its texture laid in metres. */
-function block(sx, sy, sz, cx, cy, cz, tile = 2.4, rotX = 0) {
-  const g = new THREE.BoxGeometry(sx, sy, sz);
-  const uv = g.attributes.uv, n = g.attributes.normal;
-  for (let i = 0; i < uv.count; i++) {
-    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i));
-    const [a, b] = ax > 0.5 ? [sz, sy] : ay > 0.5 ? [sx, sz] : [sx, sy];
-    uv.setXY(i, uv.getX(i) * a / tile, uv.getY(i) * b / tile);
-  }
+/*
+ * BUILT STONE (the realism pass). Every block of masonry is a box with its arrises chamfered by `c` (kettle/kit.js
+ * `chamferBoxGeometry`; 0 is a plain box), and when it is put in its list (`finish`) its uvs are laid from its FINAL
+ * world position in metres, on the face's own plane: one texel density on every wall, kerb and floor, and the
+ * courses run on from one block to the next. Each block also carries `ttFoot`, the height of the ground in front of
+ * it, which the masonry's grime reads (`grime.js`); a block with nothing in front of it carries `NO_FOOT`.
+ * The material's repeat is 1 / its tile in metres (`teeter.js`).
+ */
+
+/** A box geometry at (cx, cy, cz) of size (sx, sy, sz). `o`: `{ c, foot }` (a bare number, an old tile, is ignored). */
+function block(sx, sy, sz, cx, cy, cz, o = null, rotX = 0) {
+  const opt = o && typeof o === 'object' ? o : {};
+  const g = chamferBoxGeometry(sx, sy, sz, opt.c || 0);
   if (rotX) g.rotateX(rotX);
   g.translate(cx, cy, cz);
+  if (opt.foot !== undefined) g.userData.foot = opt.foot;
+  if (opt.footAt) g.userData.footAt = opt.footAt;
   return g;
 }
 /** A box from (x0, y0, z0) to (x1, y1, z1). */
-const span = (x0, x1, y0, y1, z0, z1, tile) => block(x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, tile);
+const span = (x0, x1, y0, y1, z0, z1, o) => block(x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, o);
+
+/** Lay a finished block's uvs in world metres on each face's plane, and give it its `ttFoot`. */
+function finish(g) {
+  const p = g.attributes.position, n = g.attributes.normal;
+  const uv = new Float32Array(p.count * 2);
+  const foot = new Float32Array(p.count).fill(g.userData.foot ?? NO_FOOT);
+  const footAt = g.userData.footAt;
+  for (let i = 0; i < p.count; i++) {
+    if (footAt) foot[i] = footAt(p.getX(i), p.getZ(i));
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    if (ay >= ax && ay >= az) { uv[i * 2] = x; uv[i * 2 + 1] = z; } else if (ax >= az) { uv[i * 2] = z; uv[i * 2 + 1] = y; } else { uv[i * 2] = x; uv[i * 2 + 1] = y; }
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.setAttribute('ttFoot', new THREE.BufferAttribute(foot, 1));
+  return g;
+}
+
+/**
+ * A run of stones along z from z0 to z1 (a coping, a kerb): each 0.8 to 1.5 m long, a hair apart, each a few
+ * millimetres off its neighbours in height and line, its arrises chamfered. Seeded, so the same every build.
+ */
+function stoneRun(put, key, x0, x1, y0, y1, z0, z1, { seed = 1, min = 0.8, max = 1.5, c = 0.025, foot = NO_FOOT, jitter = 0.008 } = {}) {
+  const rnd = makeRng(hashStr(`tt-run:${seed}:${x0.toFixed(2)}:${z0.toFixed(2)}`));
+  const len = z1 - z0;
+  const cuts = [z0];
+  let z = z0;
+  while (z1 - z > max) { z += min + rnd() * (max - min); if (z1 - z < min * 0.6) break; cuts.push(z); }
+  cuts.push(z1);
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const a = cuts[i] + (i ? 0.004 : 0), b = cuts[i + 1] - (i < cuts.length - 2 ? 0.004 : 0);
+    const dy = (rnd() - 0.5) * jitter, dx = (rnd() - 0.5) * jitter;
+    put(key, span(x0 + dx, x1 + dx, y0, y1 + dy, a, b, { c, foot }));
+  }
+  void len;
+}
 
 /** Split [a, b] into pieces no longer than `len`, skipping the gaps. */
 function pieces(a, b, gaps, len = 24) {
@@ -192,36 +300,47 @@ function pieces(a, b, gaps, len = 24) {
  */
 export function buildMasonry(plan) {
   const G = { wall: [], coping: [], kerb: [], bund: [], flags: [], vault: [], timber: [], steel: [], brick: [], roof: [], rail: [] };
-  const put = (key, geo) => G[key].push(geo);
+  const put = (key, geo) => G[key].push(finish(geo));
   const rooms = plan.rooms;
   const doorsOn = w => rooms.filter(r => r.wall === w).map(r => ({ r, d: r.door.rect }));
 
-  /* ---- the terrace walls: from the terrace below to the pans' bank above, or a parapet over the drying floor's edge. */
+  /* ---- the terrace walls: from the terrace below to the pans' bank above, or a parapet over the drying floor's edge.
+   * The walls the walk runs along (1 to 5) stand on a plinth course that steps out 0.1 m at the foot, and carry a
+   * coping of separate stones; the decor walls below the floor (6 to 8) keep a plain coping. */
   for (const w of WALLS) {
     const F = FACE[w], base = LEVEL[w], above = LEVEL[w - 1];
     const top = w === 5 ? above + 0.9 : above + 0.1;
+    const near = w <= 5;
     const gaps = [];
     if (w <= 4) gaps.push([STAIR.z0, STAIR.z1]);
     for (const { d } of doorsOn(w)) gaps.push([d.minZ, d.maxZ]);
     for (const [z0, z1] of pieces(-TERRACE_Z, TERRACE_Z, gaps)) {
-      put('wall', span(F, F + WALL_T, base - 0.4, top - 0.12, z0, z1));
-      put('coping', span(F - 0.06, F + WALL_T + 0.06, top - 0.12, top, z0, z1, 1.2));
+      put('wall', span(F, F + WALL_T, base - 0.4, top - 0.12, z0, z1, { c: 0.03, foot: base }));
+      if (near) {
+        put('wall', span(F - 0.1, F + 0.2, base - 0.4, base + 0.42, z0 + 0.004, z1 - 0.004, { c: 0.018, foot: base }));
+        stoneRun(put, 'coping', F - 0.06, F + WALL_T + 0.06, top - 0.12, top, z0, z1, { seed: w, c: 0.02 });
+      } else {
+        put('coping', span(F - 0.06, F + WALL_T + 0.06, top - 0.12, top, z0, z1, { c: 0.02 }));
+      }
     }
     // Over each door: the wall from the lintel up; a stone lintel; the reveals are the wall's own ends.
     for (const { r, d } of doorsOn(w)) {
       const house = r.shell === 'gable' || r.shell === 'mono';
-      put('coping', span(F - 0.04, F + WALL_T, base + DOOR.top, base + DOOR.top + 0.35, d.minZ - 0.3, d.maxZ + 0.3, 1.2));
-      put('wall', span(F, F + WALL_T, base + DOOR.top + 0.35, house ? base + r.top : top - 0.12, d.minZ, d.maxZ));
-      if (!house) put('coping', span(F - 0.06, F + WALL_T + 0.06, top - 0.12, top, d.minZ, d.maxZ, 1.2));
+      put('coping', span(F - 0.04, F + WALL_T, base + DOOR.top, base + DOOR.top + 0.35, d.minZ - 0.3, d.maxZ + 0.3, { c: 0.025 }));
+      put('wall', span(F, F + WALL_T, base + DOOR.top + 0.35, house ? base + r.top : top - 0.12, d.minZ, d.maxZ, { c: 0.02, foot: base }));
+      if (!house) stoneRun(put, 'coping', F - 0.06, F + WALL_T + 0.06, top - 0.12, top, d.minZ, d.maxZ, { seed: w + 50, c: 0.02 });
     }
   }
 
-  /* ---- the kerbs between the dike strips and the pans, cut for the stair. */
+  /* ---- the kerbs between the dike strips and the pans, cut for the stair: dressed kerb stones, set a hair apart. */
   for (let k = 0; k < LEVEL.length - 1; k++) {
     if (k === 4) continue;
     const x0 = k === 0 ? SHELF.minX - KERB_T : FACE[k] - DIKE_W - KERB_T;
     const gaps = k <= 3 ? [[STAIR.z0, STAIR.z1]] : [];
-    for (const [z0, z1] of pieces(-TERRACE_Z, TERRACE_Z, gaps)) put('kerb', span(x0, x0 + KERB_T, LEVEL[k] + PAN.floor - 0.1, LEVEL[k] + 0.25, z0, z1, 1.6));
+    for (const [z0, z1] of pieces(-TERRACE_Z, TERRACE_Z, gaps)) {
+      if (k <= 3) stoneRun(put, 'kerb', x0, x0 + KERB_T, LEVEL[k] + PAN.floor - 0.1, LEVEL[k] + 0.25, z0, z1, { seed: 100 + k, min: 0.9, max: 1.6, c: 0.035, foot: LEVEL[k], jitter: 0.012 });
+      else put('kerb', span(x0, x0 + KERB_T, LEVEL[k] + PAN.floor - 0.1, LEVEL[k] + 0.25, z0, z1, { c: 0.03 }));
+    }
   }
 
   /* ---- the stair: each ramp's two side walls, from the terrace below to a low wall over the terrace above. */
@@ -233,19 +352,20 @@ export function buildMasonry(plan) {
       for (let i = 0; i < n; i++) {
         const xa = F + WALL_T + (RAMP_L - WALL_T) * i / n, xb = F + WALL_T + (RAMP_L - WALL_T) * (i + 1) / n;
         const top = LEVEL[k - 1] + 0.7;
-        put('wall', span(xa, xb, LEVEL[k] - 0.4, top - 0.12, z0, z1));
-        put('coping', span(xa, xb, top - 0.12, top, z0 - 0.04, z1 + 0.04, 1.2));
+        // No foot grime: a band drawn up a sloping floor reads as a wash across the stones, not as damp.
+        put('wall', span(xa, xb, LEVEL[k] - 0.4, top - 0.12, z0, z1, { c: 0.025 }));
+        put('coping', span(xa, xb, top - 0.12, top, z0 - 0.04, z1 + 0.04, { c: 0.02 }));
       }
     }
   }
 
   /* ---- the shelf's bank against the hill, and fences across the closed ends of the walk where the ground runs on level. */
-  put('wall', span(SHELF.maxX, SHELF.maxX + 0.6, LEVEL[0] - 0.4, LEVEL[0] + 1.1, SHELF.minZ - 0.6, SHELF.maxZ + 0.6));
-  put('coping', span(SHELF.maxX - 0.04, SHELF.maxX + 0.64, LEVEL[0] + 1.1, LEVEL[0] + 1.22, SHELF.minZ - 0.6, SHELF.maxZ + 0.6, 1.2));
+  put('wall', span(SHELF.maxX, SHELF.maxX + 0.6, LEVEL[0] - 0.4, LEVEL[0] + 1.1, SHELF.minZ - 0.6, SHELF.maxZ + 0.6, { c: 0.03, foot: LEVEL[0] }));
+  stoneRun(put, 'coping', SHELF.maxX - 0.04, SHELF.maxX + 0.64, LEVEL[0] + 1.1, LEVEL[0] + 1.22, SHELF.minZ - 0.6, SHELF.maxZ + 0.6, { seed: 77, c: 0.02 });
   const fence = (x0, x1, z, y) => {
     const n = Math.max(2, Math.round((x1 - x0) / 2.4) + 1);
-    for (let i = 0; i < n; i++) put('rail', span(x0 + (x1 - x0) * i / (n - 1) - 0.06, x0 + (x1 - x0) * i / (n - 1) + 0.06, y, y + 1.05, z - 0.06, z + 0.06, 1));
-    for (const h of [0.55, 0.98]) put('rail', span(x0, x1, y + h, y + h + 0.07, z - 0.04, z + 0.04, 1));
+    for (let i = 0; i < n; i++) put('rail', span(x0 + (x1 - x0) * i / (n - 1) - 0.06, x0 + (x1 - x0) * i / (n - 1) + 0.06, y, y + 1.05, z - 0.06, z + 0.06, { c: 0.014 }));
+    for (const h of [0.55, 0.98]) put('rail', span(x0, x1, y + h, y + h + 0.07, z - 0.04, z + 0.04, { c: 0.01 }));
   };
   const fenceX = (z0, z1, x, y) => {
     const n = Math.max(2, Math.round((z1 - z0) / 2.4) + 1);
@@ -266,10 +386,12 @@ export function buildMasonry(plan) {
   /* ---- the pans' bunds: a clay wall round every pan, a hand over its brine. */
   for (const p of plan.pans()) {
     const y0 = p.level + PAN.floor - 0.02, y1 = p.level - 0.12, t = 0.3;
-    put('bund', span(p.minX - t, p.maxX + t, y0, y1, p.minZ - t, p.minZ, 1.6));
-    put('bund', span(p.minX - t, p.maxX + t, y0, y1, p.maxZ, p.maxZ + t, 1.6));
-    put('bund', span(p.minX - t, p.minX, y0, y1, p.minZ, p.maxZ, 1.6));
-    put('bund', span(p.maxX, p.maxX + t, y0, y1, p.minZ, p.maxZ, 1.6));
+    // A clay bank is rounded by the rake and the rain: its arrises are taken right off.
+    const o = { c: 0.07, foot: p.level + PAN.floor };
+    put('bund', span(p.minX - t, p.maxX + t, y0, y1, p.minZ - t, p.minZ, o));
+    put('bund', span(p.minX - t, p.maxX + t, y0, y1, p.maxZ, p.maxZ + t, o));
+    put('bund', span(p.minX - t + 0.002, p.minX - 0.002, y0, y1 - 0.004, p.minZ + 0.002, p.maxZ - 0.002, o));
+    put('bund', span(p.maxX + 0.002, p.maxX + t - 0.002, y0, y1 - 0.004, p.minZ + 0.002, p.maxZ - 0.002, o));
   }
 
   /* ---- the rooms. */
@@ -289,9 +411,9 @@ function buildRoomShell(r, put) {
   put('flags', span(d.minX, d.maxX, L - 0.2, L, d.minZ, d.maxZ, 1.8));
   // Side walls and the back wall, up to the roof's top (under the pans) or to a house's eaves.
   const wallTop = house ? L + r.top : pansFloor - 0.02;
-  put('vault', span(v.minX, v.maxX + T, L - 0.4, wallTop, v.minZ - T, v.minZ, 2.4));
-  put('vault', span(v.minX, v.maxX + T, L - 0.4, wallTop, v.maxZ, v.maxZ + T, 2.4));
-  put('vault', span(v.maxX, v.maxX + T, L - 0.4, wallTop, v.minZ, v.maxZ, 2.4));
+  put('vault', span(v.minX, v.maxX + T, L - 0.4, wallTop, v.minZ - T, v.minZ, { c: 0.02, foot: L }));
+  put('vault', span(v.minX, v.maxX + T, L - 0.4, wallTop, v.maxZ, v.maxZ + T, { c: 0.02, foot: L }));
+  put('vault', span(v.maxX, v.maxX + T, L - 0.4, wallTop, v.minZ, v.maxZ, { c: 0.02, foot: L }));
   // The roof slab under the pans: its top is the pans' floor, its underside where the shell's roof begins.
   const slab = (y0) => {
     if (r.shaft) {
@@ -345,7 +467,7 @@ function buildRoomShell(r, put) {
       }
       // The pier: a stone platform round the shaft's mouth among the pans.
       for (const [x0, x1, z0, z1] of [[pier.minX, s.cx - h - 0.3, pier.minZ, pier.maxZ], [s.cx + h + 0.3, pier.maxX, pier.minZ, pier.maxZ], [s.cx - h - 0.3, s.cx + h + 0.3, pier.minZ, s.cz - h - 0.3], [s.cx - h - 0.3, s.cx + h + 0.3, s.cz + h + 0.3, pier.maxZ]]) {
-        put('wall', span(x0, x1, pansFloor, pierTop, z0, z1, 2.4));
+        put('wall', span(x0, x1, pansFloor, pierTop, z0, z1, { c: 0.03, foot: pansFloor }));
       }
     }
     return;
@@ -353,13 +475,13 @@ function buildRoomShell(r, put) {
   if (r.shell === 'joists') {
     // Two timber girders along the room, joists across them every 0.6 m, boards over the joists, the slab over all.
     slab(top + 0.28);
-    for (const gz of [midZ - 3.5, midZ + 3.5]) put('timber', span(v.minX, v.maxX, top - 0.42, top, gz - 0.18, gz + 0.18, 1));
+    for (const gz of [midZ - 3.5, midZ + 3.5]) put('timber', span(v.minX, v.maxX, top - 0.42, top, gz - 0.18, gz + 0.18, { c: 0.012 }));
     const n = Math.round((v.maxX - v.minX) / 0.6);
     for (let i = 0; i <= n; i++) {
       const x = v.minX + 0.1 + (v.maxX - v.minX - 0.2) * i / n;
-      put('timber', span(x - 0.06, x + 0.06, top, top + 0.24, v.minZ, v.maxZ, 1));
+      put('timber', span(x - 0.06, x + 0.06, top, top + 0.24, v.minZ, v.maxZ, { c: 0.012 }));
     }
-    put('timber', span(v.minX, v.maxX, top + 0.24, top + 0.28, v.minZ, v.maxZ, 1.2));
+    put('timber', span(v.minX, v.maxX, top + 0.24, top + 0.28, v.minZ, v.maxZ, { c: 0.008 }));
     return;
   }
   if (r.shell === 'jack') {
@@ -385,12 +507,12 @@ function buildRoomShell(r, put) {
     // A weir house: its walls stand up through the pans to the eaves; a timber roof on purlins, sheeted.
     const eave = L + r.top, ridge = L + r.ridge;
     // The front wall above the terrace wall's coping, in the plane of the terrace wall.
-    put('vault', span(v.minX - WALL_T, v.minX, LEVEL[r.wall - 1] + 0.1, eave, v.minZ - T, v.maxZ + T, 2.4));
+    put('vault', span(v.minX - WALL_T, v.minX, LEVEL[r.wall - 1] + 0.1, eave, v.minZ - T, v.maxZ + T, { c: 0.03, foot: LEVEL[r.wall - 1] }));
     // Tie beams across the room at the eaves (high, clear of the bay), every 2.6 m.
     const n = Math.round((v.maxX - v.minX) / 2.6);
     for (let i = 1; i < n; i++) {
       const x = v.minX + (v.maxX - v.minX) * i / n;
-      put('timber', span(x - 0.12, x + 0.12, eave - 0.3, eave, v.minZ, v.maxZ, 1));
+      put('timber', span(x - 0.12, x + 0.12, eave - 0.3, eave, v.minZ, v.maxZ, { c: 0.012 }));
     }
     const x0 = v.minX - WALL_T - 0.4, x1 = v.maxX + T + 0.4, z0 = v.minZ - T - 0.4, z1 = v.maxZ + T + 0.4;
     if (r.shell === 'gable') {
@@ -411,7 +533,7 @@ function buildRoomShell(r, put) {
           put('vault', span(gx, gx + (gx < v.minX ? WALL_T : T), y0, y1, midZ - hw, midZ + hw, 2.4));
         }
       }
-      put('timber', span(x0, x1, ridge - 0.2, ridge, midZ - 0.12, midZ + 0.12, 1));
+      put('timber', span(x0, x1, ridge - 0.2, ridge, midZ - 0.12, midZ + 0.12, { c: 0.012 }));
     } else {
       // A monopitch rising to the back (east).
       const run = x1 - x0, rise = ridge - eave, ang = Math.atan2(rise, run), len = Math.hypot(run, rise);

@@ -48,7 +48,8 @@ export function buildMwBench(ctx, { kind = 'window', plate = 'MW-01', skin = 'de
   return buildBayBench(ctx, {
     skin,
     plate,
-    mats: ctxMats(ctx),
+    // The plate a student works on keeps its own procedural steel (`M.benchTop`); the photo plate is for the harbour.
+    mats: { ...ctxMats(ctx), top: M.benchTop || M.steel },
     tagStyle: { fg: '#1b2124', bg: '#c9d2d4' },
     dormant(dormant, { height }) {
       // THE ONE CLEAN THING. The harbour is weathered; the cased instrument is the thing somebody uses, so it

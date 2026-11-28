@@ -169,7 +169,8 @@ const squeezeLevel = f => Math.round(f.dials.squeeze.value);
 /** The press's picture state: the jar, its state, how far the piston goes, and whether it has been poured. */
 export function pressRead(state, fid) {
   const f = state.fixtures[fid];
-  const jar = seatedIn(state, f.props.slot);
+  const seated = seatedIn(state, f.props.slot);
+  const jar = seated?.kind === 'jar' ? seated : null;
   const level = squeezeLevel(f);
   if (!jar) return { jar: null, level, st: null, ratio: 1, poured: false };
   const st = jarStateOf(jar);
@@ -263,7 +264,8 @@ function runPress(state, fid) {
 function settlePress(state) {
   for (const f of Object.values(state.fixtures)) {
     if (f.kind !== 'press') continue;
-    const seated = seatedIn(state, f.props.slot);
+    const raw = seatedIn(state, f.props.slot);
+    const seated = raw?.kind === 'jar' ? raw : null;
     const seatedId = seated?.id || null;
     // Reset the piston to 1 atm whenever a different jar is seated so a new jar never starts already squeezed.
     if (f.props.lastJar !== seatedId) {
@@ -299,7 +301,7 @@ export function pressFixture(id, at, { w = 90, title = 'Piston and tank' } = {})
       dials: { squeeze: { min: 1, max: 4, step: 1, value: 1, label: 'Piston', labels: [...SQUEEZE_NAMES] } },
       props: { backdrop: true, slot: slotId }
     },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 11.5 }, size: { w: 22, h: 16 } },
+    slot: { id: slotId, label: ' ', accepts: ['jar'], at: { x: x0 + 13.5, y: y0 + top + 11.5 }, size: { w: 22, h: 16 } },
     slotId, size: { w, h }
   };
 }
@@ -313,7 +315,8 @@ const CELL = { x0: 31, y0: 12.4, w: 38, h: 26 };
 /** The window's read: the jar, the heater, the molecules in the glass, and what the reader has named at each temperature. */
 export function windowRead(state, fid) {
   const f = state.fixtures[fid];
-  const jar = seatedIn(state, f.props.slot);
+  const seated = seatedIn(state, f.props.slot);
+  const jar = seated?.kind === 'jar' ? seated : null;
   const T = f.props.Ts[Math.round(f.dials.heat.value) - 1];
   if (!jar) return { jar: null, T, reads: {}, here: null };
   const { state: st, mols } = windowMolecules({ sample: jar.props.sample, state: jar.props.state, split: jar.props.split }, T);
@@ -361,7 +364,7 @@ export function windowFixture(id, at, { Ts, title = 'Window' } = {}) {
       dials: { heat: { min: 1, max: Ts.length, step: 1, value: 1, label: 'Heater', labels: Ts.map(degC) } },
       props: { backdrop: true, slot: slotId, Ts: [...Ts], tickLabels: true }
     },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 12.2 }, size: { w: 22, h: 16 } },
+    slot: { id: slotId, label: ' ', accepts: ['jar'], at: { x: x0 + 13.5, y: y0 + top + 12.2 }, size: { w: 22, h: 16 } },
     slotId, size: { w, h }
   };
 }
@@ -372,7 +375,8 @@ export function windowFixture(id, at, { Ts, title = 'Window' } = {}) {
 
 export function scaleRead(state, fid) {
   const f = state.fixtures[fid];
-  const jar = seatedIn(state, f.props.slot);
+  const seated = seatedIn(state, f.props.slot);
+  const jar = seated?.kind === 'jar' ? seated : null;
   const weighed = Boolean(jar && jar.props.mass != null);
   return { jar, weighed, value: weighed ? jar.props.mass : null };
 }
@@ -396,7 +400,8 @@ function paintScale(ctx, f, state, b) {
 
 function runScale(state, fid) {
   const f = state.fixtures[fid];
-  const jar = seatedIn(state, f.props.slot);
+  const seated = seatedIn(state, f.props.slot);
+  const jar = seated?.kind === 'jar' ? seated : null;
   if (!jar) return { noop: 'Put a jar on the balance first.' };
   return { stamp: { [jar.id]: { mass: jarMass(jarStateOf(jar), f.props.litres ?? 1) } } };
 }
@@ -411,7 +416,7 @@ export function scaleFixture(id, at, { litres = 1, lines = [], title = 'Balance'
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   return {
     fixture: { id, kind: 'jarscale', label: title, at: { ...at }, size: { w, h }, runLabel: 'Weigh', dials: {}, props: { backdrop: true, slot: slotId, litres, lines } },
-    slot: { id: slotId, label: ' ', at: { x: x0 + 13.5, y: y0 + top + 11.5 }, size: { w: 22, h: 16 } },
+    slot: { id: slotId, label: ' ', accepts: ['jar'], at: { x: x0 + 13.5, y: y0 + top + 11.5 }, size: { w: 22, h: 16 } },
     slotId, size: { w, h }
   };
 }

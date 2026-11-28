@@ -35,12 +35,13 @@
 import * as THREE from 'three';
 import kettleData from './world-data/kettle.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
-import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d } from './materials/pbr-kit.js';
+import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d, addWorldVariation, addWorldBoxUV } from './materials/pbr-kit.js';
+import { loadTexturePack, dressFromPack, packsAvailable } from './materials/texture-pack.js';
 import { sodaCrust, slagRoad, slabConcrete, brickwork, ribbedSheet } from './materials/kettle-textures.js';
 import {
   createKtSkyDome, createKtLights, followKtShadow, createKtEnvironment, ktSkyUniforms, followCamera, KTSKY, KETTLE_SUN
 } from './kettle/atmosphere.js';
-import { makeKettleField, buildKettleTerrainGeometry, buildRibbon } from './kettle/terrain.js';
+import { makeKettleField, buildKettleTerrainGeometry, buildRibbon, patchKettleGround, setKettleSlag } from './kettle/terrain.js';
 import { makeWorksPlan } from './kettle/works-plan.js';
 import { buildWorks, buildShafts } from './kettle/works.js';
 import * as PLANT from './kettle/plant.js';
@@ -48,6 +49,7 @@ import { FILAMENT } from './kettle/kit.js';
 import { makeCover } from './lib/cover.js';
 import { yawPoint } from './ember/kit.js';
 import { HOST_BUILDERS } from './kettle/stations.js';
+import { buildContactMap, addContact, wallMaterial } from './kettle/grime.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 import { attachCrew } from './npc/attach.js';
@@ -77,6 +79,8 @@ export class KettleWorld {
     // The flat and the mesas run to the horizon on their own; the voyage must not lay a ring over them.
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
+    // Built shapes: the kit chamfers its boxes, bevels its cylinders and lays every part's uvs in metres (`kettle/kit.js`).
+    this.builtKit = true;
 
     // THE WORKS, AS A PLAN. The height field, the walk, the colliders, the light mask and the guide all stand on it.
     this.plan = makeWorksPlan(this.data);
@@ -94,8 +98,10 @@ export class KettleWorld {
     this.initLampPool();
     this.bakeStatics();
     this.buildColliders();
+    this.initGrime();
     this.enableAmbientOcclusion();
     this.initCover();
+    this.initPacks();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/kettle.js`).
     this.crew = attachCrew(this, 'kettle');
   }
@@ -127,13 +133,17 @@ export class KettleWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
+    // TILES IN METRES. The built kit lays every part's uvs in metres, so a material's repeat is 1 / its tile: one texel
+    // density on every object that wears it (`docs/plans/realism-kettle.md`).
+    const B = this.builtKit;
     const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => {
-      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 });
+      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: B ? 0.75 : 2, roughness: 1.0 });
+      m.userData.paint = paint;
       m.normalScale.set(1.2, 1.2);
       m.aoMapIntensity = 0.85;
       return m;
     };
-    M.slab = buildMaterial(slabConcrete({ size: texSize(512), seed: 7 }), { repeat: 1, roughness: 1.0 });
+    M.slab = buildMaterial(slabConcrete({ size: texSize(512), seed: 7 }), { repeat: B ? 0.25 : 1, roughness: 1.0 });
     M.concrete = M.slab;
     M.clad = metal('#b9bbb4', '#a0a39d', '#8b7a62', 81, 0.35, 2, 512);
     M.steel = metal('#868b80', '#6f766b', '#7d5f45', 83, 0.45, 2, 512);
@@ -146,14 +156,26 @@ export class KettleWorld {
     M.crateB = metal('#8a6d45', '#75603f', '#6a4a30', 103, 0.55, 2);
     // The building: brick to the dado and ribbed sheet over it, firebrick in the cast house and the pit, paved floors there.
     const surf = (surface, repeat = 1) => { const m = buildMaterial(surface, { repeat, roughness: 1.0 }); m.aoMapIntensity = 0.9; return m; };
-    M.brick = surf(brickwork({ size: texSize(512), seed: 31 }));
-    M.firebrickWall = surf(brickwork({ size: texSize(512), seed: 33, brick: '#8a5a44', dark: '#3f2a24', mortar: '#7c7468', soot: 0.6 }));
-    M.paver = surf(brickwork({ size: texSize(512), seed: 35, brick: '#6c5548', dark: '#3a3029', mortar: '#585149', soot: 0.5, across: 6, courses: 12, paving: true }));
-    M.sheet = surf(ribbedSheet({ size: texSize(512), seed: 41 }));
+    M.brick = surf(brickwork({ size: texSize(512), seed: 31 }), B ? 1 / 1.8 : 1);
+    M.firebrickWall = surf(brickwork({ size: texSize(512), seed: 33, brick: '#8a5a44', dark: '#3f2a24', mortar: '#7c7468', soot: 0.6 }), B ? 1 / 1.8 : 1);
+    M.paver = surf(brickwork({ size: texSize(512), seed: 35, brick: '#6c5548', dark: '#3a3029', mortar: '#585149', soot: 0.5, across: 6, courses: 12, paving: true }), B ? 1 / 1.4 : 1);
+    M.sheet = surf(ribbedSheet({ size: texSize(512), seed: 41 }), B ? 1 / 1.5 : 1);
     M.sheet.metalness = 0.35;
-    M.wallConcrete = surf(slabConcrete({ size: texSize(512), seed: 11 }));
+    M.wallConcrete = surf(slabConcrete({ size: texSize(512), seed: 11 }), B ? 0.25 : 1);
     M.panel = M.clad;
     M.deckPlate = metal('#4d4f4a', '#5d605a', '#6b5442', 109, 0.4, 6);
+    if (B) {
+      // The floors are their own copies (the contact map goes on them, `initGrime`), and every big surface drifts in tone
+      // and roughness over the building, with a second coarser sample against visible repeats (pbr-kit `addWorldVariation`).
+      M.floorSlab = M.slab.clone();
+      M.floorPaver = M.paver.clone();
+      M.floorDeck = M.deckPlate.clone();
+      for (const m of [M.floorSlab, M.floorPaver, M.floorDeck]) addWorldVariation(m, { scale: 7, strength: 0.16, roughShift: 0.14, antiTile: 0.6 });
+      for (const m of [M.brick, M.firebrickWall, M.wallConcrete]) addWorldVariation(wallMaterial(m), { scale: 6, strength: 0.14, roughShift: 0.08, antiTile: 0.55, streaks: 0.16 });
+      for (const m of [M.sheet, M.clad]) addWorldVariation(wallMaterial(m), { scale: 8, strength: 0.12, roughShift: 0.12, antiTile: 0.5, streaks: 0.22 });
+      for (const m of [M.roofSheet, M.hallRoof, M.slab]) addWorldVariation(m, { scale: 9, strength: 0.12, roughShift: 0.1, antiTile: 0.5 });
+      for (const m of [M.steel, M.darkSteel, M.rusted]) addWorldVariation(m, { scale: 5, strength: 0.1, roughShift: 0.12, antiTile: 0.4 });
+    }
     // The works' own: the bench is cast iron with blackened rims, its trays firebrick.
     M.castIron = metal('#5a544b', '#4a453e', '#6a4a30', 105, 0.55, 3);
     M.darkIron = metal('#2e2a26', '#3a3530', '#5a4030', 107, 0.5, 4);
@@ -185,7 +207,9 @@ export class KettleWorld {
     M.iron = std({ color: 0x3a1a0c, emissive: PLANT.FURNACE_FIRE, emissiveIntensity: 1.5, roughness: 0.7 });
 
     // The roads: slag, feathered into the crust at both edges.
-    M.slag = buildMaterial(slagRoad({ size: texSize(512), seed: 3 }), { repeat: 1, roughness: 1.0 });
+    M.slag = buildMaterial(slagRoad({ size: texSize(512), seed: 3 }), { repeat: B ? 1 / 3 : 1, roughness: 1.0 });
+    // Built: the two roads (5 m and 2.6 m wide) are laid in world metres, so their clinker is one size.
+    if (B) addWorldBoxUV(M.slag, { metres: 1 });
     M.slag.alphaMap = this.own(this.featherTexture());
     M.slag.transparent = true;
     M.slag.depthWrite = false;
@@ -197,6 +221,7 @@ export class KettleWorld {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
     }
+    for (const m of [M.brick, M.firebrickWall, M.wallConcrete, M.sheet, M.clad]) if (B) this.own(wallMaterial(m));
     this.M = M;
     this.lanternMat = M.lantern;
   }
@@ -244,9 +269,15 @@ export class KettleWorld {
 
   initTerrain() {
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
-    const crust = buildMaterial(sodaCrust({ size: texSize(512), seed: 21 }), { repeat: 1, roughness: 1.0 });
+    // The ground's uvs are laid at 9 m (`buildKettleTerrainGeometry`). Built: the crust is drawn at 4 m to the tile (its
+    // plates hand-sized, as a soda crust's are), drifts in tone over the flat, and its shader knows the heaps.
+    const crust = buildMaterial(sodaCrust({ size: texSize(512), seed: 21 }), { repeat: this.builtKit ? 9 / 4 : 1, roughness: 1.0 });
     crust.vertexColors = true;
-    crust.normalScale.set(1.3, 1.3);
+    crust.normalScale.set(this.builtKit ? 0.9 : 1.3, this.builtKit ? 0.9 : 1.3);
+    if (this.builtKit) {
+      patchKettleGround(crust);
+      addWorldVariation(crust, { scale: 16, strength: 0.08, roughShift: 0.08, antiTile: 0.65 });
+    }
     crust.envMapIntensity = 0.7;
     for (const t of crust.userData.surfaceMaps || []) { t.anisotropy = aniso; this.own(t); }
     this.own(crust);
@@ -427,9 +458,11 @@ export class KettleWorld {
 
   /** WHAT NEVER MOVES IS BAKED. The cased instruments and the indicators stay their own meshes. */
   bakeStatics() {
+    // The walls carry their grime in vertex colour (`kettle/grime.js`): the bake keeps it.
+    const keep = this.builtKit ? ['color'] : [];
     const bake = (group) => {
       group.traverse(o => { if (o !== group && (o.userData.phys || o.userData.openShell)) o.userData.noMerge = true; });
-      mergeStatic(group);
+      mergeStatic(group, { keep }); 
     };
     for (const anchor of this.benchAnchors.values()) {
       const dormant = anchor.dormant;
@@ -443,7 +476,7 @@ export class KettleWorld {
       bake(node);
     }
     // The building's shell is ground, and it is baked too: one mesh per material, each still tagged as ground.
-    mergeStatic(this.worksShell);
+    mergeStatic(this.worksShell, { keep });
     this.worksShell.traverse(o => { if (o.isMesh) o.userData.phys = 'ground'; });
     // The far country is the horizon's own, and it is baked the same way.
     for (const node of this.scene.children) {
@@ -453,7 +486,7 @@ export class KettleWorld {
     }
     // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
     // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
-    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene, { keep }) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -478,6 +511,101 @@ export class KettleWorld {
     for (const c of this.worksColliders) this.colliders.push(c);
     for (const c of this.plantColliders) this.colliders.push(c);
     for (const c of this.siteColliders) this.colliders.push(c);
+  }
+
+  /**
+   * CONTACT (built kit only): one map of where things stand on the floor, at a quarter metre, blurred, read by every
+   * floor and by the yard's ground in world x, z (`kettle/grime.js`). It is what seats a machine on the floor in rooms
+   * the sun never reaches. Built from the colliders the walk already has, so it is exactly what stands there.
+   */
+  initGrime() {
+    if (!this.builtKit) return;
+    const boxes = this.plan.wallColliders();
+    const discs = [...this.worksColliders, ...this.siteColliders, ...this.plantColliders];
+    const b = { ...this.plan.bounds };
+    for (const d of this.plantColliders) {
+      b.minX = Math.min(b.minX, d.x - d.radius); b.maxX = Math.max(b.maxX, d.x + d.radius);
+      b.minZ = Math.min(b.minZ, d.z - d.radius); b.maxZ = Math.max(b.maxZ, d.z + d.radius);
+    }
+    this.contact = buildContactMap(b, boxes, discs);
+    this.own(this.contact.texture);
+    for (const m of [this.M.floorSlab, this.M.floorPaver, this.M.floorDeck]) addContact(m, this.contact, { strength: 0.85 });
+    addContact(this.terrainMesh.material, this.contact, { strength: 0.8 });
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (`materials/texture-pack.js`, `public/textures/kettle/`, CC0, see LICENSE.md there).
+   * The world is complete with its procedural maps; at 3D On with a renderer the six packs are fetched after the build
+   * and put into the same map slots as they land, each sent to the GPU at once, during the flight. Each building
+   * material is then tinted to the paint it had (its old colour over the pack's linear mean), so the works keeps its
+   * colours. Nothing is fetched in Node or below T4; a pack that fails leaves the procedural surface. The bench's
+   * plate and rims (`castIron`, `darkIron`) keep their procedural iron: the student works on them.
+   */
+  initPacks() {
+    if (!this.t4 || !this.builtKit || !packsAvailable(this.renderer)) return;
+    const base = '/textures/kettle';
+    const M = this.M, W = m => wallMaterial(m);
+    // Linear means of the graded albedos (tools/textures/prep_kettle.py prints them).
+    const MEAN = {
+      concrete: [0.1835, 0.1737, 0.1509], brick: [0.1062, 0.0767, 0.0672],
+      sheet: [0.2222, 0.2208, 0.2054], metal: [0.1783, 0.1501, 0.1256]
+    };
+    const tint = (mat, hex, mean) => {
+      const c = new THREE.Color(hex);
+      mat.color.setRGB(Math.min(1.8, c.r / mean[0]), Math.min(1.8, c.g / mean[1]), Math.min(1.8, c.b / mean[2]));
+    };
+    // `scale` = (1 / the photo's tile in metres) / the material's own repeat, so the photo lies at its real size.
+    const metalScale = (1 / 2.0) / 0.75, sheetScale = (1 / 2.7) / (1 / 1.5), roofScale = (1 / 2.7) / 0.75;
+    const metalTint = m => m.userData.paint;
+    const plan = {
+      crust: [[this.terrainMesh.material, { scale: 1, normalScale: 1.0, aoIntensity: 0.6 }]],
+      slag: [[M.slag, { scale: (1 / 2.0) / (1 / 3), normalScale: 1.0 }, null, 0.55]],
+      concrete: [
+        [M.floorSlab, { scale: (1 / 3) / 0.25, normalScale: 0.8, aoIntensity: 0.6 }, '#8e887c'],
+        [M.slab, { scale: (1 / 3) / 0.25, normalScale: 1.0 }, '#8f8a7f'],
+        [M.wallConcrete, { scale: (1 / 3) / 0.25, normalScale: 1.0 }, '#928d82'],
+        [W(M.wallConcrete), { scale: (1 / 3) / 0.25, normalScale: 1.0 }, '#928d82']
+      ],
+      brick: [
+        [M.brick, { scale: 1.8, normalScale: 1.0 }, '#86543f'],
+        [W(M.brick), { scale: 1.8, normalScale: 1.0 }, '#86543f'],
+        [M.firebrickWall, { scale: 1.8, normalScale: 1.0 }, '#8c6450'],
+        [W(M.firebrickWall), { scale: 1.8, normalScale: 1.0 }, '#8c6450'],
+        [M.paver, { scale: 1.4, normalScale: 0.7 }, '#6e5a4c'],
+        [M.floorPaver, { scale: 1.4, normalScale: 0.7, aoIntensity: 0.7 }, '#6e5a4c']
+      ],
+      sheet: [
+        [M.sheet, { scale: sheetScale, normalScale: 1.0 }, '#8a8476'],
+        [W(M.sheet), { scale: sheetScale, normalScale: 1.0 }, '#8a8476'],
+        [M.roofSheet, { scale: roofScale, normalScale: 1.0 }, '#6e6358'],
+        [M.hallRoof, { scale: roofScale, normalScale: 1.0 }, '#625548']
+      ],
+      metal: [M.steel, M.darkSteel, M.rusted, M.clad, W(M.clad), M.hallWall, M.crate, M.crateB, M.deckPlate, M.floorDeck]
+        .map(m => [m, { scale: metalScale, normalScale: 1.0, aoIntensity: 0.8 }, metalTint(m.userData.grimeOf || m)])
+    };
+    const aniso = this.renderer.capabilities?.getMaxAnisotropy?.() || 8;
+    for (const [name, mats] of Object.entries(plan)) {
+      loadTexturePack(base, name).then(pack => {
+        if (this._disposed || !pack) return;
+        for (const [mat, opts, hex, grey] of mats) {
+          if (!mat) continue;
+          const made = dressFromPack(mat, pack, { ...opts, renderer: this.renderer });
+          this.own(...made);
+          if (hex && MEAN[name]) tint(mat, hex, MEAN[name]);
+          if (grey !== undefined) mat.color.setScalar(grey);
+        }
+        if (name === 'crust') for (const t of this.terrainMesh.material.userData.surfaceMaps || []) t.anisotropy = aniso;
+        if (name === 'slag' && pack.diff) {
+          // The heaps read the same clinker in world metres (`kettle/terrain.js` `patchKettleGround`).
+          const t = pack.diff.clone();
+          t.anisotropy = aniso;
+          t.needsUpdate = true;
+          this.own(t);
+          try { this.renderer.initTexture(t); } catch (e) { /* drawn later instead */ }
+          setKettleSlag(t);
+        }
+      });
+    }
   }
 
   /**
@@ -511,6 +639,7 @@ export class KettleWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.envTarget?.dispose();

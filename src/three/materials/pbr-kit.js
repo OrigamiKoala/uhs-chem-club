@@ -1526,9 +1526,11 @@ export function addWorldBoxUV(material, { metres = 2 } = {}) {
  * is left exactly where it is.
  *
  * @param {THREE.Object3D} group the prop, already assembled in local space
+ * @param {{ keep?: string[] }} [opts] `keep` names extra attributes to carry through (opt-in; e.g. `['color']` for
+ *   baked vertex grime). A part that lacks one gets it filled with 1s, so a bucket still merges.
  * @returns {THREE.Group} the same group, with its static meshes replaced
  */
-export function mergeStatic(group) {
+export function mergeStatic(group, { keep = [] } = {}) {
   group.updateMatrixWorld(true);
   const buckets = new Map();   // material -> geometries in the group's frame
   const doomed = [];
@@ -1565,7 +1567,7 @@ export function mergeStatic(group) {
     }
     if (!g.attributes.normal) g.computeVertexNormals();
     for (const name of Object.keys(g.attributes)) {
-      if (!['position', 'normal', 'uv'].includes(name)) g.deleteAttribute(name);
+      if (!['position', 'normal', 'uv', ...keep].includes(name)) g.deleteAttribute(name);
     }
     bucket.geos.push(g);
     bucket.cast = bucket.cast || o.castShadow;
@@ -1608,6 +1610,15 @@ export function mergeStatic(group) {
         return flat;
       });
     }
+    // A kept attribute present on some parts and not others is filled with 1s where it is missing.
+    for (const name of keep) {
+      const src = bucket.geos.find(g => g.attributes[name]);
+      if (!src) continue;
+      const size = src.attributes[name].itemSize;
+      for (const g of bucket.geos) {
+        if (!g.attributes[name]) g.setAttribute(name, new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * size).fill(1), size));
+      }
+    }
     const merged = BufferGeometryUtils.mergeGeometries(bucket.geos, false);
     if (!merged) console.warn(`mergeStatic: could not bake ${bucket.geos.length} parts of ${group.name || 'a group'}`);
     for (const g of bucket.geos) g.dispose();
@@ -1642,12 +1653,13 @@ export function mergeStatic(group) {
  * colliders and names: only their baked meshes are lifted out.
  *
  * @param {THREE.Scene} scene the built, baked world
- * @param {{ cell?: number }} [opts]
+ * @param {{ cell?: number, keep?: string[] }} [opts] `keep` (opt-in) lets a geometry that also carries these
+ *   attributes be merged; a bucket merges only if all its meshes carry the same set.
  * @returns {{ before: number, after: number }} meshes taken and meshes left in their place
  */
-export function consolidateStatic(scene, { cell = 40 } = {}) {
+export function consolidateStatic(scene, { cell = 40, keep = [] } = {}) {
   scene.updateMatrixWorld(true);
-  const KEPT = new Set(['position', 'normal', 'uv', 'uv1']);
+  const KEPT = new Set(['position', 'normal', 'uv', 'uv1', ...keep]);
   const buckets = new Map();
   const centre = new THREE.Vector3();
 
@@ -1672,7 +1684,8 @@ export function consolidateStatic(scene, { cell = 40 } = {}) {
     const key = [
       mat.uuid, Math.floor(centre.x / cell), Math.floor(centre.z / cell),
       o.castShadow ? 1 : 0, o.receiveShadow ? 1 : 0, o.renderOrder, o.layers.mask,
-      o.userData.phys || '', o.customDepthMaterial?.uuid || '', o.customDistanceMaterial?.uuid || ''
+      o.userData.phys || '', o.customDepthMaterial?.uuid || '', o.customDistanceMaterial?.uuid || '',
+      keep.filter(name => g.attributes[name]).join(',')
     ].join('|');
     let b = buckets.get(key);
     if (!b) buckets.set(key, b = []);

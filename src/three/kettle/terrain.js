@@ -56,11 +56,16 @@ export function makeKettleField(data, plan) {
     const d = Math.hypot(x, z);
     const p = smooth(190, 330, d);
     if (p > 0) {
+      // The mesas: flat-bedded rock eroded back from the flat. Their height varies along the ring and with x, z (so no
+      // two bearings mirror), gullies cut down their faces, and the beds step at uneven heights with sharp risers.
       const az = Math.atan2(x, z);
-      const H = 10 + 34 * fbm2(az * 1.8 + 5, 2.3, 41, 3);
-      const wall = H * Math.pow(p, 1.2);
-      const step = 6;
-      y += wall * 0.6 + (Math.floor(wall / step) * step + smooth(0.5, 1, (wall / step) % 1) * step) * 0.4;
+      const H = 10 + 34 * fbm2(az * 1.8 + 5, 2.3, 41, 3) + 9 * (fbm2(x * 0.011, z * 0.011, 47, 3) - 0.5);
+      let wall = H * Math.pow(p, 1.2);
+      const rid = 1 - Math.abs(2 * fbm2(az * 15 + 3, d * 0.012, 43, 2) - 1);
+      wall *= 1 - Math.pow(rid, 4) * 0.5 * smooth(0.15, 0.9, p);
+      const step = 5 + 3 * fbm2(az * 6 + 1, 0.7, 49, 2);
+      const f = (wall / step) % 1;
+      y += wall * 0.45 + (Math.floor(wall / step) * step + smooth(0.62, 0.95, f) * step) * 0.55;
     }
     if (pad) {
       const dp = Math.hypot(x - pad.pos[0], z - pad.pos[2]);
@@ -122,12 +127,23 @@ function groundTint(x, z, data, plan) {
   return c;
 }
 
+/** How much of a point is heap (slag or ore) rather than crust: 1 on the heap, fading over its washed-out foot. */
+function heapWeight(x, z, plan) {
+  let k = 0;
+  for (const hill of plan.hills) {
+    const d = hillDepth(hill, x, z);
+    if (d > -5) k = Math.max(k, smooth(-5, 1.0, d));
+  }
+  return k;
+}
+
 export function buildKettleTerrainGeometry(field, data, plan) {
   const axis = axisLines();
   const n = axis.length;
   const positions = new Float32Array(n * n * 3);
   const uvs = new Float32Array(n * n * 2);
   const colors = new Float32Array(n * n * 3);
+  const heap = new Float32Array(n * n);
   const TILE = 9;
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
@@ -136,6 +152,7 @@ export function buildKettleTerrainGeometry(field, data, plan) {
       positions.set([x, field.outside(x, z), z], k * 3);
       uvs.set([x / TILE, z / TILE], k * 2);
       colors.set(groundTint(x, z, data, plan), k * 3);
+      heap[k] = heapWeight(x, z, plan);
     }
   }
   const rooms = plan.volumes.map(v => v.rect);
@@ -153,9 +170,82 @@ export function buildKettleTerrainGeometry(field, data, plan) {
   geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   geo.setAttribute('uv1', new THREE.BufferAttribute(uvs.slice(), 2));
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('kheap', new THREE.BufferAttribute(heap, 1));
   geo.setIndex(new THREE.BufferAttribute(new Uint32Array(index), 1));
   geo.computeVertexNormals();
   geo.computeBoundingBox();
   geo.computeBoundingSphere();
   return geo;
+}
+
+/**
+ * THE GROUND'S SHADER (the realism pass): what the stock material cannot know about this ground.
+ *
+ *   HEAPS. The slag tip and the ore stock are loose clinker, not crust: where `kheap` (a vertex attribute, 1 on a heap)
+ *   is high, the crust's crack relief is flattened and its pattern given up; with the photographed `slag` pack in hand
+ *   (`setKettleSlag`) the heap is drawn in that clinker, in world metres, tinted by the vertex paint as before.
+ *   Without it (below T4, or before it lands) the heap is the paint over a quiet, crackless crust.
+ *
+ * Uniform values change when the pack lands; the program does not. Chains any earlier patch.
+ */
+export const ktGroundUniforms = {
+  uKtSlag: { value: null },
+  uKtSlagOn: { value: 0 }
+};
+
+export function patchKettleGround(mat) {
+  if (!mat || mat.userData.ktGround) return mat;
+  mat.userData.ktGround = true;
+  if (!ktGroundUniforms.uKtSlag.value) {
+    const t = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1);
+    t.needsUpdate = true;
+    ktGroundUniforms.uKtSlag.value = t;
+  }
+  const prev = mat.onBeforeCompile;
+  const prevKey = mat.customProgramCacheKey ? mat.customProgramCacheKey() : '';
+  mat.onBeforeCompile = (shader, renderer) => {
+    prev?.call(mat, shader, renderer);
+    shader.uniforms.uKtSlag = ktGroundUniforms.uKtSlag;
+    shader.uniforms.uKtSlagOn = ktGroundUniforms.uKtSlagOn;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+        attribute float kheap;
+        varying float vKHeap;
+        varying vec3 vKtGPos;`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+        vKHeap = kheap;
+        vKtGPos = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+        uniform sampler2D uKtSlag;
+        uniform float uKtSlagOn;
+        varying float vKHeap;
+        varying vec3 vKtGPos;`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        if (vKHeap > 0.001) {
+          vec3 heapCol = diffuse * 0.82;
+          if (uKtSlagOn > 0.5) {
+            // Clinker in world metres, a second rotated coarser sample against repeats (the photo's linear mean is 0.23).
+            vec2 q = vKtGPos.xz;
+            vec3 a = texture2D(uKtSlag, q / 2.0).rgb;
+            vec3 b = texture2D(uKtSlag, mat2(0.8, -0.6, 0.6, 0.8) * q / 5.3 + 0.37).rgb;
+            float w = smoothstep(0.3, 0.7, fract(sin(dot(floor(q / 7.0), vec2(12.9898, 78.233))) * 43758.5453));
+            heapCol = diffuse * mix(a, b, 0.35 + 0.3 * w) * 2.6;
+          }
+          diffuseColor.rgb = mix(diffuseColor.rgb, heapCol, vKHeap);
+        }`)
+      .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps
+        .replace('mapN.xy *= normalScale;', 'mapN.xy *= normalScale * (1.0 - 0.85 * vKHeap);'));
+  };
+  const key = `${prevKey}|ktground`;
+  mat.customProgramCacheKey = () => key;
+  mat.needsUpdate = true;
+  return mat;
+}
+
+/** The slag pack has landed: the heaps take it. */
+export function setKettleSlag(tex) {
+  if (!tex) return;
+  ktGroundUniforms.uKtSlag.value = tex;
+  ktGroundUniforms.uKtSlagOn.value = 1;
 }

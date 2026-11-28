@@ -386,6 +386,44 @@ iff a quest has a module). Plans: `docs/archive/2026-11-26/plans/learn-track.md`
   `ROUND` (concrete and brick shells become `RoundedBoxGeometry` within their own bounds), `addTube` (round rail and
   posts), `axisLines({ growth, bands })` (denser far grid plus an even band over the cone). The shells draw with their
   own clones (`SHELL_MAT` -> `M.shell*`, world box uvs and world variation), so plant props and hosts keep theirs.
+- **Kettle realism pass (2026-11-27, `docs/plans/realism-kettle.md`).** Fifth user of `texture-pack.js` (`KettleWorld.initPacks`):
+  six Poly Haven packs in `public/textures/kettle/` (2.9 MB, T4 only, graded by `tools/textures/prep_kettle.py`), each
+  building material re-tinted to its old paint (old colour over the pack's linear mean). Reusable pieces:
+  `kettle/kit.js` BUILT SHAPES, opt-in per world (`w.builtKit = true`; Verdigris, Brinewire, Lodestone, Quicklight and
+  Teeter share the kit and get the old stock geometry): `chamferBoxGeometry` (44 triangles, chamfered edges, flat
+  shaded) and `turnedGeometry` (cylinders and cones as profile bands with bevelled rims), both with uvs in METRES and a
+  seeded offset per part, so a material's repeat is 1 / its tile everywhere. `kettle/grime.js`: `wallGeometry` (a wall
+  slab in world coordinates with rows packed at the floor and the roof and its grime in vertex colour: a damp band
+  from the floor on each face's own side, soot under the roof), `wallMaterial` (the vertex-coloured clone), and
+  `buildContactMap` / `addContact` (one baked R8 map at 0.25 m of every wall, column and host footprint, blurred at two
+  radii, multiplied into the floors' and the ground's albedo in world x, z: contact shadow in rooms the sun never
+  reaches, no per-fragment loops). `pbr-kit.js` `mergeStatic(group, { keep })` / `consolidateStatic(scene, { keep })`:
+  opt-in extra attributes (Kettle passes `['color']`) carried through the bake; the default is unchanged.
+  `kettle/terrain.js` `patchKettleGround`: a `kheap` vertex attribute flattens the crust's relief on the heaps and,
+  once the `slag` pack lands (`setKettleSlag`, a uniform), draws them in clinker in world metres.
+- **Mirrowen realism pass (2026-11-27, `docs/plans/realism-mirrowen.md`).** Sixth user of `texture-pack.js`, through
+  `loadTexturePack` + `dressFromPack` (`MirrowenWorld.initPacks`): ten Poly Haven packs in `public/textures/mirrowen/`
+  (4.0 MB, T4 only, graded by `tools/textures/prep_mirrowen.py`, which prints each albedo's linear mean; `tintTo` sets a
+  material's colour to its old paint over that mean when the pack lands). The bench plate is its own clone
+  (`M.benchTop`, passed as `mats.top`). Reusable pieces: the ground split into material index groups on the one
+  terrain mesh (`terrain.js` `groundSurface`: snow, setts, dock concrete, each with vertex colour) instead of one
+  material for all ground; `terrain.js` `bucketer` now normalises every piece to position/normal/uv so chunks,
+  crystals, lathes and extrusions merge with boxes, and adds `chunk` (Lanternfall's `chunkGeometry` with box uvs) and
+  `tube`; `stoneCourse` (a coping or kerb course cut into chunked stones along a wall segment); `hipRoof` (a hipped roof
+  as one closed solid); `kit.js` `boxUv` / `blockGeometry`. Trap: `addWorldVariation`'s anti-tile blends in a rotated
+  second sample, so on boards, coursed stone, brick, corrugation or plate seams it draws them crossed (boards read as
+  blockwork); Mirrowen sets `antiTile: 0` on every directional map. A mover's material is copied before the world-uv
+  patch (`initSurfaces`), since a projection in the world's frame swims on a moving part.
+- **Teeter realism pass (2026-11-27, `docs/plans/realism-teeter.md`).** Seventh user of `texture-pack.js`
+  (`TeeterWorld.initPacks`, six Poly Haven packs in `public/textures/teeter/`, 2.9 MB, T4 only, graded by
+  `tools/textures/prep_teeter.py`), and the second world on Kettle's opt-in built kit (`builtKit = true`; `ctx` carries
+  the flag so `kitFor(ctx)` works from helpers handed only the context). Reusable pieces: masonry blocks whose uvs are
+  laid from their FINAL world position in metres on each face's plane (`teeter/terrain.js` `finish`), so courses run on
+  across blocks and through rotations; `stoneRun` (a seeded coping or kerb cut into stones); foot grime as a per-block
+  vertex attribute (`ttFoot`, the ground's height in front) read by a shader patch on cloned materials
+  (`teeter/grime.js` `grimed`: damp band plus salt tide line; lift `userData` before `clone()`, which JSON-serialises
+  it and every canvas map listed there); the ramps split off the ground mesh as their own mesh sharing its vertices;
+  far-land erosion in the drawn mesh only (`relief`), faded round anything built out there, the walked height untouched.
 - **Bellows** (`unit04`, `three/bellows.js` + `bellows/`, `tools/gen-bellows-layout.mjs`, `tools/verify-bellows.mjs`; site rebuilt 2026-11-18, `docs/archive/2026-11-26/plans/bellows-world.md`
   "Site rebuild (2026-11-18)"): A GAS WORKS OVER THE CLOUD, NO GROUND. `bellows/works-plan.js` (pure data on `lib/workings.js`) declares the floor levels (`LEVEL`: stage and
   apron 0, sphere +8, tower hall -4, holder -8, mooring deck +4, cradle -5, cold deck +12), the structures (`PLINTH`, `SPHERE`, `HOLDER`, `COLDBOX`, `BAGS` with `bagBelly`),

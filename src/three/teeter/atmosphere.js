@@ -107,9 +107,13 @@ export function createTtSkyDome(radius = 900) {
   return dome;
 }
 
-/** The sun (the only shadow) and a hemisphere fill: pale sky above, the crust's warm bounce below. */
+/**
+ * The sun (the only shadow) and a hemisphere fill: pale sky above, the crust's warm bounce below. The realism pass
+ * (`docs/plans/realism-teeter.md`) put more of the light in the sun (2.3 -> 2.7) and less in the fill (1.2 -> 0.92),
+ * with the bounce darker and warmer than the sky, so a wall in shade reads as shade and the ground's relief shows.
+ */
 export function createTtLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#fff1d8'), 2.3);
+  const key = new THREE.DirectionalLight(new THREE.Color('#fff0d4'), 2.7);
   key.position.copy(TEETER_SUN).multiplyScalar(240);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -120,7 +124,7 @@ export function createTtLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#cfd6d6'), new THREE.Color('#b9b6a6'), 1.2);
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#cdd5d7'), new THREE.Color('#a69c86'), 0.92);
   return { key, hemi };
 }
 

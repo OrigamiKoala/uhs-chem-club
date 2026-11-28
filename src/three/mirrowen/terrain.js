@@ -18,6 +18,8 @@ import {
 } from './harbour-plan.js';
 import { floorOf } from '../lib/workings.js';
 import { buildRibbon, buildDisc } from '../ember/terrain.js';
+import { chunkGeometry } from '../lanternfall/kit.js';
+import { rng, crystalGeometry, boxUv } from './kit.js';
 
 export { buildRibbon, buildDisc, fbm2 };
 
@@ -89,7 +91,7 @@ function groundTint(x, z, y, slope, plan, paths) {
     const n = fbm2(x * 0.2, z * 0.2, 31, 2);
     const wall = Math.min(x - DOCK_PIT.minX, DOCK_PIT.maxX - x);
     c = mix3(C.dockFloor, C.dockWet, Math.min(1, n * 0.6 + (1 - smooth(0.5, 2.5, wall)) * 0.6));
-  } else if (v || plan.height(x, z) >= QUAY - 0.05 && y < TERRACE + 0.5) {
+  } else if (v) {
     // Quays and the terrace: granite setts, the joints picked out by the grain, worn pale where people walk.
     const n = fbm2(x * 0.11, z * 0.11, 37, 2);
     const setts = 0.5 + 0.5 * Math.sin(x * 3.1) * Math.sin(z * 3.1);
@@ -136,29 +138,78 @@ export function buildMirrowenTerrainGeometry(plan, data) {
       uv[k * 2] = x * 0.12; uv[k * 2 + 1] = z * 0.12;
     }
   }
-  const idx = [];
+  // Three surfaces, one mesh, one index group each (the materials `mirrowen.js` hands the mesh, in this order):
+  // 0 snow (the hills and the sea ice), 1 granite setts (the quays and the terrace), 2 the dry dock's concrete floor.
+  const idx = [[], [], []];
   for (let j = 0; j < nz - 1; j++) {
     const zc = (zs[j] + zs[j + 1]) / 2;
     for (let i = 0; i < nx - 1; i++) {
       const xc = (xs[i] + xs[i + 1]) / 2;
       if (inHole(xc, zc)) continue;
       const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1;
-      idx.push(a, c, b, b, c, d);
+      idx[groundSurface(xc, zc, plan)].push(a, c, b, b, c, d);
     }
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-  geo.setIndex(idx);
+  geo.setIndex(idx.flat());
+  let start = 0;
+  idx.forEach((list, m) => { geo.addGroup(start, list.length, m); start += list.length; });
   geo.computeVertexNormals();
   const norm = geo.attributes.normal;
   const col = new Float32Array(nx * nz * 3);
+  const shade = contactShader(plan);
   for (let k = 0; k < nx * nz; k++) {
-    const [r, g, b] = groundTint(pos[k * 3], pos[k * 3 + 2], pos[k * 3 + 1], 1 - Math.max(0, norm.getY(k)), plan, paths);
-    col[k * 3] = r; col[k * 3 + 1] = g; col[k * 3 + 2] = b;
+    const x = pos[k * 3], y = pos[k * 3 + 1], z = pos[k * 3 + 2];
+    const [r, g, b] = groundTint(x, z, y, 1 - Math.max(0, norm.getY(k)), plan, paths);
+    const sh = shade(x, z, y);
+    col[k * 3] = r * sh; col[k * 3 + 1] = g * sh; col[k * 3 + 2] = b * sh;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return geo;
+}
+
+/** Which surface a cell of ground is (the same test `groundTint` paints by): 0 snow, 1 setts, 2 dock concrete. */
+function groundSurface(x, z, plan) {
+  const v = plan.volumeAt(x, z);
+  if (v && v.kind === 'dock') return 2;
+  // Only what is built is paved (the quays, the terrace, the stair); the open land round them lies under snow.
+  return v ? 1 : 0;
+}
+
+/**
+ * CONTACT SHADE, baked into the ground's vertex colour: the sky cannot reach the foot of a wall, so the ground is a
+ * little darker there. On the ice and the sea bed: along the foot of every quay and dock wall, round every hull and
+ * round the boathouses' piles. On the quays: along every hull lying alongside and round the pump house.
+ * Returns the factor (0.6..1) for a ground point.
+ */
+function contactShader(plan) {
+  const dRect = (x, z, r) => Math.hypot(Math.max(r.minX - x, 0, x - r.maxX), Math.max(r.minZ - z, 0, z - r.maxZ));
+  const quays = plan.groundVols.filter(v => v.kind !== 'dock').map(v => v.rect);
+  const hulls = plan.hulls.map(h => h.rect);
+  const piles = plan.roofedVols.filter(v => v.room && (v.room.shell === 'thawShed' || v.room.shell === 'saltStore')).map(v => v.room.rect);
+  const fall = (d, R) => 1 - smooth(0, R, d);
+  return (x, z, y) => {
+    let s = 0;
+    if (y < QUAY - 0.5) {
+      // Low ground: the ice, the sea bed, the dock floor.
+      let dq = Infinity;
+      for (const r of quays) dq = Math.min(dq, dRect(x, z, r));
+      s = Math.max(s, fall(dq, 3.5) * 0.35);
+      for (const r of hulls) s = Math.max(s, fall(dRect(x, z, r), 4) * 0.4);
+      for (const r of piles) s = Math.max(s, fall(dRect(x, z, r), 3) * 0.3);
+      if (y < DOCK + 0.5) {
+        const wall = Math.min(x - DOCK_PIT.minX, DOCK_PIT.maxX - x, z - DOCK_PIT.minZ, DOCK_PIT.maxZ - z);
+        if (wall > -0.01) s = Math.max(s, fall(wall, 2.5) * 0.35);
+      }
+    } else if (y < TERRACE - 0.5) {
+      // The quays: a hull alongside shades the edge; the pump house its foot.
+      for (const r of hulls) s = Math.max(s, fall(dRect(x, z, r), 2.5) * 0.25);
+      s = Math.max(s, fall(dRect(x, z, PUMP_HOUSE), 2.0) * 0.3);
+    }
+    return 1 - s;
+  };
 }
 
 /** The open water: one level sheet over the sea bed, never inside a hull or the dock. Vertex colour by depth of view. */
@@ -204,7 +255,37 @@ export function buildWaterGeometry(plan) {
 
 function bucketer() {
   const buckets = new Map();
-  const push = (key, g) => { let a = buckets.get(key); if (!a) { a = []; buckets.set(key, a); } a.push(g); };
+  let seed = 1;
+  // Every piece enters a bucket with the same attributes (position, normal, uv), so any two can be merged.
+  const push = (key, g) => {
+    for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal' && k !== 'uv') g.deleteAttribute(k);
+    if (!g.attributes.uv) boxUv(g);
+    let a = buckets.get(key); if (!a) { a = []; buckets.set(key, a); } a.push(g);
+  };
+  /**
+   * A worn, rounded block in place of a box (`chunkGeometry`: it only ever loses material inside the box), centred
+   * at (x, y, z), turned by `ry` about y. Seeded in build order, so every build draws the same stones.
+   */
+  const chunk = (key, sx, sy, sz, x, y, z, ry = 0, o = {}) => {
+    if (sx <= 0.001 || sy <= 0.001 || sz <= 0.001) return;
+    const { uvMetres = 2, ...shape } = o;
+    const g = chunkGeometry(sx, sy, sz, { seed: 4099 + (seed++) * 37, ...shape });
+    if (ry) g.rotateY(ry);
+    g.translate(x, y, z);
+    push(key, boxUv(g, uvMetres));
+  };
+  /** A round bar of radius `r` from point a to point b (a tube rail, a stanchion, a rubbing strake). */
+  const tube = (key, a, b, r, seg = 8) => {
+    const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+    const dir = vb.clone().sub(va);
+    const len = dir.length();
+    if (len < 0.01) return;
+    const g = new THREE.CylinderGeometry(r, r, len, seg, 1, false);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()));
+    const m = va.add(vb).multiplyScalar(0.5);
+    g.translate(m.x, m.y, m.z);
+    push(key, g);
+  };
   const box = (key, sx, sy, sz, x, y, z, rx = 0, ry = 0, rz = 0) => {
     if (sx <= 0.001 || sy <= 0.001 || sz <= 0.001) return;
     const g = new THREE.BoxGeometry(sx, sy, sz);
@@ -233,7 +314,7 @@ function bucketer() {
     push(key, g);
   };
   const geo = (key, g) => push(key, g);
-  return { buckets, box, span, cyl, beam, geo };
+  return { buckets, box, span, cyl, beam, geo, chunk, tube };
 }
 
 function flush(ctx, buckets, group, prefix, { phys = 'ground', shadow = true } = {}) {
@@ -264,6 +345,27 @@ function wallBox(B, key, seg, y0, y1, half = WALL_HALF, ext = half) {
   } else {
     const lo = Math.min(seg.ax, seg.bx) - ext, hi = Math.max(seg.ax, seg.bx) + ext;
     B.span(key, lo, hi, y0, y1, seg.az - half, seg.az + half);
+  }
+}
+
+/**
+ * A course of dressed stones along a side's segment, between heights y0 and y1, ±`half` about its plane: the coping
+ * on a quay wall, a kerb, the cap of a parapet. Cut into stones about `stone` m long, each a chunk (its arrises
+ * rounded, its corners chipped), so the joints between them read as joints. Every stone lies inside the box the
+ * course would have filled.
+ */
+function stoneCourse(B, key, seg, y0, y1, half, ext, { stone = 1.1, wear = 0.008, chip = 0.03 } = {}) {
+  if (y1 - y0 < 0.01) return;
+  const alongZ = seg.side === 'minX' || seg.side === 'maxX';
+  const lo = (alongZ ? Math.min(seg.az, seg.bz) : Math.min(seg.ax, seg.bx)) - ext;
+  const hi = (alongZ ? Math.max(seg.az, seg.bz) : Math.max(seg.ax, seg.bx)) + ext;
+  const n = Math.max(1, Math.round((hi - lo) / stone));
+  const L = (hi - lo) / n;
+  const plane = alongZ ? seg.ax : seg.az;
+  for (let i = 0; i < n; i++) {
+    const c = lo + L * (i + 0.5);
+    const [sx, sz, x, z] = alongZ ? [half * 2, L, plane, c] : [L, half * 2, c, plane];
+    B.chunk(key, sx, y1 - y0, sz, x, (y0 + y1) / 2, z, 0, { round: 0.18, wear, chip, cell: 0.4 });
   }
 }
 
@@ -329,19 +431,35 @@ function edges(B, plan) {
           continue;
         }
         const key = v.kind === 'dock' || v.kind === 'ramp' && v.id === 'dock-stair' ? 'concrete' : 'granite';
+        // Granite walls end in a dressed coping course; concrete ones in a cast capping, worn less.
+        const cope = key === 'granite' ? { stone: 1.1 } : { stone: 2.0, wear: 0.004, chip: 0.012 };
         if (far.y < lo - 0.5) {
           // A drop: the quay wall, the dock wall or the stair's side, from the bed of the water or the floor below.
           const bottom = far.v ? far.y - 0.3 : far.y < WATER - 1 ? SEABED - 0.3 : far.y - 1.0;
-          wallBox(B, key, p, bottom, hi, WALL_HALF, ext);
-          if (s.kind === 'kerb') wallBox(B, 'granite', p, hi, hi + 0.32, 0.36, ext + 0.06);
-          if (s.kind === 'wall') wallBox(B, key, p, hi, hi + 1.1, WALL_HALF, ext);
+          if (s.kind === 'kerb') {
+            wallBox(B, key, p, bottom, hi, WALL_HALF, ext);
+            stoneCourse(B, 'granite', p, hi, hi + 0.32, 0.36, ext + 0.06);
+          } else if (s.kind === 'wall') {
+            wallBox(B, key, p, bottom, hi + 0.95, WALL_HALF, ext);
+            stoneCourse(B, key, p, hi + 0.95, hi + 1.1, WALL_HALF + 0.05, ext + 0.04, cope);
+          } else {
+            // An open edge (a railing on it): the wall to just under the walk, and its coping flush with the walk.
+            wallBox(B, key, p, bottom, hi - 0.28, WALL_HALF, ext);
+            stoneCourse(B, key, p, hi - 0.28, hi + 0.02, WALL_HALF + 0.06, ext + 0.02, cope);
+          }
         } else if (far.y > hi + 0.5) {
           // Retaining: up to the walk beyond (it has its own rail), or up to the land and a parapet on it.
           const top = far.v ? far.y : far.y + 1.05;
-          wallBox(B, key, p, lo - 0.3, top, WALL_HALF, ext);
+          if (far.v) wallBox(B, key, p, lo - 0.3, top, WALL_HALF, ext);
+          else {
+            wallBox(B, key, p, lo - 0.3, top - 0.15, WALL_HALF, ext);
+            stoneCourse(B, key, p, top - 0.15, top, WALL_HALF + 0.05, ext + 0.04, cope);
+          }
         } else if (s.kind === 'wall') {
           // A closed side on level ground: a yard wall 2.4 m high, the backs of the warehouses beyond it.
-          wallBox(B, key, p, lo - 0.2, Math.max(hi, far.y) + 2.4, WALL_HALF, ext);
+          const top = Math.max(hi, far.y) + 2.4;
+          wallBox(B, key, p, lo - 0.2, top - 0.16, WALL_HALF, ext);
+          stoneCourse(B, key, p, top - 0.16, top, WALL_HALF + 0.05, ext + 0.04, cope);
         }
       }
       if (s.kind === 'bulwark') bulwark(B, s, floorOf(v, s.ax, s.az), floorOf(v, s.bx, s.bz));
@@ -356,12 +474,15 @@ function rail(B, s, ya, yb) {
   const dx = s.bx - s.ax, dz = s.bz - s.az;
   const len = Math.hypot(dx, dz);
   B.beam('darkSteel', [s.ax, ya + 0.08, s.az], [s.bx, yb + 0.08, s.bz], 0.06, 0.16);
-  B.beam('paintYellow', [s.ax, ya + H, s.az], [s.bx, yb + H, s.bz], 0.06, 0.06);
-  B.beam('paintYellow', [s.ax, ya + H * 0.52, s.az], [s.bx, yb + H * 0.52, s.bz], 0.045, 0.045);
+  // Tube rails on round stanchions, each stanchion on a small base plate.
+  B.tube('paintYellow', [s.ax, ya + H, s.az], [s.bx, yb + H, s.bz], 0.03);
+  B.tube('paintYellow', [s.ax, ya + H * 0.52, s.az], [s.bx, yb + H * 0.52, s.bz], 0.022);
   const n = Math.max(1, Math.round(len / 2.4));
   for (let i = 0; i <= n; i++) {
     const t = i / n;
-    B.box('darkSteel', 0.07, H, 0.07, s.ax + dx * t, ya + (yb - ya) * t + H / 2, s.az + dz * t);
+    const x = s.ax + dx * t, y = ya + (yb - ya) * t, z = s.az + dz * t;
+    B.cyl('darkSteel', 0.032, 0.032, H, 8, x, y + H / 2, z);
+    B.cyl('darkSteel', 0.07, 0.07, 0.02, 8, x, y + 0.01, z);
   }
 }
 
@@ -372,7 +493,8 @@ function bulwark(B, s, ya, yb) {
   const len = Math.hypot(dx, dz);
   const [px, pz] = [s.dirX * 0.18, s.dirZ * 0.18];
   B.beam('hullPlate', [s.ax - px, ya + H / 2, s.az - pz], [s.bx - px, yb + H / 2, s.bz - pz], 0.1, H);
-  B.beam('darkSteel', [s.ax - px, ya + H + 0.04, s.az - pz], [s.bx - px, yb + H + 0.04, s.bz - pz], 0.22, 0.08);
+  B.beam('darkSteel', [s.ax - px, ya + H + 0.02, s.az - pz], [s.bx - px, yb + H + 0.02, s.bz - pz], 0.2, 0.04);
+  B.tube('darkSteel', [s.ax - px, ya + H + 0.07, s.az - pz], [s.bx - px, yb + H + 0.07, s.bz - pz], 0.05);
   const n = Math.max(1, Math.round(len / 1.8));
   for (let i = 0; i <= n; i++) {
     const t = i / n;
@@ -473,6 +595,33 @@ function wallTop(plan, v) {
   return top;
 }
 
+/**
+ * A hipped roof as one closed solid: four sloping faces from the eaves rectangle (at `y`) up to a ridge `rise`
+ * above, inset `inset` from the short ends, and a flat soffit under the eaves.
+ */
+function hipRoof(x0, x1, z0, z1, y, rise, inset) {
+  const cz = (z0 + z1) / 2;
+  const ra = [x0 + inset, y + rise, cz], rb = [x1 - inset, y + rise, cz];
+  const A = [x0, y, z0], Bq = [x1, y, z0], C = [x1, y, z1], D = [x0, y, z1];
+  const tris = [
+    A, rb, Bq, A, ra, rb,      // the north slope
+    C, ra, D, C, rb, ra,       // the south slope
+    Bq, rb, C,                 // the east hip
+    D, ra, A,                  // the west hip
+    A, Bq, C, A, C, D          // the soffit
+  ];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(tris.flat(), 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Corner boards up the four outside corners of a boarded room, from `y0` to `y1`. */
+function cornerBoards(B, r, y0, y1) {
+  const o = WALL_HALF + 0.05;
+  for (const x of [r.minX - o, r.maxX + o]) for (const z of [r.minZ - o, r.maxZ + o]) B.span('timberDark', x - 0.1, x + 0.1, y0, y1, z - 0.1, z + 0.1);
+}
+
 function room(B, plan, v) {
   const rm = v.room;
   const r = rm.rect;
@@ -570,6 +719,10 @@ function room(B, plan, v) {
       const slope = Math.hypot(halfD, ridge - roofY);
       B.box(M.roof, W + 1.2, 0.16, slope, cx + 0.3, (roofY + ridge) / 2, cz - halfD / 2, -pitch, 0, 0);
       B.box(M.roof, W + 1.2, 0.16, slope, cx + 0.3, (roofY + ridge) / 2, cz + halfD / 2, pitch, 0, 0);
+      // Fascia boards along both eaves, a capping along the ridge, boards up the corners.
+      for (const sz of [-1, 1]) B.span('timberDark', r.minX - 0.3, r.maxX + 0.9, roofY - 0.22, roofY + 0.02, cz + sz * halfD - 0.06, cz + sz * halfD + 0.06);
+      B.tube('darkSteel', [r.minX - 0.3, ridge + 0.04, cz], [r.maxX + 0.9, ridge + 0.04, cz], 0.09, 8);
+      cornerBoards(B, r, y0 - 0.75, roofY);
       for (let x = r.minX + 0.3; x <= r.maxX + 0.1; x += 2.8) {
         B.span('timberDark', x - 0.1, x + 0.1, roofY - 0.25, roofY, r.minZ, r.maxZ);
         B.beam('timberDark', [x, roofY, r.minZ], [x, ridge - 0.1, cz], 0.16, 0.2);
@@ -577,9 +730,13 @@ function room(B, plan, v) {
         B.span('timberDark', x - 0.07, x + 0.07, roofY, ridge - 0.1, cz - 0.07, cz + 0.07);
       }
       // Gable infill over the west wall; the east gable open over the slip.
-      for (let i = 0; i < 4; i++) {
-        const h0 = roofY + 0.45 + i * 0.55, f = 1 - (i + 0.5) / 4;
-        B.span(M.wall, r.minX - 0.3, r.minX + 0.3, h0, h0 + 0.55, cz - halfD * f, cz + halfD * f);
+      {
+        // A triangle of boarding under the two slopes, not a stack of steps.
+        const tri = new THREE.Shape([new THREE.Vector2(-halfD, 0), new THREE.Vector2(halfD, 0), new THREE.Vector2(0, ridge - roofY - 0.2)]);
+        const gab = new THREE.ExtrudeGeometry(tri, { depth: 0.6, bevelEnabled: false });
+        gab.rotateY(Math.PI / 2);
+        gab.translate(r.minX - 0.3, roofY, cz);
+        B.geo(M.wall, gab);
       }
       // The slip: rails running down from the open end into the water.
       for (const z of [cz - 2.2, cz + 2.2]) B.beam('darkSteel', [r.maxX, y0 - 0.2, z], [r.maxX + 16, WATER - 1.8, z], 0.2, 0.3);
@@ -607,9 +764,10 @@ function room(B, plan, v) {
     case 'saltStore': {
       // A hipped roof over a boarded store; a loading hatch in the north gable.
       const rise = 2.2;
-      B.span(M.roof, r.minX - 0.5, r.maxX + 0.5, roofY + 0.45, roofY + 0.6, r.minZ - 0.5, r.maxZ + 0.5);
-      B.span(M.roof, r.minX + 1.2, r.maxX - 1.2, roofY + 0.6, roofY + 0.6 + rise * 0.5, r.minZ + 1.2, r.maxZ - 1.2);
-      B.span(M.roof, r.minX + 2.8, r.maxX - 2.8, roofY + 0.6 + rise * 0.5, roofY + 0.6 + rise, r.minZ + 2.8, r.maxZ - 2.8);
+      // A true hip: four sheeted slopes to a short ridge, a fascia round the eaves, boards up the corners.
+      B.span('timberDark', r.minX - 0.5, r.maxX + 0.5, roofY + 0.45, roofY + 0.6, r.minZ - 0.5, r.maxZ + 0.5);
+      B.geo(M.roof, hipRoof(r.minX - 0.5, r.maxX + 0.5, r.minZ - 0.5, r.maxZ + 0.5, roofY + 0.6, rise, (D + 1) / 2 * 0.85));
+      cornerBoards(B, r, y0 - 0.75, roofY + 0.45);
       roofSlab('timber');
       for (let z = r.minZ + 1.5; z < r.maxZ; z += 2.75) B.span('timberDark', r.minX, r.maxX, roofY - 0.3, roofY, z - 0.1, z + 0.1);
       // Posts of the frame showing on the inside of the boards.
@@ -698,10 +856,12 @@ function hull(B, plan, h) {
       B.span(paint, p + out * 0.02 - 0.15, p + out * 0.02 + 0.15, h.keel, deck, a, b);
       B.span('bootTop', p + out * 0.06 - 0.15, p + out * 0.06 + 0.15, WATER - 0.6, WATER + 0.7, a, b);
       B.span('darkSteel', p + out * 0.22 - 0.1, p + out * 0.22 + 0.1, deck - 0.35, deck - 0.15, a, b);
+      B.tube('darkSteel', [p + out * 0.26, deck - 1.4, a + 0.4], [p + out * 0.26, deck - 1.4, b - 0.4], 0.13, 10);
     } else {
       B.span(paint, a, b, h.keel, deck, p + out * 0.02 - 0.15, p + out * 0.02 + 0.15);
       B.span('bootTop', a, b, WATER - 0.6, WATER + 0.7, p + out * 0.06 - 0.15, p + out * 0.06 + 0.15);
       B.span('darkSteel', a, b, deck - 0.35, deck - 0.15, p + out * 0.22 - 0.1, p + out * 0.22 + 0.1);
+      B.tube('darkSteel', [a + 0.4, deck - 1.4, p + out * 0.26], [b - 0.4, deck - 1.4, p + out * 0.26], 0.13, 10);
     }
   }
   // The bow: an extruded prism from the keel to a raised forecastle, its sheer rising forward.
@@ -732,6 +892,59 @@ function hull(B, plan, h) {
   superstructure(B, plan, h);
 }
 
+/**
+ * A row of portholes on a face of a deckhouse: dark glass in a brass rim, every `step` m between `lo` and `hi`
+ * along the face, at height `y`. `axis` is the face's normal axis ('x' or 'z'), `plane` where the face is, `out`
+ * its outward sign.
+ */
+function portholes(B, axis, plane, out, y, lo, hi, step = 1.4, r = 0.2) {
+  const n = Math.max(1, Math.floor((hi - lo) / step));
+  const pad = (hi - lo - (n - 1) * step) / 2;
+  for (let i = 0; i < n; i++) {
+    const t = lo + pad + i * step;
+    if (axis === 'z') {
+      B.cyl('brass', r + 0.05, r + 0.05, 0.06, 14, t, y, plane + out * 0.03, Math.PI / 2, 0, 0);
+      B.cyl('glassDark', r, r, 0.07, 14, t, y, plane + out * 0.04, Math.PI / 2, 0, 0);
+    } else {
+      B.cyl('brass', r + 0.05, r + 0.05, 0.06, 14, plane + out * 0.03, y, t, 0, 0, Math.PI / 2);
+      B.cyl('glassDark', r, r, 0.07, 14, plane + out * 0.04, y, t, 0, 0, Math.PI / 2);
+    }
+  }
+}
+
+/** A row of square windows (dark glass in a steel frame) on a face, as `portholes`. */
+function windows(B, axis, plane, out, y, lo, hi, step = 2.2, w = 0.9, h = 0.75) {
+  const n = Math.max(1, Math.floor((hi - lo) / step));
+  const pad = (hi - lo - (n - 1) * step) / 2;
+  for (let i = 0; i < n; i++) {
+    const t = lo + pad + i * step;
+    const o = plane + out * 0.04;
+    if (axis === 'z') {
+      B.span('darkSteel', t - w / 2 - 0.06, t + w / 2 + 0.06, y - h / 2 - 0.06, y + h / 2 + 0.06, o - 0.04, o + 0.02);
+      B.span('glassDark', t - w / 2, t + w / 2, y - h / 2, y + h / 2, o - 0.02, o + 0.04);
+    } else {
+      B.span('darkSteel', o - 0.04, o + 0.02, y - h / 2 - 0.06, y + h / 2 + 0.06, t - w / 2 - 0.06, t + w / 2 + 0.06);
+      B.span('glassDark', o - 0.02, o + 0.04, y - h / 2, y + h / 2, t - w / 2, t + w / 2);
+    }
+  }
+}
+
+/** The rail round an upper deck: round stanchions every 1.5 m, a top rail and a mid rail. */
+function deckRail(B, x0, x1, z0, z1, y) {
+  const corners = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+  for (let i = 0; i < 4; i++) {
+    const [ax, az] = corners[i], [bx, bz] = corners[(i + 1) % 4];
+    B.tube('darkSteel', [ax, y + 1.0, az], [bx, y + 1.0, bz], 0.028, 6);
+    B.tube('darkSteel', [ax, y + 0.5, az], [bx, y + 0.5, bz], 0.02, 6);
+    const len = Math.hypot(bx - ax, bz - az);
+    const n = Math.max(1, Math.round(len / 1.5));
+    for (let k = 0; k < n; k++) {
+      const t = k / n;
+      B.cyl('darkSteel', 0.025, 0.025, 1.0, 6, ax + (bx - ax) * t, y + 0.5, az + (bz - az) * t);
+    }
+  }
+}
+
 /** What stands on each hull's deck: the parts that make an ice-breaker, a tanker or a freighter. */
 function superstructure(B, plan, h) {
   const r = h.rect, d = h.deck;
@@ -739,6 +952,10 @@ function superstructure(B, plan, h) {
     // The engine casing aft of the deckhouse, the funnel on it, the boat deck over the casing.
     B.span('shipWhite', 20.6, 34.6, d, d + 3.2, 0.6, 13.4);
     B.span('deckPlate', 20.2, 35, d + 3.2, d + 3.4, 0.2, 13.8);
+    deckRail(B, 20.4, 34.8, 0.4, 13.6, d + 3.4);
+    portholes(B, 'z', 13.4, 1, d + 1.9, 21.2, 34, 1.4);
+    portholes(B, 'z', 0.6, -1, d + 1.9, 21.2, 34, 1.4);
+    portholes(B, 'x', 34.6, 1, d + 1.9, 1.4, 12.6, 1.6);
     B.cyl('shipRed', 1.7, 1.9, 6.5, 18, 27, d + 3.4 + 3.25, 7);
     B.cyl('darkSteel', 1.75, 1.75, 0.9, 18, 27, d + 3.4 + 6.1, 7);
     // The foremast with its crow's nest on the forecastle.
@@ -758,6 +975,12 @@ function superstructure(B, plan, h) {
     // The midship deckhouse forward of the manifold deck, the after accommodation and its funnel.
     B.span('shipWhite', 57, 73, d, d + 6.5, 2.4, 12.6);
     B.span('deckPlate', 56.6, 73.4, d + 6.5, d + 6.7, 2, 13);
+    deckRail(B, 56.8, 73.2, 2.2, 12.8, d + 6.7);
+    for (const y of [d + 1.7, d + 4.6]) {
+      windows(B, 'x', 57, -1, y, 3.2, 11.8);
+      windows(B, 'x', 73, 1, y, 3.2, 11.8);
+      windows(B, 'z', 12.6, 1, y, 58, 72);
+    }
     B.cyl('shipBlack', 1.3, 1.5, 4.6, 16, 65, d + 6.7 + 2.3, 9);
     // Vent masts over the cargo tanks.
     for (const [x, z] of [[58.5, -44], [71.5, -44], [58.5, -24], [71.5, -24]]) B.cyl('darkSteel', 0.14, 0.14, 4.6, 8, x, d + 2.3, z);
@@ -767,6 +990,9 @@ function superstructure(B, plan, h) {
     B.span('hatch', -80.6, -68, d, d + 1.5, -49.4, -43);
     B.span('shipWhite', -68, -56, d, d + 4.6, -45.4, -40.6);
     B.span('deckPlate', -68.4, -55.6, d + 4.6, d + 4.8, -45.8, -40.2);
+    deckRail(B, -68.2, -55.8, -45.6, -40.4, d + 4.8);
+    portholes(B, 'z', -40.6, 1, d + 2.6, -67, -57, 1.5);
+    portholes(B, 'z', -45.4, -1, d + 2.6, -67, -57, 1.5);
     B.cyl('shipRust', 0.9, 1.1, 3.2, 14, -60, d + 4.8 + 1.6, -43);
     B.cyl('darkSteel', 0.24, 0.3, 11, 10, -79.6, d + 1.5 + 5.5, -40.9);
     B.beam('darkSteel', [-79.6, d + 9, -40.9], [-86, d + 3.4, -46], 0.16, 0.16);
@@ -811,16 +1037,43 @@ function pumpHouse(B) {
   const p = PUMP_HOUSE;
   B.span('brick', p.minX, p.maxX, QUAY - 0.3, QUAY + p.top, p.minZ, p.maxZ);
   B.span('roofSheet', p.minX - 0.5, p.maxX + 0.5, QUAY + p.top, QUAY + p.top + 0.35, p.minZ - 0.5, p.maxZ + 0.5);
+  // A granite plinth at the foot and a stone string course under the eaves, both a little proud of the brick.
+  B.chunk('granite', p.maxX - p.minX + 0.16, 0.7, p.maxZ - p.minZ + 0.16, (p.minX + p.maxX) / 2, QUAY + 0.05, (p.minZ + p.maxZ) / 2, 0, { round: 0.06, wear: 0.01, chip: 0.03, cell: 0.8 });
+  B.chunk('granite', p.maxX - p.minX + 0.2, 0.3, p.maxZ - p.minZ + 0.2, (p.minX + p.maxX) / 2, QUAY + p.top - 0.25, (p.minZ + p.maxZ) / 2, 0, { round: 0.1, wear: 0.008, chip: 0.02, cell: 0.8 });
+  // Stone sills under the windows.
+  for (let x = p.minX + 2; x < p.maxX - 1; x += 3) B.chunk('granite', 1.5, 0.14, 0.22, x, 2.13, p.maxZ + 0.08, 0, { round: 0.2, wear: 0.005, cell: 0.4 });
+  for (let z = p.minZ + 2; z < p.maxZ - 1; z += 3) B.chunk('granite', 0.22, 0.14, 1.5, p.maxX + 0.08, 2.13, z, 0, { round: 0.2, wear: 0.005, cell: 0.4 });
   // Tall arched windows on the yard and mole-head faces, as dark glass set in the brick.
   for (let x = p.minX + 2; x < p.maxX - 1; x += 3) B.span('glassDark', x - 0.6, x + 0.6, 2.2, 6.2, p.maxZ, p.maxZ + 0.05);
   for (let z = p.minZ + 2; z < p.maxZ - 1; z += 3) B.span('glassDark', p.maxX, p.maxX + 0.05, 2.2, 6.2, z - 0.6, z + 0.6);
   // Its chimney.
   B.span('brick', p.minX + 1, p.minX + 3, QUAY + p.top, QUAY + p.top + 9, p.minZ + 1, p.minZ + 3);
+  B.chunk('granite', 2.3, 0.3, 2.3, p.minX + 2, QUAY + p.top + 9.1, p.minZ + 2, 0, { round: 0.15, wear: 0.01, cell: 0.6 });
 }
 
 /* ======================================================================
    THE FAR COUNTRY (`phys: 'ambient'`)
    ====================================================================== */
+
+/** A far ship's hull: a long prism with a raked, pointed bow (+x), `L` × `Bm` × `H`, centred at the origin. */
+function farHull(L, Bm, H) {
+  const l = L / 2, b = Bm / 2;
+  const shape = new THREE.Shape([[-l, -b], [l - Bm * 1.4, -b], [l, 0], [l - Bm * 1.4, b], [-l, b], [-l - 0.6, b * 0.6], [-l - 0.6, -b * 0.6]].map(([x, z]) => new THREE.Vector2(x, z)));
+  const g = new THREE.ExtrudeGeometry(shape, { depth: H, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.3, bevelSegments: 1 });
+  g.rotateX(Math.PI / 2);
+  g.translate(0, H / 2, 0);
+  return g;
+}
+
+/** A gabled roof (a triangular prism) `len` long across a building `depth` deep, ridge `rise` above its eaves. */
+function gable(len, depth, rise) {
+  const d = depth / 2 + 0.5;
+  const shape = new THREE.Shape([new THREE.Vector2(-d, 0), new THREE.Vector2(d, 0), new THREE.Vector2(0, rise)]);
+  const g = new THREE.ExtrudeGeometry(shape, { depth: len + 1, bevelEnabled: false });
+  g.translate(0, 0, -(len + 1) / 2);
+  g.rotateY(Math.PI / 2);
+  return g;
+}
 
 export function buildHarbourVista(ctx, plan) {
   const group = new THREE.Group();
@@ -832,15 +1085,22 @@ export function buildHarbourVista(ctx, plan) {
   // NORTH: a tabular iceberg grounded in the sea ice, and a ship beset far out.
   {
     const y = plan.landHeight(-40, -330);
-    B.box('ice', 110, 28, 46, -40, y + 10, -330, 0, 0.12, 0);
-    B.box('iceDeep', 70, 18, 30, -10, y + 6, -310, 0, 0.3, 0.02);
+    // The berg: flat-topped, its walls broken and fluted by the sea, a calved block lying off its foot.
+    B.chunk('ice', 110, 28, 46, -40, y + 10, -330, 0.12, { round: 0.18, wear: 6, chip: 12, taper: 0.12, cell: 4, uvMetres: 14 });
+    B.chunk('iceDeep', 70, 18, 30, -10, y + 6, -310, 0.3, { round: 0.25, wear: 4.5, chip: 8, taper: 0.16, cell: 3, uvMetres: 14 });
+    B.chunk('ice', 16, 7, 12, 14, y + 1.5, -296, 0.9, { round: 0.35, wear: 0.8, chip: 1.5, cell: 2, uvMetres: 10 });
     const sy = plan.landHeight(150, -260);
-    B.box('shipBlack', 60, 7, 11, 150, sy + 1.5, -260, 0, 0.6, 0.06);
+    const ship = farHull(60, 11, 7);
+    ship.rotateX(0.06).rotateY(-0.6);
+    ship.translate(150, sy + 1.5, -260);
+    B.geo('shipBlack', ship);
     B.box('shipWhite', 12, 7, 9, 135, sy + 7, -250, 0, 0.6, 0.06);
   }
   // EAST: the outer breakwater out into the sea ice, the harbour light at its end.
   {
-    for (let x = 100; x < 260; x += 8) B.box('granite', 8.2, 4.2, 9, x + 4, ICE + 1.2, -40 + (x - 100) * 0.05);
+    // Armour stone heaped along the breakwater, each block its own broken shape.
+    const br = rng(0xb4ea);
+    for (let x = 100; x < 260; x += 8) B.chunk('granite', 8.2, 4.2 + br() * 0.8, 9, x + 4, ICE + 1.2, -40 + (x - 100) * 0.05, (br() - 0.5) * 0.3, { round: 0.3, wear: 0.4, chip: 1.2, cell: 1.6, uvMetres: 3 });
     B.cyl('shipWhite', 2.6, 3.2, 22, 12, 268, ICE + 12, -32);
     B.cyl('darkSteel', 2.2, 2.2, 3, 12, 268, ICE + 24.5, -32);
     B.cyl('paintRed', 2.8, 2.8, 4, 12, 268, ICE + 6, -32);
@@ -851,7 +1111,10 @@ export function buildHarbourVista(ctx, plan) {
       const x = -120 + i * 34, z = 128 + (i % 3) * 22;
       const y = plan.landHeight(x, z);
       B.box(i % 2 ? 'brick' : 'hallWall', 26, 12 + (i % 3) * 3, 14, x, y + 6, z, 0, (i % 4) * 0.08, 0);
-      B.box('roofSheet', 27, 1, 15, x, y + 12.6 + (i % 3) * 3, z, 0, (i % 4) * 0.08, 0);
+      const roof = gable(26, 14, 4 + (i % 2) * 1.5);
+      roof.rotateY((i % 4) * 0.08);
+      roof.translate(x, y + 12 + (i % 3) * 1.5, z);
+      B.geo('roofSheet', roof);
     }
     const my = plan.landHeight(40, 330);
     B.cyl('darkSteel', 0.6, 1.8, 60, 8, 40, my + 30, 330);
@@ -860,12 +1123,21 @@ export function buildHarbourVista(ctx, plan) {
   {
     for (let x = -130; x > -560; x -= 26) {
       for (const z of [CANAL.minZ - 3, CANAL.maxZ + 3]) {
+        // A cluster of crystal columns, as the Fifth's walls in the harbour, leaning on each other.
         const hgt = 10 + Math.abs(Math.sin(x * 0.13)) * 12;
-        B.box('ice', 9, hgt, 6, x, ICE + hgt / 2 - 0.5, z, 0.05, x * 0.2, 0.1);
+        for (let k = 0; k < 3; k++) {
+          const c = crystalGeometry(2.2 - k * 0.4, hgt * (1 - k * 0.22), { seed: k + Math.round(-x) });
+          c.rotateZ((k - 1) * 0.12).rotateX(0.05 * (k - 1));
+          c.translate(x + (k - 1) * 3, ICE - 0.5, z + (k % 2 ? 1.2 : -0.6));
+          B.geo(k === 1 ? 'iceDeep' : 'ice', boxUv(c, 4));
+        }
       }
     }
     for (const [x, roll] of [[-190, 0.12], [-330, -0.1]]) {
-      B.box('shipRust', 40, 7, 10, x, ICE + 1.2, (CANAL.minZ + CANAL.maxZ) / 2, roll, 0.04, 0);
+      const h = farHull(40, 10, 7);
+      h.rotateX(roll).rotateY(0.04);
+      h.translate(x, ICE + 1.2, (CANAL.minZ + CANAL.maxZ) / 2);
+      B.geo('shipRust', h);
       B.box('shipWhite', 8, 5, 8, x + 14, ICE + 6.5, (CANAL.minZ + CANAL.maxZ) / 2, roll, 0.04, 0);
     }
   }

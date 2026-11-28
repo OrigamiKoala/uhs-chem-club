@@ -174,8 +174,9 @@ export function planetPos(node, _time = 0) {
 export function layoutSystems(list, seed = null) {
   const rng = seed == null ? Math.random : mulberry32(hashString(String(seed)));
   let bestOut = null;
-  let bestMin = -1;
-  for (let attempt = 0; attempt < 15; attempt++) {
+  let bestScore = -Infinity;
+  // Re-roll the random layout until the worlds are apart AND every label fits without overlap.
+  for (let attempt = 0; attempt < 400; attempt++) {
     const starSystems = buildStarSystems(SYSTEM_COUNTS.length, rng);
     // Spread worlds across the 6 star systems at random angles around each host star.
     const slots = [];
@@ -199,6 +200,8 @@ export function layoutSystems(list, seed = null) {
         id: list[i].id,
         index: i,
         act: list[i].act || 'act1',
+        name: list[i].name,
+        code: list[i].code,
         system,
         orbitR: sl.orbitR,
         orbitSpeed: sl.orbitSpeed,
@@ -217,20 +220,137 @@ export function layoutSystems(list, seed = null) {
         minD = Math.min(minD, Math.hypot(out[i].x - out[j].x, out[i].y - out[j].y));
       }
     }
-    if (minD > bestMin) { bestMin = minD; bestOut = out; }
-    if (minD >= 62) return out;
+    if (minD < 62) {
+      if (bestOut === null || minD - 1000 > bestScore) { bestScore = minD - 1000; bestOut = out; }
+      continue;
+    }
+    const sides = solveLabelSides(out);
+    if (sides) {
+      for (const n of out) n.labelSide = sides[n.id];
+      return out;
+    }
+    if (minD > bestScore) { bestScore = minD; bestOut = out; }
   }
+  const fallback = labelSides(bestOut);
+  for (const n of bestOut) n.labelSide = fallback[n.id];
   return bestOut;
 }
 
+/* Label geometry, shared by layout, drawing and hit-testing (screen pixels). */
+const LABEL_NAME_CHAR = 9.5;  // 12px bold Quantico, per character (generous)
+const LABEL_CODE_CHAR = 7;    // 10px Quantico, per character
+const LABEL_GAP = 12;         // planet edge to label, beside the planet
+/** Smallest chart scale the label layout must hold at (the whole map, zoomed out, on a laptop). */
+const LABEL_REF_K = 0.6;
+const LABEL_REF_PLANET = 9;   // planetPx at about that scale
+const LABEL_PAD = 3;
+
+function labelWidthPx(node, showName = true) {
+  const nameW = showName && node.name ? node.name.length * LABEL_NAME_CHAR : 0;
+  const codeW = node.code ? String(node.code).length * LABEL_CODE_CHAR : 0;
+  return Math.max(nameW, codeW, 20);
+}
+
+/** Vertical offset of the label's text block for a side (1 right, -1 left, 0 below, 2 above). */
+function labelDy(side, r) {
+  if (side === 0) return r + 16;
+  if (side === 2) return -(r + 17);
+  return 0;
+}
+
+/** Label box in screen px relative to the planet centre. Text spans dy-13 .. dy+13. */
+function labelBoxPx(side, r, lw) {
+  const dy = labelDy(side, r);
+  let x0;
+  if (side === 1) x0 = r + LABEL_GAP;
+  else if (side === -1) x0 = -(r + LABEL_GAP) - lw;
+  else x0 = -lw / 2;
+  return { x0, x1: x0 + lw, y0: dy - 13, y1: dy + 13 };
+}
+
 /**
- * Which side of its planet each label goes. Outward from the core by default;
- * flipped when a neighbour sits on that side close enough to collide with it,
- * and set beneath the planet (0) when both sides would.
+ * Pick a side for every label so no two labels overlap, no label covers another
+ * planet or a star, and none runs off the chart, at the zoomed-out scale. Returns
+ * null when no assignment exists for this layout.
  *
- * @returns {Record<string, 1|-1|0>}
+ * @returns {Record<string, 1|-1|0|2>|null}
+ */
+export function solveLabelSides(nodes, k = LABEL_REF_K) {
+  const r = LABEL_REF_PLANET;
+  const pad = LABEL_PAD / k;
+  // Places the chart's own furniture sits: zoom keys (top left), compass (top right).
+  const furniture = [
+    { x0: 0, y0: 0, x1: 130 / k, y1: 64 / k },
+    { x0: GALAXY_W - 70 / k, y0: 0, x1: GALAXY_W, y1: 80 / k }
+  ];
+  const stars = [];
+  const seen = new Set();
+  for (const n of nodes) {
+    if (n.system && !seen.has(n.system.id)) { seen.add(n.system.id); stars.push(starPos(n.system)); }
+  }
+  const rectCircle = (b, cx, cy, cr) => {
+    const qx = Math.max(b.x0, Math.min(cx, b.x1));
+    const qy = Math.max(b.y0, Math.min(cy, b.y1));
+    return Math.hypot(qx - cx, qy - cy) < cr;
+  };
+  const rectRect = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+  const margin = 6 / k;
+
+  // Every legal box per node, in order of preference (outward from the centre first).
+  const cands = nodes.map(n => {
+    const lw = labelWidthPx(n);
+    const outward = n.x >= CORE.x ? 1 : -1;
+    const below = n.y >= CORE.y ? 0 : 2;
+    const order = [outward, -outward, below, below === 0 ? 2 : 0];
+    const list = [];
+    for (const side of order) {
+      const px = labelBoxPx(side, r, lw);
+      const b = {
+        side,
+        x0: n.x + px.x0 / k - pad, x1: n.x + px.x1 / k + pad,
+        y0: n.y + px.y0 / k - pad, y1: n.y + px.y1 / k + pad
+      };
+      if (b.x0 < margin || b.y0 < margin || b.x1 > GALAXY_W - margin || b.y1 > GALAXY_H - margin) continue;
+      if (furniture.some(f => rectRect(b, f))) continue;
+      if (nodes.some(o => o !== n && rectCircle(b, o.x, o.y, (r + 3) / k))) continue;
+      if (stars.some(s => rectCircle(b, s.x, s.y, 7 / k))) continue;
+      list.push(b);
+    }
+    return { n, list };
+  });
+  if (cands.some(c => !c.list.length)) return null;
+
+  // Most constrained first, then backtrack.
+  const order = cands.slice().sort((a, b) => a.list.length - b.list.length);
+  const chosen = new Array(order.length);
+  let steps = 0;
+  const place = (i) => {
+    if (i === order.length) return true;
+    if (++steps > 20000) return false;
+    for (const b of order[i].list) {
+      let ok = true;
+      for (let j = 0; j < i; j++) if (rectRect(b, chosen[j])) { ok = false; break; }
+      if (!ok) continue;
+      chosen[i] = b;
+      if (place(i + 1)) return true;
+    }
+    return false;
+  };
+  if (!place(0)) return null;
+  const out = {};
+  order.forEach((c, i) => { out[c.n.id] = chosen[i].side; });
+  return out;
+}
+
+/**
+ * Which side of its planet each label goes. Uses the overlap-free solver when it
+ * can; otherwise outward from the core, flipped when a neighbour is in the way.
+ *
+ * @returns {Record<string, 1|-1|0|2>}
  */
 export function labelSides(systems) {
+  const solved = solveLabelSides(systems);
+  if (solved) return solved;
   const out = {};
   const edgeClash = (s, side) =>
     (side === 1 && s.x > GALAXY_W - 185) ||
@@ -324,16 +444,14 @@ export function hitSystem(systems, view, w, h, sx, sy, slop = 24, time = 0) {
     if (d <= reach && d < bestD) { best = s; bestD = d; }
     if (s.name || s.code) {
       const side = s.labelSide === undefined ? 1 : s.labelSide;
-      const lx = side === 0 ? p.x : p.x + side * (pr + 12);
-      const dy = side === 0 ? pr + 16 : 0;
-      const nameW = showName && s.name ? s.name.length * 8.2 : 0;
-      const codeW = s.code ? s.code.length * 6.5 : 0;
-      const lw = Math.max(44, nameW, codeW);
+      const lw = Math.max(44, labelWidthPx(s, showName));
+      const box = labelBoxPx(side, pr, lw);
       const pad = 6;
-      const x0 = (side === 0 ? lx - lw / 2 : side > 0 ? lx : lx - lw) - pad;
-      const x1 = (side === 0 ? lx + lw / 2 : side > 0 ? lx + lw : lx) + pad;
-      const y0 = p.y + dy - 14 - pad;
-      const y1 = p.y + dy + (showName ? 16 : 2) + (pr >= 11 && showName ? 12 : 0) + pad;
+      const x0 = p.x + box.x0 - pad;
+      const x1 = p.x + box.x1 + pad;
+      const lift = side === 2 && pr >= 11 && showName ? 12 : 0;
+      const y0 = p.y + box.y0 - lift - pad;
+      const y1 = p.y + box.y1 - lift + (pr >= 11 && showName ? 12 : 0) + pad;
       if (sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1 && d < bestLabelD) {
         bestLabel = s;
         bestLabelD = d;
@@ -805,9 +923,12 @@ function drawSystem(ctx, view, w, h, node, opts) {
 
   // Label: code always, name when there is room (or when picked).
   const side = node.labelSide === undefined ? 1 : node.labelSide;
-  const lx = side === 0 ? p.x : p.x + side * (planetR + 12);
-  const dy = side === 0 ? planetR + 16 : 0;
-  ctx.textAlign = side === 0 ? 'center' : side > 0 ? 'left' : 'right';
+  const beside = side === 1 || side === -1;
+  const lx = beside ? p.x + side * (planetR + LABEL_GAP) : p.x;
+  const showPlace = (showName || selected || hovered) && planetR >= 11;
+  // Above the planet, a third line would run into it: lift the whole block by a line.
+  const dy = labelDy(side, planetR) - (side === 2 && showPlace ? 12 : 0);
+  ctx.textAlign = beside ? (side > 0 ? 'left' : 'right') : 'center';
   ctx.font = fontFor(10, '');
   ctx.fillStyle = selected ? COLORS.amber : stateInk(node.state);
   ctx.fillText(node.code, lx, p.y - 3 + dy);
@@ -815,7 +936,7 @@ function drawSystem(ctx, view, w, h, node, opts) {
     ctx.font = fontFor(12, 'bold');
     ctx.fillStyle = selected || hovered ? COLORS.amber : sealed ? COLORS.textDim : COLORS.text;
     ctx.fillText(node.name.toUpperCase(), lx, p.y + 10 + dy);
-    if (planetR >= 11) {
+    if (showPlace) {
       ctx.font = fontFor(9, '');
       ctx.fillStyle = COLORS.textMuted;
       ctx.fillText(node.place, lx, p.y + 22 + dy);
@@ -958,8 +1079,7 @@ function escHtml(s) {
 export function mountGalaxyMap(root, opts) {
   const { nodes: rawNodes, acts = [], reducedMotion = false, onAction } = opts;
   const placed = layoutSystems(rawNodes);
-  const sides = labelSides(placed);
-  const nodes = rawNodes.map((n, i) => ({ ...placed[i], ...n, index: i, labelSide: sides[placed[i].id] }));
+  const nodes = rawNodes.map((n, i) => ({ ...placed[i], ...n, index: i, labelSide: placed[i].labelSide }));
   const lanes = layoutLanes(nodes);
   const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
 

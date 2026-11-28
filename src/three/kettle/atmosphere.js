@@ -105,7 +105,8 @@ export function createKtSkyDome(radius = 900) {
 
 /** The sun (the only shadow) and a hemisphere fill: pale sky above, the crust's warm bounce below. */
 export function createKtLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#ffe0b0'), 2.2);
+  // Realism pass: the sun a little stronger and the fill a little weaker, so a wall in shade reads as in shade.
+  const key = new THREE.DirectionalLight(new THREE.Color('#ffe0b0'), 2.4);
   key.position.copy(KETTLE_SUN).multiplyScalar(240);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -116,7 +117,8 @@ export function createKtLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#cdbf9f'), new THREE.Color('#9d9179'), 1.15);
+  // The bounce is the crust's: warm, and darker than the sky (it was nearly as bright, which flattened every face).
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#cfc0a0'), new THREE.Color('#957f60'), 1.0);
   return { key, hemi };
 }
 

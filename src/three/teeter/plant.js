@@ -19,8 +19,9 @@ import {
 
 export { buildLampPost, buildLandingPad } from '../ember/plant.js';
 
-const cyl = (ctx, g, rt, rb, h, mat, x, y, z, seg = 18, cast = true) => g.add(part(ctx, new THREE.CylinderGeometry(rt, rb, h, seg), mat, x, y, z, { cast })) && g;
-const box = (ctx, g, w, h, d, mat, x, y, z, cast = true) => g.add(part(ctx, new THREE.BoxGeometry(w, h, d), mat, x, y, z, { cast })) && g;
+// Through the shared kit, so a pump's pier and frame are built shapes laid in metres like everything else (the realism pass).
+const cyl = (ctx, g, rt, rb, h, mat, x, y, z, seg = 18, cast = true) => { kitFor(ctx).cyl(g, [rt, rb, h, seg], mat, [x, y, z], null, cast); return g; };
+const box = (ctx, g, w, h, d, mat, x, y, z, cast = true) => { kitFor(ctx).box(g, [w, h, d], mat, [x, y, z], null, cast); return g; };
 
 /** The beam pump's reach: the pivot's height over its sole, the half-length of its beam, how far it tips, one stroke. */
 export const PUMP = { pivotY: 3.4, half: 3.5, tip: 0.13, period: 7.0 };

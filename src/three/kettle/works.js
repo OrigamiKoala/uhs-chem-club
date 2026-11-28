@@ -26,6 +26,7 @@ import * as THREE from 'three';
 import { SIDE } from '../lib/workings.js';
 import { WALL_T } from './works-plan.js';
 import { kitFor, slabGeometry } from './kit.js';
+import { wallGeometry, wallMaterial } from './grime.js';
 
 /** Brick stands this high over a hall's floor before the sheet starts. */
 const DADO = 3.4;
@@ -71,12 +72,12 @@ export function buildWorks(w) {
   const clerestory = w.data.works.clerestory || [];
 
   const SKIN = {
-    hall: { low: M.brick, high: M.sheet, floor: M.slab, roof: M.roofSheet },
-    cast: { low: M.firebrickWall, high: M.sheet, floor: M.paver, roof: M.roofSheet },
-    brick: { low: M.brick, high: M.brick, floor: M.slab, roof: M.roofSheet },
-    panel: { low: M.panel, high: M.panel, floor: M.deckPlate, roof: M.hallRoof },
-    concrete: { low: M.wallConcrete, high: M.wallConcrete, floor: M.slab, roof: M.wallConcrete },
-    firebrick: { low: M.firebrickWall, high: M.firebrickWall, floor: M.paver, roof: M.hallRoof }
+    hall: { low: M.brick, high: M.sheet, floor: M.floorSlab || M.slab, roof: M.roofSheet },
+    cast: { low: M.firebrickWall, high: M.sheet, floor: M.floorPaver || M.paver, roof: M.roofSheet },
+    brick: { low: M.brick, high: M.brick, floor: M.floorSlab || M.slab, roof: M.roofSheet },
+    panel: { low: M.panel, high: M.panel, floor: M.floorDeck || M.deckPlate, roof: M.hallRoof },
+    concrete: { low: M.wallConcrete, high: M.wallConcrete, floor: M.floorSlab || M.slab, roof: M.wallConcrete },
+    firebrick: { low: M.firebrickWall, high: M.firebrickWall, floor: M.floorPaver || M.paver, roof: M.hallRoof }
   };
   const floorRange = v => plan.floorRange(v);
 
@@ -93,7 +94,12 @@ export function buildWorks(w) {
     if (s1 - s0 < 0.02 || y1 - y0 < 0.02) return;
     const [x, z] = onSide(v, side, (s0 + s1) / 2, WALL_T / 2);
     const size = SIDE[side].along === 'z' ? [WALL_T, y1 - y0, s1 - s0] : [s1 - s0, y1 - y0, WALL_T];
-    k.slab(shell, size, mat, [x, (y0 + y1) / 2, z], { tile: 2 });
+    if (!w.builtKit) { k.slab(shell, size, mat, [x, (y0 + y1) / 2, z], { tile: 2 }); return; }
+    // Built: the slab in the world's frame, its grime in its vertices (`grime.js`).
+    const geo = wallGeometry({ centre: [x, (y0 + y1) / 2, z], size, floorAt: (px, pz) => w.getTerrainHeight(px, pz), roof: v.top, into: SIDE[side].dir });
+    const m = new THREE.Mesh(w.own(geo), wallMaterial(mat, (...o) => w.own(...o)));
+    m.castShadow = m.receiveShadow = w.t4;
+    shell.add(m);
   };
   /** A stretch of a room's wall, with the louvred bands cut out of it and the dado split from the sheet. */
   const wall = (v, side, s0, s1, y0, y1) => {
@@ -115,7 +121,14 @@ export function buildWorks(w) {
     for (const [a, b, lo, hi] of pieces) {
       if (skin.low === skin.high || hi <= dado) wallBox(v, side, a, b, lo, hi, skin.low);
       else if (lo >= dado) wallBox(v, side, a, b, lo, hi, skin.high);
-      else { wallBox(v, side, a, b, lo, dado, skin.low); wallBox(v, side, a, b, dado, hi, skin.high); }
+      else {
+        wallBox(v, side, a, b, lo, dado, skin.low); wallBox(v, side, a, b, dado, hi, skin.high);
+        // Built: where the brick stops, a sloped steel sill on the room's face sheds what runs down the sheet.
+        if (w.builtKit && b - a > 0.3) {
+          const [x, z] = onSide(v, side, (a + b) / 2, WALL_T + 0.035);
+          k.box(shell, SIDE[side].along === 'z' ? [0.07, 0.07, b - a] : [b - a, 0.07, 0.07], M.darkSteel, [x, dado + 0.01, z], null, false);
+        }
+      }
     }
   };
 
@@ -128,8 +141,15 @@ export function buildWorks(w) {
       const [x, z] = onSide(v, side, Math.min(s1 - 0.05, Math.max(s0 + 0.05, s)), 0.12);
       const [fx, fz] = onSide(v, side, Math.min(s1 - 0.05, Math.max(s0 + 0.05, s)), 0.4);
       const y = plan.floorOf(v, fx, fz);
-      k.box(fittings, [0.06, RAIL_H, 0.06], M.darkSteel, [x, y + RAIL_H / 2, z], null, false);
-      if (prev) for (const h of [RAIL_H, RAIL_H * 0.55]) k.bar(fittings, [prev[0], prev[1] + h, prev[2]], [x, y + h, z], 0.05, M.paintYellow);
+      if (w.builtKit) {
+        // Built: tube stanchions on a toe plate, tube rails, as safety rail is made.
+        k.box(fittings, [0.14, 0.012, 0.14], M.darkSteel, [x, y + 0.006, z], null, false);
+        k.strut(fittings, [x, y + 0.012, z], [x, y + RAIL_H + 0.02, z], 0.024, M.darkSteel, 10);
+        if (prev) for (const h of [RAIL_H, RAIL_H * 0.55]) k.strut(fittings, [prev[0], prev[1] + h, prev[2]], [x, y + h, z], 0.021, M.paintYellow, 10);
+      } else {
+        k.box(fittings, [0.06, RAIL_H, 0.06], M.darkSteel, [x, y + RAIL_H / 2, z], null, false);
+        if (prev) for (const h of [RAIL_H, RAIL_H * 0.55]) k.bar(fittings, [prev[0], prev[1] + h, prev[2]], [x, y + h, z], 0.05, M.paintYellow);
+      }
       prev = [x, y, z];
     }
   };
@@ -142,7 +162,7 @@ export function buildWorks(w) {
     const yBot = Math.min(lo, 0) - 0.3;
 
     // THE FLOOR.
-    const floor = new THREE.Mesh(w.own(floorGeometry(plan, v, 4)), skin.floor);
+    const floor = new THREE.Mesh(w.own(floorGeometry(plan, v, w.builtKit ? 1 : 4)), skin.floor);
     floor.name = `floor-${v.id}`;
     floor.receiveShadow = w.t4;
     shell.add(floor);
@@ -201,6 +221,8 @@ export function buildWorks(w) {
     roof.name = `roof-${v.id}`;
   }
 
+  if (w.builtKit) buildExteriorTrim(w, k, shell);
+
   // THE LOUVRES: mullions and three blades across each band, in the wall's own thickness.
   for (const c of clerestory) {
     const v = plan.byId.get(c.room);
@@ -222,7 +244,15 @@ export function buildWorks(w) {
   /** A stanchion against a hall's side wall, with a disc for the walk. */
   const column = (x, z, y0, y1) => {
     k.stanchion(fittings, x, z, y0, y1, { d: 0.4, b: 0.32 });
-    k.box(fittings, [0.6, 0.06, 0.6], M.darkSteel, [x, y0 + 0.03, z], null, false);
+    if (w.builtKit) {
+      // Built: the column stands on a grouted pad, its base plate held down by four bolts.
+      k.box(fittings, [0.78, 0.1, 0.78], M.wallConcrete, [x, y0 + 0.05, z], null, false);
+      k.box(fittings, [0.56, 0.04, 0.56], M.darkSteel, [x, y0 + 0.12, z], null, false);
+      for (const [dx, dz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        k.cyl(fittings, [0.028, 0.028, 0.02, 6], M.darkSteel, [x + dx * 0.21, y0 + 0.15, z + dz * 0.21], null, false);
+        k.cyl(fittings, [0.012, 0.012, 0.05, 6], M.darkSteel, [x + dx * 0.21, y0 + 0.17, z + dz * 0.21], null, false);
+      }
+    } else k.box(fittings, [0.6, 0.06, 0.6], M.darkSteel, [x, y0 + 0.03, z], null, false);
     colliders.push({ x, z, radius: 0.32 });
   };
   /** A roof truss across x at `z`: two chords, posts and diagonals. */
@@ -311,6 +341,81 @@ export function buildWorks(w) {
   hang('pit-landing', 28, -41, 1.6);
 
   return { shell, fittings, colliders };
+}
+
+/**
+ * THE OUTSIDE OF THE WORKS (built kit only): what a brick-and-sheet shed has where it meets the weather. Along every
+ * stretch of wall that faces the yard: a concrete plinth course at the foot, a steel sill where the brick stops under
+ * the sheet, a gutter at the eaves and a downpipe every dozen metres; at every outside corner, a steel angle the
+ * height of the wall. All of it is the shell's (`phys: 'ground'`), standing proud of the wall's outer face by
+ * centimetres, under the wall colliders' reach.
+ */
+function buildExteriorTrim(w, k, shell) {
+  const { plan, M } = w;
+  const outside = (x, z) => plan.volumeAt(x, z) === null;
+  const at = (v, side, s, off) => {
+    const r = v.rect, d = SIDE[side].dir, plane = r[side];
+    return SIDE[side].along === 'z' ? [plane + d[0] * off, s] : [s, plane + d[1] * off];
+  };
+  const dims = (side, along, up, out) => SIDE[side].along === 'z' ? [out, up, along] : [along, up, out];
+  for (const v of plan.volumes) {
+    const hall = v.skin === 'hall' || v.skin === 'cast';
+    const dado = plan.floorRange(v)[1] + DADO;
+    const sides = new Set();
+    for (const seg of plan.wallSegments(v)) {
+      // The stretches of this segment with the yard behind them, a metre at a time.
+      const runs = [];
+      let start = null;
+      for (let s = seg.from; s <= seg.to + 1e-6; s += 0.5) {
+        const sc = Math.min(seg.to - 0.05, Math.max(seg.from + 0.05, s));
+        const ext = outside(...at(v, seg.side, sc, -0.6));
+        if (ext && start === null) start = sc;
+        if ((!ext || s + 0.5 > seg.to + 1e-6) && start !== null) { runs.push([start, ext ? seg.to : sc]); start = null; }
+      }
+      for (const [a0, b0] of runs) {
+        const a = a0 <= seg.from + 0.06 ? seg.from : a0, b = b0 >= seg.to - 0.06 ? seg.to : b0;
+        if (b - a < 0.6) continue;
+        sides.add(seg.side);
+        const mid = (a + b) / 2, len = b - a;
+        const ground = Math.min(...[a, mid, b].map(s => w.field.outside(...at(v, seg.side, s, -0.6))));
+        // The plinth course: a hand's breadth proud, from below the yard to knee height.
+        const [px, pz] = at(v, seg.side, mid, -0.045);
+        k.box(shell, dims(seg.side, len, 0.85, 0.09), M.wallConcrete, [px, ground + 0.12, pz], null, false);
+        // The sill where the brick stops under the sheet.
+        if (hall && dado < v.top - 0.5) {
+          const [sx, sz] = at(v, seg.side, mid, -0.04);
+          k.box(shell, dims(seg.side, len, 0.08, 0.08), M.darkSteel, [sx, dado + 0.01, sz], null, false);
+        }
+        // The gutter at the eaves, and its downpipes.
+        const [gx, gz] = at(v, seg.side, mid, -0.11);
+        k.box(shell, dims(seg.side, len, 0.18, 0.2), M.darkSteel, [gx, v.top + 0.02, gz], null, false);
+        if (len > 7) {
+          const n = Math.max(1, Math.round(len / 12));
+          for (let i = 0; i < n; i++) {
+            const s = a + len * ((i + 0.5) / n);
+            const [dx, dz] = at(v, seg.side, s, -0.12);
+            const g0 = w.field.outside(dx, dz);
+            k.strut(shell, [dx, g0 + 0.25, dz], [dx, v.top - 0.08, dz], 0.055, M.darkSteel, 10);
+            k.cyl(shell, [0.07, 0.07, 0.06, 10], M.darkSteel, [dx, v.top - 0.6, dz], null, false);
+            k.cyl(shell, [0.07, 0.07, 0.06, 10], M.darkSteel, [dx, ground + 2.4, dz], null, false);
+            const [ox, oz] = at(v, seg.side, s, -0.3);
+            k.strut(shell, [dx, g0 + 0.28, dz], [ox, g0 + 0.1, oz], 0.055, M.darkSteel, 10);   // the shoe
+          }
+        }
+      }
+    }
+    // Outside corners: both sides of the corner face the yard, and so does the diagonal.
+    const r = v.rect;
+    for (const [cx, cz, sxs, szs] of [[r.minX, r.minZ, 'minX', 'minZ'], [r.maxX, r.minZ, 'maxX', 'minZ'], [r.minX, r.maxZ, 'minX', 'maxZ'], [r.maxX, r.maxZ, 'maxX', 'maxZ']]) {
+      if (!sides.has(sxs) || !sides.has(szs)) continue;
+      const ox = sxs === 'minX' ? -1 : 1, oz = szs === 'minZ' ? -1 : 1;
+      if (!outside(cx + ox * 0.6, cz + oz * 0.6) || !outside(cx + ox * 0.6, cz - oz * 0.6) || !outside(cx - ox * 0.6, cz + oz * 0.6)) continue;
+      const g0 = w.field.outside(cx + ox * 0.3, cz + oz * 0.3);
+      const h = v.top + 0.2 - (g0 + 0.55), y = g0 + 0.55 + h / 2;
+      k.box(shell, [0.16, h, 0.035], M.darkSteel, [cx + ox * 0.06, y, cz + oz * 0.0175], null, false);
+      k.box(shell, [0.035, h, 0.16], M.darkSteel, [cx + ox * 0.0175, y, cz + oz * 0.06], null, false);
+    }
+  }
 }
 
 /**

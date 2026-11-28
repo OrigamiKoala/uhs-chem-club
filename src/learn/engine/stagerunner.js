@@ -231,8 +231,8 @@ export function createRunner(container, ctx, cfg) {
       // The quest ends on its story animation, which is Vess's debrief said over a scene (`story/quest-story.js`); a quest that
       // has none yet ends on the debrief card. Either way the player then leaves.
       const key = ctx.world && ctx.quest ? `${ctx.world.id}/${ctx.quest.id}` : null;
-      // After the debrief the bench asks its two practice problems (and, on a computational bench, offers a worked one) from
-      // the question bank. All of it is skippable and gates nothing; the player leaves either way.
+      // After the debrief the bench opens its worked problem (on a computational bench) and then asks its two practice
+      // problems from the question bank. All of it is skippable and gates nothing; the player leaves either way.
       const leave = () => {
         if (!key || typeof document === 'undefined' || globalThis.__LQ_TEST__) { ctx.exit(); return; }
         import('../../ui/bench-practice.js')

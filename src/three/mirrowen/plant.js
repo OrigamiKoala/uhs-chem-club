@@ -12,7 +12,7 @@
  */
 
 import * as THREE from 'three';
-import { part, put, between, strut, rng, crystalGeometry, rockGeometry } from './kit.js';
+import { part, put, between, strut, rng, crystalGeometry, rockGeometry, blockGeometry } from './kit.js';
 
 /** A lamp: the glass that glows, and the mark the pool lights from. */
 function lampAt(ctx, g, x, y, z, { intensity = 5, distance = 13, w = 0.15, h = 0.24 } = {}) {
@@ -31,7 +31,7 @@ export function buildLampPost(ctx, index = 0) {
   const g = new THREE.Group();
   const H = 3.5;
   g.add(part(ctx, new THREE.CylinderGeometry(0.055, 0.08, H, 6), ctx.M.darkSteel, 0, H / 2, 0, { cast: true }));
-  g.add(part(ctx, new THREE.BoxGeometry(0.36, 0.14, 0.36), ctx.M.concrete, 0, 0.07, 0));
+  g.add(part(ctx, blockGeometry(0.36, 0.14, 0.36, { seed: 31 + index }), ctx.M.concrete, 0, 0.07, 0));
   g.add(part(ctx, new THREE.BoxGeometry(0.6, 0.045, 0.045), ctx.M.darkSteel, 0.29, H - 0.12, 0));
   g.add(between(ctx, [0.05, H - 0.6, 0], [0.42, H - 0.14, 0], 0.02, ctx.M.darkSteel, 5));
   g.add(part(ctx, new THREE.ConeGeometry(0.2, 0.14, 8), ctx.M.clad, 0.55, H - 0.2, 0));
@@ -49,9 +49,10 @@ export function buildLampPost(ctx, index = 0) {
 /** A mooring bollard: a cast-iron post on a foot, banded with rust. */
 export function buildBollard(ctx) {
   const g = new THREE.Group();
-  g.add(part(ctx, new THREE.CylinderGeometry(0.34, 0.4, 0.14, 12), ctx.M.concrete, 0, 0.07, 0));
-  g.add(part(ctx, new THREE.CylinderGeometry(0.18, 0.24, 0.55, 12), ctx.M.rusted, 0, 0.4, 0, { cast: true }));
-  g.add(part(ctx, new THREE.CylinderGeometry(0.27, 0.2, 0.12, 12), ctx.M.rusted, 0, 0.75, 0));
+  // A chamfered concrete foot, and a cast post turned in one piece: a flared base, a waisted neck, a cap with a lip.
+  const lathe = pts => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 18);
+  g.add(part(ctx, lathe([[0, 0], [0.4, 0], [0.4, 0.09], [0.35, 0.14], [0, 0.14]]), ctx.M.concrete, 0, 0, 0));
+  g.add(part(ctx, lathe([[0.001, 0.14], [0.25, 0.14], [0.24, 0.2], [0.2, 0.26], [0.18, 0.46], [0.19, 0.6], [0.26, 0.66], [0.27, 0.72], [0.24, 0.79], [0.16, 0.81], [0.001, 0.815]]), ctx.M.rusted, 0, 0, 0, { cast: true }));
   g.userData.colliders = [{ x: 0, z: 0, r: 0.4 }];
   return g;
 }

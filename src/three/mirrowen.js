@@ -32,9 +32,11 @@ import * as THREE from 'three';
 import mirrowenData from './world-data/mirrowen.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic
+  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, addWorldBoxUV, addWorldVariation
 } from './materials/pbr-kit.js';
 import { frostShingle, quayPaving, crystalIce, canalRipple } from './materials/mirrowen-textures.js';
+import { grainSurface } from './materials/lanternfall-textures.js';
+import { packsAvailable, loadTexturePack, dressFromPack } from './materials/texture-pack.js';
 import {
   createMwSkyDome, createMwLights, followMwShadow, createMwEnvironment, mwSkyUniforms, followCamera, MWSKY, MIRROWEN_SUN
 } from './mirrowen/atmosphere.js';
@@ -57,6 +59,30 @@ const SELF_TURNED = new Set(['lamp-post', 'bollard', 'ice-wall']);
 
 /** How far (m) the player walks before the sun's shadow box follows them. */
 const SHADOW_FOLLOW_STEP = 2;
+
+/** sRGB (0..1) to linear light. */
+function srgbToLinear(c) {
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+/**
+ * Set a material's colour so that its map, whose mean in linear light is `mean` (a number or [r, g, b]), averages to
+ * the sRGB colour `hex`: the paint of a ship, the tone of a board.
+ */
+function tintTo(mat, hex, mean) {
+  const c = new THREE.Color(hex);   // linear, as three keeps it
+  const m = Array.isArray(mean) ? mean : [mean, mean, mean];
+  mat.color.setRGB(c.r / m[0], c.g / m[1], c.b / m[2]);
+}
+
+/** A copy of a material that shares its maps but not its bookkeeping (Material.clone would copy the maps' list). */
+function cloneBare(m) {
+  const ud = m.userData;
+  m.userData = {};
+  const c = m.clone();
+  m.userData = ud;
+  return c;
+}
 
 export class MirrowenWorld {
   constructor(renderer) {
@@ -88,6 +114,7 @@ export class MirrowenWorld {
     this.initTerrain();
     this.initLandmarks();
     this.initHosts();
+    this.initSurfaces();
     this.initEffects();
     this.initLampPool();
     this.initCover();
@@ -97,6 +124,7 @@ export class MirrowenWorld {
     this.enableAmbientOcclusion();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/mirrowen.js`).
     this.crew = attachCrew(this, 'mirrowen');
+    this.initPacks();
   }
 
   own(...objs) {
@@ -128,9 +156,20 @@ export class MirrowenWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-    const metal = (paint, base, rust, seed, weather, panels = 2, size = 128) => buildMaterial(
-      platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(Math.min(size, 256)) }), { repeat: 2, roughness: 1.0 }
-    );
+    const metal = (paint, base, rust, seed, weather, panels = 2, size = 128) => {
+      const m = buildMaterial(
+        platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(Math.min(size, 256)) }), { repeat: 2, roughness: 1.0 }
+      );
+      m.userData.paint = paint;   // the colour the neutral photo plate is tinted to when it lands (`initPacks`)
+      return m;
+    };
+    // Neutral grains for the materials that had no maps (boards, brick), so a photo set has slots to land in and the
+    // lower tiers have grain; the colour is in the material, divided by the grain's own mean.
+    const grain = (kind, seed, hex, mean = 0.62) => {
+      const m = buildMaterial(grainSurface({ kind, seed, mean, contrast: 0.18, size: texSize(256) }), { repeat: 1, roughness: 1.0, metalness: 0 });
+      tintTo(m, hex, srgbToLinear(mean));
+      return m;
+    };
 
     // Stone and concrete: the quays are dressed granite, the dock and the pump well cast concrete.
     M.granite = buildMaterial(quayPaving({ size: texSize(256), seed: 5 }), { repeat: 1, roughness: 1.0 });
@@ -171,10 +210,10 @@ export class MirrowenWorld {
     M.copper = std({ color: 0xb5714a, roughness: 0.4, metalness: 0.9 });
     M.rubber = std({ color: 0x1c1d1e, roughness: 0.9, metalness: 0 });
     M.insul = std({ color: 0xdcdcd4, roughness: 0.82, metalness: 0.05 });
-    M.timber = std({ color: 0x6a5a48, roughness: 0.95, metalness: 0 });
-    M.timberDark = std({ color: 0x3e342c, roughness: 0.95, metalness: 0 });
-    M.boards = std({ color: 0x5d5448, roughness: 0.96, metalness: 0 });
-    M.brick = std({ color: 0x80483b, roughness: 0.92, metalness: 0 });
+    M.timber = grain('boards', 11, 0x6a5a48);
+    M.timberDark = grain('boards', 12, 0x3e342c);
+    M.boards = grain('boards', 13, 0x5d5448);
+    M.brick = grain('rock', 14, 0x80483b);
     M.drum = std({ color: 0x3d5a6e, roughness: 0.6, metalness: 0.5 });
     M.drumB = std({ color: 0x8a3b2a, roughness: 0.62, metalness: 0.45 });
     M.paintYellow = std({ color: 0xc9a14a, roughness: 0.7, metalness: 0.1 });
@@ -203,13 +242,23 @@ export class MirrowenWorld {
     M.iceDeep.color.set(0x9ec4da);
     M.iceDeep.flatShading = true;
 
-    // The ground: wind-packed snow and ice, fine cells, painted per vertex.
+    // The ground, painted per vertex, in three surfaces (`terrain.js` groundSurface): wind-packed snow on the hills
+    // and the sea ice, granite setts on the quays and the terrace, the dry dock's concrete floor. The ground's uvs run
+    // at 0.12 per metre (8.33 m a unit); `initPacks` scales the photos from these tiles.
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
     M.ground = buildMaterial(frostShingle({ size: texSize(256), seed: 7 }), { repeat: 2, roughness: 1.0 });
     M.ground.vertexColors = true;
     M.ground.normalScale.set(0.9, 0.9);
     M.ground.envMapIntensity = 0.75;
-    for (const t of M.ground.userData.surfaceMaps || []) t.anisotropy = aniso;
+    M.ground.color.setScalar(1.1);
+    M.setts = buildMaterial(quayPaving({ size: texSize(256), seed: 13 }), { repeat: 4, roughness: 1.0 });
+    M.setts.vertexColors = true;
+    M.setts.envMapIntensity = 0.7;
+    M.setts.color.setScalar(1.6);
+    M.dockFloor = buildMaterial(quayPaving({ size: texSize(256), seed: 15 }), { repeat: 4, roughness: 1.0 });
+    M.dockFloor.vertexColors = true;
+    M.dockFloor.color.setScalar(2.4);
+    for (const m of [M.ground, M.setts, M.dockFloor]) for (const t of m.userData.surfaceMaps || []) t.anisotropy = aniso;
 
     // The water: a moving mirror, coloured per vertex.
     const ripple = buildMaterial(canalRipple({ size: texSize(256), seed: 17 }), { repeat: 3, roughness: 0.06 });
@@ -222,12 +271,119 @@ export class MirrowenWorld {
     ripple.normalScale.set(0.35, 0.35);
     M.water = ripple;
 
+    // The bench's plate keeps the procedural plated steel it has always had: the photographed plate goes on the rest
+    // of the steel (`initPacks`), never on the surface a student works on.
+    M.benchTop = cloneBare(M.steel);
+
     for (const m of Object.values(M)) {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
     }
     this.M = M;
     this.lanternMat = M.lantern;
+  }
+
+  /* ======================================================================
+     SURFACES IN METRES
+     ====================================================================== */
+
+  /**
+   * Every shell, hull, room and prop is built of boxes whose uvs run 0..1 across each face, so a plate, a block or a
+   * board changed size with every box (a ship's side was eight plates long, a 30 cm kerb one). Laid from the world
+   * instead (`addWorldBoxUV`), every tile is a fixed size in metres everywhere; the large surfaces also drift in tone
+   * and roughness and break their repeat (`addWorldVariation`), and the walls carry run streaks. A material on a
+   * moving part keeps its own uvs (a projection in the world's frame would swim on it): the mover gets a copy first.
+   */
+  initSurfaces() {
+    const M = this.M;
+    // Movers: their meshes take an unpatched copy of their material.
+    const copies = new Map();
+    this.scene.traverse(o => {
+      if (!o.userData.mover) return;
+      o.traverse(c => {
+        if (!c.isMesh || Array.isArray(c.material)) return;
+        if (!copies.has(c.material)) copies.set(c.material, this.own(cloneBare(c.material)));
+        c.material = copies.get(c.material);
+      });
+    });
+    // [keys, metres per uv unit (one tile = metres / the material's repeat of 2 or 1), world variation or null]
+    // Anti-tile blends in a rotated second sample, so it is only for maps with no direction (rust, concrete); a
+    // board, a course of stone, a brick bond, a corrugation or a plate seam would show crossed.
+    const big = { scale: 7, strength: 0.12, roughShift: 0.1, antiTile: 0 };
+    const SURF = [
+      [['granite'], 1.9, { ...big, streaks: 0.18 }],
+      [['concrete'], 2, { ...big, antiTile: 0.4, streaks: 0.22 }],
+      [['clad', 'shipRed', 'shipBlack', 'shipWhite', 'hullPlate', 'tankSteel', 'tankWhite', 'tankGreen', 'hallWall'], 5, { ...big, strength: 0.1, streaks: 0.14 }],
+      [['shipRust', 'holdSteel', 'rusted', 'bootTop'], 4, { ...big, antiTile: 0.5 }],
+      [['deckPlate', 'grating', 'hatch', 'hallRoof', 'roofSheet'], 4, { ...big, strength: 0.08 }],
+      [['steel', 'darkSteel', 'perf', 'crate', 'crateB'], 2, null],
+      [['timber', 'timberDark', 'boards'], 1.8, { ...big, strength: 0.1 }],
+      [['brick'], 1.0, { ...big, strength: 0.1, streaks: 0.12 }]
+    ];
+    for (const [keys, metres, wv] of SURF) {
+      for (const k of keys) {
+        if (!M[k]) continue;
+        addWorldBoxUV(M[k], { metres });
+        if (wv) addWorldVariation(M[k], wv);
+      }
+    }
+    // The ground: slow drift over the vertex paint, anti-tile on the snow and the setts.
+    addWorldVariation(M.ground, { scale: 16, strength: 0.05, roughShift: 0.08, antiTile: 0.6 });
+    addWorldVariation(M.setts, { scale: 9, strength: 0.1, roughShift: 0.12, antiTile: 0 });
+    addWorldVariation(M.dockFloor, { scale: 6, strength: 0.1, roughShift: 0.12, antiTile: 0.5 });
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (`materials/texture-pack.js`, `public/textures/mirrowen/`, CC0, see LICENSE.md there).
+   * The world is complete with its procedural maps; at 3D On with a renderer the photo packs are fetched and put into
+   * the same map slots as they land, each sent to the GPU at once, during the flight. Nothing is fetched in Node or
+   * below T4, and a pack that fails leaves the procedural surface it would have replaced.
+   *
+   * `scale` = metres one procedural tile covered / metres one photo tile covers (LICENSE.md lists the photo sizes).
+   * The world-uv materials tile at `metres / repeat`, so for them `scale` = that / the photo's size. Painted steel and
+   * sheet are graded neutral; the paint moves into the material colour when the photo lands (`tintTo`).
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const M = this.M;
+    const base = '/textures/mirrowen';
+    const live = () => !this._disposed;
+    const each = (keys, o) => keys.filter(k => M[k]).map(k => [M[k], o]);
+    // The linear means the photos were graded to (`tools/textures/prep_mirrowen.py` prints them).
+    const MEAN = {
+      setts: [0.25, 0.248, 0.234], snow: [0.661, 0.68, 0.699], granite: [0.321, 0.292, 0.259], concrete: [0.326, 0.324, 0.309],
+      plate: [0.51, 0.51, 0.51], deck: [0.286, 0.268, 0.251], rust: [0.356, 0.274, 0.226], boards: [0.382, 0.279, 0.204],
+      roof: [0.398, 0.398, 0.398], brick: [0.223, 0.153, 0.131]
+    };
+    const PAINTED = ['clad', 'steel', 'darkSteel', 'shipRed', 'shipBlack', 'shipWhite', 'hullPlate', 'tankSteel', 'tankWhite', 'tankGreen', 'hatch', 'crate', 'crateB'];
+    const SMALL = ['steel', 'darkSteel', 'crate', 'crateB'];
+    // Paint in daylight reads a little darker than the procedural plate's lit panels did.
+    const paint = (keys, pack) => () => { for (const k of keys) if (M[k]) { tintTo(M[k], M[k].userData.paint, MEAN[pack]); M[k].color.multiplyScalar(0.85); } };
+    const to = (pairs, pack) => () => { for (const [k, hex] of pairs) if (M[k]) tintTo(M[k], hex, MEAN[pack]); };
+    const plan = [
+      // The ground: the photo's colour times the vertex paint (the paint is about 0.5 on the setts, 0.88 on snow).
+      { name: 'snow', mats: [[M.ground, { scale: (8.33 / 2) / 3.5, normalScale: 0.8 }]], after: () => M.ground.color.setScalar(1.05) },
+      { name: 'setts', mats: [[M.setts, { scale: (8.33 / 4) / 2.0, normalScale: 1.0 }]], after: () => M.setts.color.setScalar(1.7) },
+      { name: 'concrete', mats: [[M.dockFloor, { scale: (8.33 / 4) / 2.0, normalScale: 0.9 }], ...each(['concrete'], { scale: 1 / 2, normalScale: 1.0 })],
+        after: () => { M.dockFloor.color.setScalar(2.2); to([['concrete', 0xa4a6a2]], 'concrete')(); } },
+      { name: 'granite', mats: each(['granite'], { scale: 1.9 / 1.9, normalScale: 1.1 }), after: to([['granite', 0x9c9c98]], 'granite') },
+      // The hulls and walls tile at 2.5 m (the photo's size); steel, dark steel and crates at 1 m.
+      { name: 'plate', mats: [...each(PAINTED.filter(k => !SMALL.includes(k)), { scale: 1, normalScale: 0.9, aoIntensity: 0.6 }),
+        ...each(SMALL, { scale: 1 / 2.5, normalScale: 0.7, aoIntensity: 0.6 })], after: paint(PAINTED, 'plate') },
+      { name: 'deck', mats: each(['deckPlate', 'grating', 'perf'], { scale: 2 / 2, normalScale: 0.8, aoIntensity: 0.6 }), after: to([['deckPlate', 0x6c6f69], ['grating', 0x575c5d], ['perf', 0x575c5d]], 'deck') },
+      { name: 'rust', mats: each(['shipRust', 'holdSteel', 'rusted', 'bootTop'], { scale: 2 / 2, normalScale: 0.9, aoIntensity: 0.6 }),
+        after: to([['shipRust', 0x5c4136], ['holdSteel', 0x5e5144], ['rusted', 0x5f4538], ['bootTop', 0x2e3030]], 'rust') },
+      { name: 'boards', mats: each(['timber', 'timberDark', 'boards'], { scale: 1.8 / 2.4, normalScale: 0.9 }),
+        after: to([['timber', 0x8a8072], ['timberDark', 0x4e463e], ['boards', 0x8c8478]], 'boards') },
+      { name: 'roof', mats: each(['roofSheet', 'hallRoof', 'hallWall'], { scale: 2 / 2.7, normalScale: 1.0, aoIntensity: 0.6 }),
+        after: to([['roofSheet', 0x6a7678], ['hallRoof', 0x566066], ['hallWall', 0xa9b2b1]], 'roof') },
+      { name: 'brick', mats: each(['brick'], { scale: 1 / 1, normalScale: 1.0 }), after: to([['brick', 0x80483b]], 'brick') }
+    ];
+    this.packsReady = Promise.all(plan.map(entry => loadTexturePack(base, entry.name).then(pack => {
+      if (!live() || !pack) return;
+      for (const [mat, o] of entry.mats) this.own(...dressFromPack(mat, pack, { ...o, renderer: this.renderer }));
+      entry.after?.();
+    })));
   }
 
   /* ======================================================================
@@ -248,7 +404,7 @@ export class MirrowenWorld {
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.85;
+      this.scene.environmentIntensity = 0.75;
     }
   }
 
@@ -267,7 +423,7 @@ export class MirrowenWorld {
 
   initTerrain() {
     const geo = this.own(buildMirrowenTerrainGeometry(this.plan, this.data));
-    this.terrainMesh = new THREE.Mesh(geo, this.M.ground);
+    this.terrainMesh = new THREE.Mesh(geo, [this.M.ground, this.M.setts, this.M.dockFloor]);
     this.terrainMesh.name = 'mirrowen-ground';
     this.terrainMesh.frustumCulled = false;
     this.terrainMesh.userData.phys = 'ground';
@@ -529,6 +685,7 @@ export class MirrowenWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.effects?.dispose();

@@ -285,7 +285,7 @@ export async function buildLiveDemo(table, step) {
     }
   } else if (step.pc && table.pieces?.[step.pc]) {
     const p = table.pieces[step.pc];
-    if (p.kind === 'element' || p.kind === 'hub' || p.kind === 'shift' || p.kind === 'gcard' || p.kind === 'claim' || p.kind === 'card' || p.kind === 'mixc' || p.kind === 'rtile' || p.kind === 'rxnc' || p.kind === 'kval' || p.kind === 'chc' || p.kind === 'dgc' || p.kind === 'stmt' || p.kind === 'arr') {
+    if (p.kind === 'element' || p.kind === 'hub' || p.kind === 'shift' || p.kind === 'gcard' || p.kind === 'claim' || p.kind === 'card' || p.kind === 'mixc' || p.kind === 'rtile' || p.kind === 'rxnc' || p.kind === 'kval' || p.kind === 'chc' || p.kind === 'dgc' || p.kind === 'stmt' || p.kind === 'arr' || p.kind === 'tag' || p.kind === 'pbox' || p.kind === 'note') {
       // Highlight without giving away a sort, prediction, or answer-slot choice.
       return null;
     } else if (p.kind === 'block') {

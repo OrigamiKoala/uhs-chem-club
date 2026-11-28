@@ -7,7 +7,7 @@
  * moments turns a road into a gate. So the problems wait at the end of the
  * WORLD: the end set in `bank/<world>.json`, all together, once every bench in that
  * unit has been worked. (Each bench also asks two short problems of its own, and
- * offers a guided worked problem where the bench is computational: `ui/bench-practice.js`.) By then the player has met every idea the set asks about.
+ * opens a guided worked problem before them where the bench is computational: `ui/bench-practice.js`.) By then the player has met every idea the set asks about.
  *
  * THREE RULES, AND THEY ARE THE PRODUCT
  *   1. The problems are OPTIONAL. Nothing is locked behind them: the next world

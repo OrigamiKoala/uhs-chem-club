@@ -1,10 +1,11 @@
 /**
  * bench-practice.js — what a bench asks once its debrief is over.
  *
- * Two short problems from the question bank, then, on a computational bench, an
- * offer of a guided worked problem. All of it is skippable at every point and
- * gates nothing: the player leaves for the next bench either way. No XP — an
- * answer only moves the cosmetic mastery record the Drill Deck keeps.
+ * On a computational bench, the guided worked problem opens first, followed by
+ * two short practice problems from the question bank. All of it is skippable at
+ * every point and gates nothing: the player leaves for the next bench either
+ * way. No XP — an answer only moves the cosmetic mastery record the Drill Deck
+ * keeps.
  */
 
 import { showModal, closeModal } from './modal.js';
@@ -56,7 +57,7 @@ export function runBenchPractice(worldId, questId) {
     };
 
     function askProblem(n) {
-      if (n >= problems.length) { offerWorked(); return; }
+      if (n >= problems.length) { leave(); return; }
       const q = problems[n];
       let picked = null;
       showModal(`
@@ -101,45 +102,33 @@ export function runBenchPractice(worldId, questId) {
           </div>`;
         const next = modal.querySelector('[data-next]');
         next.hidden = false;
-        next.textContent = n + 1 < problems.length || worked ? 'Next' : 'Finish';
+        next.textContent = n + 1 < problems.length ? 'Next' : 'Finish';
         next.addEventListener('click', () => askProblem(n + 1));
         next.focus({ preventScroll: true });
       }));
     }
 
-    function offerWorked() {
-      if (!worked) { leave(); return; }
-      showModal(`
-        <div class="quest-modal-head lq-modal-head">
-          <div>
-            <div class="eyebrow lit">${esc(worked.questTitle)}</div>
-            <h2 id="bp-title" class="section-title">${esc(worked.title)}</h2>
-          </div>
-          <span class="tag">Worked problem</span>
-        </div>
-        <p class="lq-practice-question">${esc(worked.setup)}</p>
-        <p class="lq-practice-note">${worked.steps.length} steps. You work each one out.</p>
-        <div class="lq-practice-keys">
-          <button type="button" class="btn-secondary" data-skip>Skip</button>
-          <button type="button" class="btn-primary" data-start>Start</button>
-        </div>
-      `, { labelledBy: 'bp-title', onClose: finish });
-      const modal = document.getElementById('modal-container');
-      modal.querySelector('[data-skip]').addEventListener('click', leave);
-      modal.querySelector('[data-start]').addEventListener('click', startWorked);
-      modal.querySelector('[data-start]').focus({ preventScroll: true });
+    function afterWorked() {
+      closeCalculator();
+      view?.dispose();
+      view = null;
+      modalEl?.classList.remove('modal-worked');
+      if (problems.length) askProblem(0);
+      else leave();
     }
 
     function startWorked() {
       modalEl?.classList.add('modal-worked');
       showModal('<div id="bp-host" class="bp-host"></div>', { labelledBy: 'bp-title', onClose: finish });
       const host = document.getElementById('bp-host');
+      if (!host) { afterWorked(); return; }
       view = mountWorked(host, worked, {
-        onDone: () => { note(worked.id, true); leave(); },
-        onLeave: leave
+        onDone: () => { note(worked.id, true); afterWorked(); },
+        onLeave: afterWorked
       });
     }
 
-    askProblem(0);
+    if (worked) startWorked();
+    else askProblem(0);
   });
 }

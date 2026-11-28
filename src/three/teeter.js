@@ -34,8 +34,11 @@
 import * as THREE from 'three';
 import teeterData from './world-data/teeter.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
-import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic } from './materials/pbr-kit.js';
-import { panCrust, saltSlab, brineRipple } from './materials/teeter-textures.js';
+import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, addWorldVariation } from './materials/pbr-kit.js';
+import { panCrust, saltSlab, brineRipple, weatheredBoards } from './materials/teeter-textures.js';
+import { brickwork } from './materials/kettle-textures.js';
+import { loadTexturePack, dressFromPack, packsAvailable } from './materials/texture-pack.js';
+import { grimed } from './teeter/grime.js';
 import {
   createTtSkyDome, createTtLights, followTtShadow, createTtEnvironment, ttSkyUniforms, followCamera, TTSKY, TEETER_SUN
 } from './teeter/atmosphere.js';
@@ -78,6 +81,9 @@ export class TeeterWorld {
     // The hill, the spurs and the valley run to the horizon on their own; the voyage must not lay a ring over them.
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
+    // BUILT SHAPES (the realism pass, `docs/plans/realism-teeter.md`): the shared kit chamfers every box and bevels every
+    // cylinder, its uvs in metres (kettle/kit.js), so every material below is tiled in metres.
+    this.builtKit = true;
 
     // THE TERRACES, AS A PLAN. The height field, the walk, the colliders, the light mask and the guide all stand on it.
     this.plan = makeTerracePlan();
@@ -97,6 +103,8 @@ export class TeeterWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.initCover();
+    // The photographed (CC0) surfaces, fetched at 3D On and put into the slots the procedural maps hold.
+    this.initPacks();
     // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/teeter.js`).
     this.crew = attachCrew(this, 'teeter');
   }
@@ -108,7 +116,7 @@ export class TeeterWorld {
 
   /** What the builders are handed: materials, `own`, the lamp list, the tier, the field and the plan. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan, builtKit: this.builtKit };
   }
 
   /** `aoMap` samples the SECOND uv set, which a primitive geometry does not have: reuse the first. */
@@ -128,32 +136,40 @@ export class TeeterWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => {
-      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 });
+    // TILES IN METRES. The kit, the masonry and the ground all lay their uvs in metres, so a material's repeat is
+    // 1 / its tile: one texel density on every object that wears it.
+    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256, repeat = 0.75) => {
+      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat, roughness: 1.0 });
       m.normalScale.set(1.2, 1.2);
       m.aoMapIntensity = 0.85;
       return m;
     };
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
-    // THE GROUND: the pans' crust for grain; the vertex colours say what it is (clay dike, crust, stair stone, hill rock).
-    M.ground = buildMaterial(panCrust({ size: texSize(512), seed: 31 }), { repeat: 4, roughness: 1.0 });
+    // THE GROUND: the pans' crust for grain (a 3 m tile); the vertex colours say what it is (clay dike, crust, hill rock).
+    M.ground = buildMaterial(panCrust({ size: texSize(512), seed: 31 }), { repeat: 1 / 3, roughness: 1.0 });
     M.ground.vertexColors = true;
     M.ground.normalScale.set(1.1, 1.1);
     M.ground.envMapIntensity = 0.6;
     for (const t of M.ground.userData.surfaceMaps || []) t.anisotropy = aniso;
+    // THE STAIR'S RAMPS: worn setts (the ground's grain until the photograph lands), the same vertex paint.
+    M.stair = buildMaterial(saltSlab({ size: texSize(512), seed: 23 }), { repeat: 1 / 1.6, roughness: 1.0 });
+    M.stair.vertexColors = true;
+    M.stair.envMapIntensity = 0.6;
     // THE MASONRY: dressed limestone, salt-bloomed. Coping and flags a shade darker; the rooms' insides darker again.
-    const stone = (color, seed) => {
-      const m = buildMaterial(saltSlab({ size: texSize(512), seed }), { repeat: 1, roughness: 1.0 });
+    const stone = (color, seed, tile) => {
+      const m = buildMaterial(saltSlab({ size: texSize(512), seed }), { repeat: 1 / tile, roughness: 1.0 });
       m.color = new THREE.Color(color);
       return m;
     };
-    M.masonry = stone(0xe0d9c8, 7);
-    M.coping = stone(0xc9c1ae, 11);
-    M.flags = stone(0xb6ad9a, 13);
-    M.vault = stone(0xcdc4b0, 17);
-    M.brick = std({ color: 0x9a6a4c, roughness: 0.9, metalness: 0 });
-    M.kerb = std({ color: 0xbdb39c, roughness: 0.97, metalness: 0 });
-    M.bund = std({ color: 0xc9c0aa, roughness: 0.97, metalness: 0 });
+    M.masonry = stone(0xe0d9c8, 7, 2.4);
+    M.coping = stone(0xc9c1ae, 11, 1.2);
+    M.flags = stone(0xb6ad9a, 13, 1.8);
+    M.vault = stone(0xcdc4b0, 17, 2.4);
+    M.kerb = stone(0xbdb39c, 19, 1.6);
+    // The pans' clay banks: the ground's own crust, a little darker and damp.
+    M.bund = buildMaterial(panCrust({ size: texSize(512), seed: 37 }), { repeat: 1 / 1.6, roughness: 1.0 });
+    M.bund.color = new THREE.Color(0xb7ae99);
+    M.brick = buildMaterial(brickwork({ size: texSize(512), seed: 41, brick: '#8a5a42', dark: '#4f3428', mortar: '#a39a88', soot: 0.15 }), { repeat: 1 / 1.8, roughness: 1.0 });
     M.concrete = M.masonry;
     M.slab = M.masonry;
     M.clad = metal('#cfd2cd', '#aeb2ad', '#a08a6c', 81, 0.3, 2, 512);
@@ -161,10 +177,18 @@ export class TeeterWorld {
     M.darkSteel = metal('#43484a', '#585d5c', '#76604c', 85, 0.5, 4);
     M.rusted = metal('#76543e', '#62544a', '#84512f', 87, 0.8, 3);
     M.roofSheet = metal('#8e9593', '#7c8381', '#8a6444', 95, 0.55, 5);
-    M.benchTop = metal('#a9aeaa', '#8d938f', '#8a7358', 105, 0.4, 3);
+    // THE BENCH keeps its look: its parts are stock boxes, so it keeps the old repeat and plain timber.
+    M.benchTop = metal('#a9aeaa', '#8d938f', '#8a7358', 105, 0.4, 3, 256, 2);
+    M.benchDark = metal('#43484a', '#585d5c', '#76604c', 85, 0.5, 4, 256, 2);
+    M.benchTray = std({ color: 0x8a7658, roughness: 0.95, metalness: 0 });
     M.paintGrey = metal('#8a8e88', '#6f736d', '#6a5442', 121, 0.4, 2);
-    M.timber = std({ color: 0x8a7658, roughness: 0.95, metalness: 0 });
-    M.timberDark = std({ color: 0x5a4a38, roughness: 0.95, metalness: 0 });
+    const boards = (color, seed) => {
+      const m = buildMaterial(weatheredBoards({ size: texSize(512), seed }), { repeat: 1 / 2, roughness: 1.0 });
+      m.color = new THREE.Color(color);
+      return m;
+    };
+    M.timber = boards(0xc8bfae, 5);
+    M.timberDark = boards(0x8a7e6c, 6);
     M.brushwood = std({ color: 0x4d4436, roughness: 1.0, metalness: 0 });
     M.salt = std({ color: 0xece9de, roughness: 0.95, metalness: 0 });
     M.saltWhite = std({ color: 0xf3f1e8, roughness: 0.9, metalness: 0 });
@@ -181,12 +205,15 @@ export class TeeterWorld {
     M.paintRed = std({ color: 0x8e2f22, roughness: 0.65, metalness: 0.1 });
     M.paint2 = std({ color: 0xe8e2d4, roughness: 0.6, metalness: 0 });
     // Brine is still, grey-green and glossy: in a room's culvert or tank (opaque), and over every pan (translucent).
+    // A warm grey tint takes the ripple map's blue out: the pans read as brine over pale crust, not as a pool.
     M.brine = buildMaterial(brineRipple({ size: texSize(256), seed: 9 }), { repeat: 1, roughness: 0.14 });
+    M.brine.color = new THREE.Color(0xd8d6c8);
     M.brine.envMapIntensity = 1.3;
     M.panWater = buildMaterial(brineRipple({ size: texSize(256), seed: 19 }), { repeat: 1, roughness: 0.12 });
-    M.panWater.envMapIntensity = 1.3;
+    M.panWater.color = new THREE.Color(0xe8dfcc);
+    M.panWater.envMapIntensity = 1.0;
     M.panWater.transparent = true;
-    M.panWater.opacity = 0.78;
+    M.panWater.opacity = 0.62;
     M.panWater.depthWrite = false;
     M.river = std({ color: 0x5d6a66, roughness: 0.1, metalness: 0, envMapIntensity: 1.1 });
     M.glass = std({ color: 0xd5dfe2, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false });
@@ -197,12 +224,80 @@ export class TeeterWorld {
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
+    // THE MASONRY'S GRIME (teeter/grime.js): the terrace masonry wears clones that draw the damp band and the salt line
+    // at each wall's foot. Made before the variation below, which each copy then gets for itself.
+    M.wallG = grimed(M.masonry);
+    M.vaultG = grimed(M.vault, { damp: 0.3, salt: 0.3 });
+    M.kerbG = grimed(M.kerb, { damp: 0.28, salt: 0.35 });
+    M.bundG = grimed(M.bund, { damp: 0.25, salt: 0.0 });
+    // EVERY BIG SURFACE DRIFTS in tone and roughness over the hillside, with a coarser second sample against visible
+    // repeats (pbr-kit `addWorldVariation`); the walls also carry streaks where brine has run down from the coping.
+    // Coursed stone, boards and brick take no anti-tile: its rotated second sample would draw their joints crossed
+    // (diagonal joints over the courses). The tone drift breaks their repeat instead.
+    for (const m of [M.wallG, M.masonry]) addWorldVariation(m, { scale: 7, strength: 0.15, roughShift: 0.08, antiTile: 0, streaks: 0.14 });
+    for (const m of [M.vaultG, M.vault]) addWorldVariation(m, { scale: 5, strength: 0.12, roughShift: 0.08, antiTile: 0, streaks: 0.08 });
+    for (const m of [M.coping, M.kerbG, M.kerb, M.flags]) addWorldVariation(m, { scale: 6, strength: 0.12, roughShift: 0.1, antiTile: 0 });
+    for (const m of [M.ground, M.stair, M.bundG, M.bund]) addWorldVariation(m, { scale: 11, strength: 0.12, roughShift: 0.1, antiTile: 0.6 });
+    for (const m of [M.timber, M.timberDark, M.brick]) addWorldVariation(m, { scale: 5, strength: 0.1, roughShift: 0.08, antiTile: 0 });
+
     for (const m of Object.values(M)) {
       this.own(m);
       for (const t of m.userData?.surfaceMaps || []) this.own(t);
     }
     this.M = M;
     this.lanternMat = M.lantern;
+  }
+
+  /**
+   * THE PHOTOGRAPHED SURFACES (CC0, `public/textures/teeter/LICENSE.md`). At 3D On with a renderer, each pack is fetched
+   * after the world is built and put into the slots its materials' procedural maps already hold (texture-pack.js), so
+   * no program changes and each map is uploaded as it lands; until then, and below 3D On, the procedural maps stay.
+   * `scale` = (1 / the photo's tile in metres) / the material's own repeat, so every photo lies at its real size.
+   * `grey` is the material's colour once it wears the photo (the photos are graded close to what each surface wants).
+   */
+  initPacks() {
+    if (!this.t4 || !packsAvailable(this.renderer)) return;
+    const M = this.M;
+    const sc = (photo, repeat) => (1 / photo) / repeat;
+    const plan = {
+      ground: [
+        [M.ground, { scale: sc(3, 1 / 3), normalScale: 1.0, aoIntensity: 0.6 }, 0xffffff],
+        [M.bund, { scale: sc(3, 1 / 1.6), normalScale: 1.0 }, 0xc8bfae],
+        [M.bundG, { scale: sc(3, 1 / 1.6), normalScale: 1.0 }, 0xc8bfae]
+      ],
+      wall: [
+        [M.masonry, { scale: sc(3, 1 / 2.4), normalScale: 1.0, aoIntensity: 0.8 }, 0xd8d3c6],
+        [M.wallG, { scale: sc(3, 1 / 2.4), normalScale: 1.0, aoIntensity: 0.8 }, 0xd8d3c6],
+        [M.kerb, { scale: sc(3, 1 / 1.6), normalScale: 0.9 }, 0xbdb6a5],
+        [M.kerbG, { scale: sc(3, 1 / 1.6), normalScale: 0.9 }, 0xbdb6a5],
+        [M.vault, { scale: sc(3, 1 / 2.4), normalScale: 1.0 }, 0xc2baa8],
+        [M.vaultG, { scale: sc(3, 1 / 2.4), normalScale: 1.0 }, 0xc2baa8]
+      ],
+      // The coping is dressed slab, as the rooms' floors are: smooth-faced, not rock-faced.
+      flags: [
+        [M.flags, { scale: sc(3, 1 / 1.8), normalScale: 1.0, aoIntensity: 0.7 }, 0xd2ccbe],
+        [M.coping, { scale: sc(3, 1 / 1.2), normalScale: 1.0 }, 0xe4ddd0]
+      ],
+      setts: [[M.stair, { scale: sc(2, 1 / 1.6), normalScale: 1.0, aoIntensity: 0.7 }, 0xffffff]],
+      timber: [
+        [M.timber, { scale: sc(2, 1 / 2), normalScale: 1.0 }, 0xe0d8c8],
+        [M.timberDark, { scale: sc(2, 1 / 2), normalScale: 1.0 }, 0xa09482]
+      ],
+      brick: [[M.brick, { scale: sc(2, 1 / 1.8), normalScale: 1.0 }, 0xd8d0c8]]
+    };
+    const aniso = this.renderer.capabilities?.getMaxAnisotropy?.() || 8;
+    for (const [name, mats] of Object.entries(plan)) {
+      loadTexturePack('/textures/teeter', name).then(pack => {
+        if (this._disposed || !pack) return;
+        for (const [mat, opts, grey] of mats) {
+          if (!mat) continue;
+          const made = dressFromPack(mat, pack, { ...opts, renderer: this.renderer });
+          for (const t of made) t.anisotropy = aniso;
+          this.own(...made);
+          if (grey !== undefined) mat.color.setHex(grey);
+        }
+      });
+    }
   }
 
   /* ------------------------------------------------------------ light and sky */
@@ -213,13 +308,15 @@ export class TeeterWorld {
     this.scene.add(key, key.target, hemi);
     holdShadowUntilAsked(this.scene, key);
     const amb = this.data.ambience;
-    this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
+    // The haze gives depth without burying the land: it starts and closes a little further out than the layout's
+    // ambience (the realism pass; the layout keeps its numbers for the lower tiers' reference).
+    this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear * 1.3, amb.fogFar * 1.2);
     this.scene.background = TTSKY.horizon.clone();
     const env = createTtEnvironment(this.renderer);
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.8;
+      this.scene.environmentIntensity = 0.65;
     }
   }
 
@@ -239,10 +336,20 @@ export class TeeterWorld {
     this.terrainMesh.userData.noWeather = true;
     this.terrainMesh.receiveShadow = this.t4;
     this.scene.add(this.terrainMesh);
+    // The stair's ramps: the same ground, laid in setts.
+    const stairGeo = this.own(ground.userData.stair);
+    delete ground.userData.stair;
+    this.stairMesh = new THREE.Mesh(stairGeo, this.M.stair);
+    this.stairMesh.name = 'teeter-stair';
+    this.stairMesh.userData.phys = 'ground';
+    this.stairMesh.userData.noMerge = true;
+    this.stairMesh.userData.noWeather = true;
+    this.stairMesh.receiveShadow = this.t4;
+    this.scene.add(this.stairMesh);
 
     // THE MASONRY, merged by material over 40 m squares: walls, kerbs, the stair, the rooms' shells, the pans' bunds.
     const lists = buildMasonry(this.plan);
-    const mat = { wall: this.M.masonry, coping: this.M.coping, kerb: this.M.kerb, bund: this.M.bund, flags: this.M.flags, vault: this.M.vault, timber: this.M.timber, steel: this.M.darkSteel, brick: this.M.brick, roof: this.M.roofSheet, rail: this.M.timberDark };
+    const mat = { wall: this.M.wallG, coping: this.M.coping, kerb: this.M.kerbG, bund: this.M.bundG, flags: this.M.flags, vault: this.M.vaultG, timber: this.M.timber, steel: this.M.darkSteel, brick: this.M.brick, roof: this.M.roofSheet, rail: this.M.timberDark };
     const masonry = new THREE.Group();
     masonry.name = 'terraces';
     masonry.userData.phys = 'ground';
@@ -478,6 +585,7 @@ export class TeeterWorld {
   }
 
   dispose() {
+    this._disposed = true;
     this.crew?.dispose();
     this.crew = null;
     this.envTarget?.dispose();

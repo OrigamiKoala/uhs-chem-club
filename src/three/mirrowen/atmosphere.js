@@ -158,12 +158,13 @@ export function followCamera(dome, eye) {
 }
 
 /**
- * The light on the shelf. A cold white sun from the east-south-east that casts the shadows, and
- * a hemisphere fill that is the pale haze above and the bounce off frost below. There is no
+ * The light on the shelf. A low, faintly warm sun from the east-south-east that casts the shadows, and
+ * a hemisphere fill that is the pale haze above and the darker bounce off stone and snow below. There is no
  * second key: the shelf has no light of its own but its lamps.
  */
 export function createMwLights({ shadows }) {
-  const key = new THREE.DirectionalLight(new THREE.Color('#edf3f7'), 2.0);
+  // A low morning sun is a little warmer than the sky it shines through, and it is the strongest light here.
+  const key = new THREE.DirectionalLight(new THREE.Color('#f6efe3'), 2.8);
   key.position.copy(MIRROWEN_SUN).multiplyScalar(240);
   key.castShadow = Boolean(shadows);
   if (shadows) {
@@ -175,7 +176,8 @@ export function createMwLights({ shadows }) {
     key.shadow.normalBias = 0.05;
     key.shadow.radius = 2;
   }
-  const hemi = new THREE.HemisphereLight(new THREE.Color('#bdd0dc'), new THREE.Color('#7f8c90'), 1.25);
+  // The bounce off grey stone and trodden snow is darker than the sky above it, so undersides read as undersides.
+  const hemi = new THREE.HemisphereLight(new THREE.Color('#bccfdc'), new THREE.Color('#5e676a'), 0.92);
   return { key, hemi };
 }
 

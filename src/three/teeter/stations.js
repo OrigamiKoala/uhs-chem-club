@@ -49,7 +49,7 @@ export function buildTtBench(ctx, { kind = 'pan', plate = 'TTR-01', skin = 'deck
   };
   return buildBayBench(ctx, {
     skin, plate,
-    mats: { top: M.benchTop, dark: M.darkSteel, tray: M.timber },
+    mats: { top: M.benchTop, dark: M.benchDark || M.darkSteel, tray: M.benchTray || M.timber },
     tagStyle: { fg: '#1e1a14', bg: '#dcd8c8' },
     dormant(dormant, { height }) {
       const y0 = height + 0.045;
@@ -60,7 +60,7 @@ export function buildTtBench(ctx, { kind = 'pan', plate = 'TTR-01', skin = 'deck
       add(new THREE.CylinderGeometry(0.16, 0.16, 0.04, 22), M.brass, -0.62, height + 0.42, 0.05, [Math.PI / 2, 0, 0]);
       add(new THREE.CircleGeometry(0.13, 22), M.glassDark, -0.62, height + 0.42, 0.072);
       if (kind === 'pan') {
-        add(new THREE.BoxGeometry(0.9, 0.05, 0.5), M.timber, 0.6, y0 + 0.025, 0.1);
+        add(new THREE.BoxGeometry(0.9, 0.05, 0.5), M.benchTray || M.timber, 0.6, y0 + 0.025, 0.1);
         add(new THREE.BoxGeometry(0.8, 0.02, 0.4), M.brine, 0.6, y0 + 0.055, 0.1);
         for (const x of [0.25, 0.4]) add(new THREE.CylinderGeometry(0.06, 0.05, 0.05, 16), x < 0.3 ? M.paint2 : M.paintBlue, x, y0 + 0.025, 0.4);
       } else if (kind === 'scale') {
